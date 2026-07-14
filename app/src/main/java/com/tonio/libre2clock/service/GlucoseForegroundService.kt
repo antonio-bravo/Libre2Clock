@@ -2,8 +2,13 @@ package com.tonio.libre2clock.service
 
 import android.app.*
 import android.content.Intent
+import android.graphics.Typeface
 import android.os.Build
 import android.os.IBinder
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.style.RelativeSizeSpan
+import android.text.style.StyleSpan
 import androidx.core.app.NotificationCompat
 import com.tonio.libre2clock.MainActivity
 import com.tonio.libre2clock.R
@@ -190,22 +195,23 @@ class GlucoseForegroundService : Service() {
 
                 private fun sendWatchAlertNotification(measurement: GlucoseMeasurement) {
                     val trendStr = GlucoseProcessor.getTrendArrowSymbol(measurement.trendArrow)
-                    val title = "${measurement.calibratedValue} mg/dL  $trendStr"
-                    val content = "Raw: ${measurement.value} mg/dL"
+                    val dualValue = GlucoseProcessor.formatDualValue(measurement.value, measurement.calibratedValue)
+                    val plainTitle = "$dualValue mg/dL  $trendStr"
+                    val styledTitle = buildWatchStyledTitle(plainTitle, dualValue)
                     val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
                     val watchNotificationId = (System.currentTimeMillis() % Int.MAX_VALUE).toInt()
                     val notification = NotificationCompat.Builder(this, ALERT_CHANNEL_ID)
-                        .setContentTitle(title)
-                        .setContentText(content)
+                        .setContentTitle(styledTitle)
+                        .setContentText(plainTitle)
                         .setSmallIcon(android.R.drawable.stat_notify_sync)
                         .setPriority(NotificationCompat.PRIORITY_HIGH)
                         .setCategory(NotificationCompat.CATEGORY_STATUS)
                         .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                         .setStyle(
                             NotificationCompat.BigTextStyle()
-                                .setBigContentTitle(title)
-                                .bigText("Current glucose\n$title\n$content")
+                                .setBigContentTitle(styledTitle)
+                                .bigText(styledTitle)
                         )
                         .setOngoing(true)
                         .setAutoCancel(false)
@@ -213,5 +219,28 @@ class GlucoseForegroundService : Service() {
                         .build()
 
                     notificationManager.notify(watchNotificationId, notification)
+                }
+
+                private fun buildWatchStyledTitle(title: String, dualValue: String): CharSequence {
+                    return SpannableString(title).apply {
+                        setSpan(
+                            RelativeSizeSpan(1.8f),
+                            0,
+                            title.length,
+                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                        )
+                        setSpan(
+                            RelativeSizeSpan(2.0f),
+                            0,
+                            dualValue.length,
+                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                        )
+                        setSpan(
+                            StyleSpan(Typeface.BOLD),
+                            0,
+                            dualValue.length,
+                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                        )
+                    }
                 }
 }

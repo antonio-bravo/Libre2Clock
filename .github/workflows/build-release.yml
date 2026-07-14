@@ -1,0 +1,80 @@
+name: Build and Release Libre2Clock APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version (dejar vacio para usar 1.YYYYMMDD.HHmmss)"
+        required: false
+        default: ""
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set Version
+        id: set_version
+        run: |
+          if [ -z "${{ github.event.inputs.version }}" ]; then
+            V_AUTO="1.$(date -u +'%Y%m%d.%H%M%S')"
+            echo "VERSION=$V_AUTO" >> "$GITHUB_ENV"
+          else
+            echo "VERSION=${{ github.event.inputs.version }}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build Release and Debug APK
+        run: ./gradlew assembleRelease assembleDebug
+
+      - name: Prepare APK for Release
+        run: |
+          RELEASE_APK=$(find app/build/outputs/apk/release/ -name "*.apk" | head -n 1)
+          if [ -f "$RELEASE_APK" ]; then
+            echo "APK de release encontrado en $RELEASE_APK"
+            cp "$RELEASE_APK" "libre2clock-v${{ env.VERSION }}.apk"
+          else
+            echo "Error: No se encontro el APK de release. Revisa el log de Gradle."
+            exit 1
+          fi
+
+          DEBUG_APK=$(find app/build/outputs/apk/debug/ -name "*.apk" | head -n 1)
+          if [ -f "$DEBUG_APK" ]; then
+            echo "APK debug encontrado en $DEBUG_APK"
+            cp "$DEBUG_APK" "libre2clock-v${{ env.VERSION }}_debug.apk"
+          else
+            echo "Error: No se encontro el APK debug. Revisa el log de Gradle."
+            exit 1
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: Libre2Clock v${{ env.VERSION }}
+          files: |
+            libre2clock-v${{ env.VERSION }}.apk
+            libre2clock-v${{ env.VERSION }}_debug.apk
+          generate_release_notes: true
+          draft: false
+          prerelease: false
