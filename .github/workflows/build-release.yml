@@ -56,6 +56,17 @@ jobs:
             -Pkotlin.incremental=false \
             clean assembleRelease
 
+      - name: Build Debug APK
+        run: |
+          ./gradlew \
+            --no-daemon \
+            --no-configuration-cache \
+            --no-parallel \
+            -Djava.awt.headless=true \
+            -Pksp.incremental=false \
+            -Pkotlin.incremental=false \
+            assembleDebug
+
       - name: Prepare APK for Release
         run: |
           RELEASE_APK=$(find app/build/outputs/apk/release/ -name "*.apk" | head -n 1)
@@ -67,6 +78,15 @@ jobs:
             exit 1
           fi
 
+          DEBUG_APK=$(find app/build/outputs/apk/debug/ -name "*.apk" | head -n 1)
+          if [ -f "$DEBUG_APK" ]; then
+            echo "APK debug encontrado en $DEBUG_APK"
+            cp "$DEBUG_APK" "libre2clock-v${{ env.VERSION }}_debug.apk"
+          else
+            echo "Error: No se encontro el APK debug. Revisa el log de Gradle."
+            exit 1
+          fi
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -74,6 +94,7 @@ jobs:
           name: Libre2Clock v${{ env.VERSION }}
           files: |
             libre2clock-v${{ env.VERSION }}.apk
+            libre2clock-v${{ env.VERSION }}_debug.apk
           generate_release_notes: true
           draft: false
           prerelease: false
