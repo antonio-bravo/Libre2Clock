@@ -36,6 +36,8 @@ fun SettingsScreen(
     val capillaryReadings by viewModel.capillaryReadings.collectAsStateWithLifecycle()
     val watchAlertsEnabled by viewModel.watchAlertsEnabled.collectAsStateWithLifecycle()
     val watchAlertIntervalMinutes by viewModel.watchAlertIntervalMinutes.collectAsStateWithLifecycle()
+    val lowGlucoseAlarmEnabled by viewModel.lowGlucoseAlarmEnabled.collectAsStateWithLifecycle()
+    val highGlucoseAlarmEnabled by viewModel.highGlucoseAlarmEnabled.collectAsStateWithLifecycle()
 
     var showAddRangeDialog by remember { mutableStateOf(false) }
     var editingRange by remember { mutableStateOf<GlucoseOffsetRange?>(null) }
@@ -167,7 +169,7 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Enable periodic watch alerts",
+                        text = "Enable periodic watch push",
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Switch(
@@ -191,6 +193,49 @@ fun SettingsScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     enabled = watchAlertsEnabled
                 )
+
+                Spacer(modifier = Modifier.height(24.dp))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Text(
+                    text = "Glucose alarms",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = "Enable or disable high/low alarms independently. Periodic watch push remains independent.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Low glucose alarm (< 70 mg/dL)",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Switch(
+                        checked = lowGlucoseAlarmEnabled,
+                        onCheckedChange = viewModel::updateLowGlucoseAlarmEnabled
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "High glucose alarm (> 180 mg/dL)",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Switch(
+                        checked = highGlucoseAlarmEnabled,
+                        onCheckedChange = viewModel::updateHighGlucoseAlarmEnabled
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(24.dp))
                 HorizontalDivider()

@@ -30,6 +30,10 @@ class GlucoseForegroundService : Service() {
     private var lastWatchAlertAtMillis: Long = 0L
     private var watchAlertsEnabledCached: Boolean = false
     private var watchAlertIntervalMinutesCached: Int = 60
+    private var lowGlucoseAlarmEnabledCached: Boolean = false
+    private var highGlucoseAlarmEnabledCached: Boolean = false
+    private var lastLowAlarmAtMillis: Long = 0L
+    private var lastHighAlarmAtMillis: Long = 0L
     private var lastForegroundNotificationContent: String? = null
 
     companion object {
@@ -38,6 +42,9 @@ class GlucoseForegroundService : Service() {
         const val NOTIFICATION_ID = 1
         const val TEST_ALERT_TIMEOUT_MS = 15 * 60 * 1000L
         const val WATCH_ALERT_TIMEOUT_MS = 10 * 60 * 1000L
+        const val GLUCOSE_ALARM_COOLDOWN_MS = 15 * 60 * 1000L
+        const val LOW_GLUCOSE_THRESHOLD = 70
+        const val HIGH_GLUCOSE_THRESHOLD = 180
     }
 
     override fun onCreate() {
@@ -80,11 +87,24 @@ class GlucoseForegroundService : Service() {
                 }
             }
 
+            launch {
+                preferenceManager.lowGlucoseAlarmEnabled.collect {
+                    lowGlucoseAlarmEnabledCached = it
+                }
+            }
+
+            launch {
+                preferenceManager.highGlucoseAlarmEnabled.collect {
+                    highGlucoseAlarmEnabledCached = it
+                }
+            }
+
             while (isActive) {
                 val fetchResult = repository.fetchLatestGlucose()
                 val measurement = fetchResult.getOrNull()
                 if (measurement != null) {
                     maybeSendWatchAlert(measurement)
+                    maybeSendGlucoseAlarms(measurement)
                 }
                 delay(60000) // Sync every minute
             }
@@ -238,6 +258,59 @@ class GlucoseForegroundService : Service() {
                         .build()
 
                     notificationManager.notify(watchNotificationId, notification)
+                }
+
+                private fun maybeSendGlucoseAlarms(measurement: GlucoseMeasurement) {
+                    val now = System.currentTimeMillis()
+                    val calibrated = measurement.calibratedValue
+
+                    if (lowGlucoseAlarmEnabledCached && calibrated < LOW_GLUCOSE_THRESHOLD) {
+                        if (now - lastLowAlarmAtMillis >= GLUCOSE_ALARM_COOLDOWN_MS) {
+                            sendThresholdAlarmNotification(measurement, isLow = true)
+                            lastLowAlarmAtMillis = now
+                        }
+                    }
+
+                    if (highGlucoseAlarmEnabledCached && calibrated > HIGH_GLUCOSE_THRESHOLD) {
+                        if (now - lastHighAlarmAtMillis >= GLUCOSE_ALARM_COOLDOWN_MS) {
+                            sendThresholdAlarmNotification(measurement, isLow = false)
+                            lastHighAlarmAtMillis = now
+                        }
+                    }
+                }
+
+                private fun sendThresholdAlarmNotification(measurement: GlucoseMeasurement, isLow: Boolean) {
+                    val plainTitle = buildWatchPlainTitle(measurement)
+                    val dualValue = GlucoseProcessor.formatDualValue(measurement.value, measurement.calibratedValue)
+                    val styledTitle = buildWatchStyledTitle(plainTitle, dualValue)
+                    val alarmText = if (isLow) {
+                        "Low glucose alarm"
+                    } else {
+                        "High glucose alarm"
+                    }
+                    val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+
+                    val alarmNotificationId = (System.currentTimeMillis() % Int.MAX_VALUE).toInt()
+                    val notification = NotificationCompat.Builder(this, ALERT_CHANNEL_ID)
+                        .setContentTitle(styledTitle)
+                        .setContentText(alarmText)
+                        .setSmallIcon(android.R.drawable.stat_notify_sync)
+                        .setPriority(NotificationCompat.PRIORITY_HIGH)
+                        .setCategory(NotificationCompat.CATEGORY_ALARM)
+                        .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                        .setDefaults(NotificationCompat.DEFAULT_ALL)
+                        .setStyle(
+                            NotificationCompat.BigTextStyle()
+                                .setBigContentTitle(styledTitle)
+                                .bigText("$alarmText\n$plainTitle")
+                        )
+                        .setVibrate(longArrayOf(0, 500, 200, 500))
+                        .setOngoing(false)
+                        .setAutoCancel(true)
+                        .setTimeoutAfter(TEST_ALERT_TIMEOUT_MS)
+                        .build()
+
+                    notificationManager.notify(alarmNotificationId, notification)
                 }
 
                 private fun buildWatchPlainTitle(measurement: GlucoseMeasurement): String {

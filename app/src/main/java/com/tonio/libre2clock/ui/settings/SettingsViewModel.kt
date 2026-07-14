@@ -32,6 +32,12 @@ class SettingsViewModel(
     val watchAlertIntervalMinutes: StateFlow<Int> = preferenceManager.watchAlertIntervalMinutes
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 60)
 
+    val lowGlucoseAlarmEnabled: StateFlow<Boolean> = preferenceManager.lowGlucoseAlarmEnabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val highGlucoseAlarmEnabled: StateFlow<Boolean> = preferenceManager.highGlucoseAlarmEnabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     fun updateOffset(offset: Int) {
         viewModelScope.launch {
             preferenceManager.saveGlucoseOffset(offset)
@@ -70,6 +76,18 @@ class SettingsViewModel(
     fun updateWatchAlertIntervalMinutes(minutes: Int) {
         viewModelScope.launch {
             preferenceManager.saveWatchAlertIntervalMinutes(minutes)
+        }
+    }
+
+    fun updateLowGlucoseAlarmEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            preferenceManager.saveLowGlucoseAlarmEnabled(enabled)
+        }
+    }
+
+    fun updateHighGlucoseAlarmEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            preferenceManager.saveHighGlucoseAlarmEnabled(enabled)
         }
     }
 

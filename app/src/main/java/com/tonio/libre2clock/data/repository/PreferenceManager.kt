@@ -26,6 +26,8 @@ class PreferenceManager(private val context: Context) {
     private val CAPILLARY_READINGS_KEY = stringPreferencesKey("capillary_readings")
     private val WATCH_ALERTS_ENABLED_KEY = booleanPreferencesKey("watch_alerts_enabled")
     private val WATCH_ALERT_INTERVAL_MINUTES_KEY = androidx.datastore.preferences.core.intPreferencesKey("watch_alert_interval_minutes")
+    private val LOW_GLUCOSE_ALARM_ENABLED_KEY = booleanPreferencesKey("low_glucose_alarm_enabled")
+    private val HIGH_GLUCOSE_ALARM_ENABLED_KEY = booleanPreferencesKey("high_glucose_alarm_enabled")
 
     val authToken: Flow<String?> = context.dataStore.data.map { preferences ->
         preferences[TOKEN_KEY]
@@ -77,6 +79,14 @@ class PreferenceManager(private val context: Context) {
         (preferences[WATCH_ALERT_INTERVAL_MINUTES_KEY] ?: 60).coerceIn(5, 180)
     }
 
+    val lowGlucoseAlarmEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[LOW_GLUCOSE_ALARM_ENABLED_KEY] ?: false
+    }
+
+    val highGlucoseAlarmEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[HIGH_GLUCOSE_ALARM_ENABLED_KEY] ?: false
+    }
+
     private fun getDefaultRanges() = listOf(
         GlucoseOffsetRange(0, 70, 20),
         GlucoseOffsetRange(70, 100, 40),
@@ -125,6 +135,18 @@ class PreferenceManager(private val context: Context) {
     suspend fun saveWatchAlertIntervalMinutes(minutes: Int) {
         context.dataStore.edit { preferences ->
             preferences[WATCH_ALERT_INTERVAL_MINUTES_KEY] = minutes.coerceIn(5, 180)
+        }
+    }
+
+    suspend fun saveLowGlucoseAlarmEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[LOW_GLUCOSE_ALARM_ENABLED_KEY] = enabled
+        }
+    }
+
+    suspend fun saveHighGlucoseAlarmEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[HIGH_GLUCOSE_ALARM_ENABLED_KEY] = enabled
         }
     }
 
