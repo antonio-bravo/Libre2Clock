@@ -153,33 +153,53 @@ class GlucoseForegroundService : Service() {
     }
 
     private fun triggerTestNotification() {
-        val title = "145 mg/dL  ↗"
-        val content = "Test alert for watch mirroring"
-        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        
-        // Unique ID so each test is treated as a new notification event.
-        val testNotificationId = (System.currentTimeMillis() % Int.MAX_VALUE).toInt()
-        
-        val notification = NotificationCompat.Builder(this, ALERT_CHANNEL_ID)
-            .setContentTitle(title)
-            .setContentText(content)
-            .setSmallIcon(android.R.drawable.stat_notify_sync)
-            .setPriority(NotificationCompat.PRIORITY_HIGH) 
-            .setCategory(NotificationCompat.CATEGORY_ALARM)
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setDefaults(NotificationCompat.DEFAULT_ALL)
-            .setStyle(
-                NotificationCompat.BigTextStyle()
-                    .setBigContentTitle(title)
-                    .bigText("Glucose test notification\n$title")
-            )
-            .setVibrate(longArrayOf(0, 500, 200, 500))
-            .setOngoing(true)
-            .setAutoCancel(false)
-            .setTimeoutAfter(TEST_ALERT_TIMEOUT_MS)
-            .build()
-            
-        notificationManager.notify(testNotificationId, notification)
+        serviceScope.launch {
+            (repository as? GlucoseRepositoryImpl)?.initialize()
+            val measurement = repository.fetchLatestGlucose().getOrNull()
+            val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            val testNotificationId = (System.currentTimeMillis() % Int.MAX_VALUE).toInt()
+
+            val notification = if (measurement != null) {
+                val title = buildWatchPlainTitle(measurement)
+                val dualValue = GlucoseProcessor.formatDualValue(measurement.value, measurement.calibratedValue)
+                val styledTitle = buildWatchStyledTitle(title, dualValue)
+
+                NotificationCompat.Builder(this@GlucoseForegroundService, ALERT_CHANNEL_ID)
+                    .setContentTitle(styledTitle)
+                    .setContentText(title)
+                    .setSmallIcon(android.R.drawable.stat_notify_sync)
+                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setCategory(NotificationCompat.CATEGORY_ALARM)
+                    .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                    .setDefaults(NotificationCompat.DEFAULT_ALL)
+                    .setStyle(
+                        NotificationCompat.BigTextStyle()
+                            .setBigContentTitle(styledTitle)
+                            .bigText(styledTitle)
+                    )
+                    .setVibrate(longArrayOf(0, 500, 200, 500))
+                    .setOngoing(false)
+                    .setAutoCancel(true)
+                    .setTimeoutAfter(TEST_ALERT_TIMEOUT_MS)
+                    .build()
+            } else {
+                NotificationCompat.Builder(this@GlucoseForegroundService, ALERT_CHANNEL_ID)
+                    .setContentTitle("No glucose data")
+                    .setContentText("No se pudo obtener lectura actual")
+                    .setSmallIcon(android.R.drawable.stat_notify_sync)
+                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setCategory(NotificationCompat.CATEGORY_ALARM)
+                    .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                    .setDefaults(NotificationCompat.DEFAULT_ALL)
+                    .setVibrate(longArrayOf(0, 500, 200, 500))
+                    .setOngoing(false)
+                    .setAutoCancel(true)
+                    .setTimeoutAfter(TEST_ALERT_TIMEOUT_MS)
+                    .build()
+            }
+
+            notificationManager.notify(testNotificationId, notification)
+        }
     }
 
                 private suspend fun maybeSendWatchAlert(measurement: GlucoseMeasurement) {
@@ -194,9 +214,8 @@ class GlucoseForegroundService : Service() {
                 }
 
                 private fun sendWatchAlertNotification(measurement: GlucoseMeasurement) {
-                    val trendStr = GlucoseProcessor.getTrendArrowSymbol(measurement.trendArrow)
                     val dualValue = GlucoseProcessor.formatDualValue(measurement.value, measurement.calibratedValue)
-                    val plainTitle = "$dualValue mg/dL  $trendStr"
+                    val plainTitle = buildWatchPlainTitle(measurement)
                     val styledTitle = buildWatchStyledTitle(plainTitle, dualValue)
                     val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
@@ -219,6 +238,12 @@ class GlucoseForegroundService : Service() {
                         .build()
 
                     notificationManager.notify(watchNotificationId, notification)
+                }
+
+                private fun buildWatchPlainTitle(measurement: GlucoseMeasurement): String {
+                    val trendStr = GlucoseProcessor.getTrendArrowSymbol(measurement.trendArrow)
+                    val dualValue = GlucoseProcessor.formatDualValue(measurement.value, measurement.calibratedValue)
+                    return "$dualValue mg/dL  $trendStr"
                 }
 
                 private fun buildWatchStyledTitle(title: String, dualValue: String): CharSequence {

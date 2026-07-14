@@ -1,4 +1,4 @@
-name: Build and Release Libre2Clock APK
+name: Build and Release
 
 on:
   workflow_dispatch:
