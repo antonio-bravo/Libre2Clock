@@ -20,6 +20,9 @@ import com.tonio.libre2clock.data.repository.GlucoseProcessor
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import java.time.Instant
+import java.time.ZoneId
+import java.time.LocalTime
 
 class GlucoseForegroundService : Service() {
 
@@ -27,9 +30,10 @@ class GlucoseForegroundService : Service() {
     private lateinit var repository: GlucoseRepository
     private lateinit var preferenceManager: PreferenceManager
     private var syncJob: Job? = null
-    private var lastWatchAlertAtMillis: Long = 0L
+    private var lastWatchAlertEpochMinute: Long = -1L
     private var watchAlertsEnabledCached: Boolean = false
     private var watchAlertIntervalMinutesCached: Int = 60
+    private var watchAlertStartMinuteCached: Int = LocalTime.now().minute
     private var lowGlucoseAlarmEnabledCached: Boolean = false
     private var highGlucoseAlarmEnabledCached: Boolean = false
     private var lastLowAlarmAtMillis: Long = 0L
@@ -84,6 +88,12 @@ class GlucoseForegroundService : Service() {
             launch {
                 preferenceManager.watchAlertIntervalMinutes.collect {
                     watchAlertIntervalMinutesCached = it.coerceIn(5, 180)
+                }
+            }
+
+            launch {
+                preferenceManager.watchAlertStartMinute.collect {
+                    watchAlertStartMinuteCached = it.coerceIn(0, 59)
                 }
             }
 
@@ -225,12 +235,19 @@ class GlucoseForegroundService : Service() {
                 private suspend fun maybeSendWatchAlert(measurement: GlucoseMeasurement) {
                     if (!watchAlertsEnabledCached) return
 
-                    val intervalMillis = watchAlertIntervalMinutesCached * 60_000L
-                    val now = System.currentTimeMillis()
+                    val intervalMinutes = watchAlertIntervalMinutesCached.coerceIn(5, 180)
+                    val startMinute = watchAlertStartMinuteCached.coerceIn(0, 59)
+                    val nowMillis = System.currentTimeMillis()
+                    val epochMinute = nowMillis / 60_000L
+                    val nowLocal = Instant.ofEpochMilli(nowMillis).atZone(ZoneId.systemDefault())
+                    val minuteOfDay = (nowLocal.hour * 60) + nowLocal.minute
+                    val offsetFromStart = (minuteOfDay - startMinute).mod(24 * 60)
 
-                    if (now - lastWatchAlertAtMillis < intervalMillis) return
+                    if (offsetFromStart % intervalMinutes != 0) return
+                    if (epochMinute == lastWatchAlertEpochMinute) return
+
                     sendWatchAlertNotification(measurement)
-                    lastWatchAlertAtMillis = now
+                    lastWatchAlertEpochMinute = epochMinute
                 }
 
                 private fun sendWatchAlertNotification(measurement: GlucoseMeasurement) {

@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tonio.libre2clock.data.model.CapillaryMeasurement
 import com.tonio.libre2clock.data.model.GlucoseOffsetRange
+import com.tonio.libre2clock.data.model.GlucoseMeasurement
+import com.tonio.libre2clock.data.repository.GlucoseRepository
 import com.tonio.libre2clock.data.repository.PreferenceManager
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -11,7 +13,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(
-    private val preferenceManager: PreferenceManager
+    private val preferenceManager: PreferenceManager,
+    repository: GlucoseRepository
 ) : ViewModel() {
 
     val glucoseOffset: StateFlow<Int> = preferenceManager.glucoseOffset
@@ -32,11 +35,17 @@ class SettingsViewModel(
     val watchAlertIntervalMinutes: StateFlow<Int> = preferenceManager.watchAlertIntervalMinutes
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 60)
 
+    val watchAlertStartMinute: StateFlow<Int> = preferenceManager.watchAlertStartMinute
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), java.time.LocalTime.now().minute)
+
     val lowGlucoseAlarmEnabled: StateFlow<Boolean> = preferenceManager.lowGlucoseAlarmEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     val highGlucoseAlarmEnabled: StateFlow<Boolean> = preferenceManager.highGlucoseAlarmEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val currentGlucose: StateFlow<GlucoseMeasurement?> = repository.currentGlucose
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     fun updateOffset(offset: Int) {
         viewModelScope.launch {
@@ -76,6 +85,12 @@ class SettingsViewModel(
     fun updateWatchAlertIntervalMinutes(minutes: Int) {
         viewModelScope.launch {
             preferenceManager.saveWatchAlertIntervalMinutes(minutes)
+        }
+    }
+
+    fun updateWatchAlertStartMinute(minute: Int) {
+        viewModelScope.launch {
+            preferenceManager.saveWatchAlertStartMinute(minute)
         }
     }
 

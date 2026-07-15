@@ -12,5 +12,7 @@ data class GlucoseOffsetRange(
 @Serializable
 data class CapillaryMeasurement(
     val value: Int,
-    val timestamp: String
+    val timestamp: String,
+    val sensorValue: Int? = null,
+    val delta: Int? = null
 )

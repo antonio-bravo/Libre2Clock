@@ -34,8 +34,10 @@ fun SettingsScreen(
     val ranges by viewModel.glucoseOffsetRanges.collectAsStateWithLifecycle()
     val autoAdjustEnabled by viewModel.autoAdjustEnabled.collectAsStateWithLifecycle()
     val capillaryReadings by viewModel.capillaryReadings.collectAsStateWithLifecycle()
+    val currentGlucose by viewModel.currentGlucose.collectAsStateWithLifecycle()
     val watchAlertsEnabled by viewModel.watchAlertsEnabled.collectAsStateWithLifecycle()
     val watchAlertIntervalMinutes by viewModel.watchAlertIntervalMinutes.collectAsStateWithLifecycle()
+    val watchAlertStartMinute by viewModel.watchAlertStartMinute.collectAsStateWithLifecycle()
     val lowGlucoseAlarmEnabled by viewModel.lowGlucoseAlarmEnabled.collectAsStateWithLifecycle()
     val highGlucoseAlarmEnabled by viewModel.highGlucoseAlarmEnabled.collectAsStateWithLifecycle()
 
@@ -113,7 +115,10 @@ fun SettingsScreen(
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
                 OutlinedButton(
-                    onClick = { showCapillaryDialog = true },
+                    onClick = {
+                        capillaryDateText = currentDateTimeText()
+                        showCapillaryDialog = true
+                    },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null)
@@ -140,6 +145,19 @@ fun SettingsScreen(
                                 Column {
                                     Text(text = "${reading.value} mg/dL", fontWeight = FontWeight.Bold)
                                     Text(text = reading.timestamp, style = MaterialTheme.typography.bodySmall)
+                                    reading.sensorValue?.let {
+                                        Text(
+                                            text = "Sensor: $it mg/dL",
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                    }
+                                    reading.delta?.let {
+                                        val deltaText = if (it >= 0) "+$it" else "$it"
+                                        Text(
+                                            text = "Delta capilar-sensor: $deltaText mg/dL",
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                    }
                                 }
                                 IconButton(onClick = { viewModel.removeCapillaryReading(reading) }) {
                                     Icon(Icons.Default.Delete, contentDescription = "Delete")
@@ -192,6 +210,27 @@ fun SettingsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     enabled = watchAlertsEnabled
+                )
+                var watchStartMinuteText by remember(watchAlertStartMinute) {
+                    mutableStateOf(watchAlertStartMinute.toString())
+                }
+                OutlinedTextField(
+                    value = watchStartMinuteText,
+                    onValueChange = {
+                        watchStartMinuteText = it
+                        it.toIntOrNull()?.let { minute ->
+                            viewModel.updateWatchAlertStartMinute(minute)
+                        }
+                    },
+                    label = { Text("Start minute (0-59)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    enabled = watchAlertsEnabled
+                )
+                Text(
+                    text = "Notifications are sent when minute matches this start point and then every interval.",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 4.dp)
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -353,19 +392,47 @@ fun SettingsScreen(
                         label = { Text("Date and time (yyyy-MM-dd HH:mm)") },
                         modifier = Modifier.fillMaxWidth()
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    val sensorValue = currentGlucose?.value
+                    OutlinedTextField(
+                        value = sensorValue?.toString() ?: "No sensor reading available",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Current sensor reading") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    val capillaryValue = capillaryValueText.toIntOrNull()
+                    val delta = if (capillaryValue != null && sensorValue != null) {
+                        capillaryValue - sensorValue
+                    } else {
+                        null
+                    }
+                    if (delta != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        val deltaText = if (delta >= 0) "+$delta" else "$delta"
+                        Text(
+                            text = "Delta at save time: $deltaText mg/dL",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
                 }
             },
             confirmButton = {
                 TextButton(onClick = {
                     val value = capillaryValueText.toIntOrNull() ?: return@TextButton
-                    val timestamp = capillaryDateText.ifBlank {
-                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
-                            .withZone(ZoneId.systemDefault())
-                            .format(Instant.now())
-                    }
-                    viewModel.addCapillaryReading(CapillaryMeasurement(value, timestamp))
+                    val sensorValue = currentGlucose?.value
+                    val delta = sensorValue?.let { value - it }
+                    val timestamp = capillaryDateText.ifBlank { currentDateTimeText() }
+                    viewModel.addCapillaryReading(
+                        CapillaryMeasurement(
+                            value = value,
+                            timestamp = timestamp,
+                            sensorValue = sensorValue,
+                            delta = delta
+                        )
+                    )
                     capillaryValueText = ""
-                    capillaryDateText = ""
+                    capillaryDateText = currentDateTimeText()
                     showCapillaryDialog = false
                 }) {
                     Text("Save")
@@ -378,6 +445,12 @@ fun SettingsScreen(
             }
         )
     }
+}
+
+private fun currentDateTimeText(): String {
+    return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+        .withZone(ZoneId.systemDefault())
+        .format(Instant.now())
 }
 
 @Composable

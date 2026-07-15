@@ -94,7 +94,11 @@ object GlucoseProcessor {
         }
 
         val bestMatch = candidates.minByOrNull { it.second }
-        return bestMatch?.let { (reading, _) -> reading.value - rawValue } ?: 0
+        return bestMatch?.let { (reading, _) ->
+            reading.delta
+                ?: reading.sensorValue?.let { reading.value - it }
+                ?: (reading.value - rawValue)
+        } ?: 0
     }
 
     private fun parseTimestampToInstant(timestamp: String): Instant? {

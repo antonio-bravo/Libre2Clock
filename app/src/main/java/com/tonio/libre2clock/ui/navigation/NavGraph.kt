@@ -56,7 +56,7 @@ fun NavGraph(
                 )
             }
             entry<Destination.Settings> {
-                val settingsViewModel: SettingsViewModel = viewModel { SettingsViewModel(preferenceManager) }
+                val settingsViewModel: SettingsViewModel = viewModel { SettingsViewModel(preferenceManager, repository) }
                 SettingsScreen(
                     viewModel = settingsViewModel,
                     onBack = { backStack.removeAt(backStack.size - 1) },
