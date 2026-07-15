@@ -89,7 +89,7 @@ fun SettingsScreen(
                     },
                     label = { Text("Manual Offset (mg/dL)") },
                     modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -482,7 +482,11 @@ fun RangeItem(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Offset: ${if (range.offset >= 0) "+" else ""}${range.offset} mg/dL",
+                    text = "Fixed offset: ${if (range.offset >= 0) "+" else ""}${range.offset} mg/dL",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = "Percentage offset: ${if (range.percentage >= 0) "+" else ""}${range.percentage}%",
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -507,6 +511,7 @@ fun RangeDialog(
     var minText by remember { mutableStateOf(initialRange?.min?.toString() ?: "") }
     var maxText by remember { mutableStateOf(initialRange?.max?.toString() ?: "") }
     var offsetText by remember { mutableStateOf(initialRange?.offset?.toString() ?: "") }
+    var percentageText by remember { mutableStateOf(initialRange?.percentage?.toString() ?: "") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -532,9 +537,17 @@ fun RangeDialog(
                 OutlinedTextField(
                     value = offsetText,
                     onValueChange = { offsetText = it },
-                    label = { Text("Offset") },
+                    label = { Text("Fixed offset (mg/dL)") },
                     modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = percentageText,
+                    onValueChange = { percentageText = it },
+                    label = { Text("Percentage offset (%)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                 )
             }
         },
@@ -544,7 +557,8 @@ fun RangeDialog(
                     val min = minText.toIntOrNull() ?: 0
                     val max = maxText.toIntOrNull()
                     val offset = offsetText.toIntOrNull() ?: 0
-                    onConfirm(GlucoseOffsetRange(min, max, offset))
+                    val percentage = percentageText.toIntOrNull() ?: 0
+                    onConfirm(GlucoseOffsetRange(min, max, offset, percentage))
                 }
             ) {
                 Text("Confirm")

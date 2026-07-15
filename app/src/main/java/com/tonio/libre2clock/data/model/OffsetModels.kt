@@ -6,7 +6,8 @@ import kotlinx.serialization.Serializable
 data class GlucoseOffsetRange(
     val min: Int,
     val max: Int?,
-    val offset: Int
+    val offset: Int,
+    val percentage: Int = 0
 )
 
 @Serializable

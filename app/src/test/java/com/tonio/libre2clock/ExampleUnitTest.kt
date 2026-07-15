@@ -2,6 +2,7 @@ package com.tonio.libre2clock
 
 import com.tonio.libre2clock.data.model.CapillaryMeasurement
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
+import com.tonio.libre2clock.data.model.GlucoseOffsetRange
 import com.tonio.libre2clock.data.repository.GlucoseProcessor
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -37,5 +38,33 @@ class ExampleUnitTest {
         )
 
         assertEquals(110, calibrated.calibratedValue)
+    }
+
+    @Test
+    fun calibratedValueAppliesFixedAndPercentageOffsets() {
+        val calibrated = GlucoseProcessor.getCalibratedValue(
+            rawValue = 100,
+            manualOffset = 0,
+            userRanges = listOf(
+                GlucoseOffsetRange(min = 80, max = 130, offset = 10, percentage = 5)
+            ),
+            autoAdjustEnabled = false
+        )
+
+        assertEquals(115, calibrated)
+    }
+
+    @Test
+    fun calibratedValueSupportsNegativeFixedAndPercentageOffsets() {
+        val calibrated = GlucoseProcessor.getCalibratedValue(
+            rawValue = 100,
+            manualOffset = 0,
+            userRanges = listOf(
+                GlucoseOffsetRange(min = 80, max = 130, offset = -8, percentage = -12)
+            ),
+            autoAdjustEnabled = false
+        )
+
+        assertEquals(80, calibrated)
     }
 }

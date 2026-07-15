@@ -11,6 +11,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import kotlin.math.abs
+import kotlin.math.roundToInt
 
 /**
  * Utility to process glucose data based on specific adjustment logic
@@ -62,14 +63,17 @@ object GlucoseProcessor {
             rawValue >= range.min && (range.max == null || rawValue < range.max)
         }
 
-        val rangeOffset = matchingRange?.offset ?: 0
+        val rangeFixedOffset = matchingRange?.offset ?: 0
+        val rangePercentageOffset = matchingRange?.let { range ->
+            (rawValue * (range.percentage / 100.0)).roundToInt()
+        } ?: 0
         val autoAdjustment = if (autoAdjustEnabled) {
             getAutoAdjustment(rawValue, measurementTimestamp, capillaryReadings)
         } else {
             0
         }
 
-        return rawValue + rangeOffset + manualOffset + autoAdjustment
+        return rawValue + rangeFixedOffset + rangePercentageOffset + manualOffset + autoAdjustment
     }
 
     fun getAutoAdjustment(
