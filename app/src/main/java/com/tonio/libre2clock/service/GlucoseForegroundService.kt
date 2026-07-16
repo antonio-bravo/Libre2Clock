@@ -20,6 +20,7 @@ import com.tonio.libre2clock.data.repository.GlucoseProcessor
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import java.time.Instant
 import java.time.ZoneId
 
@@ -184,7 +185,13 @@ class GlucoseForegroundService : Service() {
     private fun triggerTestNotification() {
         serviceScope.launch {
             (repository as? GlucoseRepositoryImpl)?.initialize()
-            val measurement = repository.fetchLatestGlucose().getOrNull()
+            val fetchResult = repository.fetchLatestGlucose()
+            val measurement = fetchResult.getOrNull()
+                ?: repository.currentGlucose.first()
+                ?: preferenceManager.historicalGlucoseArchive.first().firstOrNull()
+            val fetchErrorMessage = fetchResult.exceptionOrNull()?.message
+                ?.trim()
+                ?.takeIf { it.isNotEmpty() }
             val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             val testNotificationId = (System.currentTimeMillis() % Int.MAX_VALUE).toInt()
 
@@ -214,7 +221,7 @@ class GlucoseForegroundService : Service() {
             } else {
                 NotificationCompat.Builder(this@GlucoseForegroundService, ALERT_CHANNEL_ID)
                     .setContentTitle("No glucose data")
-                    .setContentText("No se pudo obtener lectura actual")
+                    .setContentText(fetchErrorMessage ?: "No se pudo obtener lectura actual")
                     .setSmallIcon(android.R.drawable.stat_notify_sync)
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
                     .setCategory(NotificationCompat.CATEGORY_ALARM)
