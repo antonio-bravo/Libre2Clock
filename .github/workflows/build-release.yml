@@ -88,13 +88,11 @@ jobs:
           fi
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ env.VERSION }}
-          name: Libre2Clock v${{ env.VERSION }}
-          files: |
-            libre2clock-v${{ env.VERSION }}.apk
-            libre2clock-v${{ env.VERSION }}_debug.apk
-          generate_release_notes: true
-          draft: false
-          prerelease: false
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "v${{ env.VERSION }}" \
+            --title "Libre2Clock v${{ env.VERSION }}" \
+            --generate-notes \
+            "libre2clock-v${{ env.VERSION }}.apk" \
+            "libre2clock-v${{ env.VERSION }}_debug.apk"
