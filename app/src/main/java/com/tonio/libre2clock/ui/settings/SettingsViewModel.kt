@@ -36,13 +36,16 @@ class SettingsViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 60)
 
     val watchAlertStartMinute: StateFlow<Int> = preferenceManager.watchAlertStartMinute
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), java.time.LocalTime.now().minute)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     val lowGlucoseAlarmEnabled: StateFlow<Boolean> = preferenceManager.lowGlucoseAlarmEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     val highGlucoseAlarmEnabled: StateFlow<Boolean> = preferenceManager.highGlucoseAlarmEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val lastHistoryBackupRequestAt: StateFlow<Long?> = preferenceManager.lastHistoryBackupRequestAt
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     val currentGlucose: StateFlow<GlucoseMeasurement?> = repository.currentGlucose
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
@@ -78,6 +81,9 @@ class SettingsViewModel(
 
     fun updateWatchAlertsEnabled(enabled: Boolean) {
         viewModelScope.launch {
+            if (enabled) {
+                preferenceManager.initializeWatchAlertStartMinuteIfMissing()
+            }
             preferenceManager.saveWatchAlertsEnabled(enabled)
         }
     }
@@ -103,6 +109,30 @@ class SettingsViewModel(
     fun updateHighGlucoseAlarmEnabled(enabled: Boolean) {
         viewModelScope.launch {
             preferenceManager.saveHighGlucoseAlarmEnabled(enabled)
+        }
+    }
+
+    fun requestHistoryBackupNow() {
+        viewModelScope.launch {
+            preferenceManager.requestHistoryCloudBackupIfDue(force = true)
+        }
+    }
+
+    fun requestPartialHistoryBackup(includeHistoricalGlucose: Boolean, includeCapillaryReadings: Boolean) {
+        viewModelScope.launch {
+            preferenceManager.requestPartialHistoryCloudBackup(
+                includeHistoricalGlucose = includeHistoricalGlucose,
+                includeCapillaryReadings = includeCapillaryReadings
+            )
+        }
+    }
+
+    fun restorePartialHistoryFromBackup(includeHistoricalGlucose: Boolean, includeCapillaryReadings: Boolean) {
+        viewModelScope.launch {
+            preferenceManager.restorePartialHistoryFromBackup(
+                includeHistoricalGlucose = includeHistoricalGlucose,
+                includeCapillaryReadings = includeCapillaryReadings
+            )
         }
     }
 

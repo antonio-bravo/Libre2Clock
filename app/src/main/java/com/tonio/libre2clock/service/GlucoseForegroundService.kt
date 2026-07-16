@@ -22,7 +22,6 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import java.time.Instant
 import java.time.ZoneId
-import java.time.LocalTime
 
 class GlucoseForegroundService : Service() {
 
@@ -33,7 +32,7 @@ class GlucoseForegroundService : Service() {
     private var lastWatchAlertEpochMinute: Long = -1L
     private var watchAlertsEnabledCached: Boolean = false
     private var watchAlertIntervalMinutesCached: Int = 60
-    private var watchAlertStartMinuteCached: Int = LocalTime.now().minute
+    private var watchAlertStartMinuteCached: Int = 0
     private var lowGlucoseAlarmEnabledCached: Boolean = false
     private var highGlucoseAlarmEnabledCached: Boolean = false
     private var lastLowAlarmAtMillis: Long = 0L

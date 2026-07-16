@@ -17,3 +17,9 @@ data class CapillaryMeasurement(
     val sensorValue: Int? = null,
     val delta: Int? = null
 )
+
+@Serializable
+data class HistoryBackupPayload(
+    val historicalGlucoseArchive: List<GlucoseMeasurement> = emptyList(),
+    val capillaryReadings: List<CapillaryMeasurement> = emptyList()
+)

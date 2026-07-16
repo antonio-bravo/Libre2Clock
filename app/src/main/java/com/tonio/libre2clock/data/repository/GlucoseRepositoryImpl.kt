@@ -227,9 +227,22 @@ class GlucoseRepositoryImpl(
         val token = preferenceManager.authToken.first()
         val userId = preferenceManager.userId.first()
         val archivedHistory = preferenceManager.historicalGlucoseArchive.first()
+        val backupPayload = preferenceManager.loadHistoryBackupPayload()
         if (archivedHistory.isNotEmpty()) {
             _historicalGlucose.value = mergeAndPruneHistory(emptyList(), archivedHistory)
+        } else if (backupPayload?.historicalGlucoseArchive?.isNotEmpty() == true) {
+            val restoredHistory = mergeAndPruneHistory(emptyList(), backupPayload.historicalGlucoseArchive)
+            _historicalGlucose.value = restoredHistory
+            preferenceManager.saveHistoricalGlucoseArchive(restoredHistory)
         }
+
+        val capillaryReadings = preferenceManager.capillaryReadings.first()
+        if (capillaryReadings.isEmpty() && backupPayload?.capillaryReadings?.isNotEmpty() == true) {
+            preferenceManager.saveCapillaryReadings(backupPayload.capillaryReadings)
+        }
+
+        preferenceManager.requestHistoryCloudBackupIfDue()
+
         if (token != null && userId != null) {
             LibreService.setAuth(token, userId)
         }

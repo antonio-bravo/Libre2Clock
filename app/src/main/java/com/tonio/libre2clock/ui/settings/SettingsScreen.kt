@@ -40,6 +40,7 @@ fun SettingsScreen(
     val watchAlertStartMinute by viewModel.watchAlertStartMinute.collectAsStateWithLifecycle()
     val lowGlucoseAlarmEnabled by viewModel.lowGlucoseAlarmEnabled.collectAsStateWithLifecycle()
     val highGlucoseAlarmEnabled by viewModel.highGlucoseAlarmEnabled.collectAsStateWithLifecycle()
+    val lastHistoryBackupRequestAt by viewModel.lastHistoryBackupRequestAt.collectAsStateWithLifecycle()
 
     var showAddRangeDialog by remember { mutableStateOf(false) }
     var editingRange by remember { mutableStateOf<GlucoseOffsetRange?>(null) }
@@ -281,6 +282,92 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Text(
+                    text = "History Backup",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = "Libre2Clock keeps the historical glucose archive locally and asks Android to back it up to your Google account. Restore happens automatically when Android restores app data.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+                Text(
+                    text = lastHistoryBackupRequestAt?.let {
+                        "Last backup request: ${formatBackupTimestamp(it)}"
+                    } ?: "No backup request has been sent yet.",
+                    style = MaterialTheme.typography.bodySmall
+                )
+                OutlinedButton(
+                    onClick = viewModel::requestHistoryBackupNow,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp)
+                ) {
+                    Text("Request Google Backup Now")
+                }
+                Text(
+                    text = "Partial backup/restore works over the same Google backup payload file.",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+                OutlinedButton(
+                    onClick = {
+                        viewModel.requestPartialHistoryBackup(
+                            includeHistoricalGlucose = true,
+                            includeCapillaryReadings = false
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                ) {
+                    Text("Backup only glucose history")
+                }
+                OutlinedButton(
+                    onClick = {
+                        viewModel.requestPartialHistoryBackup(
+                            includeHistoricalGlucose = false,
+                            includeCapillaryReadings = true
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                ) {
+                    Text("Backup only capillary readings")
+                }
+                OutlinedButton(
+                    onClick = {
+                        viewModel.restorePartialHistoryFromBackup(
+                            includeHistoricalGlucose = true,
+                            includeCapillaryReadings = false
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                ) {
+                    Text("Restore only glucose history (merge)")
+                }
+                OutlinedButton(
+                    onClick = {
+                        viewModel.restorePartialHistoryFromBackup(
+                            includeHistoricalGlucose = false,
+                            includeCapillaryReadings = true
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                ) {
+                    Text("Restore only capillary readings (merge)")
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Text(
                     text = "Range-Based Offsets",
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.primary
@@ -291,7 +378,6 @@ fun SettingsScreen(
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
             }
-
             if (ranges.isEmpty()) {
                 item {
                     Text(
@@ -445,6 +531,12 @@ fun SettingsScreen(
             }
         )
     }
+}
+
+private fun formatBackupTimestamp(timestamp: Long): String {
+    return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+        .withZone(ZoneId.systemDefault())
+        .format(Instant.ofEpochMilli(timestamp))
 }
 
 private fun currentDateTimeText(): String {
