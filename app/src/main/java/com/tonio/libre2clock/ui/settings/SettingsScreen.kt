@@ -1,5 +1,7 @@
 package com.tonio.libre2clock.ui.settings
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -41,12 +43,25 @@ fun SettingsScreen(
     val lowGlucoseAlarmEnabled by viewModel.lowGlucoseAlarmEnabled.collectAsStateWithLifecycle()
     val highGlucoseAlarmEnabled by viewModel.highGlucoseAlarmEnabled.collectAsStateWithLifecycle()
     val lastHistoryBackupRequestAt by viewModel.lastHistoryBackupRequestAt.collectAsStateWithLifecycle()
+    val backupStatusMessage by viewModel.backupStatusMessage.collectAsStateWithLifecycle()
 
     var showAddRangeDialog by remember { mutableStateOf(false) }
     var editingRange by remember { mutableStateOf<GlucoseOffsetRange?>(null) }
     var showCapillaryDialog by remember { mutableStateOf(false) }
     var capillaryValueText by remember { mutableStateOf("") }
     var capillaryDateText by remember { mutableStateOf("") }
+    val localBackupRestoreLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let(viewModel::restoreLocalBackupFromUri)
+    }
+
+    LaunchedEffect(backupStatusMessage) {
+        if (backupStatusMessage != null) {
+            kotlinx.coroutines.delay(4000)
+            viewModel.clearBackupStatusMessage()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -310,6 +325,32 @@ fun SettingsScreen(
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 8.dp)
                 )
+                OutlinedButton(
+                    onClick = viewModel::exportLocalBackupToDownloads,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                ) {
+                    Text("Export local backup to Downloads/Libre2Clock")
+                }
+                OutlinedButton(
+                    onClick = {
+                        localBackupRestoreLauncher.launch(arrayOf("application/json"))
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                ) {
+                    Text("Restore local backup from file")
+                }
+                backupStatusMessage?.let { message ->
+                    Text(
+                        text = message,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
                 OutlinedButton(
                     onClick = {
                         viewModel.requestPartialHistoryBackup(

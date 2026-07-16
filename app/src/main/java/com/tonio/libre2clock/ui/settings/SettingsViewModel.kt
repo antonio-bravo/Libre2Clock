@@ -1,5 +1,6 @@
 package com.tonio.libre2clock.ui.settings
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tonio.libre2clock.data.model.CapillaryMeasurement
@@ -7,8 +8,10 @@ import com.tonio.libre2clock.data.model.GlucoseOffsetRange
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.repository.GlucoseRepository
 import com.tonio.libre2clock.data.repository.PreferenceManager
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -16,6 +19,9 @@ class SettingsViewModel(
     private val preferenceManager: PreferenceManager,
     repository: GlucoseRepository
 ) : ViewModel() {
+
+    private val _backupStatusMessage = MutableStateFlow<String?>(null)
+    val backupStatusMessage = _backupStatusMessage.asStateFlow()
 
     val glucoseOffset: StateFlow<Int> = preferenceManager.glucoseOffset
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
@@ -114,26 +120,65 @@ class SettingsViewModel(
 
     fun requestHistoryBackupNow() {
         viewModelScope.launch {
-            preferenceManager.requestHistoryCloudBackupIfDue(force = true)
+            val requested = preferenceManager.requestHistoryCloudBackupIfDue(force = true)
+            _backupStatusMessage.value = if (requested) {
+                "Google backup requested."
+            } else {
+                "No Google backup request was sent."
+            }
         }
     }
 
     fun requestPartialHistoryBackup(includeHistoricalGlucose: Boolean, includeCapillaryReadings: Boolean) {
         viewModelScope.launch {
-            preferenceManager.requestPartialHistoryCloudBackup(
+            val requested = preferenceManager.requestPartialHistoryCloudBackup(
                 includeHistoricalGlucose = includeHistoricalGlucose,
                 includeCapillaryReadings = includeCapillaryReadings
             )
+            _backupStatusMessage.value = if (requested) {
+                "Partial Google backup requested."
+            } else {
+                "Partial Google backup request failed."
+            }
         }
     }
 
     fun restorePartialHistoryFromBackup(includeHistoricalGlucose: Boolean, includeCapillaryReadings: Boolean) {
         viewModelScope.launch {
-            preferenceManager.restorePartialHistoryFromBackup(
+            val restored = preferenceManager.restorePartialHistoryFromBackup(
                 includeHistoricalGlucose = includeHistoricalGlucose,
                 includeCapillaryReadings = includeCapillaryReadings
             )
+            _backupStatusMessage.value = if (restored) {
+                "Partial restore completed."
+            } else {
+                "Partial restore failed or no backup data was found."
+            }
         }
+    }
+
+    fun exportLocalBackupToDownloads() {
+        viewModelScope.launch {
+            val result = preferenceManager.exportHistoryBackupToDownloads()
+            _backupStatusMessage.value = result.fold(
+                onSuccess = { path -> "Local backup exported to $path" },
+                onFailure = { error -> error.message ?: "Local backup export failed." }
+            )
+        }
+    }
+
+    fun restoreLocalBackupFromUri(uri: Uri) {
+        viewModelScope.launch {
+            val result = preferenceManager.restoreHistoryBackupFromUri(uri)
+            _backupStatusMessage.value = result.fold(
+                onSuccess = { "Local backup restored and merged." },
+                onFailure = { error -> error.message ?: "Local backup restore failed." }
+            )
+        }
+    }
+
+    fun clearBackupStatusMessage() {
+        _backupStatusMessage.value = null
     }
 
     fun addRange(range: GlucoseOffsetRange) {

@@ -1,7 +1,12 @@
 package com.tonio.libre2clock.data.repository
 
 import android.app.backup.BackupManager
+import android.content.ContentValues
 import android.content.Context
+import android.net.Uri
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -20,6 +25,7 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
+import java.io.IOException
 import java.time.LocalTime
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
@@ -30,6 +36,8 @@ class PreferenceManager(private val context: Context) {
         private const val HISTORY_BACKUP_REQUEST_INTERVAL_MS = 24L * 60L * 60L * 1000L
         private const val HISTORY_BACKUP_DIR = "backup"
         private const val HISTORY_BACKUP_FILE = "history_backup.json"
+        private const val LOCAL_DOWNLOADS_BACKUP_FILE = "libre2clock_history_backup.json"
+        private const val LOCAL_DOWNLOADS_BACKUP_SUBDIR = "Libre2Clock"
     }
 
     private val TOKEN_KEY = stringPreferencesKey("auth_token")
@@ -271,6 +279,46 @@ class PreferenceManager(private val context: Context) {
         return requestHistoryCloudBackupIfDue(force = true)
     }
 
+    suspend fun exportHistoryBackupToDownloads(): Result<String> {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            return Result.failure(
+                IllegalStateException("Local export to Downloads requires Android 10 or newer.")
+            )
+        }
+
+        val payload = buildCurrentHistoryBackupPayload()
+        val jsonPayload = Json.encodeToString(payload)
+        val resolver = context.contentResolver
+        val relativePath = Environment.DIRECTORY_DOWNLOADS + "/" + LOCAL_DOWNLOADS_BACKUP_SUBDIR
+
+        deleteExistingDownloadsBackup(relativePath)
+
+        val values = ContentValues().apply {
+            put(MediaStore.Downloads.DISPLAY_NAME, LOCAL_DOWNLOADS_BACKUP_FILE)
+            put(MediaStore.Downloads.MIME_TYPE, "application/json")
+            put(MediaStore.Downloads.RELATIVE_PATH, relativePath)
+            put(MediaStore.Downloads.IS_PENDING, 1)
+        }
+
+        val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+            ?: return Result.failure(IOException("Could not create backup file in Downloads."))
+
+        return try {
+            resolver.openOutputStream(uri, "w")?.use { outputStream ->
+                outputStream.write(jsonPayload.toByteArray())
+            } ?: throw IOException("Could not open backup file output stream.")
+
+            val finalizeValues = ContentValues().apply {
+                put(MediaStore.Downloads.IS_PENDING, 0)
+            }
+            resolver.update(uri, finalizeValues, null, null)
+            Result.success("Downloads/$LOCAL_DOWNLOADS_BACKUP_SUBDIR/$LOCAL_DOWNLOADS_BACKUP_FILE")
+        } catch (e: Exception) {
+            resolver.delete(uri, null, null)
+            Result.failure(e)
+        }
+    }
+
     suspend fun restorePartialHistoryFromBackup(
         includeHistoricalGlucose: Boolean,
         includeCapillaryReadings: Boolean
@@ -305,6 +353,38 @@ class PreferenceManager(private val context: Context) {
         return true
     }
 
+    suspend fun restoreHistoryBackupFromUri(uri: Uri): Result<HistoryBackupPayload> {
+        return try {
+            val payloadText = context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { reader ->
+                reader.readText()
+            } ?: throw IOException("Could not read selected backup file.")
+
+            val payload = Json.decodeFromString<HistoryBackupPayload>(payloadText)
+            val mergedHistorical = mergeHistoricalMeasurements(
+                historicalGlucoseArchive.first(),
+                payload.historicalGlucoseArchive
+            )
+            val mergedCapillary = mergeCapillaryMeasurements(
+                capillaryReadings.first(),
+                payload.capillaryReadings
+            )
+
+            context.dataStore.edit { preferences ->
+                preferences[HISTORICAL_GLUCOSE_KEY] = Json.encodeToString(mergedHistorical)
+                preferences[CAPILLARY_READINGS_KEY] = Json.encodeToString(mergedCapillary)
+            }
+            saveHistoryBackupPayload(
+                HistoryBackupPayload(
+                    historicalGlucoseArchive = mergedHistorical,
+                    capillaryReadings = mergedCapillary
+                )
+            )
+            Result.success(payload)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun clearAuth() {
         context.dataStore.edit { preferences ->
             preferences.remove(TOKEN_KEY)
@@ -322,6 +402,40 @@ class PreferenceManager(private val context: Context) {
 
     private fun saveHistoryBackupPayload(payload: HistoryBackupPayload) {
         historyBackupFile().writeText(Json.encodeToString(payload))
+    }
+
+    private suspend fun buildCurrentHistoryBackupPayload(): HistoryBackupPayload {
+        return HistoryBackupPayload(
+            historicalGlucoseArchive = historicalGlucoseArchive.first(),
+            capillaryReadings = capillaryReadings.first()
+        )
+    }
+
+    private fun deleteExistingDownloadsBackup(relativePath: String) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return
+
+        val resolver = context.contentResolver
+        val selection = "${MediaStore.Downloads.DISPLAY_NAME} = ? AND ${MediaStore.Downloads.RELATIVE_PATH} = ?"
+        val selectionArgs = arrayOf(LOCAL_DOWNLOADS_BACKUP_FILE, relativePath)
+        val projection = arrayOf(MediaStore.Downloads._ID)
+
+        resolver.query(
+            MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+            projection,
+            selection,
+            selectionArgs,
+            null
+        )?.use { cursor ->
+            val idIndex = cursor.getColumnIndexOrThrow(MediaStore.Downloads._ID)
+            while (cursor.moveToNext()) {
+                val id = cursor.getLong(idIndex)
+                val existingUri = android.content.ContentUris.withAppendedId(
+                    MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                    id
+                )
+                resolver.delete(existingUri, null, null)
+            }
+        }
     }
 
     private fun mergeHistoricalMeasurements(
