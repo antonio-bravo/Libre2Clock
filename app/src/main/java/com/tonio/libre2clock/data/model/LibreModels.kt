@@ -2,6 +2,7 @@ package com.tonio.libre2clock.data.model
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import kotlinx.serialization.Serializable
 
 @JsonClass(generateAdapter = true)
 data class LoginRequest(
@@ -79,6 +80,7 @@ data class SensorStatus(
 )
 
 @JsonClass(generateAdapter = true)
+@Serializable
 data class GlucoseMeasurement(
     @Json(name = "FactoryTimestamp") val factoryTimestamp: String,
     @Json(name = "Timestamp") val timestamp: String,

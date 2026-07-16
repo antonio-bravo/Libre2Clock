@@ -10,5 +10,6 @@ interface GlucoseRepository {
     val sensorStatus: Flow<SensorStatus?>
     suspend fun login(email: String, password: String): Result<Unit>
     suspend fun fetchLatestGlucose(): Result<GlucoseMeasurement>
+    suspend fun refreshHistoricalGlucoseWindow(): Result<GlucoseMeasurement>
     fun enableDemoMode()
 }

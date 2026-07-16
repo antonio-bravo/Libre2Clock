@@ -43,6 +43,7 @@ fun DashboardScreen(
     val currentGlucose by viewModel.currentGlucose.collectAsStateWithLifecycle()
     val sensorStatus by viewModel.sensorStatus.collectAsStateWithLifecycle()
     val historicalData by viewModel.historicalData.collectAsStateWithLifecycle()
+    val isHistoryRefreshing by viewModel.isHistoryRefreshing.collectAsStateWithLifecycle()
     val dashboardMetrics = remember(historicalData) { calculateDashboardMetrics(historicalData) }
 
     Scaffold(
@@ -72,7 +73,11 @@ fun DashboardScreen(
             Spacer(modifier = Modifier.height(16.dp))
             SensorHealthCard(sensorStatus)
             Spacer(modifier = Modifier.height(16.dp))
-            DashboardSlidesCard(dashboardMetrics)
+            DashboardSlidesCard(
+                metrics = dashboardMetrics,
+                isRefreshing = isHistoryRefreshing,
+                onRefresh = viewModel::refreshHistoryWindow
+            )
             Spacer(modifier = Modifier.height(12.dp))
             InteractiveTrendGraph(
                 measurements = historicalData,
@@ -156,7 +161,7 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
                 verticalAlignment = Alignment.Top
             ) {
                 CornerMetric(
-                    title = "Estimated HbA1c",
+                    title = "Estimated HbA1c (90d)",
                     primary = metrics.estimatedA1c,
                     secondary = "",
                     modifier = Modifier.weight(1f)
@@ -245,7 +250,11 @@ private fun CornerMetric(
 }
 
 @Composable
-private fun DashboardSlidesCard(metrics: DashboardMetrics) {
+private fun DashboardSlidesCard(
+    metrics: DashboardMetrics,
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit
+) {
     val pagerState = rememberPagerState(pageCount = { 3 })
     val pageTitle = when (pagerState.currentPage) {
         0 -> "Avg Glucose"
@@ -273,17 +282,33 @@ private fun DashboardSlidesCard(metrics: DashboardMetrics) {
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    repeat(3) { index ->
-                        val active = index == pagerState.currentPage
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .background(
-                                    color = if (active) Color(0xFF0B57D0) else Color(0xFFD6DCE5),
-                                    shape = RoundedCornerShape(50)
-                                )
-                        )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        repeat(3) { index ->
+                            val active = index == pagerState.currentPage
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .background(
+                                        color = if (active) Color(0xFF0B57D0) else Color(0xFFD6DCE5),
+                                        shape = RoundedCornerShape(50)
+                                    )
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(4.dp))
+                    IconButton(onClick = onRefresh, enabled = !isRefreshing) {
+                        if (isRefreshing) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Refresh historical data"
+                            )
+                        }
                     }
                 }
             }
@@ -441,6 +466,7 @@ private fun calculateDashboardMetrics(measurements: List<GlucoseMeasurement>): D
     val startOfYesterday = today.minusDays(1).atStartOfDay(zone).toInstant()
     val startOfWeekWindow = now.minusSeconds(7L * 24L * 60L * 60L)
     val startOfMonthWindow = now.minusSeconds(30L * 24L * 60L * 60L)
+    val startOfA1cWindow = now.minusSeconds(90L * 24L * 60L * 60L)
 
     val dated = measurements.mapNotNull { m ->
         parseMeasurementInstant(m)?.let { instant -> instant to m }
@@ -461,7 +487,8 @@ private fun calculateDashboardMetrics(measurements: List<GlucoseMeasurement>): D
         !instant.isBefore(startOfMonthWindow) && mealSlotOf(instant, zone) == MealSlot.DINNER
     }.map { it.second }
 
-    val allForA1c = if (monthItems.isNotEmpty()) monthItems else measurements
+    val a1cWindowItems = dated.filter { (instant, _) -> !instant.isBefore(startOfA1cWindow) }.map { it.second }
+    val allForA1c = if (a1cWindowItems.isNotEmpty()) a1cWindowItems else measurements
     val avgForA1c = if (allForA1c.isNotEmpty()) {
         allForA1c.map { it.calibratedValue }.average()
     } else {

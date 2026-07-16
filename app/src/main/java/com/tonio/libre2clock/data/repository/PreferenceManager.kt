@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.tonio.libre2clock.data.model.CapillaryMeasurement
+import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.GlucoseOffsetRange
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -30,6 +31,7 @@ class PreferenceManager(private val context: Context) {
     private val WATCH_ALERT_START_MINUTE_KEY = androidx.datastore.preferences.core.intPreferencesKey("watch_alert_start_minute")
     private val LOW_GLUCOSE_ALARM_ENABLED_KEY = booleanPreferencesKey("low_glucose_alarm_enabled")
     private val HIGH_GLUCOSE_ALARM_ENABLED_KEY = booleanPreferencesKey("high_glucose_alarm_enabled")
+    private val HISTORICAL_GLUCOSE_KEY = stringPreferencesKey("historical_glucose_archive")
 
     val authToken: Flow<String?> = context.dataStore.data.map { preferences ->
         preferences[TOKEN_KEY]
@@ -91,6 +93,19 @@ class PreferenceManager(private val context: Context) {
 
     val highGlucoseAlarmEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[HIGH_GLUCOSE_ALARM_ENABLED_KEY] ?: false
+    }
+
+    val historicalGlucoseArchive: Flow<List<GlucoseMeasurement>> = context.dataStore.data.map { preferences ->
+        val json = preferences[HISTORICAL_GLUCOSE_KEY]
+        if (json != null) {
+            try {
+                Json.decodeFromString<List<GlucoseMeasurement>>(json)
+            } catch (e: Exception) {
+                emptyList()
+            }
+        } else {
+            emptyList()
+        }
     }
 
     private fun getDefaultRanges() = listOf(
@@ -159,6 +174,12 @@ class PreferenceManager(private val context: Context) {
     suspend fun saveHighGlucoseAlarmEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[HIGH_GLUCOSE_ALARM_ENABLED_KEY] = enabled
+        }
+    }
+
+    suspend fun saveHistoricalGlucoseArchive(measurements: List<GlucoseMeasurement>) {
+        context.dataStore.edit { preferences ->
+            preferences[HISTORICAL_GLUCOSE_KEY] = Json.encodeToString(measurements)
         }
     }
 

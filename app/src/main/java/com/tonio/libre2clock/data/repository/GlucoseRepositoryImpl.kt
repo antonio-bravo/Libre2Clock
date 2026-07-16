@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import java.time.Instant
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -16,6 +18,10 @@ import java.util.*
 class GlucoseRepositoryImpl(
     private val preferenceManager: PreferenceManager
 ) : GlucoseRepository {
+
+    companion object {
+        private const val HISTORY_RETENTION_DAYS = 90L
+    }
 
     private val _currentGlucose = MutableStateFlow<GlucoseMeasurement?>(null)
     override val currentGlucose: Flow<GlucoseMeasurement?> = _currentGlucose.asStateFlow()
@@ -61,6 +67,14 @@ class GlucoseRepositoryImpl(
     }
 
     override suspend fun fetchLatestGlucose(): Result<GlucoseMeasurement> {
+        return fetchLatestGlucoseInternal(persistArchive = false)
+    }
+
+    override suspend fun refreshHistoricalGlucoseWindow(): Result<GlucoseMeasurement> {
+        return fetchLatestGlucoseInternal(persistArchive = true)
+    }
+
+    private suspend fun fetchLatestGlucoseInternal(persistArchive: Boolean): Result<GlucoseMeasurement> {
         if (isDemoMode) {
             val now = Instant.now()
             val formatter = DateTimeFormatter.ofPattern("HH:mm")
@@ -115,9 +129,14 @@ class GlucoseRepositoryImpl(
             _currentGlucose.value = processed
             
             // Add new reading to history
-            val currentHistory = _historicalGlucose.value.toMutableList()
-            currentHistory.add(processed)
-            _historicalGlucose.value = currentHistory.takeLast(100)
+            val mergedHistory = mergeAndPruneHistory(
+                existing = _historicalGlucose.value,
+                incoming = listOf(processed)
+            )
+            _historicalGlucose.value = mergedHistory
+            if (persistArchive) {
+                preferenceManager.saveHistoricalGlucoseArchive(mergedHistory)
+            }
             
             return Result.success(processed)
         }
@@ -166,8 +185,6 @@ class GlucoseRepositoryImpl(
                     capillaryReadings
                 )
             } ?: emptyList()
-            
-            _historicalGlucose.value = historicalMeasurements
 
             if (measurement != null) {
                 val processedMeasurement = GlucoseProcessor.process(
@@ -178,8 +195,27 @@ class GlucoseRepositoryImpl(
                     capillaryReadings
                 )
                 _currentGlucose.value = processedMeasurement
+
+                val mergedHistory = mergeAndPruneHistory(
+                    existing = _historicalGlucose.value,
+                    incoming = historicalMeasurements + processedMeasurement
+                )
+                _historicalGlucose.value = mergedHistory
+                if (persistArchive) {
+                    preferenceManager.saveHistoricalGlucoseArchive(mergedHistory)
+                }
+
                 Result.success(processedMeasurement)
             } else {
+                val mergedHistory = mergeAndPruneHistory(
+                    existing = _historicalGlucose.value,
+                    incoming = historicalMeasurements
+                )
+                _historicalGlucose.value = mergedHistory
+                if (persistArchive) {
+                    preferenceManager.saveHistoricalGlucoseArchive(mergedHistory)
+                }
+
                 Result.failure(Exception("No glucose measurement found"))
             }
         } catch (e: Exception) {
@@ -190,8 +226,70 @@ class GlucoseRepositoryImpl(
     suspend fun initialize() {
         val token = preferenceManager.authToken.first()
         val userId = preferenceManager.userId.first()
+        val archivedHistory = preferenceManager.historicalGlucoseArchive.first()
+        if (archivedHistory.isNotEmpty()) {
+            _historicalGlucose.value = mergeAndPruneHistory(emptyList(), archivedHistory)
+        }
         if (token != null && userId != null) {
             LibreService.setAuth(token, userId)
+        }
+    }
+
+    private fun mergeAndPruneHistory(
+        existing: List<GlucoseMeasurement>,
+        incoming: List<GlucoseMeasurement>
+    ): List<GlucoseMeasurement> {
+        if (existing.isEmpty() && incoming.isEmpty()) return emptyList()
+
+        val mergedByKey = LinkedHashMap<String, GlucoseMeasurement>()
+        (existing + incoming).forEach { measurement ->
+            measurementKey(measurement)?.let { key ->
+                mergedByKey[key] = measurement
+            }
+        }
+
+        val cutoff = Instant.now().minusSeconds(HISTORY_RETENTION_DAYS * 24L * 60L * 60L)
+        return mergedByKey.values
+            .mapNotNull { measurement ->
+                parseMeasurementInstant(measurement)?.let { instant -> instant to measurement }
+            }
+            .filter { (instant, _) -> !instant.isBefore(cutoff) }
+            .sortedBy { (instant, _) -> instant }
+            .map { it.second }
+    }
+
+    private fun measurementKey(measurement: GlucoseMeasurement): String? {
+        val instant = parseMeasurementInstant(measurement) ?: return null
+        return "${instant.toEpochMilli()}-${measurement.value}-${measurement.calibratedValue}-${measurement.type}"
+    }
+
+    private fun parseMeasurementInstant(measurement: GlucoseMeasurement): Instant? {
+        return parseFlexibleInstant(measurement.factoryTimestamp)
+            ?: parseFlexibleInstant(measurement.timestamp)
+    }
+
+    private fun parseFlexibleInstant(timestamp: String): Instant? {
+        return try {
+            Instant.parse(timestamp)
+        } catch (_: Exception) {
+            try {
+                LocalDateTime.parse(timestamp).atZone(ZoneId.systemDefault()).toInstant()
+            } catch (_: Exception) {
+                try {
+                    LocalDateTime.parse(timestamp, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
+                        .atZone(ZoneId.systemDefault())
+                        .toInstant()
+                } catch (_: Exception) {
+                    try {
+                        LocalTime.parse(timestamp, DateTimeFormatter.ofPattern("HH:mm"))
+                            .atDate(java.time.LocalDate.now())
+                            .atZone(ZoneId.systemDefault())
+                            .toInstant()
+                    } catch (_: Exception) {
+                        null
+                    }
+                }
+            }
         }
     }
 }
