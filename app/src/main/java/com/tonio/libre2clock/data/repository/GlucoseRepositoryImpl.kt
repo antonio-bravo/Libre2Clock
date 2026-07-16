@@ -33,7 +33,7 @@ class GlucoseRepositoryImpl(
         isDemoMode = true
         _sensorStatus.value = SensorStatus(
             daysRemaining = 12,
-            expiryDate = "Expires: Nov 15, 2025 10:30",
+            expiryDate = "Expires: Sat, Nov 15, 2025 10:30",
             serialNumber = "DEMO-12345"
         )
     }
@@ -141,7 +141,7 @@ class GlucoseRepositoryImpl(
                 val remainingSeconds = expiryTime - now
                 val daysRemaining = (remainingSeconds / (24 * 60 * 60)).toInt()
                 
-                val formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm")
+                val formatter = DateTimeFormatter.ofPattern("EEE, MMM dd, yyyy HH:mm", Locale.getDefault())
                     .withZone(ZoneId.systemDefault())
                 val expiryDateStr = formatter.format(Instant.ofEpochSecond(expiryTime))
                 
