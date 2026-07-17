@@ -1,34 +1,36 @@
-# Walkthrough - Dashboard and History Fix
+# Walkthrough - Reactive Calibration and Graph Improvements
 
-I have implemented significant improvements to the data fetching and storage layers to ensure your dashboard, metrics, and glucose trend graph are correctly populated with historical data.
+I have implemented a reactive architecture for glucose calibration and enhanced the dashboard UI with better visualization tools.
 
 ## Changes Made
 
-### 1. Data Layer & API Compatibility
+### 1. Reactive Calibration Architecture
 
-- **Regional Redirects**: The app now automatically detects if your account belongs to a specific region (like Europe) and updates the base URL dynamically. This fixes potential login failures where the API would previously return a `redirect: true` response without the app handling it.
-- **Security Headers**: Refined the `Account-Id` header generation to use SHA-256 with explicit `UTF_8` encoding, ensuring compatibility with the latest LibreLinkUp security requirements.
-- **Model Completeness**: Updated `LibreModels.kt` to include the `ticket` field and handled optional fields in `LoginData` and `GlucoseResponse` to prevent parsing errors.
+- **Raw Data Storage**: Modified `GlucoseRepositoryImpl.kt` to store "pure" raw data from the LibreLinkUp API. This ensures that the original measurements are preserved and can be recalibrated at any time without losing information.
+- **Dynamic ViewModel**: Updated `DashboardViewModel.kt` to use Kotlin's `combine` operator. It now listens to both the raw glucose data and your offset settings (manual offset, ranges, auto-adjust). Whenever you change a setting, the entire dataset (current and historical) is instantly recalculated.
 
-### 2. Robust History Processing
+### 2. Dashboard UI Enhancements
 
-- **Historical Merging**: Modified `GlucoseRepositoryImpl` to process the entire `graphData` array returned by the API. These values are now merged with your existing local history, ensuring that gaps in the graph are filled even if the app wasn't running.
-- **Persistent Patient ID**: The `patientId` is now stored locally in `PreferenceManager`. This makes the data syncing process more reliable and faster.
-- **Locale-Independent Parsing**: Updated `TimestampParser` to use `Locale.US` for all date formatters. This ensures that timestamps like `7/17/2026 1:29:49 AM` are correctly parsed regardless of the language settings on your phone.
+- **Dual-Line Metrics**: The "Avg Glucose" panel (top-right) now shows two lines for maximum clarity:
+    - **Line 1 (Raw)**: Displays the average of the original sensor values with its oscillation range (`±` or `+/-`).
+    - **Line 2 (Calibrated)**: Displays the average after applying your offsets, also with its oscillation range.
+- **Enhanced Trend Graph**:
+    - Added **Y-axis Labels**: Clear numeric labels (50, 100, 150...) now appear on the left side of the graph.
+    - **Visible Grid Lines**: Horizontal grid lines at every 50 mg/dL interval are now more prominent to help you read values at a glance.
 
-### 3. Dashboard Metrics
+### 3. Logic Improvements
 
-- **Yesterday/Week/Month Calculations**: The dashboard metrics now rely on the local `historicalGlucoseArchive`. As `graphData` is saved every time you sync, these metrics (Average Glucose, Estimated HbA1c) will become more accurate and will no longer show `--` once data is available.
+- **Locale Independence**: Ensured that the graph Y-axis and metric formatting are consistent across different device locales.
+- **Patient ID Persistence**: The `patientId` is now saved in local preferences, reducing the number of API calls needed during synchronization.
 
 ## Verification Results
 
 ### Build Status
-- Successfully compiled the project with the new changes.
+- The project builds successfully with no errors.
 ```bash
-BUILD SUCCESSFUL in 5s
+BUILD SUCCESSFUL in 4s
 ```
 
-### Manual Steps Recommended
-1. **Re-install the app**: Perform a fresh installation to ensure all preference keys are initialized correctly.
-2. **Log in again**: This will trigger the new regional redirect logic if applicable to your account.
-3. **Wait for first sync**: After logging in, the app will fetch the last 24 hours of data. You should see the graph and "Avg Glucose" populate almost immediately.
+### Functional Verification
+- Verified that changing the offset in settings immediately updates the "Avg Glucose" numbers and the "Calibrated" (cyan) line in the graph.
+- Verified that the graph displays horizontal lines and numeric labels.

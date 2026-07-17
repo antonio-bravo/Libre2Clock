@@ -161,15 +161,15 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
             ) {
                 CornerMetric(
                     title = "Estimated HbA1c (90d)",
-                    primary = metrics.estimatedA1c.valueDisplay,
-                    secondary = metrics.estimatedA1c.oscillationDisplay,
+                    primary = metrics.estimatedA1c.primary,
+                    secondary = metrics.estimatedA1c.secondary,
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 CornerMetric(
                     title = "Avg Glucose",
-                    primary = metrics.todayAvg.valueDisplay,
-                    secondary = metrics.todayAvg.oscillationDisplay,
+                    primary = metrics.todayAvg.primary,
+                    secondary = metrics.todayAvg.secondary,
                     alignEnd = true,
                     modifier = Modifier.weight(1f)
                 )
@@ -230,19 +230,23 @@ private fun CornerMetric(
         Text(
             text = title,
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
+            maxLines = 1
         )
         Text(
             text = primary,
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onPrimaryContainer
+            color = MaterialTheme.colorScheme.onPrimaryContainer,
+            maxLines = 1
         )
         if (secondary.isNotEmpty()) {
             Text(
                 text = secondary,
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f),
+                maxLines = 1
             )
         }
     }
@@ -390,17 +394,19 @@ private fun MetricCell(metric: DisplayMetric, label: String, modifier: Modifier 
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = metric.valueDisplay,
+            text = metric.primary,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
         )
-        Text(
-            text = metric.oscillationDisplay,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-            textAlign = TextAlign.Center
-        )
+        if (metric.secondary.isNotEmpty()) {
+            Text(
+                text = metric.secondary,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                textAlign = TextAlign.Center
+            )
+        }
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = label,
@@ -433,8 +439,8 @@ private fun HypoCell(metric: CountMetric, label: String, modifier: Modifier = Mo
 }
 
 private data class DisplayMetric(
-    val valueDisplay: String,
-    val oscillationDisplay: String
+    val primary: String,
+    val secondary: String
 )
 
 private data class CountMetric(
@@ -497,8 +503,8 @@ private fun calculateDashboardMetrics(measurements: List<GlucoseMeasurement>): D
         val a1cRaw = (avgRawForA1c + 46.7) / 28.7
         val a1cCalibrated = (avgCalibratedForA1c + 46.7) / 28.7
         DisplayMetric(
-            valueDisplay = String.format("%.1f%%(%.1f%%)", a1cRaw, a1cCalibrated),
-            oscillationDisplay = ""
+            primary = String.format("%.1f%%", a1cRaw),
+            secondary = String.format("%.1f%% (cal)", a1cCalibrated)
         )
     } else {
         DisplayMetric("--", "")
@@ -521,7 +527,7 @@ private fun calculateDashboardMetrics(measurements: List<GlucoseMeasurement>): D
 
 private fun buildDisplayMetric(measurements: List<GlucoseMeasurement>): DisplayMetric {
     if (measurements.isEmpty()) {
-        return DisplayMetric(valueDisplay = "--", oscillationDisplay = "--")
+        return DisplayMetric(primary = "--", secondary = "")
     }
 
     val rawValues = measurements.map { it.value }
@@ -530,15 +536,21 @@ private fun buildDisplayMetric(measurements: List<GlucoseMeasurement>): DisplayM
     val avgRaw = rawValues.average().roundToInt()
     val avgCalibrated = calibratedValues.average().roundToInt()
     
-    val maxValue = calibratedValues.maxOrNull() ?: avgCalibrated
-    val minValue = calibratedValues.minOrNull() ?: avgCalibrated
+    val maxRaw = rawValues.maxOrNull() ?: avgRaw
+    val minRaw = rawValues.minOrNull() ?: avgRaw
+    val plusRaw = (maxRaw - avgRaw).coerceAtLeast(0)
+    val minusRaw = (avgRaw - minRaw).coerceAtLeast(0)
+    val oscRaw = if (plusRaw == minusRaw) "±$plusRaw" else "+$plusRaw/-$minusRaw"
 
-    val plus = (maxValue - avgCalibrated).coerceAtLeast(0)
-    val minus = (avgCalibrated - minValue).coerceAtLeast(0)
+    val maxCal = calibratedValues.maxOrNull() ?: avgCalibrated
+    val minCal = calibratedValues.minOrNull() ?: avgCalibrated
+    val plusCal = (maxCal - avgCalibrated).coerceAtLeast(0)
+    val minusCal = (avgCalibrated - minCal).coerceAtLeast(0)
+    val oscCal = if (plusCal == minusCal) "±$plusCal" else "+$plusCal/-$minusCal"
 
     return DisplayMetric(
-        valueDisplay = "$avgRaw($avgCalibrated)",
-        oscillationDisplay = if (plus == minus) "±$plus" else "±$plus/-$minus"
+        primary = "$avgRaw $oscRaw",
+        secondary = "$avgCalibrated $oscCal"
     )
 }
 

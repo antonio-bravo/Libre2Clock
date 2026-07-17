@@ -25,7 +25,6 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.*
 
 private val ORIGINAL_LINE_COLOR = Color.Gray.copy(alpha = 0.5f)
 private val CALIBRATED_LINE_COLOR = Color(0xFF00BCD4)
@@ -170,13 +169,26 @@ fun InteractiveTrendGraph(
                     )
 
                     val tickValues = listOf(50, 100, 150, 200, 250, 300, 350)
+                    val tickPaint = Paint().apply {
+                        color = android.graphics.Color.GRAY
+                        alpha = 100
+                        textSize = 10.sp.toPx()
+                        textAlign = Paint.Align.LEFT
+                    }
+
                     tickValues.forEach { value ->
                         val y = plotHeight - ((value - minGlucose) / range * plotHeight)
                         drawLine(
-                            color = Color.Gray.copy(alpha = 0.15f),
+                            color = Color.Gray.copy(alpha = 0.3f),
                             start = Offset(0f, y),
                             end = Offset(width, y),
                             strokeWidth = 0.5.dp.toPx()
+                        )
+                        drawContext.canvas.nativeCanvas.drawText(
+                            value.toString(),
+                            4.dp.toPx(),
+                            y - 4.dp.toPx(),
+                            tickPaint
                         )
                     }
 

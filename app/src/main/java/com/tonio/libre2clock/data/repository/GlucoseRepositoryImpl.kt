@@ -186,32 +186,12 @@ class GlucoseRepositoryImpl(
                 )
             }
 
-            val manualOffset = preferenceManager.glucoseOffset.first()
-            val userRanges = preferenceManager.glucoseOffsetRanges.first()
-            val autoAdjustEnabled = preferenceManager.autoAdjustEnabled.first()
-            val capillaryReadings = preferenceManager.capillaryReadings.first()
+            val historicalMeasurements = response.data?.graphData ?: emptyList()
 
-            val historicalMeasurements = response.data?.graphData?.map {
-                GlucoseProcessor.process(
-                    it,
-                    manualOffset,
-                    userRanges,
-                    autoAdjustEnabled,
-                    capillaryReadings
-                )
-            } ?: emptyList()
-
-            // Merge everything including graphData
+            // Merge everything as RAW data
             val incomingList = if (measurement != null) {
-                val processedCurrent = GlucoseProcessor.process(
-                    measurement,
-                    manualOffset,
-                    userRanges,
-                    autoAdjustEnabled,
-                    capillaryReadings
-                )
-                _currentGlucose.value = processedCurrent
-                historicalMeasurements + processedCurrent
+                _currentGlucose.value = measurement
+                historicalMeasurements + measurement
             } else {
                 historicalMeasurements
             }
@@ -227,7 +207,7 @@ class GlucoseRepositoryImpl(
             }
 
             if (measurement != null) {
-                Result.success(_currentGlucose.value!!)
+                Result.success(measurement)
             } else if (historicalMeasurements.isNotEmpty()) {
                 Result.success(historicalMeasurements.last())
             } else {
@@ -290,7 +270,7 @@ class GlucoseRepositoryImpl(
 
     private fun measurementKey(measurement: GlucoseMeasurement): String? {
         val instant = parseMeasurementInstant(measurement) ?: return null
-        return "${instant.toEpochMilli()}-${measurement.value}-${measurement.calibratedValue}-${measurement.type}"
+        return "${instant.toEpochMilli()}-${measurement.value}-${measurement.type}"
     }
 
     private fun parseMeasurementInstant(measurement: GlucoseMeasurement): Instant? {

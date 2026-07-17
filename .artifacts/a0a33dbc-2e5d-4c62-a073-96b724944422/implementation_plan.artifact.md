@@ -1,44 +1,45 @@
-# Implementation Plan - Fix Data Display and Enable Cross-Day History
+# Implementation Plan - Reactive Glucose Calibration and UI Enhancements
 
-The goal is to fix the empty dashboard by correctly fetching, processing, and storing historical glucose data (`graphData`) from the LibreLinkUp API. This data will be used to populate the trend graph and calculate metrics like Average Glucose and HbA1c.
-
-## User Review Required
-
-> [!IMPORTANT]
-> To support cross-IDE usage (VS Code/Android Studio) and avoid regional login issues, we will implement an automatic server redirection. The app will also start caching historical data locally to ensure metrics are available even when offline.
+Enable real-time, retroactive glucose calibration and improve the dashboard UI for better data visualization.
 
 ## Proposed Changes
 
-### Data Layer
-
-#### [MODIFY] [LibreModels.kt](file:///Users/antonio-bravo/AndroidStudioProjects/Libre2Clock/app/src/main/java/com/tonio/libre2clock/data/model/LibreModels.kt)
-- Update `LoginResponse` and `LoginData` to handle `redirect: true` and the `region` field.
-
-#### [MODIFY] [LibreService.kt](file:///Users/antonio-bravo/AndroidStudioProjects/Libre2Clock/app/src/main/java/com/tonio/libre2clock/data/api/LibreService.kt)
-- Add support for changing the `BASE_URL` dynamically based on regional redirects.
-- Fix `Account-Id` header generation to match the SHA-256 requirement precisely.
+### Data & Architecture
 
 #### [MODIFY] [GlucoseRepositoryImpl.kt](file:///Users/antonio-bravo/AndroidStudioProjects/Libre2Clock/app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt)
-- **Login Redirect**: Implement retry logic if a redirect is required.
-- **Data Persistence**: Ensure `graphData` is merged into the local `historicalGlucoseArchive` every time it is fetched.
-- **Metric Readiness**: Ensure the local cache is initialized correctly so the `DashboardViewModel` can calculate averages.
+- Stop applying calibration offsets during data ingestion. The repository will now store "pure" raw data from the API.
+- Update `measurementKey` to not depend on `calibratedValue` for merging, ensuring consistency.
 
-### UI & Logic
+#### [MODIFY] [DashboardViewModel.kt](file:///Users/antonio-bravo/AndroidStudioProjects/Libre2Clock/app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt)
+- Inject `PreferenceManager`.
+- Implement reactive transformation: combine `historicalGlucose` and `currentGlucose` with offset preferences (`glucoseOffset`, `glucoseOffsetRanges`, `autoAdjustEnabled`, `capillaryReadings`).
+- Use `GlucoseProcessor.process` inside the `combine` block to update the entire dataset whenever any setting changes.
+
+### UI Enhancements
 
 #### [MODIFY] [DashboardScreen.kt](file:///Users/antonio-bravo/AndroidStudioProjects/Libre2Clock/app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt)
-- Verify `calculateDashboardMetrics` logic to ensure it correctly filters data for Today, Yesterday, Week, and Month based on the new stored history.
+- **Metrics Calculation**: Update `calculateDashboardMetrics` to produce dual-line metrics for Average Glucose.
+    - Line 1: Raw average with `±` (Max/Min deviation).
+    - Line 2: Calibrated average with `±` (Max/Min deviation).
+- **Metric Display**: Update `CornerMetric` and `GlucoseCard` to support the new multi-line format.
 
-#### [MODIFY] [TimestampParser.kt](file:///Users/antonio-bravo/AndroidStudioProjects/Libre2Clock/app/src/main/java/com/tonio/libre2clock/util/TimestampParser.kt)
-- Update formatters to be `Locale`-independent (using `Locale.US`) to prevent parsing errors on devices with different language settings.
+#### [MODIFY] [TrendGraph.kt](file:///Users/antonio-bravo/AndroidStudioProjects/Libre2Clock/app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt)
+- **Grid Lines**: Increase visibility of horizontal grid lines at 50 mg/dL intervals.
+- **Labels**: Add text labels for the 50, 100, 150... mg/dL levels on the Y-axis.
+
+### Navigation
+
+#### [MODIFY] [NavGraph.kt](file:///Users/antonio-bravo/AndroidStudioProjects/Libre2Clock/app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt)
+- Update `DashboardViewModel` instantiation to include `preferenceManager`.
 
 ## Verification Plan
 
 ### Automated Tests
-- Test regional redirect logic by mocking a redirect response.
-- Test `TimestampParser` with timestamps from `graph_response.json`.
+- Verify that changing a preference (e.g., `glucoseOffset`) in `PreferenceManager` triggers an update in the `DashboardViewModel`'s `historicalData` Flow.
 
 ### Manual Verification
-- Perform a fresh login and verify the "Avg Glucose" and "Estimated HbA1c" values.
-- Verify the central panel (Yesterday/Week/Month) correctly displays data.
-- Verify the trend graph shows historical data from the start of the day.
-- Run a local export and check that the generated JSON contains all historical measurements.
+1. Open the **Dashboard**.
+2. Go to **Settings** and change the Manual Offset.
+3. Return to the **Dashboard** and verify that the graph and all average values update **instantly** without needing a manual refresh.
+4. Verify the new layout of the "Avg Glucose" metric (top-right).
+5. Verify that the trend graph now has clearly visible horizontal lines and Y-axis labels.

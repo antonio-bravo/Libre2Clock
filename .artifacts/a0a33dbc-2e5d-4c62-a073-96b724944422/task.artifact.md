@@ -1,11 +1,12 @@
-- [x] Update Data Layer
-    - [x] Update `LibreModels.kt` for redirect support
-    - [x] Update `LibreService.kt` for dynamic base URL and SHA-256
-    - [x] Update `TimestampParser.kt` for locale-independent parsing
-- [x] Implement Repository Logic
-    - [x] Handle login redirects in `GlucoseRepositoryImpl.kt`
-    - [x] Improve `graphData` merging and persistence
-    - [x] Persist `patientId` in `PreferenceManager.kt`
-- [ ] Verify & Finalize
-    - [ ] Run build and verify functionality
-    - [ ] Update walkthrough
+- [x] Data & Repository Adjustments
+    - [x] Modify `GlucoseRepositoryImpl.kt` to store raw data
+    - [x] Update `measurementKey` in `GlucoseRepositoryImpl.kt`
+- [x] ViewModel Reactivity
+    - [x] Update `DashboardViewModel.kt` to combine data with preferences
+- [x] UI Enhancements
+    - [x] Update `DashboardScreen.kt` for dual-line metrics
+    - [x] Update `TrendGraph.kt` with grid labels and lines
+- [x] Integration
+    - [x] Update `NavGraph.kt` dependency injection
+- [x] Verification
+    - [x] Verify reactive updates in the app
