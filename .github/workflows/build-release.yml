@@ -52,6 +52,7 @@ jobs:
             --no-configuration-cache \
             --no-parallel \
             -Djava.awt.headless=true \
+            -Dkotlin.daemon.enabled=false \
             -Pksp.incremental=false \
             -Pkotlin.incremental=false \
             clean assembleRelease
@@ -63,6 +64,7 @@ jobs:
             --no-configuration-cache \
             --no-parallel \
             -Djava.awt.headless=true \
+            -Dkotlin.daemon.enabled=false \
             -Pksp.incremental=false \
             -Pkotlin.incremental=false \
             assembleDebug
