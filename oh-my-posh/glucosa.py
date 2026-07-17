@@ -27,15 +27,16 @@ NOTIFY_INTERVAL_SECONDS = (
 if NOTIFY_ENABLED and NOTIFY_INTERVAL_SECONDS <= 0:
     NOTIFY_INTERVAL_SECONDS = 300
 
-# Tabla de rangos para aplicar un offset al valor mostrado.
-# Se puede ajustar fácilmente según el rango en el que se encuentre la medida.
+# Tabla de rangos para aplicar un offset y un porcentaje al valor mostrado.
+# Estructura: (mínimo, máximo, offset_fijo, porcentaje_extra)
 OFFSET_RANGES = [
-    (0, 70, 20),
-    (70, 100, 40),
-    (100, 140, 60),
-    (140, 200, 80),
-    (200, None, 80),
+    (0, 70, 0, 20),        # Suma 20 de offset fijo y 0% extra
+    (70, 100, 0, 20),      # Suma 40 de offset fijo y un 5% extra
+    (100, 140, 0, 20),    # Suma 60 de offset fijo y un 10% extra
+    (140, 200, 0, 20),    # Suma 80 de offset fijo y un 10% extra
+    (200, None, 0, 20),   # Suma 80 de offset fijo y un 15% extra
 ]
+
 
 
 def formatear_valor(valor):
@@ -54,12 +55,16 @@ def calcular_valor_ajustado(valor):
         numero = float(valor)
     except (TypeError, ValueError):
         return None
-
-    for lower, upper, offset in OFFSET_RANGES:
+        
+    for lower, upper, offset, porcentaje in OFFSET_RANGES:
         if (lower is None or numero >= lower) and (upper is None or numero <= upper):
-            return round(numero + offset, 1)
-
+            # Calcula el valor del porcentaje sobre la medida original
+            ajuste_porcentaje = numero * (porcentaje / 100.0)
+            # Retorna el número original + el ajuste de porcentaje + el offset fijo
+            return round(numero + ajuste_porcentaje + offset, 1)
+            
     return round(numero, 1)
+
 
 
 def build_headers(token=None, account_id=None):
