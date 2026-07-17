@@ -1,12 +1,9 @@
-- [x] Data & Repository Adjustments
-    - [x] Modify `GlucoseRepositoryImpl.kt` to store raw data
-    - [x] Update `measurementKey` in `GlucoseRepositoryImpl.kt`
-- [x] ViewModel Reactivity
-    - [x] Update `DashboardViewModel.kt` to combine data with preferences
-- [x] UI Enhancements
-    - [x] Update `DashboardScreen.kt` for dual-line metrics
-    - [x] Update `TrendGraph.kt` with grid labels and lines
-- [x] Integration
-    - [x] Update `NavGraph.kt` dependency injection
-- [x] Verification
-    - [x] Verify reactive updates in the app
+- [/] Enhance Sensor Health Data
+    - [ ] Update `SensorStatus` model with `startDate`
+    - [ ] Update `GlucoseRepositoryImpl.kt` to calculate sensor start time
+- [/] Update Dashboard UI
+    - [ ] Add copy button to `SensorHealthCard`
+    - [ ] Display start date in `SensorHealthCard`
+    - [ ] Implement clipboard logic
+- [ ] Verification
+    - [ ] Verify copy functionality

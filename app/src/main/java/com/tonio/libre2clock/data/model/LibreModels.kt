@@ -80,6 +80,7 @@ data class Sensor(
 
 data class SensorStatus(
     val daysRemaining: Int,
+    val startDate: String,
     val expiryDate: String,
     val serialNumber: String
 )

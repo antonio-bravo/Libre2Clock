@@ -1,5 +1,6 @@
 package com.tonio.libre2clock.ui.dashboard
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.*
@@ -9,6 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
@@ -18,6 +20,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -90,6 +95,9 @@ fun DashboardScreen(
 
 @Composable
 fun SensorHealthCard(status: SensorStatus?) {
+    val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -99,11 +107,39 @@ fun SensorHealthCard(status: SensorStatus?) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            Text(
-                text = "Sensor Health",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSecondaryContainer
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Sensor Health",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                if (status != null) {
+                    IconButton(
+                        onClick = {
+                            val text = """
+                                Sensor SN: ${status.serialNumber}
+                                ${status.startDate}
+                                ${status.expiryDate}
+                                Remaining: ${status.daysRemaining} days
+                            """.trimIndent()
+                            clipboardManager.setText(AnnotatedString(text))
+                            Toast.makeText(context, "Sensor info copied to clipboard", Toast.LENGTH_SHORT).show()
+                        },
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.ContentCopy,
+                            contentDescription = "Copy sensor info",
+                            modifier = Modifier.size(18.dp),
+                            tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                        )
+                    }
+                }
+            }
             Spacer(modifier = Modifier.height(8.dp))
             if (status != null) {
                 Row(
@@ -117,6 +153,11 @@ fun SensorHealthCard(status: SensorStatus?) {
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                        Text(
+                            text = status.startDate,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                         )
                         Text(
                             text = status.expiryDate,
@@ -503,8 +544,8 @@ private fun calculateDashboardMetrics(measurements: List<GlucoseMeasurement>): D
         val a1cRaw = (avgRawForA1c + 46.7) / 28.7
         val a1cCalibrated = (avgCalibratedForA1c + 46.7) / 28.7
         DisplayMetric(
-            primary = String.format("%.1f%%", a1cRaw),
-            secondary = String.format("%.1f%% (cal)", a1cCalibrated)
+            primary = String.format("%.1f%%(%.1f%%)", a1cRaw, a1cCalibrated),
+            secondary = ""
         )
     } else {
         DisplayMetric("--", "")
@@ -538,19 +579,15 @@ private fun buildDisplayMetric(measurements: List<GlucoseMeasurement>): DisplayM
     
     val maxRaw = rawValues.maxOrNull() ?: avgRaw
     val minRaw = rawValues.minOrNull() ?: avgRaw
-    val plusRaw = (maxRaw - avgRaw).coerceAtLeast(0)
-    val minusRaw = (avgRaw - minRaw).coerceAtLeast(0)
-    val oscRaw = if (plusRaw == minusRaw) "±$plusRaw" else "+$plusRaw/-$minusRaw"
+    val oscRaw = maxOf(maxRaw - avgRaw, avgRaw - minRaw).coerceAtLeast(0)
 
     val maxCal = calibratedValues.maxOrNull() ?: avgCalibrated
     val minCal = calibratedValues.minOrNull() ?: avgCalibrated
-    val plusCal = (maxCal - avgCalibrated).coerceAtLeast(0)
-    val minusCal = (avgCalibrated - minCal).coerceAtLeast(0)
-    val oscCal = if (plusCal == minusCal) "±$plusCal" else "+$plusCal/-$minusCal"
+    val oscCal = maxOf(maxCal - avgCalibrated, avgCalibrated - minCal).coerceAtLeast(0)
 
     return DisplayMetric(
-        primary = "$avgRaw $oscRaw",
-        secondary = "$avgCalibrated $oscCal"
+        primary = "Avg $avgRaw ± $oscRaw",
+        secondary = "(avg $avgCalibrated ± $oscCal)"
     )
 }
 
