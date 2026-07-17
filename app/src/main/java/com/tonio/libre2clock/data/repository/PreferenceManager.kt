@@ -38,6 +38,9 @@ class PreferenceManager(private val context: Context) {
         private const val HISTORY_BACKUP_FILE = "history_backup.json"
         private const val LOCAL_DOWNLOADS_BACKUP_FILE = "libre2clock_history_backup.json"
         private const val LOCAL_DOWNLOADS_BACKUP_SUBDIR = "Libre2Clock"
+        private const val DEFAULT_HISTORY_RETENTION_DAYS = 90
+        private const val MIN_HISTORY_RETENTION_DAYS = 30
+        private const val MAX_HISTORY_RETENTION_DAYS = 365
     }
 
     private val TOKEN_KEY = stringPreferencesKey("auth_token")
@@ -52,6 +55,7 @@ class PreferenceManager(private val context: Context) {
     private val LOW_GLUCOSE_ALARM_ENABLED_KEY = booleanPreferencesKey("low_glucose_alarm_enabled")
     private val HIGH_GLUCOSE_ALARM_ENABLED_KEY = booleanPreferencesKey("high_glucose_alarm_enabled")
     private val HISTORICAL_GLUCOSE_KEY = stringPreferencesKey("historical_glucose_archive")
+    private val HISTORY_RETENTION_DAYS_KEY = androidx.datastore.preferences.core.intPreferencesKey("history_retention_days")
     private val LAST_HISTORY_BACKUP_REQUEST_AT_KEY = longPreferencesKey("last_history_backup_request_at")
 
     val authToken: Flow<String?> = context.dataStore.data.map { preferences ->
@@ -127,6 +131,11 @@ class PreferenceManager(private val context: Context) {
         } else {
             emptyList()
         }
+    }
+
+    val historyRetentionDays: Flow<Int> = context.dataStore.data.map { preferences ->
+        (preferences[HISTORY_RETENTION_DAYS_KEY] ?: DEFAULT_HISTORY_RETENTION_DAYS)
+            .coerceIn(MIN_HISTORY_RETENTION_DAYS, MAX_HISTORY_RETENTION_DAYS)
     }
 
     val lastHistoryBackupRequestAt: Flow<Long?> = context.dataStore.data.map { preferences ->
@@ -231,6 +240,15 @@ class PreferenceManager(private val context: Context) {
             )
         )
         requestHistoryCloudBackupIfDue()
+    }
+
+    suspend fun saveHistoryRetentionDays(days: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[HISTORY_RETENTION_DAYS_KEY] = days.coerceIn(
+                MIN_HISTORY_RETENTION_DAYS,
+                MAX_HISTORY_RETENTION_DAYS
+            )
+        }
     }
 
     fun loadHistoryBackupPayload(): HistoryBackupPayload? {

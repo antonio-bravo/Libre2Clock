@@ -43,6 +43,7 @@ fun SettingsScreen(
     val lowGlucoseAlarmEnabled by viewModel.lowGlucoseAlarmEnabled.collectAsStateWithLifecycle()
     val highGlucoseAlarmEnabled by viewModel.highGlucoseAlarmEnabled.collectAsStateWithLifecycle()
     val lastHistoryBackupRequestAt by viewModel.lastHistoryBackupRequestAt.collectAsStateWithLifecycle()
+    val historyRetentionDays by viewModel.historyRetentionDays.collectAsStateWithLifecycle()
     val backupStatusMessage by viewModel.backupStatusMessage.collectAsStateWithLifecycle()
 
     var showAddRangeDialog by remember { mutableStateOf(false) }
@@ -301,8 +302,25 @@ fun SettingsScreen(
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
+                var historyRetentionDaysText by remember(historyRetentionDays) {
+                    mutableStateOf(historyRetentionDays.toString())
+                }
+                OutlinedTextField(
+                    value = historyRetentionDaysText,
+                    onValueChange = {
+                        historyRetentionDaysText = it
+                        it.toIntOrNull()?.let { days ->
+                            viewModel.updateHistoryRetentionDays(days)
+                        }
+                    },
+                    label = { Text("Retention days (30-365)") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
                 Text(
-                    text = "Libre2Clock keeps the historical glucose archive locally and asks Android to back it up to your Google account. Restore happens automatically when Android restores app data.",
+                    text = "Libre2Clock keeps the historical glucose archive locally for the configured retention days and asks Android to back it up to your Google account. Restore happens automatically when Android restores app data.",
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )

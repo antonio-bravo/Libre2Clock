@@ -53,6 +53,9 @@ class SettingsViewModel(
     val lastHistoryBackupRequestAt: StateFlow<Long?> = preferenceManager.lastHistoryBackupRequestAt
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    val historyRetentionDays: StateFlow<Int> = preferenceManager.historyRetentionDays
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 90)
+
     val currentGlucose: StateFlow<GlucoseMeasurement?> = repository.currentGlucose
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
@@ -126,6 +129,12 @@ class SettingsViewModel(
             } else {
                 "No Google backup request was sent."
             }
+        }
+    }
+
+    fun updateHistoryRetentionDays(days: Int) {
+        viewModelScope.launch {
+            preferenceManager.saveHistoryRetentionDays(days)
         }
     }
 

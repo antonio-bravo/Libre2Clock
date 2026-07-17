@@ -19,10 +19,6 @@ class GlucoseRepositoryImpl(
     private val preferenceManager: PreferenceManager
 ) : GlucoseRepository {
 
-    companion object {
-        private const val HISTORY_RETENTION_DAYS = 90L
-    }
-
     private val _currentGlucose = MutableStateFlow<GlucoseMeasurement?>(null)
     override val currentGlucose: Flow<GlucoseMeasurement?> = _currentGlucose.asStateFlow()
 
@@ -67,7 +63,7 @@ class GlucoseRepositoryImpl(
     }
 
     override suspend fun fetchLatestGlucose(): Result<GlucoseMeasurement> {
-        return fetchLatestGlucoseInternal(persistArchive = false)
+        return fetchLatestGlucoseInternal(persistArchive = true)
     }
 
     override suspend fun refreshHistoricalGlucoseWindow(): Result<GlucoseMeasurement> {
@@ -248,7 +244,7 @@ class GlucoseRepositoryImpl(
         }
     }
 
-    private fun mergeAndPruneHistory(
+    private suspend fun mergeAndPruneHistory(
         existing: List<GlucoseMeasurement>,
         incoming: List<GlucoseMeasurement>
     ): List<GlucoseMeasurement> {
@@ -261,7 +257,8 @@ class GlucoseRepositoryImpl(
             }
         }
 
-        val cutoff = Instant.now().minusSeconds(HISTORY_RETENTION_DAYS * 24L * 60L * 60L)
+        val retentionDays = preferenceManager.historyRetentionDays.first().toLong()
+        val cutoff = Instant.now().minusSeconds(retentionDays * 24L * 60L * 60L)
         return mergedByKey.values
             .mapNotNull { measurement ->
                 parseMeasurementInstant(measurement)?.let { instant -> instant to measurement }
