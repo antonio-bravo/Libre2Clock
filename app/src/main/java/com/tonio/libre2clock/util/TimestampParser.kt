@@ -8,21 +8,23 @@ import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 object TimestampParser {
 
     private val localDateTimeFormats = listOf(
-        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"),
-        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
-        DateTimeFormatter.ofPattern("M/d/yyyy H:mm"),
-        DateTimeFormatter.ofPattern("M/d/yyyy H:mm:ss"),
-        DateTimeFormatter.ofPattern("M/d/yyyy h:mm a"),
-        DateTimeFormatter.ofPattern("M/d/yyyy h:mm:ss a")
+        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm", Locale.US),
+        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.US),
+        DateTimeFormatter.ofPattern("M/d/yyyy H:mm", Locale.US),
+        DateTimeFormatter.ofPattern("M/d/yyyy H:mm:ss", Locale.US),
+        DateTimeFormatter.ofPattern("M/d/yyyy h:mm a", Locale.US),
+        DateTimeFormatter.ofPattern("M/d/yyyy h:mm:ss a", Locale.US),
+        DateTimeFormatter.ofPattern("MM/dd/yyyy h:mm:ss a", Locale.US)
     )
 
     private val localTimeFormats = listOf(
-        DateTimeFormatter.ofPattern("HH:mm"),
-        DateTimeFormatter.ofPattern("H:mm")
+        DateTimeFormatter.ofPattern("HH:mm", Locale.US),
+        DateTimeFormatter.ofPattern("H:mm", Locale.US)
     )
 
     fun parseFlexibleInstant(timestamp: String, zoneId: ZoneId = ZoneId.systemDefault()): Instant? {

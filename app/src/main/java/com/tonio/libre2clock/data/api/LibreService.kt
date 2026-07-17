@@ -10,16 +10,26 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 import java.security.MessageDigest
 
 object LibreService {
-    private const val BASE_URL = "https://api.libreview.io/"
+    private var baseUrl = "https://api.libreview.io/"
     private const val PRODUCT = "llu.android"
     private const val VERSION = "4.16.0"
 
     private var authToken: String? = null
     private var userId: String? = null
 
+    private var retrofit: Retrofit? = null
+
     fun setAuth(token: String, id: String) {
         authToken = token
         userId = id
+    }
+
+    fun updateRegion(region: String) {
+        val newBaseUrl = "https://api-$region.libreview.io/"
+        if (baseUrl != newBaseUrl) {
+            baseUrl = newBaseUrl
+            retrofit = null // Force rebuild of API
+        }
     }
 
     private val authInterceptor = Interceptor { chain ->
@@ -52,16 +62,21 @@ object LibreService {
         .add(KotlinJsonAdapterFactory())
         .build()
 
-    val api: LibreLinkUpApi = Retrofit.Builder()
-        .baseUrl(BASE_URL)
-        .client(okHttpClient)
-        .addConverterFactory(MoshiConverterFactory.create(moshi))
-        .build()
-        .create(LibreLinkUpApi::class.java)
+    val api: LibreLinkUpApi
+        get() {
+            if (retrofit == null) {
+                retrofit = Retrofit.Builder()
+                    .baseUrl(baseUrl)
+                    .client(okHttpClient)
+                    .addConverterFactory(MoshiConverterFactory.create(moshi))
+                    .build()
+            }
+            return retrofit!!.create(LibreLinkUpApi::class.java)
+        }
 
     private fun String.sha256(): String {
         return MessageDigest.getInstance("SHA-256")
-            .digest(this.toByteArray())
+            .digest(this.toByteArray(Charsets.UTF_8))
             .joinToString("") { "%02x".format(it) }
     }
 }

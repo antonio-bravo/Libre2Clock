@@ -1,32 +1,34 @@
-# Walkthrough - Cross-IDE Compatibility Setup
+# Walkthrough - Dashboard and History Fix
 
-I have updated the project configuration to support both Visual Studio Code and Android Studio seamlessly, following open-source best practices by removing local-only paths.
+I have implemented significant improvements to the data fetching and storage layers to ensure your dashboard, metrics, and glucose trend graph are correctly populated with historical data.
 
 ## Changes Made
 
-### Removed Hardcoded Paths
+### 1. Data Layer & API Compatibility
 
-#### [gradle.properties](file:///Users/antonio-bravo/AndroidStudioProjects/Libre2Clock/gradle.properties)
-- Removed `org.gradle.java.home`. This ensures that Gradle uses its own discovery mechanism (Toolchains and Daemon JVM criteria) instead of a fixed path that only exists on your Mac.
+- **Regional Redirects**: The app now automatically detects if your account belongs to a specific region (like Europe) and updates the base URL dynamically. This fixes potential login failures where the API would previously return a `redirect: true` response without the app handling it.
+- **Security Headers**: Refined the `Account-Id` header generation to use SHA-256 with explicit `UTF_8` encoding, ensuring compatibility with the latest LibreLinkUp security requirements.
+- **Model Completeness**: Updated `LibreModels.kt` to include the `ticket` field and handled optional fields in `LoginData` and `GlucoseResponse` to prevent parsing errors.
 
-### Standardized Java Versioning
+### 2. Robust History Processing
 
-#### [app/build.gradle.kts](file:///Users/antonio-bravo/AndroidStudioProjects/Libre2Clock/app/build.gradle.kts)
-- Kept `kotlin { jvmToolchain(21) }`. This is the standard way to tell Gradle to find or download a JDK 21 for compilation, regardless of which IDE is used.
+- **Historical Merging**: Modified `GlucoseRepositoryImpl` to process the entire `graphData` array returned by the API. These values are now merged with your existing local history, ensuring that gaps in the graph are filled even if the app wasn't running.
+- **Persistent Patient ID**: The `patientId` is now stored locally in `PreferenceManager`. This makes the data syncing process more reliable and faster.
+- **Locale-Independent Parsing**: Updated `TimestampParser` to use `Locale.US` for all date formatters. This ensures that timestamps like `7/17/2026 1:29:49 AM` are correctly parsed regardless of the language settings on your phone.
 
-### Build Robustness
+### 3. Dashboard Metrics
 
-#### [settings.gradle.kts](file:///Users/antonio-bravo/AndroidStudioProjects/Libre2Clock/settings.gradle.kts)
-- Verified the presence of `org.gradle.toolchains.foojay-resolver-convention`. This plugin allows Gradle to automatically download the correct JDK if it's missing on a developer's machine.
+- **Yesterday/Week/Month Calculations**: The dashboard metrics now rely on the local `historicalGlucoseArchive`. As `graphData` is saved every time you sync, these metrics (Average Glucose, Estimated HbA1c) will become more accurate and will no longer show `--` once data is available.
 
 ## Verification Results
 
-- **Environment Cleaned**: Ran `./gradlew --stop` to clear any daemons locked to the previous hardcoded path.
-- **Build Success**: Executed `./gradlew assembleDebug` successfully without requiring local IDE paths.
-
-> [!NOTE]
-> During verification, a conflict between environment variables (`ANDROID_PREFS_ROOT` and `ANDROID_USER_HOME`) was detected in your current shell environment. This is a local system configuration issue unrelated to the project files. To fix it permanently in your terminal, it is recommended to remove `ANDROID_PREFS_ROOT` from your shell profile (e.g., `.zshrc`) and keep only `ANDROID_USER_HOME`.
-
+### Build Status
+- Successfully compiled the project with the new changes.
 ```bash
-BUILD SUCCESSFUL in 6s
+BUILD SUCCESSFUL in 5s
 ```
+
+### Manual Steps Recommended
+1. **Re-install the app**: Perform a fresh installation to ensure all preference keys are initialized correctly.
+2. **Log in again**: This will trigger the new regional redirect logic if applicable to your account.
+3. **Wait for first sync**: After logging in, the app will fetch the last 24 hours of data. You should see the graph and "Avg Glucose" populate almost immediately.

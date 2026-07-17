@@ -45,9 +45,17 @@ class GlucoseRepositoryImpl(
 
     override suspend fun login(email: String, password: String): Result<Unit> {
         return try {
-            val response = LibreService.api.login(LoginRequest(email, password))
-            val data = response.data
-            if (response.status == 0 && data != null) {
+            var response = LibreService.api.login(LoginRequest(email, password))
+            var data = response.data
+
+            // Handle regional redirect
+            if (data?.redirect == true && data.region != null) {
+                LibreService.updateRegion(data.region)
+                response = LibreService.api.login(LoginRequest(email, password))
+                data = response.data
+            }
+
+            if (response.status == 0 && data != null && data.authTicket != null && data.user != null) {
                 val token = data.authTicket.token
                 val userId = data.user.id
                 LibreService.setAuth(token, userId)
@@ -138,12 +146,24 @@ class GlucoseRepositoryImpl(
 
         return try {
             if (patientId == null) {
+                patientId = preferenceManager.patientId.first()
+            }
+            
+            if (patientId == null) {
                 val connectionsResponse = LibreService.api.getConnections()
-                patientId = connectionsResponse.data?.firstOrNull()?.patientId
+                val id = connectionsResponse.data?.firstOrNull()?.patientId
+                if (id != null) {
+                    patientId = id
+                    preferenceManager.savePatientId(id)
+                }
             }
 
             val id = patientId ?: return Result.failure(Exception("No patient found"))
             val response = LibreService.api.getGlucoseGraph(id)
+            
+            // Log for debugging if needed (System.out for now)
+            println("Libre2Clock: Graph Response status=${response.status} items=${response.data?.graphData?.size}")
+
             val measurement = response.data?.connection?.glucoseMeasurement
             val activeSensors = response.data?.activeSensors
             
@@ -155,7 +175,7 @@ class GlucoseRepositoryImpl(
                 val remainingSeconds = expiryTime - now
                 val daysRemaining = (remainingSeconds / (24 * 60 * 60)).toInt()
                 
-                val formatter = DateTimeFormatter.ofPattern("EEE, MMM dd, yyyy HH:mm", Locale.getDefault())
+                val formatter = DateTimeFormatter.ofPattern("EEE, MMM dd, yyyy HH:mm", Locale.US)
                     .withZone(ZoneId.systemDefault())
                 val expiryDateStr = formatter.format(Instant.ofEpochSecond(expiryTime))
                 
@@ -181,39 +201,40 @@ class GlucoseRepositoryImpl(
                 )
             } ?: emptyList()
 
-            if (measurement != null) {
-                val processedMeasurement = GlucoseProcessor.process(
+            // Merge everything including graphData
+            val incomingList = if (measurement != null) {
+                val processedCurrent = GlucoseProcessor.process(
                     measurement,
                     manualOffset,
                     userRanges,
                     autoAdjustEnabled,
                     capillaryReadings
                 )
-                _currentGlucose.value = processedMeasurement
-
-                val mergedHistory = mergeAndPruneHistory(
-                    existing = _historicalGlucose.value,
-                    incoming = historicalMeasurements + processedMeasurement
-                )
-                _historicalGlucose.value = mergedHistory
-                if (persistArchive) {
-                    preferenceManager.saveHistoricalGlucoseArchive(mergedHistory)
-                }
-
-                Result.success(processedMeasurement)
+                _currentGlucose.value = processedCurrent
+                historicalMeasurements + processedCurrent
             } else {
-                val mergedHistory = mergeAndPruneHistory(
-                    existing = _historicalGlucose.value,
-                    incoming = historicalMeasurements
-                )
-                _historicalGlucose.value = mergedHistory
-                if (persistArchive) {
-                    preferenceManager.saveHistoricalGlucoseArchive(mergedHistory)
-                }
+                historicalMeasurements
+            }
 
-                Result.failure(Exception("No glucose measurement found"))
+            val mergedHistory = mergeAndPruneHistory(
+                existing = _historicalGlucose.value,
+                incoming = incomingList
+            )
+            _historicalGlucose.value = mergedHistory
+            
+            if (persistArchive) {
+                preferenceManager.saveHistoricalGlucoseArchive(mergedHistory)
+            }
+
+            if (measurement != null) {
+                Result.success(_currentGlucose.value!!)
+            } else if (historicalMeasurements.isNotEmpty()) {
+                Result.success(historicalMeasurements.last())
+            } else {
+                Result.failure(Exception("No glucose data found in response"))
             }
         } catch (e: Exception) {
+            e.printStackTrace()
             Result.failure(e)
         }
     }

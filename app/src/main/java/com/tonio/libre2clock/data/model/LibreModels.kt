@@ -13,13 +13,16 @@ data class LoginRequest(
 @JsonClass(generateAdapter = false)
 data class LoginResponse(
     @param:Json(name = "status") val status: Int,
-    @param:Json(name = "data") val data: LoginData?
+    @param:Json(name = "data") val data: LoginData?,
+    @param:Json(name = "ticket") val ticket: AuthTicket? = null
 )
 
 @JsonClass(generateAdapter = false)
 data class LoginData(
-    @param:Json(name = "user") val user: User,
-    @param:Json(name = "authTicket") val authTicket: AuthTicket
+    @param:Json(name = "user") val user: User? = null,
+    @param:Json(name = "authTicket") val authTicket: AuthTicket? = null,
+    @param:Json(name = "redirect") val redirect: Boolean? = null,
+    @param:Json(name = "region") val region: String? = null
 )
 
 @JsonClass(generateAdapter = false)
@@ -37,7 +40,8 @@ data class AuthTicket(
 @JsonClass(generateAdapter = false)
 data class ConnectionsResponse(
     @param:Json(name = "status") val status: Int,
-    @param:Json(name = "data") val data: List<Connection>?
+    @param:Json(name = "data") val data: List<Connection>? = null,
+    @param:Json(name = "ticket") val ticket: AuthTicket? = null
 )
 
 @JsonClass(generateAdapter = false)
@@ -45,13 +49,14 @@ data class Connection(
     @param:Json(name = "patientId") val patientId: String,
     @param:Json(name = "firstName") val firstName: String,
     @param:Json(name = "lastName") val lastName: String,
-    @param:Json(name = "glucoseMeasurement") val glucoseMeasurement: GlucoseMeasurement?
+    @param:Json(name = "glucoseMeasurement") val glucoseMeasurement: GlucoseMeasurement? = null
 )
 
 @JsonClass(generateAdapter = false)
 data class GlucoseResponse(
     @param:Json(name = "status") val status: Int,
-    @param:Json(name = "data") val data: GlucoseData?
+    @param:Json(name = "data") val data: GlucoseData? = null,
+    @param:Json(name = "ticket") val ticket: AuthTicket? = null
 )
 
 @JsonClass(generateAdapter = false)

@@ -45,6 +45,7 @@ class PreferenceManager(private val context: Context) {
 
     private val TOKEN_KEY = stringPreferencesKey("auth_token")
     private val USER_ID_KEY = stringPreferencesKey("user_id")
+    private val PATIENT_ID_KEY = stringPreferencesKey("patient_id")
     private val GLUCOSE_OFFSET_KEY = androidx.datastore.preferences.core.intPreferencesKey("glucose_offset")
     private val GLUCOSE_OFFSET_RANGES_KEY = stringPreferencesKey("glucose_offset_ranges")
     private val AUTO_ADJUST_ENABLED_KEY = booleanPreferencesKey("auto_adjust_enabled")
@@ -64,6 +65,10 @@ class PreferenceManager(private val context: Context) {
 
     val userId: Flow<String?> = context.dataStore.data.map { preferences ->
         preferences[USER_ID_KEY]
+    }
+
+    val patientId: Flow<String?> = context.dataStore.data.map { preferences ->
+        preferences[PATIENT_ID_KEY]
     }
 
     val glucoseOffset: Flow<Int> = context.dataStore.data.map { preferences ->
@@ -154,6 +159,12 @@ class PreferenceManager(private val context: Context) {
         context.dataStore.edit { preferences ->
             preferences[TOKEN_KEY] = token
             preferences[USER_ID_KEY] = userId
+        }
+    }
+
+    suspend fun savePatientId(patientId: String) {
+        context.dataStore.edit { preferences ->
+            preferences[PATIENT_ID_KEY] = patientId
         }
     }
 

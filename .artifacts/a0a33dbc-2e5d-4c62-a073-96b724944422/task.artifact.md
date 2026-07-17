@@ -1,4 +1,11 @@
-- [ ] Remove hardcoded path from `gradle.properties`
-- [ ] Configure `gradle/gradle-daemon-jvm.properties`
-- [ ] Add toolchain resolver to `settings.gradle.kts`
-- [ ] Verify build in current environment
+- [x] Update Data Layer
+    - [x] Update `LibreModels.kt` for redirect support
+    - [x] Update `LibreService.kt` for dynamic base URL and SHA-256
+    - [x] Update `TimestampParser.kt` for locale-independent parsing
+- [x] Implement Repository Logic
+    - [x] Handle login redirects in `GlucoseRepositoryImpl.kt`
+    - [x] Improve `graphData` merging and persistence
+    - [x] Persist `patientId` in `PreferenceManager.kt`
+- [ ] Verify & Finalize
+    - [ ] Run build and verify functionality
+    - [ ] Update walkthrough
