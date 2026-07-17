@@ -4,6 +4,10 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.plugin.serialization)
 }
 
+kotlin {
+    jvmToolchain(21)
+}
+
 android {
     namespace = "com.tonio.libre2clock"
     compileSdk = 37

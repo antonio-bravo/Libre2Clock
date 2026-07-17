@@ -97,10 +97,19 @@ fun InteractiveTrendGraph(
                         .fillMaxSize()
                         .pointerInput(measurements) {
                             detectTapGestures { offset ->
+                                if (measurements.isEmpty()) return@detectTapGestures
                                 val width = size.width
-                                val stepX = width / (measurements.size - 1).coerceAtLeast(1)
-                                val index = (offset.x / stepX).toInt().coerceIn(0, measurements.size - 1)
-                                selectedMeasurement = measurements[index]
+                                val firstInstant = measurements.firstOrNull()?.let(::measurementInstant) ?: return@detectTapGestures
+                                val lastInstant = measurements.lastOrNull()?.let(::measurementInstant) ?: return@detectTapGestures
+                                val totalSeconds = (lastInstant.epochSecond - firstInstant.epochSecond).coerceAtLeast(1L)
+                                
+                                val tapTimeSeconds = firstInstant.epochSecond + (offset.x / width) * totalSeconds
+                                
+                                selectedMeasurement = measurements.minByOrNull { 
+                                    val mInstant = measurementInstant(it)
+                                    if (mInstant == null) Long.MAX_VALUE 
+                                    else kotlin.math.abs(mInstant.epochSecond - tapTimeSeconds).toLong()
+                                }
                             }
                         }
                 ) {
@@ -108,13 +117,18 @@ fun InteractiveTrendGraph(
                     val height = size.height
                     val bottomLabelSpace = 36.dp.toPx()
                     val plotHeight = (height - bottomLabelSpace).coerceAtLeast(1f)
-                    val stepX = width / (measurements.size - 1).coerceAtLeast(1)
+
+                    val firstInstant = measurements.firstOrNull()?.let(::measurementInstant) ?: return@Canvas
+                    val lastInstant = measurements.lastOrNull()?.let(::measurementInstant) ?: return@Canvas
+                    val totalSeconds = (lastInstant.epochSecond - firstInstant.epochSecond).coerceAtLeast(1L)
 
                     val rawPath = Path()
                     val calibratedPath = Path()
 
                     measurements.forEachIndexed { index, measurement ->
-                        val x = index * stepX
+                        val mInstant = measurementInstant(measurement) ?: return@forEachIndexed
+                        val secondsOffset = mInstant.epochSecond - firstInstant.epochSecond
+                        val x = (secondsOffset.toFloat() / totalSeconds.toFloat()) * width
                         
                         // Raw Value Y
                         val rawY = plotHeight - ((measurement.value - minGlucose) / range * plotHeight)

@@ -1,0 +1,4 @@
+- [ ] Remove hardcoded path from `gradle.properties`
+- [ ] Configure `gradle/gradle-daemon-jvm.properties`
+- [ ] Add toolchain resolver to `settings.gradle.kts`
+- [ ] Verify build in current environment

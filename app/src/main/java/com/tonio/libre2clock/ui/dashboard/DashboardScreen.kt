@@ -161,8 +161,8 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
             ) {
                 CornerMetric(
                     title = "Estimated HbA1c (90d)",
-                    primary = metrics.estimatedA1c,
-                    secondary = "",
+                    primary = metrics.estimatedA1c.valueDisplay,
+                    secondary = metrics.estimatedA1c.oscillationDisplay,
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -412,12 +412,13 @@ private fun MetricCell(metric: DisplayMetric, label: String, modifier: Modifier 
 
 @Composable
 private fun HypoCell(metric: CountMetric, label: String, modifier: Modifier = Modifier) {
+    val rawCount = metric.count - metric.offset
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "${metric.count} (${formatSigned(metric.offset)})",
+            text = "$rawCount(${metric.count})",
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
@@ -442,7 +443,7 @@ private data class CountMetric(
 )
 
 private data class DashboardMetrics(
-    val estimatedA1c: String,
+    val estimatedA1c: DisplayMetric,
     val todayAvg: DisplayMetric,
     val yesterdayAvg: DisplayMetric,
     val weekAvg: DisplayMetric,
@@ -488,15 +489,19 @@ private fun calculateDashboardMetrics(measurements: List<GlucoseMeasurement>): D
 
     val a1cWindowItems = dated.filter { (instant, _) -> !instant.isBefore(startOfA1cWindow) }.map { it.second }
     val allForA1c = if (a1cWindowItems.isNotEmpty()) a1cWindowItems else measurements
-    val avgForA1c = if (allForA1c.isNotEmpty()) {
-        allForA1c.map { it.calibratedValue }.average()
+    
+    val avgRawForA1c = if (allForA1c.isNotEmpty()) allForA1c.map { it.value }.average() else 0.0
+    val avgCalibratedForA1c = if (allForA1c.isNotEmpty()) allForA1c.map { it.calibratedValue }.average() else 0.0
+    
+    val estimatedA1c = if (avgCalibratedForA1c > 0.0) {
+        val a1cRaw = (avgRawForA1c + 46.7) / 28.7
+        val a1cCalibrated = (avgCalibratedForA1c + 46.7) / 28.7
+        DisplayMetric(
+            valueDisplay = String.format("%.1f%%(%.1f%%)", a1cRaw, a1cCalibrated),
+            oscillationDisplay = ""
+        )
     } else {
-        0.0
-    }
-    val estimatedA1c = if (avgForA1c > 0.0) {
-        String.format("%.1f%%", (avgForA1c + 46.7) / 28.7)
-    } else {
-        "--"
+        DisplayMetric("--", "")
     }
 
     return DashboardMetrics(
@@ -519,18 +524,21 @@ private fun buildDisplayMetric(measurements: List<GlucoseMeasurement>): DisplayM
         return DisplayMetric(valueDisplay = "--", oscillationDisplay = "--")
     }
 
+    val rawValues = measurements.map { it.value }
     val calibratedValues = measurements.map { it.calibratedValue }
+    
+    val avgRaw = rawValues.average().roundToInt()
     val avgCalibrated = calibratedValues.average().roundToInt()
+    
     val maxValue = calibratedValues.maxOrNull() ?: avgCalibrated
     val minValue = calibratedValues.minOrNull() ?: avgCalibrated
 
-    val avgOffset = measurements.map { it.calibratedValue - it.value }.average().roundToInt()
     val plus = (maxValue - avgCalibrated).coerceAtLeast(0)
     val minus = (avgCalibrated - minValue).coerceAtLeast(0)
 
     return DisplayMetric(
-        valueDisplay = "$avgCalibrated (${formatSigned(avgOffset)})",
-        oscillationDisplay = "+$plus/-$minus"
+        valueDisplay = "$avgRaw($avgCalibrated)",
+        oscillationDisplay = if (plus == minus) "±$plus" else "±$plus/-$minus"
     )
 }
 
@@ -553,10 +561,6 @@ private fun mealSlotOf(instant: Instant, zone: ZoneId): MealSlot? {
         time >= LocalTime.of(17, 0) -> MealSlot.DINNER
         else -> null
     }
-}
-
-private fun formatSigned(value: Int): String {
-    return if (value >= 0) "+$value" else value.toString()
 }
 
 private fun parseMeasurementInstant(measurement: GlucoseMeasurement): Instant? {

@@ -1,0 +1,4 @@
+- `[x]` Update `DashboardScreen.kt` with new metric format and improved metric calculation.
+- `[x]` Refactor `InteractiveTrendGraph` in `TrendGraph.kt` to use a time-based X-axis.
+- `[x]` Verify `GlucoseRepositoryImpl.kt` history merging and sorting logic.
+- `[x]` Verify UI with Compose Previews.
