@@ -20,9 +20,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.repository.GlucoseProcessor
+import com.tonio.libre2clock.util.TimestampParser
 import java.time.Instant
 import java.time.LocalDateTime
-import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -31,30 +31,7 @@ private val ORIGINAL_LINE_COLOR = Color.Gray.copy(alpha = 0.5f)
 private val CALIBRATED_LINE_COLOR = Color(0xFF00BCD4)
 
 private fun parseTimestamp(timestamp: String): Instant? {
-    return try {
-        Instant.parse(timestamp)
-    } catch (_: Exception) {
-        try {
-            java.time.LocalDateTime.parse(timestamp)
-                .atZone(ZoneId.systemDefault())
-                .toInstant()
-        } catch (_: Exception) {
-            try {
-                java.time.LocalDateTime.parse(timestamp, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-                    .atZone(ZoneId.systemDefault())
-                    .toInstant()
-            } catch (_: Exception) {
-                try {
-                    java.time.LocalTime.parse(timestamp, DateTimeFormatter.ofPattern("HH:mm"))
-                        .atDate(java.time.LocalDate.now())
-                        .atZone(ZoneId.systemDefault())
-                        .toInstant()
-                } catch (_: Exception) {
-                    null
-                }
-            }
-        }
-    }
+    return TimestampParser.parseFlexibleInstant(timestamp)
 }
 
 private fun measurementInstant(measurement: GlucoseMeasurement): Instant? {

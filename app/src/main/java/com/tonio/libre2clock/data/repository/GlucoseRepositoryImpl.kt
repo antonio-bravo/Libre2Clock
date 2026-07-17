@@ -4,13 +4,12 @@ import com.tonio.libre2clock.data.api.LibreService
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.LoginRequest
 import com.tonio.libre2clock.data.model.SensorStatus
+import com.tonio.libre2clock.util.TimestampParser
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import java.time.Instant
-import java.time.LocalDateTime
-import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -279,27 +278,6 @@ class GlucoseRepositoryImpl(
     }
 
     private fun parseFlexibleInstant(timestamp: String): Instant? {
-        return try {
-            Instant.parse(timestamp)
-        } catch (_: Exception) {
-            try {
-                LocalDateTime.parse(timestamp).atZone(ZoneId.systemDefault()).toInstant()
-            } catch (_: Exception) {
-                try {
-                    LocalDateTime.parse(timestamp, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-                        .atZone(ZoneId.systemDefault())
-                        .toInstant()
-                } catch (_: Exception) {
-                    try {
-                        LocalTime.parse(timestamp, DateTimeFormatter.ofPattern("HH:mm"))
-                            .atDate(java.time.LocalDate.now())
-                            .atZone(ZoneId.systemDefault())
-                            .toInstant()
-                    } catch (_: Exception) {
-                        null
-                    }
-                }
-            }
-        }
+        return TimestampParser.parseFlexibleInstant(timestamp)
     }
 }

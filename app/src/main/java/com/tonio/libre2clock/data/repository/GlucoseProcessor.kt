@@ -3,13 +3,9 @@ package com.tonio.libre2clock.data.repository
 import com.tonio.libre2clock.data.model.CapillaryMeasurement
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.GlucoseOffsetRange
+import com.tonio.libre2clock.util.TimestampParser
 import java.time.Duration
 import java.time.Instant
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -106,30 +102,7 @@ object GlucoseProcessor {
     }
 
     private fun parseTimestampToInstant(timestamp: String): Instant? {
-        return try {
-            Instant.parse(timestamp)
-        } catch (_: DateTimeParseException) {
-            try {
-                LocalDateTime.parse(timestamp)
-                    .atZone(ZoneId.systemDefault())
-                    .toInstant()
-            } catch (_: DateTimeParseException) {
-                try {
-                LocalDateTime.parse(timestamp, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-                    .atZone(ZoneId.systemDefault())
-                    .toInstant()
-                } catch (_: DateTimeParseException) {
-                    try {
-                        LocalTime.parse(timestamp, DateTimeFormatter.ofPattern("HH:mm"))
-                            .atDate(LocalDateTime.now().toLocalDate())
-                            .atZone(ZoneId.systemDefault())
-                            .toInstant()
-                    } catch (_: DateTimeParseException) {
-                        null
-                    }
-                }
-            }
-        }
+        return TimestampParser.parseFlexibleInstant(timestamp)
     }
 
     /**

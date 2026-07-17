@@ -26,12 +26,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.SensorStatus
 import com.tonio.libre2clock.data.repository.GlucoseProcessor
+import com.tonio.libre2clock.util.TimestampParser
 import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -565,28 +564,7 @@ private fun parseMeasurementInstant(measurement: GlucoseMeasurement): Instant? {
 }
 
 private fun parseFlexibleInstant(timestamp: String): Instant? {
-    return try {
-        Instant.parse(timestamp)
-    } catch (_: Exception) {
-        try {
-            LocalDateTime.parse(timestamp).atZone(ZoneId.systemDefault()).toInstant()
-        } catch (_: Exception) {
-            try {
-                LocalDateTime.parse(timestamp, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-                    .atZone(ZoneId.systemDefault())
-                    .toInstant()
-            } catch (_: Exception) {
-                try {
-                    LocalTime.parse(timestamp, DateTimeFormatter.ofPattern("HH:mm"))
-                        .atDate(LocalDate.now())
-                        .atZone(ZoneId.systemDefault())
-                        .toInstant()
-                } catch (_: Exception) {
-                    null
-                }
-            }
-        }
-    }
+    return TimestampParser.parseFlexibleInstant(timestamp)
 }
 
 @Composable
