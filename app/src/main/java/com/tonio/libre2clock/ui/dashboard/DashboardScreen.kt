@@ -1,5 +1,6 @@
 package com.tonio.libre2clock.ui.dashboard
 
+import android.content.ClipData
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -14,15 +15,13 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -32,8 +31,10 @@ import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.SensorStatus
 import com.tonio.libre2clock.data.repository.GlucoseProcessor
 import com.tonio.libre2clock.util.TimestampParser
+import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
+import java.util.Locale
 import java.time.LocalTime
 import java.time.ZoneId
 import kotlin.math.roundToInt
@@ -99,7 +100,8 @@ fun SensorHealthCard(
     onRefresh: () -> Unit
 ) {
     val context = LocalContext.current
-    val clipboardManager = LocalClipboardManager.current
+    val clipboard = LocalClipboard.current
+    val scope = rememberCoroutineScope()
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -142,7 +144,9 @@ fun SensorHealthCard(
                                     ${status.expiryDate}
                                     Remaining: ${status.daysRemaining} days
                                 """.trimIndent()
-                                clipboardManager.setText(AnnotatedString(text))
+                                scope.launch {
+                                    clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("Sensor Info", text)))
+                                }
                                 Toast.makeText(context, "Sensor info copied to clipboard", Toast.LENGTH_SHORT).show()
                             },
                             modifier = Modifier.size(24.dp)
@@ -561,7 +565,7 @@ private fun calculateDashboardMetrics(measurements: List<GlucoseMeasurement>): D
         val a1cRaw = (avgRawForA1c + 46.7) / 28.7
         val a1cCalibrated = (avgCalibratedForA1c + 46.7) / 28.7
         DisplayMetric(
-            primary = String.format("%.1f%%(%.1f%%)", a1cRaw, a1cCalibrated),
+            primary = String.format(Locale.US, "%.1f%%(%.1f%%)", a1cRaw, a1cCalibrated),
             secondary = ""
         )
     } else {

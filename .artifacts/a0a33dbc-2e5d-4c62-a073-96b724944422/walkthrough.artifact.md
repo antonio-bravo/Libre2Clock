@@ -1,33 +1,36 @@
-# Walkthrough - Robust History Restoration and Metric Reactivity
+# Walkthrough - Fixing Deprecations and CI Warnings
 
-I have overhauled the data management layer to ensure that restoring backups works flawlessly and that the UI updates immediately when data is merged.
+I have addressed the Kotlin compilation warning regarding the deprecated `LocalClipboardManager` and resolved the GitHub Actions Node.js version and deprecation warnings.
 
 ## Changes Made
 
-### 1. Reactive Data Architecture
+### 1. Updated Clipboard API
 
-- **Flow-based Repository**: Refactored `GlucoseRepositoryImpl.kt` to remove static `MutableStateFlow`s for glucose data.
-- **Dynamic Observation**: The repository now derives its `historicalGlucose` and `currentGlucose` flows directly from `PreferenceManager.kt`. This means that any operation that writes to the local storage (like a **Restore from Backup**) will automatically trigger a refresh of the graph and all metrics on the screen.
+#### [MODIFY] [DashboardScreen.kt](file:///Users/antonio-bravo/AndroidStudioProjects/Libre2Clock/app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt)
+- Replaced the deprecated `LocalClipboardManager` with the modern `LocalClipboard` API.
+- Implemented `ClipEntry` with `ClipData` for more robust clipboard operations.
+- Wrapped the clipboard update in a `coroutineScope.launch` as required by the new suspend-based API.
+- Added necessary imports for `ClipData`, `ClipEntry`, `LocalClipboard`, and `Locale`.
 
-### 2. Robust Merging Logic
+### 2. CI/CD Workflow Optimization
 
-- **Unified Key Generation**: Updated the merging logic to use a more resilient unique key: `ParsedInstant + RawValue`.
-- **Improved Backup Support**: The restore function in `PreferenceManager.kt` now uses the same robust merging logic as the live data fetcher. This prevents duplicate entries and ensures that data from different sources (live sync vs. backup file) is combined correctly.
-- **Strict Sorting**: Guaranteed that data is always sorted descending by time (newest first) using `Instant` comparison, fixing potential issues where mismatched timestamp string formats could break the chart.
+#### [MODIFY] [.github/workflows/build-release.yml](file:///Users/antonio-bravo/AndroidStudioProjects/Libre2Clock/.github/workflows/build-release.yml)
+- Removed the redundant `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24` environment variable, as GitHub Actions runners now use Node 24 by default.
+- Added `NODE_OPTIONS: "--no-deprecation"` to suppress noisy deprecation warnings (like the `punycode` warning) during the build process.
 
-### 3. Metric Accuracy
+### 3. Code Quality Fixes
 
-- **HbA1c Calculation**: Since the repository is now reactive, the "Estimated HbA1c" will immediately recalculate after a restore, including all the historical points from the backup file.
+#### [MODIFY] [DashboardScreen.kt](file:///Users/antonio-bravo/AndroidStudioProjects/Libre2Clock/app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt)
+- Fixed a linting warning by explicitly using `Locale.US` in `String.format` for HbA1c calculations, ensuring consistent number formatting across different device regions.
 
 ## Verification Results
 
 ### Build Status
-- Project builds and initializes correctly.
+- Successfully compiled the project locally using `./gradlew assembleDebug`.
 ```bash
-BUILD SUCCESSFUL in 4s
+BUILD SUCCESSFUL in 13s
 ```
 
-### Functional Highlights
-- **Instant Restore**: Restoring a backup now populates the "Yesterday" metrics and the graph immediately without needing an app restart.
-- **No Duplicates**: Repeated restores or overlapping data between the API and backup files are handled gracefully by the new key-based merging.
-- **History View**: The graph correctly identifies and displays data points from previous days once the backup is merged.
+### Functional Verification
+- Verified that the "Copy" button in the Sensor Health card still works correctly with the new API.
+- Verified that all compilation warnings in `DashboardScreen.kt` related to the clipboard have been resolved.
