@@ -1,9 +1,9 @@
-- [x] Fix Graph Visualization
-    - [x] Update `TrendGraph.kt` to ensure chronological sorting (ascending)
-    - [x] Robust timestamp parsing in graph
-- [x] Robust Backup/Restore
-    - [x] Use lenient JSON configuration in `PreferenceManager.kt`
-    - [x] Improve merging logic with fallback parsing
+- [x] Fix Trend Graph Drawing
+    - [x] Sanitize and sort data chronologically
+    - [x] Implement robust path building logic
+    - [x] Restore `drawPath` calls (fixed empty graph)
+    - [x] Update date format and labels
+- [x] Ensure Backup Resilience
+    - [x] Verify `PreferenceManager` uses lenient JSON
 - [x] Verification
-    - [x] Verify graph displays restored data correctly
-    - [x] Verify scrolling to previous days
+    - [x] Verify graph appears after restore

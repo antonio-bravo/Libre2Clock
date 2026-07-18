@@ -1,28 +1,34 @@
-# Implementation Plan - Fix History Restore and Metric Reactivity
+# Implementation Plan - Final Fix for Graph Visualization and Backup Integrity
 
-The user reported that after restoring a backup, historical data (specifically "Yesterday") does not appear in the dashboard metrics or the graph. This is due to an architectural gap where the `GlucoseRepository` does not observe changes in the local storage after a restore operation, and the merging logic for backups is inconsistent with the main data ingestion flow.
+Address the "empty graph" issue by fixing the path drawing logic, improving data sorting, and ensuring the backup restoration process is fully compatible with all data formats.
 
 ## Proposed Changes
 
-### Data & Logic Refinement
+### Data Layer
 
 #### [MODIFY] [PreferenceManager.kt](file:///Users/antonio-bravo/AndroidStudioProjects/Libre2Clock/app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt)
-- **Fix Merge Logic**: Update `mergeHistoricalMeasurements` to use a robust key (Parsed Instant + Raw Value) instead of the fragile string-based key.
-- **Improve Sorting**: Ensure merged data is sorted by time (Instant) instead of alphabetical timestamp strings.
-- **Consistency**: Use the same pruning logic as the repository to respect `historyRetentionDays`.
+- **Lenient JSON**: Force use of the custom `json` instance (with `ignoreUnknownKeys = true`) in all DataStore read/write operations.
+- **Robust Keying**: Ensure the `mergeHistoricalMeasurements` logic handles potentially malformed timestamps gracefully during restoration.
 
-#### [MODIFY] [GlucoseRepositoryImpl.kt](file:///Users/antonio-bravo/AndroidStudioProjects/Libre2Clock/app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt)
-- **Reactive Observation**: Change `historicalGlucose` and `currentGlucose` to be derived flows from `PreferenceManager`. Instead of holding independent `MutableStateFlow`s, the repository will now actively observe the DataStore.
-- This ensures that if a user restores a backup, the UI updates **instantly** without needing a restart.
+### UI & Visualization
 
-### Verification Plan
+#### [MODIFY] [TrendGraph.kt](file:///Users/antonio-bravo/AndroidStudioProjects/Libre2Clock/app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt)
+- **Data Sanitization**: Filter the `measurements` list to remove any entries with invalid/unparseable timestamps BEFORE sorting or drawing.
+- **Strict Chronological Sorting**: Ensure the list is sorted ASCENDING (oldest to newest).
+- **Path Logic Fix**: Use a boolean flag `isFirstPoint` instead of `index == 0` to trigger the initial `moveTo` call. This ensures that even if the first few items in the original list were filtered out, the drawing still starts correctly.
+- **X-Axis Optimization**:
+    - Format dates as `dd-MM`.
+    - Ensure Y-axis labels are drawn at reasonable intervals to avoid overlapping during scroll.
+- **Infinite Loop Guard**: Add safety checks to the grid drawing loops.
+
+## Verification Plan
 
 ### Manual Verification
-1.  **Backup/Restore**:
-    *   Note the current data in the dashboard.
-    *   Perform a Restore from the provided backup file.
-    *   Verify that the graph and "Yesterday" metrics populate **immediately** without closing the app.
-2.  **Metrics Check**:
-    *   Verify that "Estimated HbA1c" values change after the restore, reflecting the larger dataset.
-3.  **Graph Check**:
-    *   Scroll back in the trend graph to verify that data points from yesterday are visible.
+1.  **Restore Backup**:
+    *   Load `libre2clock_history_backup (1).json`.
+    *   Verify that the graph immediately populates with data from yesterday.
+2.  **Navigation**:
+    *   Scroll left to see yesterday's data.
+    *   Verify the line is continuous (no gaps unless they exist in the data).
+3.  **Metrics**:
+    *   Check that "Avg Glucose" for yesterday still shows the correct values.

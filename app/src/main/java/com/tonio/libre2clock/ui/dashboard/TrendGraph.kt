@@ -46,10 +46,10 @@ fun InteractiveTrendGraph(
     measurements: List<GlucoseMeasurement>,
     modifier: Modifier = Modifier
 ) {
-    val sortedMeasurements = remember(measurements) {
-        measurements.sortedBy { measurement ->
-            measurementInstant(measurement) ?: Instant.MIN
-        }
+    val sanitizedSorted = remember(measurements) {
+        measurements.mapNotNull { m ->
+            measurementInstant(m)?.let { it to m }
+        }.sortedBy { it.first }
     }
 
     var selectedMeasurement by remember { mutableStateOf<GlucoseMeasurement?>(null) }
@@ -98,7 +98,7 @@ fun InteractiveTrendGraph(
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            if (sortedMeasurements.isEmpty()) {
+            if (sanitizedSorted.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("No data available", style = MaterialTheme.typography.bodyMedium)
                 }
@@ -107,13 +107,13 @@ fun InteractiveTrendGraph(
                 val maxGlucose = 350
                 val range = (maxGlucose - minGlucose).toFloat().coerceAtLeast(1f)
 
-                val firstInstant = sortedMeasurements.firstOrNull()?.let(::measurementInstant) ?: Instant.now()
-                val lastInstant = sortedMeasurements.lastOrNull()?.let(::measurementInstant) ?: Instant.now()
+                val firstInstant = sanitizedSorted.first().first
+                val lastInstant = sanitizedSorted.last().first
                 val totalDurationHours = Duration.between(firstInstant, lastInstant).toMinutes() / 60.0
                 val graphWidth = (totalDurationHours * pixelsPerHour.value).dp.coerceAtLeast(screenWidth)
 
                 // Auto-scroll to end on first load or data change
-                LaunchedEffect(sortedMeasurements.size) {
+                LaunchedEffect(sanitizedSorted.size) {
                     scrollState.scrollTo(scrollState.maxValue)
                 }
 
@@ -127,18 +127,16 @@ fun InteractiveTrendGraph(
                         modifier = Modifier
                             .width(graphWidth)
                             .fillMaxHeight()
-                            .pointerInput(sortedMeasurements) {
+                            .pointerInput(sanitizedSorted) {
                                 detectTapGestures { offset ->
-                                    if (sortedMeasurements.isEmpty()) return@detectTapGestures
+                                    if (sanitizedSorted.isEmpty()) return@detectTapGestures
                                     val widthPx = size.width
                                     val totalSeconds = (lastInstant.epochSecond - firstInstant.epochSecond).coerceAtLeast(1L)
                                     val tapTimeSeconds = firstInstant.epochSecond + (offset.x / widthPx) * totalSeconds
                                     
-                                    selectedMeasurement = sortedMeasurements.minByOrNull { 
-                                        val mInstant = measurementInstant(it)
-                                        if (mInstant == null) Long.MAX_VALUE 
-                                        else kotlin.math.abs(mInstant.epochSecond - tapTimeSeconds).toLong()
-                                    }
+                                    selectedMeasurement = sanitizedSorted.minByOrNull { (instant, _) ->
+                                        kotlin.math.abs(instant.epochSecond - tapTimeSeconds)
+                                    }?.second
                                 }
                             }
                     ) {
@@ -150,19 +148,33 @@ fun InteractiveTrendGraph(
 
                         val rawPath = Path()
                         val calibratedPath = Path()
+                        var isFirstPoint = true
 
-                        sortedMeasurements.forEachIndexed { index, measurement ->
-                            val mInstant = measurementInstant(measurement) ?: return@forEachIndexed
-                            val secondsOffset = mInstant.epochSecond - firstInstant.epochSecond
+                        sanitizedSorted.forEach { (instant, measurement) ->
+                            val secondsOffset = instant.epochSecond - firstInstant.epochSecond
                             val x = (secondsOffset.toFloat() / totalSeconds.toFloat()) * width
                             
-                            // Raw Value Y
                             val rawY = plotHeight - ((measurement.value - minGlucose) / range * plotHeight)
-                            if (index == 0) rawPath.moveTo(x, rawY) else rawPath.lineTo(x, rawY)
-
-                            // Calibrated Value Y                            
                             val calY = plotHeight - ((measurement.calibratedValue - minGlucose) / range * plotHeight)
-                            if (index == 0) calibratedPath.moveTo(x, calY) else calibratedPath.lineTo(x, calY)
+
+                            if (isFirstPoint) {
+                                rawPath.moveTo(x, rawY)
+                                calibratedPath.moveTo(x, calY)
+                                isFirstPoint = false
+                            } else {
+                                rawPath.lineTo(x, rawY)
+                                calibratedPath.lineTo(x, calY)
+                            }
+                        }
+
+                        // Draw Paths
+                        drawPath(path = rawPath, color = ORIGINAL_LINE_COLOR, style = Stroke(width = 2.dp.toPx()))
+                        drawPath(path = calibratedPath, color = CALIBRATED_LINE_COLOR, style = Stroke(width = 4.dp.toPx()))
+                        
+                        // Reference lines
+                        listOf(70, 180).forEach { threshold ->
+                            val y = plotHeight - ((threshold - minGlucose) / range * plotHeight)
+                            drawLine(color = Color.Gray.copy(alpha = 0.3f), start = Offset(0f, y), end = Offset(width, y), strokeWidth = 1.dp.toPx())
                         }
 
                         // Draw Raw Path (Original)
