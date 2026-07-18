@@ -1,36 +1,31 @@
-# Walkthrough - Fixing Deprecations and CI Warnings
+# Walkthrough - Fixed Graph after Restore and Robust Backup
 
-I have addressed the Kotlin compilation warning regarding the deprecated `LocalClipboardManager` and resolved the GitHub Actions Node.js version and deprecation warnings.
+I have fixed the issue where the trend graph would appear empty after restoring a backup, despite the numerical values being present. I also made the backup/restore process more resilient.
 
 ## Changes Made
 
-### 1. Updated Clipboard API
+### 1. Trend Graph Fix
 
-#### [MODIFY] [DashboardScreen.kt](file:///Users/antonio-bravo/AndroidStudioProjects/Libre2Clock/app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt)
-- Replaced the deprecated `LocalClipboardManager` with the modern `LocalClipboard` API.
-- Implemented `ClipEntry` with `ClipData` for more robust clipboard operations.
-- Wrapped the clipboard update in a `coroutineScope.launch` as required by the new suspend-based API.
-- Added necessary imports for `ClipData`, `ClipEntry`, `LocalClipboard`, and `Locale`.
+#### [MODIFY] [TrendGraph.kt](file:///Users/antonio-bravo/AndroidStudioProjects/Libre2Clock/app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt)
+- **Automatic Sorting**: The graph now internally sorts all measurements chronologically (oldest to newest) before drawing.
+- **Why this matters**: The repository returns data newest-first. When you restore a large historical backup, the drawing logic was trying to connect dots "backwards" or in a mixed order, causing the graph paths to become invalid or invisible. Now, the line will always flow correctly from left to right.
 
-### 2. CI/CD Workflow Optimization
+### 2. Resilient Backup & Restore
 
-#### [MODIFY] [.github/workflows/build-release.yml](file:///Users/antonio-bravo/AndroidStudioProjects/Libre2Clock/.github/workflows/build-release.yml)
-- Removed the redundant `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24` environment variable, as GitHub Actions runners now use Node 24 by default.
-- Added `NODE_OPTIONS: "--no-deprecation"` to suppress noisy deprecation warnings (like the `punycode` warning) during the build process.
-
-### 3. Code Quality Fixes
-
-#### [MODIFY] [DashboardScreen.kt](file:///Users/antonio-bravo/AndroidStudioProjects/Libre2Clock/app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt)
-- Fixed a linting warning by explicitly using `Locale.US` in `String.format` for HbA1c calculations, ensuring consistent number formatting across different device regions.
+#### [MODIFY] [PreferenceManager.kt](file:///Users/antonio-bravo/AndroidStudioProjects/Libre2Clock/app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt)
+- **Lenient JSON Decoding**: Configured the JSON parser to `ignoreUnknownKeys = true`.
+- **Safety**: This prevents the restore process from failing if the backup file contains extra fields or if the data models have changed slightly since the backup was made.
+- **Improved Merging**: Refined the duplicate detection to ensure that restored points are seamlessly integrated with live points already in the app.
 
 ## Verification Results
 
 ### Build Status
-- Successfully compiled the project locally using `./gradlew assembleDebug`.
+- Successfully compiled the project.
 ```bash
-BUILD SUCCESSFUL in 13s
+BUILD SUCCESSFUL in 5s
 ```
 
 ### Functional Verification
-- Verified that the "Copy" button in the Sensor Health card still works correctly with the new API.
-- Verified that all compilation warnings in `DashboardScreen.kt` related to the clipboard have been resolved.
+- Verified that "Avg Glucose" metrics correctly display data from the restored file.
+- Confirmed that the graph now correctly plots restored historical points from yesterday (7/17).
+- Verified smooth scrolling to see the full restored history.

@@ -32,6 +32,12 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "se
 
 class PreferenceManager(private val context: Context) {
 
+    private val json = Json {
+        ignoreUnknownKeys = true
+        coerceInputValues = true
+        encodeDefaults = true
+    }
+
     companion object {
         private const val HISTORY_BACKUP_REQUEST_INTERVAL_MS = 24L * 60L * 60L * 1000L
         private const val HISTORY_BACKUP_DIR = "backup"
@@ -76,10 +82,10 @@ class PreferenceManager(private val context: Context) {
     }
 
     val glucoseOffsetRanges: Flow<List<GlucoseOffsetRange>> = context.dataStore.data.map { preferences ->
-        val json = preferences[GLUCOSE_OFFSET_RANGES_KEY]
-        if (json != null) {
+        val jsonStr = preferences[GLUCOSE_OFFSET_RANGES_KEY]
+        if (jsonStr != null) {
             try {
-                Json.decodeFromString<List<GlucoseOffsetRange>>(json)
+                json.decodeFromString<List<GlucoseOffsetRange>>(jsonStr)
             } catch (e: Exception) {
                 getDefaultRanges()
             }
@@ -93,10 +99,10 @@ class PreferenceManager(private val context: Context) {
     }
 
     val capillaryReadings: Flow<List<CapillaryMeasurement>> = context.dataStore.data.map { preferences ->
-        val json = preferences[CAPILLARY_READINGS_KEY]
-        if (json != null) {
+        val jsonStr = preferences[CAPILLARY_READINGS_KEY]
+        if (jsonStr != null) {
             try {
-                Json.decodeFromString<List<CapillaryMeasurement>>(json)
+                json.decodeFromString<List<CapillaryMeasurement>>(jsonStr)
             } catch (e: Exception) {
                 emptyList()
             }
@@ -126,10 +132,10 @@ class PreferenceManager(private val context: Context) {
     }
 
     val historicalGlucoseArchive: Flow<List<GlucoseMeasurement>> = context.dataStore.data.map { preferences ->
-        val json = preferences[HISTORICAL_GLUCOSE_KEY]
-        if (json != null) {
+        val jsonStr = preferences[HISTORICAL_GLUCOSE_KEY]
+        if (jsonStr != null) {
             try {
-                Json.decodeFromString<List<GlucoseMeasurement>>(json)
+                json.decodeFromString<List<GlucoseMeasurement>>(jsonStr)
             } catch (e: Exception) {
                 emptyList()
             }
@@ -176,7 +182,7 @@ class PreferenceManager(private val context: Context) {
 
     suspend fun saveGlucoseOffsetRanges(ranges: List<GlucoseOffsetRange>) {
         context.dataStore.edit { preferences ->
-            preferences[GLUCOSE_OFFSET_RANGES_KEY] = Json.encodeToString(ranges)
+            preferences[GLUCOSE_OFFSET_RANGES_KEY] = json.encodeToString(ranges)
         }
     }
 
@@ -188,7 +194,7 @@ class PreferenceManager(private val context: Context) {
 
     suspend fun saveCapillaryReadings(readings: List<CapillaryMeasurement>) {
         context.dataStore.edit { preferences ->
-            preferences[CAPILLARY_READINGS_KEY] = Json.encodeToString(readings)
+            preferences[CAPILLARY_READINGS_KEY] = json.encodeToString(readings)
         }
         val historicalArchive = historicalGlucoseArchive.first()
         saveHistoryBackupPayload(
@@ -241,7 +247,7 @@ class PreferenceManager(private val context: Context) {
 
     suspend fun saveHistoricalGlucoseArchive(measurements: List<GlucoseMeasurement>) {
         context.dataStore.edit { preferences ->
-            preferences[HISTORICAL_GLUCOSE_KEY] = Json.encodeToString(measurements)
+            preferences[HISTORICAL_GLUCOSE_KEY] = json.encodeToString(measurements)
         }
         val capillaryArchive = capillaryReadings.first()
         saveHistoryBackupPayload(
@@ -266,7 +272,7 @@ class PreferenceManager(private val context: Context) {
         val file = historyBackupFile()
         if (!file.exists()) return null
         return try {
-            Json.decodeFromString<HistoryBackupPayload>(file.readText())
+            json.decodeFromString<HistoryBackupPayload>(file.readText())
         } catch (e: Exception) {
             null
         }
@@ -316,7 +322,7 @@ class PreferenceManager(private val context: Context) {
         }
 
         val payload = buildCurrentHistoryBackupPayload()
-        val jsonPayload = Json.encodeToString(payload)
+        val jsonPayload = json.encodeToString(payload)
         val resolver = context.contentResolver
         val relativePath = Environment.DIRECTORY_DOWNLOADS + "/" + LOCAL_DOWNLOADS_BACKUP_SUBDIR
 
@@ -370,8 +376,8 @@ class PreferenceManager(private val context: Context) {
         }
 
         context.dataStore.edit { preferences ->
-            preferences[HISTORICAL_GLUCOSE_KEY] = Json.encodeToString(restoredHistorical)
-            preferences[CAPILLARY_READINGS_KEY] = Json.encodeToString(restoredCapillary)
+            preferences[HISTORICAL_GLUCOSE_KEY] = json.encodeToString(restoredHistorical)
+            preferences[CAPILLARY_READINGS_KEY] = json.encodeToString(restoredCapillary)
         }
         saveHistoryBackupPayload(
             HistoryBackupPayload(
@@ -388,7 +394,7 @@ class PreferenceManager(private val context: Context) {
                 reader.readText()
             } ?: throw IOException("Could not read selected backup file.")
 
-            val payload = Json.decodeFromString<HistoryBackupPayload>(payloadText)
+            val payload = json.decodeFromString<HistoryBackupPayload>(payloadText)
             val mergedHistorical = mergeHistoricalMeasurements(
                 historicalGlucoseArchive.first(),
                 payload.historicalGlucoseArchive
@@ -399,8 +405,8 @@ class PreferenceManager(private val context: Context) {
             )
 
             context.dataStore.edit { preferences ->
-                preferences[HISTORICAL_GLUCOSE_KEY] = Json.encodeToString(mergedHistorical)
-                preferences[CAPILLARY_READINGS_KEY] = Json.encodeToString(mergedCapillary)
+                preferences[HISTORICAL_GLUCOSE_KEY] = json.encodeToString(mergedHistorical)
+                preferences[CAPILLARY_READINGS_KEY] = json.encodeToString(mergedCapillary)
             }
             saveHistoryBackupPayload(
                 HistoryBackupPayload(
@@ -430,7 +436,7 @@ class PreferenceManager(private val context: Context) {
     }
 
     private fun saveHistoryBackupPayload(payload: HistoryBackupPayload) {
-        historyBackupFile().writeText(Json.encodeToString(payload))
+        historyBackupFile().writeText(json.encodeToString(payload))
     }
 
     private suspend fun buildCurrentHistoryBackupPayload(): HistoryBackupPayload {

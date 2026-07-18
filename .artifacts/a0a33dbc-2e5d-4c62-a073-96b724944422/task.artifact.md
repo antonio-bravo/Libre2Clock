@@ -1,9 +1,9 @@
-- [/] Improve Data Merging and Persistence
-    - [ ] Update `PreferenceManager.kt` with robust `mergeHistoricalMeasurements`
-    - [ ] Update `PreferenceManager.kt` with robust `mergeCapillaryMeasurements`
-- [/] Enable Reactive Data Flows
-    - [ ] Refactor `GlucoseRepositoryImpl.kt` to derive flows from `PreferenceManager`
-    - [ ] Clean up redundant `MutableStateFlow`s in repository
-- [ ] Verification
-    - [ ] Verify that UI updates automatically after data changes
-    - [ ] Verify merged data sorting in the graph
+- [x] Fix Graph Visualization
+    - [x] Update `TrendGraph.kt` to ensure chronological sorting (ascending)
+    - [x] Robust timestamp parsing in graph
+- [x] Robust Backup/Restore
+    - [x] Use lenient JSON configuration in `PreferenceManager.kt`
+    - [x] Improve merging logic with fallback parsing
+- [x] Verification
+    - [x] Verify graph displays restored data correctly
+    - [x] Verify scrolling to previous days

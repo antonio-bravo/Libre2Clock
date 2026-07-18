@@ -46,6 +46,12 @@ fun InteractiveTrendGraph(
     measurements: List<GlucoseMeasurement>,
     modifier: Modifier = Modifier
 ) {
+    val sortedMeasurements = remember(measurements) {
+        measurements.sortedBy { measurement ->
+            measurementInstant(measurement) ?: Instant.MIN
+        }
+    }
+
     var selectedMeasurement by remember { mutableStateOf<GlucoseMeasurement?>(null) }
     val scrollState = rememberScrollState()
     val configuration = LocalConfiguration.current
@@ -92,7 +98,7 @@ fun InteractiveTrendGraph(
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            if (measurements.isEmpty()) {
+            if (sortedMeasurements.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("No data available", style = MaterialTheme.typography.bodyMedium)
                 }
@@ -101,13 +107,13 @@ fun InteractiveTrendGraph(
                 val maxGlucose = 350
                 val range = (maxGlucose - minGlucose).toFloat().coerceAtLeast(1f)
 
-                val firstInstant = measurements.firstOrNull()?.let(::measurementInstant) ?: Instant.now()
-                val lastInstant = measurements.lastOrNull()?.let(::measurementInstant) ?: Instant.now()
+                val firstInstant = sortedMeasurements.firstOrNull()?.let(::measurementInstant) ?: Instant.now()
+                val lastInstant = sortedMeasurements.lastOrNull()?.let(::measurementInstant) ?: Instant.now()
                 val totalDurationHours = Duration.between(firstInstant, lastInstant).toMinutes() / 60.0
                 val graphWidth = (totalDurationHours * pixelsPerHour.value).dp.coerceAtLeast(screenWidth)
 
                 // Auto-scroll to end on first load or data change
-                LaunchedEffect(measurements.size) {
+                LaunchedEffect(sortedMeasurements.size) {
                     scrollState.scrollTo(scrollState.maxValue)
                 }
 
@@ -121,14 +127,14 @@ fun InteractiveTrendGraph(
                         modifier = Modifier
                             .width(graphWidth)
                             .fillMaxHeight()
-                            .pointerInput(measurements) {
+                            .pointerInput(sortedMeasurements) {
                                 detectTapGestures { offset ->
-                                    if (measurements.isEmpty()) return@detectTapGestures
+                                    if (sortedMeasurements.isEmpty()) return@detectTapGestures
                                     val widthPx = size.width
                                     val totalSeconds = (lastInstant.epochSecond - firstInstant.epochSecond).coerceAtLeast(1L)
                                     val tapTimeSeconds = firstInstant.epochSecond + (offset.x / widthPx) * totalSeconds
                                     
-                                    selectedMeasurement = measurements.minByOrNull { 
+                                    selectedMeasurement = sortedMeasurements.minByOrNull { 
                                         val mInstant = measurementInstant(it)
                                         if (mInstant == null) Long.MAX_VALUE 
                                         else kotlin.math.abs(mInstant.epochSecond - tapTimeSeconds).toLong()
@@ -145,7 +151,7 @@ fun InteractiveTrendGraph(
                         val rawPath = Path()
                         val calibratedPath = Path()
 
-                        measurements.forEachIndexed { index, measurement ->
+                        sortedMeasurements.forEachIndexed { index, measurement ->
                             val mInstant = measurementInstant(measurement) ?: return@forEachIndexed
                             val secondsOffset = mInstant.epochSecond - firstInstant.epochSecond
                             val x = (secondsOffset.toFloat() / totalSeconds.toFloat()) * width
