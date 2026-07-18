@@ -4,7 +4,9 @@ import android.graphics.Paint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,12 +17,14 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.repository.GlucoseProcessor
 import com.tonio.libre2clock.util.TimestampParser
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -43,6 +47,12 @@ fun InteractiveTrendGraph(
     modifier: Modifier = Modifier
 ) {
     var selectedMeasurement by remember { mutableStateOf<GlucoseMeasurement?>(null) }
+    val scrollState = rememberScrollState()
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+
+    // Viewport: 12 hours = Screen Width
+    val pixelsPerHour = screenWidth / 12f
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -91,161 +101,122 @@ fun InteractiveTrendGraph(
                 val maxGlucose = 350
                 val range = (maxGlucose - minGlucose).toFloat().coerceAtLeast(1f)
 
-                Canvas(
+                val firstInstant = measurements.firstOrNull()?.let(::measurementInstant) ?: Instant.now()
+                val lastInstant = measurements.lastOrNull()?.let(::measurementInstant) ?: Instant.now()
+                val totalDurationHours = Duration.between(firstInstant, lastInstant).toMinutes() / 60.0
+                val graphWidth = (totalDurationHours * pixelsPerHour.value).dp.coerceAtLeast(screenWidth)
+
+                // Auto-scroll to end on first load or data change
+                LaunchedEffect(measurements.size) {
+                    scrollState.scrollTo(scrollState.maxValue)
+                }
+
+                Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .pointerInput(measurements) {
-                            detectTapGestures { offset ->
-                                if (measurements.isEmpty()) return@detectTapGestures
-                                val width = size.width
-                                val firstInstant = measurements.firstOrNull()?.let(::measurementInstant) ?: return@detectTapGestures
-                                val lastInstant = measurements.lastOrNull()?.let(::measurementInstant) ?: return@detectTapGestures
-                                val totalSeconds = (lastInstant.epochSecond - firstInstant.epochSecond).coerceAtLeast(1L)
-                                
-                                val tapTimeSeconds = firstInstant.epochSecond + (offset.x / width) * totalSeconds
-                                
-                                selectedMeasurement = measurements.minByOrNull { 
-                                    val mInstant = measurementInstant(it)
-                                    if (mInstant == null) Long.MAX_VALUE 
-                                    else kotlin.math.abs(mInstant.epochSecond - tapTimeSeconds).toLong()
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .horizontalScroll(scrollState)
+                ) {
+                    Canvas(
+                        modifier = Modifier
+                            .width(graphWidth)
+                            .fillMaxHeight()
+                            .pointerInput(measurements) {
+                                detectTapGestures { offset ->
+                                    if (measurements.isEmpty()) return@detectTapGestures
+                                    val widthPx = size.width
+                                    val totalSeconds = (lastInstant.epochSecond - firstInstant.epochSecond).coerceAtLeast(1L)
+                                    val tapTimeSeconds = firstInstant.epochSecond + (offset.x / widthPx) * totalSeconds
+                                    
+                                    selectedMeasurement = measurements.minByOrNull { 
+                                        val mInstant = measurementInstant(it)
+                                        if (mInstant == null) Long.MAX_VALUE 
+                                        else kotlin.math.abs(mInstant.epochSecond - tapTimeSeconds).toLong()
+                                    }
                                 }
                             }
+                    ) {
+                        val width = size.width
+                        val height = size.height
+                        val bottomLabelSpace = 36.dp.toPx()
+                        val plotHeight = (height - bottomLabelSpace).coerceAtLeast(1f)
+                        val totalSeconds = (lastInstant.epochSecond - firstInstant.epochSecond).coerceAtLeast(1L)
+
+                        val rawPath = Path()
+                        val calibratedPath = Path()
+
+                        measurements.forEachIndexed { index, measurement ->
+                            val mInstant = measurementInstant(measurement) ?: return@forEachIndexed
+                            val secondsOffset = mInstant.epochSecond - firstInstant.epochSecond
+                            val x = (secondsOffset.toFloat() / totalSeconds.toFloat()) * width
+                            
+                            // Raw Value Y
+                            val rawY = plotHeight - ((measurement.value - minGlucose) / range * plotHeight)
+                            if (index == 0) rawPath.moveTo(x, rawY) else rawPath.lineTo(x, rawY)
+
+                            // Calibrated Value Y                            
+                            val calY = plotHeight - ((measurement.calibratedValue - minGlucose) / range * plotHeight)
+                            if (index == 0) calibratedPath.moveTo(x, calY) else calibratedPath.lineTo(x, calY)
                         }
-                ) {
-                    val width = size.width
-                    val height = size.height
-                    val bottomLabelSpace = 36.dp.toPx()
-                    val plotHeight = (height - bottomLabelSpace).coerceAtLeast(1f)
 
-                    val firstInstant = measurements.firstOrNull()?.let(::measurementInstant) ?: return@Canvas
-                    val lastInstant = measurements.lastOrNull()?.let(::measurementInstant) ?: return@Canvas
-                    val totalSeconds = (lastInstant.epochSecond - firstInstant.epochSecond).coerceAtLeast(1L)
-
-                    val rawPath = Path()
-                    val calibratedPath = Path()
-
-                    measurements.forEachIndexed { index, measurement ->
-                        val mInstant = measurementInstant(measurement) ?: return@forEachIndexed
-                        val secondsOffset = mInstant.epochSecond - firstInstant.epochSecond
-                        val x = (secondsOffset.toFloat() / totalSeconds.toFloat()) * width
+                        // Draw Raw Path (Original)
+                        drawPath(path = rawPath, color = ORIGINAL_LINE_COLOR, style = Stroke(width = 2.dp.toPx()))
+                        drawPath(path = calibratedPath, color = CALIBRATED_LINE_COLOR, style = Stroke(width = 4.dp.toPx()))
                         
-                        // Raw Value Y
-                        val rawY = plotHeight - ((measurement.value - minGlucose) / range * plotHeight)
-                        if (index == 0) rawPath.moveTo(x, rawY) else rawPath.lineTo(x, rawY)
+                        // Reference lines
+                        listOf(70, 180).forEach { threshold ->
+                            val y = plotHeight - ((threshold - minGlucose) / range * plotHeight)
+                            drawLine(color = Color.Gray.copy(alpha = 0.3f), start = Offset(0f, y), end = Offset(width, y), strokeWidth = 1.dp.toPx())
+                        }
+
+                        // Ticks and Grid
+                        val tickValues = listOf(50, 100, 150, 200, 250, 300, 350)
+                        val tickPaint = Paint().apply {
+                            color = android.graphics.Color.GRAY
+                            alpha = 100
+                            textSize = 10.sp.toPx()
+                            textAlign = Paint.Align.LEFT
+                        }
+
+                        tickValues.forEach { value ->
+                            val y = plotHeight - ((value - minGlucose) / range * plotHeight)
+                            drawLine(color = Color.Gray.copy(alpha = 0.3f), start = Offset(0f, y), end = Offset(width, y), strokeWidth = 0.5.dp.toPx())
+                            
+                            // Draw labels multiple times to keep them visible while scrolling if viewport is large
+                            // Or just draw them at specific intervals. For now, every 6 hours of width.
+                            val labelStepPx = pixelsPerHour.value * 6f * density
+                            var labelX = 4.dp.toPx()
+                            while (labelX < width) {
+                                drawContext.canvas.nativeCanvas.drawText(value.toString(), labelX, y - 4.dp.toPx(), tickPaint)
+                                labelX += labelStepPx
+                            }
+                        }
+
+                        // Time Labels
+                        val labelPaint = Paint().apply {
+                            color = android.graphics.Color.GRAY
+                            textSize = 11.sp.toPx()
+                            textAlign = Paint.Align.CENTER
+                            isAntiAlias = true
+                        }
+                        val dateFormatter = DateTimeFormatter.ofPattern("dd-MM")
+                        val hourFormatter = DateTimeFormatter.ofPattern("HH:mm")
+                        val zone = ZoneId.systemDefault()
+                        val intervalSeconds = 3L * 60L * 60L // 3 hours
                         
-                        // Calibrated Value Y
-                        val calY = plotHeight - ((measurement.calibratedValue - minGlucose) / range * plotHeight)
-                        if (index == 0) calibratedPath.moveTo(x, calY) else calibratedPath.lineTo(x, calY)
-                    }
+                        val startDateTime = LocalDateTime.ofInstant(firstInstant, zone)
+                        val alignedStartHour = (startDateTime.hour / 3) * 3
+                        var cursor = startDateTime.withHour(alignedStartHour).withMinute(0).withSecond(0).withNano(0).atZone(zone).toInstant()
+                        while (cursor.isBefore(firstInstant)) cursor = cursor.plusSeconds(intervalSeconds)
 
-                    // Draw Raw Path (Original)
-                    drawPath(
-                        path = rawPath,
-                        color = ORIGINAL_LINE_COLOR,
-                        style = Stroke(width = 2.dp.toPx())
-                    )
+                        while (!cursor.isAfter(lastInstant)) {
+                            val x = ((cursor.epochSecond - firstInstant.epochSecond).toFloat() / totalSeconds.toFloat()) * width
+                            drawLine(color = Color.Gray.copy(alpha = 0.25f), start = Offset(x, 0f), end = Offset(x, plotHeight), strokeWidth = 0.5.dp.toPx())
 
-                    // Draw Calibrated Path
-                    drawPath(
-                        path = calibratedPath,
-                        color = CALIBRATED_LINE_COLOR,
-                        style = Stroke(width = 4.dp.toPx())
-                    )
-                    
-                    val targetLowY = plotHeight - ((70 - minGlucose) / range * plotHeight)
-                    val targetHighY = plotHeight - ((180 - minGlucose) / range * plotHeight)
-
-                    drawLine(
-                        color = Color.Gray.copy(alpha = 0.3f),
-                        start = Offset(0f, targetLowY),
-                        end = Offset(width, targetLowY),
-                        strokeWidth = 1.dp.toPx()
-                    )
-                    drawLine(
-                        color = Color.Gray.copy(alpha = 0.3f),
-                        start = Offset(0f, targetHighY),
-                        end = Offset(width, targetHighY),
-                        strokeWidth = 1.dp.toPx()
-                    )
-
-                    val tickValues = listOf(50, 100, 150, 200, 250, 300, 350)
-                    val tickPaint = Paint().apply {
-                        color = android.graphics.Color.GRAY
-                        alpha = 100
-                        textSize = 10.sp.toPx()
-                        textAlign = Paint.Align.LEFT
-                    }
-
-                    tickValues.forEach { value ->
-                        val y = plotHeight - ((value - minGlucose) / range * plotHeight)
-                        drawLine(
-                            color = Color.Gray.copy(alpha = 0.3f),
-                            start = Offset(0f, y),
-                            end = Offset(width, y),
-                            strokeWidth = 0.5.dp.toPx()
-                        )
-                        drawContext.canvas.nativeCanvas.drawText(
-                            value.toString(),
-                            4.dp.toPx(),
-                            y - 4.dp.toPx(),
-                            tickPaint
-                        )
-                    }
-
-                    val startInstant = measurements.firstOrNull()?.let(::measurementInstant)
-                    val endInstant = measurements.lastOrNull()?.let(::measurementInstant)
-                    if (startInstant != null && endInstant != null) {
-                        val effectiveStart = startInstant
-                        val effectiveEnd = endInstant
-                        if (!effectiveStart.isAfter(effectiveEnd)) {
-                            val labelPaint = Paint().apply {
-                                color = android.graphics.Color.GRAY
-                                textSize = 11.sp.toPx()
-                                textAlign = Paint.Align.CENTER
-                                isAntiAlias = true
-                            }
-                            val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                            val hourFormatter = DateTimeFormatter.ofPattern("HH:mm")
-                            val zone = ZoneId.systemDefault()
-                            val intervalSeconds = 3L * 60L * 60L
-                            val startDateTime = LocalDateTime.ofInstant(effectiveStart, zone)
-                            val alignedStartHour = (startDateTime.hour / 3) * 3
-                            var cursor = startDateTime
-                                .withHour(alignedStartHour)
-                                .withMinute(0)
-                                .withSecond(0)
-                                .withNano(0)
-                                .atZone(zone)
-                                .toInstant()
-                            while (cursor.isBefore(effectiveStart)) {
-                                cursor = cursor.plusSeconds(intervalSeconds)
-                            }
-
-                            val totalSpan = (effectiveEnd.epochSecond - effectiveStart.epochSecond).coerceAtLeast(1L)
-                            while (!cursor.isAfter(effectiveEnd)) {
-                                val x = ((cursor.epochSecond - effectiveStart.epochSecond).toFloat() / totalSpan.toFloat()) * width
-                                drawLine(
-                                    color = Color.Gray.copy(alpha = 0.25f),
-                                    start = Offset(x, 0f),
-                                    end = Offset(x, plotHeight),
-                                    strokeWidth = 0.5.dp.toPx()
-                                )
-
-                                val localDateTime = LocalDateTime.ofInstant(cursor, zone)
-                                drawContext.canvas.nativeCanvas.drawText(
-                                    dateFormatter.format(localDateTime),
-                                    x,
-                                    plotHeight + 14.dp.toPx(),
-                                    labelPaint
-                                )
-                                drawContext.canvas.nativeCanvas.drawText(
-                                    hourFormatter.format(localDateTime),
-                                    x,
-                                    plotHeight + 28.dp.toPx(),
-                                    labelPaint
-                                )
-                                cursor = cursor.plusSeconds(intervalSeconds)
-                            }
+                            val localDateTime = LocalDateTime.ofInstant(cursor, zone)
+                            drawContext.canvas.nativeCanvas.drawText(dateFormatter.format(localDateTime), x, plotHeight + 14.dp.toPx(), labelPaint)
+                            drawContext.canvas.nativeCanvas.drawText(hourFormatter.format(localDateTime), x, plotHeight + 28.dp.toPx(), labelPaint)
+                            cursor = cursor.plusSeconds(intervalSeconds)
                         }
                     }
                 }

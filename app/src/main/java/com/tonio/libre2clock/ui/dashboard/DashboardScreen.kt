@@ -75,7 +75,7 @@ fun DashboardScreen(
         ) {
             GlucoseCard(currentGlucose, dashboardMetrics)
             Spacer(modifier = Modifier.height(16.dp))
-            SensorHealthCard(sensorStatus)
+            SensorHealthCard(sensorStatus, onRefresh = viewModel::refresh)
             Spacer(modifier = Modifier.height(16.dp))
             DashboardSlidesCard(
                 metrics = dashboardMetrics,
@@ -94,7 +94,10 @@ fun DashboardScreen(
 }
 
 @Composable
-fun SensorHealthCard(status: SensorStatus?) {
+fun SensorHealthCard(
+    status: SensorStatus?,
+    onRefresh: () -> Unit
+) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
 
@@ -118,25 +121,39 @@ fun SensorHealthCard(status: SensorStatus?) {
                     color = MaterialTheme.colorScheme.onSecondaryContainer
                 )
                 if (status != null) {
-                    IconButton(
-                        onClick = {
-                            val text = """
-                                Sensor SN: ${status.serialNumber}
-                                ${status.startDate}
-                                ${status.expiryDate}
-                                Remaining: ${status.daysRemaining} days
-                            """.trimIndent()
-                            clipboardManager.setText(AnnotatedString(text))
-                            Toast.makeText(context, "Sensor info copied to clipboard", Toast.LENGTH_SHORT).show()
-                        },
-                        modifier = Modifier.size(24.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.ContentCopy,
-                            contentDescription = "Copy sensor info",
-                            modifier = Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
-                        )
+                    Row {
+                        IconButton(
+                            onClick = onRefresh,
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Refresh sensor info",
+                                modifier = Modifier.size(18.dp),
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        IconButton(
+                            onClick = {
+                                val text = """
+                                    Sensor SN: ${status.serialNumber}
+                                    ${status.startDate}
+                                    ${status.expiryDate}
+                                    Remaining: ${status.daysRemaining} days
+                                """.trimIndent()
+                                clipboardManager.setText(AnnotatedString(text))
+                                Toast.makeText(context, "Sensor info copied to clipboard", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.ContentCopy,
+                                contentDescription = "Copy sensor info",
+                                modifier = Modifier.size(18.dp),
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                            )
+                        }
                     }
                 }
             }

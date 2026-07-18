@@ -1,9 +1,13 @@
-- [/] Enhance Sensor Health Data
-    - [ ] Update `SensorStatus` model with `startDate`
-    - [ ] Update `GlucoseRepositoryImpl.kt` to calculate sensor start time
-- [/] Update Dashboard UI
-    - [ ] Add copy button to `SensorHealthCard`
-    - [ ] Display start date in `SensorHealthCard`
-    - [ ] Implement clipboard logic
-- [ ] Verification
-    - [ ] Verify copy functionality
+- [x] Centralize Calibration in `GlucoseForegroundService`
+    - [x] Observe offset preferences in the service
+    - [x] Apply calibration to all notification types
+- [x] Enhance Trend Graph
+    - [x] Update date format to `dd-MM`
+    - [x] Implement horizontal scrolling with 12h viewport
+    - [x] Auto-scroll to latest data
+- [x] UI Refinements
+    - [x] Add refresh button to `SensorHealthCard`
+- [x] Verification
+    - [x] Verify reactive notifications
+    - [x] Verify graph navigation
+    - [x] Verify sensor refresh button

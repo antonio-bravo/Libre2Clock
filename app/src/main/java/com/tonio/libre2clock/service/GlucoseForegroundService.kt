@@ -31,11 +31,18 @@ class GlucoseForegroundService : Service() {
     private lateinit var preferenceManager: PreferenceManager
     private var syncJob: Job? = null
     private var lastWatchAlertEpochMinute: Long = -1L
+    
+    // Calibration Cache
     private var watchAlertsEnabledCached: Boolean = false
     private var watchAlertIntervalMinutesCached: Int = 60
     private var watchAlertStartMinuteCached: Int = 0
     private var lowGlucoseAlarmEnabledCached: Boolean = false
     private var highGlucoseAlarmEnabledCached: Boolean = false
+    private var glucoseOffsetCached: Int = 0
+    private var glucoseOffsetRangesCached: List<com.tonio.libre2clock.data.model.GlucoseOffsetRange> = emptyList()
+    private var autoAdjustEnabledCached: Boolean = false
+    private var capillaryReadingsCached: List<com.tonio.libre2clock.data.model.CapillaryMeasurement> = emptyList()
+
     private var lastLowAlarmAtMillis: Long = 0L
     private var lastHighAlarmAtMillis: Long = 0L
     private var lastForegroundNotificationContent: String? = null
@@ -109,6 +116,34 @@ class GlucoseForegroundService : Service() {
                 }
             }
 
+            launch {
+                preferenceManager.glucoseOffset.collect {
+                    glucoseOffsetCached = it
+                    repository.currentGlucose.first()?.let { updateNotification(it) }
+                }
+            }
+
+            launch {
+                preferenceManager.glucoseOffsetRanges.collect {
+                    glucoseOffsetRangesCached = it
+                    repository.currentGlucose.first()?.let { updateNotification(it) }
+                }
+            }
+
+            launch {
+                preferenceManager.autoAdjustEnabled.collect {
+                    autoAdjustEnabledCached = it
+                    repository.currentGlucose.first()?.let { updateNotification(it) }
+                }
+            }
+
+            launch {
+                preferenceManager.capillaryReadings.collect {
+                    capillaryReadingsCached = it
+                    repository.currentGlucose.first()?.let { updateNotification(it) }
+                }
+            }
+
             while (isActive) {
                 val fetchResult = repository.fetchLatestGlucose()
                 val measurement = fetchResult.getOrNull()
@@ -173,13 +208,24 @@ class GlucoseForegroundService : Service() {
     }
 
     private fun updateNotification(measurement: GlucoseMeasurement) {
-        val trendStr = GlucoseProcessor.getTrendArrowSymbol(measurement.trendArrow)
-        val dualValue = GlucoseProcessor.formatDualValue(measurement.value, measurement.calibratedValue)
+        val processed = processMeasurement(measurement)
+        val trendStr = GlucoseProcessor.getTrendArrowSymbol(processed.trendArrow)
+        val dualValue = GlucoseProcessor.formatDualValue(processed.value, processed.calibratedValue)
         val content = "$dualValue mg/dL $trendStr"
         if (content == lastForegroundNotificationContent) return
         lastForegroundNotificationContent = content
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(NOTIFICATION_ID, createNotification(content))
+    }
+
+    private fun processMeasurement(measurement: GlucoseMeasurement): GlucoseMeasurement {
+        return GlucoseProcessor.process(
+            measurement = measurement,
+            manualOffset = glucoseOffsetCached,
+            userRanges = glucoseOffsetRangesCached,
+            autoAdjustEnabled = autoAdjustEnabledCached,
+            capillaryReadings = capillaryReadingsCached
+        )
     }
 
     private fun triggerTestNotification() {
@@ -196,8 +242,9 @@ class GlucoseForegroundService : Service() {
             val testNotificationId = (System.currentTimeMillis() % Int.MAX_VALUE).toInt()
 
             val notification = if (measurement != null) {
-                val title = buildWatchPlainTitle(measurement)
-                val dualValue = GlucoseProcessor.formatDualValue(measurement.value, measurement.calibratedValue)
+                val processed = processMeasurement(measurement)
+                val title = buildWatchPlainTitle(processed)
+                val dualValue = GlucoseProcessor.formatDualValue(processed.value, processed.calibratedValue)
                 val styledTitle = buildWatchStyledTitle(title, dualValue)
 
                 NotificationCompat.Builder(this@GlucoseForegroundService, ALERT_CHANNEL_ID)
@@ -252,7 +299,8 @@ class GlucoseForegroundService : Service() {
                     if (offsetFromStart % intervalMinutes != 0) return
                     if (epochMinute == lastWatchAlertEpochMinute) return
 
-                    sendWatchAlertNotification(measurement)
+                    val processed = processMeasurement(measurement)
+                    sendWatchAlertNotification(processed)
                     lastWatchAlertEpochMinute = epochMinute
                 }
 
@@ -285,18 +333,19 @@ class GlucoseForegroundService : Service() {
 
                 private fun maybeSendGlucoseAlarms(measurement: GlucoseMeasurement) {
                     val now = System.currentTimeMillis()
-                    val calibrated = measurement.calibratedValue
+                    val processed = processMeasurement(measurement)
+                    val calibrated = processed.calibratedValue
 
                     if (lowGlucoseAlarmEnabledCached && calibrated < LOW_GLUCOSE_THRESHOLD) {
                         if (now - lastLowAlarmAtMillis >= GLUCOSE_ALARM_COOLDOWN_MS) {
-                            sendThresholdAlarmNotification(measurement, isLow = true)
+                            sendThresholdAlarmNotification(processed, isLow = true)
                             lastLowAlarmAtMillis = now
                         }
                     }
 
                     if (highGlucoseAlarmEnabledCached && calibrated > HIGH_GLUCOSE_THRESHOLD) {
                         if (now - lastHighAlarmAtMillis >= GLUCOSE_ALARM_COOLDOWN_MS) {
-                            sendThresholdAlarmNotification(measurement, isLow = false)
+                            sendThresholdAlarmNotification(processed, isLow = false)
                             lastHighAlarmAtMillis = now
                         }
                     }
