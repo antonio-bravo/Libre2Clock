@@ -1,13 +1,9 @@
-- [x] Centralize Calibration in `GlucoseForegroundService`
-    - [x] Observe offset preferences in the service
-    - [x] Apply calibration to all notification types
-- [x] Enhance Trend Graph
-    - [x] Update date format to `dd-MM`
-    - [x] Implement horizontal scrolling with 12h viewport
-    - [x] Auto-scroll to latest data
-- [x] UI Refinements
-    - [x] Add refresh button to `SensorHealthCard`
-- [x] Verification
-    - [x] Verify reactive notifications
-    - [x] Verify graph navigation
-    - [x] Verify sensor refresh button
+- [/] Improve Data Merging and Persistence
+    - [ ] Update `PreferenceManager.kt` with robust `mergeHistoricalMeasurements`
+    - [ ] Update `PreferenceManager.kt` with robust `mergeCapillaryMeasurements`
+- [/] Enable Reactive Data Flows
+    - [ ] Refactor `GlucoseRepositoryImpl.kt` to derive flows from `PreferenceManager`
+    - [ ] Clean up redundant `MutableStateFlow`s in repository
+- [ ] Verification
+    - [ ] Verify that UI updates automatically after data changes
+    - [ ] Verify merged data sorting in the graph

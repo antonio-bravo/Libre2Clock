@@ -471,21 +471,51 @@ class PreferenceManager(private val context: Context) {
         local: List<GlucoseMeasurement>,
         backup: List<GlucoseMeasurement>
     ): List<GlucoseMeasurement> {
-        return (local + backup)
-            .distinctBy { measurement ->
-                "${measurement.timestamp}|${measurement.value}|${measurement.calibratedValue}|${measurement.trendArrow}"
+        val mergedMap = LinkedHashMap<String, GlucoseMeasurement>()
+        (local + backup).forEach { m ->
+            val instant = parseFlexibleInstant(m.factoryTimestamp) ?: parseFlexibleInstant(m.timestamp)
+            val key = if (instant != null) {
+                "${instant.toEpochMilli()}-${m.value}"
+            } else {
+                "${m.timestamp}-${m.value}"
             }
-            .sortedByDescending { it.timestamp }
+            mergedMap[key] = m
+        }
+
+        return mergedMap.values
+            .mapNotNull { m ->
+                val instant = parseFlexibleInstant(m.factoryTimestamp) ?: parseFlexibleInstant(m.timestamp)
+                if (instant != null) instant to m else null
+            }
+            .sortedByDescending { it.first }
+            .map { it.second }
     }
 
     private fun mergeCapillaryMeasurements(
         local: List<CapillaryMeasurement>,
         backup: List<CapillaryMeasurement>
     ): List<CapillaryMeasurement> {
-        return (local + backup)
-            .distinctBy { reading ->
-                "${reading.timestamp}|${reading.value}|${reading.sensorValue}|${reading.delta}"
+        val mergedMap = LinkedHashMap<String, CapillaryMeasurement>()
+        (local + backup).forEach { r ->
+            val instant = parseFlexibleInstant(r.timestamp)
+            val key = if (instant != null) {
+                "${instant.toEpochMilli()}-${r.value}"
+            } else {
+                "${r.timestamp}-${r.value}"
             }
-            .sortedByDescending { it.timestamp }
+            mergedMap[key] = r
+        }
+
+        return mergedMap.values
+            .mapNotNull { r ->
+                val instant = parseFlexibleInstant(r.timestamp)
+                if (instant != null) instant to r else null
+            }
+            .sortedByDescending { it.first }
+            .map { it.second }
+    }
+
+    private fun parseFlexibleInstant(timestamp: String): java.time.Instant? {
+        return com.tonio.libre2clock.util.TimestampParser.parseFlexibleInstant(timestamp)
     }
 }

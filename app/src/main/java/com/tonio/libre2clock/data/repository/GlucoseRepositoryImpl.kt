@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -18,11 +19,10 @@ class GlucoseRepositoryImpl(
     private val preferenceManager: PreferenceManager
 ) : GlucoseRepository {
 
-    private val _currentGlucose = MutableStateFlow<GlucoseMeasurement?>(null)
-    override val currentGlucose: Flow<GlucoseMeasurement?> = _currentGlucose.asStateFlow()
+    override val currentGlucose: Flow<GlucoseMeasurement?> = preferenceManager.historicalGlucoseArchive
+        .map { it.firstOrNull() }
 
-    private val _historicalGlucose = MutableStateFlow<List<GlucoseMeasurement>>(emptyList())
-    override val historicalGlucose: Flow<List<GlucoseMeasurement>> = _historicalGlucose.asStateFlow()
+    override val historicalGlucose: Flow<List<GlucoseMeasurement>> = preferenceManager.historicalGlucoseArchive
 
     private val _sensorStatus = MutableStateFlow<SensorStatus?>(null)
     override val sensorStatus: Flow<SensorStatus?> = _sensorStatus.asStateFlow()
@@ -38,10 +38,6 @@ class GlucoseRepositoryImpl(
             expiryDate = "Expires: Sat, Nov 15, 2025 10:30",
             serialNumber = "DEMO-12345"
         )
-    }
-
-    init {
-        // Initialize LibreService with stored credentials if available
     }
 
     override suspend fun login(email: String, password: String): Result<Unit> {
@@ -81,38 +77,11 @@ class GlucoseRepositoryImpl(
     private suspend fun fetchLatestGlucoseInternal(persistArchive: Boolean): Result<GlucoseMeasurement> {
         if (isDemoMode) {
             val now = Instant.now()
-            val formatter = DateTimeFormatter.ofPattern("HH:mm")
+            val formatter = DateTimeFormatter.ofPattern("HH:mm", Locale.US)
             
-            val manualOffset = preferenceManager.glucoseOffset.first()
-            val userRanges = preferenceManager.glucoseOffsetRanges.first()
-            val autoAdjustEnabled = preferenceManager.autoAdjustEnabled.first()
-            val capillaryReadings = preferenceManager.capillaryReadings.first()
-
-            // Generate initial historical data if empty
-            if (_historicalGlucose.value.isEmpty()) {
-                val mockHistory = (0 until 48).map { i ->
-                    val time = now.minusSeconds((i * 15 * 60).toLong())
-                    val rawValue = (100..180).random()
-                    val measurement = GlucoseMeasurement(
-                        factoryTimestamp = time.toString(),
-                        timestamp = formatter.format(time.atZone(ZoneId.systemDefault())),
-                        type = 0,
-                        valueInMgPerDl = rawValue,
-                        trendArrow = 3,
-                        measurementColor = 1,
-                        value = rawValue
-                    )
-                    GlucoseProcessor.process(
-                        measurement,
-                        manualOffset,
-                        userRanges,
-                        autoAdjustEnabled,
-                        capillaryReadings
-                    )
-                }.reversed()
-                _historicalGlucose.value = mockHistory
-            }
-
+            // For Demo mode, we still need to merge into PreferenceManager
+            val currentHistory = preferenceManager.historicalGlucoseArchive.first()
+            
             val demoValue = (100..180).random()
             val measurement = GlucoseMeasurement(
                 factoryTimestamp = now.toString(),
@@ -123,26 +92,17 @@ class GlucoseRepositoryImpl(
                 measurementColor = 1,
                 value = demoValue
             )
-            val processed = GlucoseProcessor.process(
-                measurement,
-                manualOffset,
-                userRanges,
-                autoAdjustEnabled,
-                capillaryReadings
-            )
-            _currentGlucose.value = processed
             
-            // Add new reading to history
             val mergedHistory = mergeAndPruneHistory(
-                existing = _historicalGlucose.value,
-                incoming = listOf(processed)
+                existing = currentHistory,
+                incoming = listOf(measurement)
             )
-            _historicalGlucose.value = mergedHistory
+            
             if (persistArchive) {
                 preferenceManager.saveHistoricalGlucoseArchive(mergedHistory)
             }
             
-            return Result.success(processed)
+            return Result.success(measurement)
         }
 
         return try {
@@ -162,9 +122,6 @@ class GlucoseRepositoryImpl(
             val id = patientId ?: return Result.failure(Exception("No patient found"))
             val response = LibreService.api.getGlucoseGraph(id)
             
-            // Log for debugging if needed (System.out for now)
-            println("Libre2Clock: Graph Response status=${response.status} items=${response.data?.graphData?.size}")
-
             val measurement = response.data?.connection?.glucoseMeasurement
             val activeSensors = response.data?.activeSensors
             
@@ -190,29 +147,25 @@ class GlucoseRepositoryImpl(
             }
 
             val historicalMeasurements = response.data?.graphData ?: emptyList()
-
-            // Merge everything as RAW data
             val incomingList = if (measurement != null) {
-                _currentGlucose.value = measurement
                 historicalMeasurements + measurement
             } else {
                 historicalMeasurements
             }
 
+            val currentHistory = preferenceManager.historicalGlucoseArchive.first()
             val mergedHistory = mergeAndPruneHistory(
-                existing = _historicalGlucose.value,
+                existing = currentHistory,
                 incoming = incomingList
             )
-            _historicalGlucose.value = mergedHistory
             
             if (persistArchive) {
                 preferenceManager.saveHistoricalGlucoseArchive(mergedHistory)
             }
 
-            if (measurement != null) {
-                Result.success(measurement)
-            } else if (historicalMeasurements.isNotEmpty()) {
-                Result.success(historicalMeasurements.last())
+            val resultMeasurement = measurement ?: historicalMeasurements.lastOrNull()
+            if (resultMeasurement != null) {
+                Result.success(resultMeasurement)
             } else {
                 Result.failure(Exception("No glucose data found in response"))
             }
@@ -225,21 +178,8 @@ class GlucoseRepositoryImpl(
     suspend fun initialize() {
         val token = preferenceManager.authToken.first()
         val userId = preferenceManager.userId.first()
-        val archivedHistory = preferenceManager.historicalGlucoseArchive.first()
-        val backupPayload = preferenceManager.loadHistoryBackupPayload()
-        if (archivedHistory.isNotEmpty()) {
-            _historicalGlucose.value = mergeAndPruneHistory(emptyList(), archivedHistory)
-        } else if (backupPayload?.historicalGlucoseArchive?.isNotEmpty() == true) {
-            val restoredHistory = mergeAndPruneHistory(emptyList(), backupPayload.historicalGlucoseArchive)
-            _historicalGlucose.value = restoredHistory
-            preferenceManager.saveHistoricalGlucoseArchive(restoredHistory)
-        }
-
-        val capillaryReadings = preferenceManager.capillaryReadings.first()
-        if (capillaryReadings.isEmpty() && backupPayload?.capillaryReadings?.isNotEmpty() == true) {
-            preferenceManager.saveCapillaryReadings(backupPayload.capillaryReadings)
-        }
-
+        
+        // Initial sync of backup if needed (logic already in PreferenceManager)
         preferenceManager.requestHistoryCloudBackupIfDue()
 
         if (token != null && userId != null) {
@@ -251,29 +191,27 @@ class GlucoseRepositoryImpl(
         existing: List<GlucoseMeasurement>,
         incoming: List<GlucoseMeasurement>
     ): List<GlucoseMeasurement> {
-        if (existing.isEmpty() && incoming.isEmpty()) return emptyList()
-
-        val mergedByKey = LinkedHashMap<String, GlucoseMeasurement>()
-        (existing + incoming).forEach { measurement ->
-            measurementKey(measurement)?.let { key ->
-                mergedByKey[key] = measurement
+        val mergedMap = LinkedHashMap<String, GlucoseMeasurement>()
+        (existing + incoming).forEach { m ->
+            val instant = parseMeasurementInstant(m)
+            val key = if (instant != null) {
+                "${instant.toEpochMilli()}-${m.value}"
+            } else {
+                "${m.timestamp}-${m.value}"
             }
+            mergedMap[key] = m
         }
 
         val retentionDays = preferenceManager.historyRetentionDays.first().toLong()
         val cutoff = Instant.now().minusSeconds(retentionDays * 24L * 60L * 60L)
-        return mergedByKey.values
-            .mapNotNull { measurement ->
-                parseMeasurementInstant(measurement)?.let { instant -> instant to measurement }
+        
+        return mergedMap.values
+            .mapNotNull { m ->
+                parseMeasurementInstant(m)?.let { instant -> instant to m }
             }
             .filter { (instant, _) -> !instant.isBefore(cutoff) }
-            .sortedBy { (instant, _) -> instant }
+            .sortedByDescending { it.first } // Newest first
             .map { it.second }
-    }
-
-    private fun measurementKey(measurement: GlucoseMeasurement): String? {
-        val instant = parseMeasurementInstant(measurement) ?: return null
-        return "${instant.toEpochMilli()}-${measurement.value}-${measurement.type}"
     }
 
     private fun parseMeasurementInstant(measurement: GlucoseMeasurement): Instant? {

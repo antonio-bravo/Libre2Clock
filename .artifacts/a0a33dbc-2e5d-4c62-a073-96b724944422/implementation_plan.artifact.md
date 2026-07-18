@@ -1,47 +1,28 @@
-# Implementation Plan - Notification Calibration, Scrollable Graph, and Sensor Refresh
+# Implementation Plan - Fix History Restore and Metric Reactivity
 
-Address calibration issues in notifications, improve graph readability/navigation with scrolling (12h viewport), and add a manual refresh for sensor data.
-
-## User Review Required
-
-> [!IMPORTANT]
-> The **glucose notifications** will now be fully reactive. Any change to your offset settings will reflect immediately in the background notification.
->
-> The **Trend Graph** will now allow you to scroll back in time to see all your stored history. By default, it will show a **12-hour window** on the screen, which makes the points much easier to read than the previous compressed view.
+The user reported that after restoring a backup, historical data (specifically "Yesterday") does not appear in the dashboard metrics or the graph. This is due to an architectural gap where the `GlucoseRepository` does not observe changes in the local storage after a restore operation, and the merging logic for backups is inconsistent with the main data ingestion flow.
 
 ## Proposed Changes
 
-### Background Service & Calibration Centralization
+### Data & Logic Refinement
 
-#### [MODIFY] [GlucoseForegroundService.kt](file:///Users/antonio-bravo/AndroidStudioProjects/Libre2Clock/app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt)
-- Add observers for all calibration-related preferences: `glucoseOffset`, `glucoseOffsetRanges`, `autoAdjustEnabled`, and `capillaryReadings`.
-- Store these values in the service to ensure that every background update uses the latest user settings.
-- Use `GlucoseProcessor.process` in `updateNotification`, `sendWatchAlertNotification`, and `sendThresholdAlarmNotification` to ensure the "dual value" `raw(calibrated)` is always accurate.
+#### [MODIFY] [PreferenceManager.kt](file:///Users/antonio-bravo/AndroidStudioProjects/Libre2Clock/app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt)
+- **Fix Merge Logic**: Update `mergeHistoricalMeasurements` to use a robust key (Parsed Instant + Raw Value) instead of the fragile string-based key.
+- **Improve Sorting**: Ensure merged data is sorted by time (Instant) instead of alphabetical timestamp strings.
+- **Consistency**: Use the same pruning logic as the repository to respect `historyRetentionDays`.
 
-### UI & UX Enhancements
+#### [MODIFY] [GlucoseRepositoryImpl.kt](file:///Users/antonio-bravo/AndroidStudioProjects/Libre2Clock/app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt)
+- **Reactive Observation**: Change `historicalGlucose` and `currentGlucose` to be derived flows from `PreferenceManager`. Instead of holding independent `MutableStateFlow`s, the repository will now actively observe the DataStore.
+- This ensures that if a user restores a backup, the UI updates **instantly** without needing a restart.
 
-#### [MODIFY] [TrendGraph.kt](file:///Users/antonio-bravo/AndroidStudioProjects/Libre2Clock/app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt)
-- **Date Format**: Change X-axis labels to `dd-MM` and `HH:mm`.
-- **Horizontal Scrolling**:
-    - Wrap the graph in a `HorizontalScroll`.
-    - Implement a fixed scaling factor: `12 hours = Screen Width`.
-    - The graph will automatically expand its width based on the amount of data available in `historicalData`.
-    - Keep the Y-axis labels (50, 100...) visible or fixed if possible (or just draw them frequently).
-- **Initial Position**: Automatically scroll to the end (most recent data) when the graph loads.
-
-#### [MODIFY] [DashboardScreen.kt](file:///Users/antonio-bravo/AndroidStudioProjects/Libre2Clock/app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt)
-- **SensorHealthCard**: Add a `Refresh` icon button next to the `Copy` button.
-- This button will trigger `viewModel.refresh()`, forcing an immediate update of sensor status and glucose data from the LibreLinkUp API.
-
-## Verification Plan
+### Verification Plan
 
 ### Manual Verification
-1.  **Notification Calibration**:
-    *   Change the Manual Offset in Settings.
-    *   Check the persistent notification; it should update the `(calibrated)` value immediately.
-2.  **Scrollable Graph**:
-    *   Verify that the graph is no longer "squashed" and you can scroll horizontally.
-    *   Check that the date format is `DD-MM`.
-3.  **Sensor Refresh**:
-    *   Tap the new refresh button in the **Sensor Health** card.
-    *   Verify that the "last sync" time or sensor info updates.
+1.  **Backup/Restore**:
+    *   Note the current data in the dashboard.
+    *   Perform a Restore from the provided backup file.
+    *   Verify that the graph and "Yesterday" metrics populate **immediately** without closing the app.
+2.  **Metrics Check**:
+    *   Verify that "Estimated HbA1c" values change after the restore, reflecting the larger dataset.
+3.  **Graph Check**:
+    *   Scroll back in the trend graph to verify that data points from yesterday are visible.

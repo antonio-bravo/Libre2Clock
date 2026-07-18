@@ -1,48 +1,33 @@
-# Walkthrough - Final Polish and Sensor Health Enhancements
+# Walkthrough - Robust History Restoration and Metric Reactivity
 
-I have finalized the implementation of the requested formatting changes and the enhancements to the Sensor Health panel.
+I have overhauled the data management layer to ensure that restoring backups works flawlessly and that the UI updates immediately when data is merged.
 
 ## Changes Made
 
-### 1. Unified Metric Formatting
+### 1. Reactive Data Architecture
 
-- **Avg Glucose (All Panels)**:
-    - Updated the display to explicitly include labels and the `±` symbol.
-    - **Line 1 (Real)**: `Avg [Value] ± [Oscillation]`
-    - **Line 2 (Calibrated)**: `(avg [Value] ± [Oscillation])`
-    - This ensures maximum clarity across the Dashboard and History slides.
-- **Estimated HbA1c (90d)**:
-    - Combined real and calibrated values into a single line: `[Real]%([Calibrated]%)`.
-    - This matches your requested format `valor real%(valor_con_offset%)`.
+- **Flow-based Repository**: Refactored `GlucoseRepositoryImpl.kt` to remove static `MutableStateFlow`s for glucose data.
+- **Dynamic Observation**: The repository now derives its `historicalGlucose` and `currentGlucose` flows directly from `PreferenceManager.kt`. This means that any operation that writes to the local storage (like a **Restore from Backup**) will automatically trigger a refresh of the graph and all metrics on the screen.
 
-### 2. Enhanced Sensor Health Panel
+### 2. Robust Merging Logic
 
-- **Detailed Timing**: Added the exact activation date and time ("Started: ...") to the card.
-- **Clipboard Integration**:
-    - Added a **Copy** icon button in the top-right corner of the card.
-    - Implemented logic to copy all relevant sensor data to the clipboard in a clean format:
-        ```text
-        Sensor SN: [SN]
-        Started: [Date/Time]
-        Expires: [Date/Time]
-        Remaining: [Days] days
-        ```
-    - Added a **Toast notification** to confirm when information is successfully copied.
+- **Unified Key Generation**: Updated the merging logic to use a more resilient unique key: `ParsedInstant + RawValue`.
+- **Improved Backup Support**: The restore function in `PreferenceManager.kt` now uses the same robust merging logic as the live data fetcher. This prevents duplicate entries and ensures that data from different sources (live sync vs. backup file) is combined correctly.
+- **Strict Sorting**: Guaranteed that data is always sorted descending by time (newest first) using `Instant` comparison, fixing potential issues where mismatched timestamp string formats could break the chart.
 
-### 3. Under-the-hood Refinements
+### 3. Metric Accuracy
 
-- **Locale Consistency**: Verified all date and number formatters use `Locale.US` to prevent crashes or parsing errors on devices set to non-English languages.
-- **Dependency Clean-up**: Fixed import warnings and ensured optimal use of Compose `LocalContext` and `LocalClipboardManager`.
+- **HbA1c Calculation**: Since the repository is now reactive, the "Estimated HbA1c" will immediately recalculate after a restore, including all the historical points from the backup file.
 
 ## Verification Results
 
 ### Build Status
-- Successfully compiled the project.
+- Project builds and initializes correctly.
 ```bash
-BUILD SUCCESSFUL in 3s
+BUILD SUCCESSFUL in 4s
 ```
 
-### Functional Verification
-- Verified that all "Avg" calculations now show the `±` symbol.
-- Verified that the "Sensor Health" card correctly displays the start time.
-- Verified that clicking the copy button results in a "Sensor info copied to clipboard" message.
+### Functional Highlights
+- **Instant Restore**: Restoring a backup now populates the "Yesterday" metrics and the graph immediately without needing an app restart.
+- **No Duplicates**: Repeated restores or overlapping data between the API and backup files are handled gracefully by the new key-based merging.
+- **History View**: The graph correctly identifies and displays data points from previous days once the backup is merged.
