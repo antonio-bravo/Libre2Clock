@@ -38,6 +38,10 @@ import java.util.Locale
 import java.time.LocalTime
 import java.time.ZoneId
 import kotlin.math.roundToInt
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -205,6 +209,15 @@ fun SensorHealthCard(
 
 @Composable
 private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetrics) {
+    // Format timestamp to yyyy-MM-dd HH:mm:ss using TimestampParser for flexibility
+    val lastSyncText = measurement?.timestamp?.let { timestamp ->
+        TimestampParser.parseFlexibleInstant(timestamp)?.let { instant ->
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                .withZone(ZoneId.systemDefault())
+                .format(instant)
+        } ?: timestamp
+    } ?: "------ --:--:--"
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -264,7 +277,8 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
                         }
                     }
                     Text(
-                        text = "Last sync: ${measurement.timestamp}",
+                        // text = "Last sync: ${measurement.timestamp}",
+                        text = "Last sync: ${lastSyncText}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                     )
