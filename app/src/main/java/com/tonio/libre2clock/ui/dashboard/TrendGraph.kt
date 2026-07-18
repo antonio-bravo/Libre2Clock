@@ -217,7 +217,7 @@ fun InteractiveTrendGraph(
                             textAlign = Paint.Align.CENTER
                             isAntiAlias = true
                         }
-                        val dateFormatter = DateTimeFormatter.ofPattern("dd-MM")
+                        val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
                         val hourFormatter = DateTimeFormatter.ofPattern("HH:mm")
                         val zone = ZoneId.systemDefault()
                         val intervalSeconds = 3L * 60L * 60L // 3 hours
