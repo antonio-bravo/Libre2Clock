@@ -39,6 +39,9 @@ class DashboardViewModel(
     val sensorStatus: StateFlow<SensorStatus?> = repository.sensorStatus
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    val isDemoMode: StateFlow<Boolean> = repository.isDemoMode
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     val historicalData: StateFlow<List<GlucoseMeasurement>> = combine(
         repository.historicalGlucose,
         preferenceManager.glucoseOffset,

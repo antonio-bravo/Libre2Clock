@@ -64,6 +64,7 @@ class PreferenceManager(private val context: Context) {
     private val HISTORICAL_GLUCOSE_KEY = stringPreferencesKey("historical_glucose_archive")
     private val HISTORY_RETENTION_DAYS_KEY = androidx.datastore.preferences.core.intPreferencesKey("history_retention_days")
     private val LAST_HISTORY_BACKUP_REQUEST_AT_KEY = longPreferencesKey("last_history_backup_request_at")
+    private val IS_DEMO_MODE_KEY = booleanPreferencesKey("is_demo_mode")
 
     val authToken: Flow<String?> = context.dataStore.data.map { preferences ->
         preferences[TOKEN_KEY]
@@ -151,6 +152,10 @@ class PreferenceManager(private val context: Context) {
 
     val lastHistoryBackupRequestAt: Flow<Long?> = context.dataStore.data.map { preferences ->
         preferences[LAST_HISTORY_BACKUP_REQUEST_AT_KEY]
+    }
+
+    val isDemoMode: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[IS_DEMO_MODE_KEY] ?: false
     }
 
     private fun getDefaultRanges() = listOf(
@@ -265,6 +270,12 @@ class PreferenceManager(private val context: Context) {
                 MIN_HISTORY_RETENTION_DAYS,
                 MAX_HISTORY_RETENTION_DAYS
             )
+        }
+    }
+
+    suspend fun saveDemoMode(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[IS_DEMO_MODE_KEY] = enabled
         }
     }
 

@@ -49,7 +49,8 @@ data class Connection(
     @param:Json(name = "patientId") val patientId: String,
     @param:Json(name = "firstName") val firstName: String,
     @param:Json(name = "lastName") val lastName: String,
-    @param:Json(name = "glucoseMeasurement") val glucoseMeasurement: GlucoseMeasurement? = null
+    @param:Json(name = "glucoseMeasurement") val glucoseMeasurement: GlucoseMeasurement? = null,
+    @param:Json(name = "sensor") val sensor: Sensor? = null
 )
 
 @JsonClass(generateAdapter = false)

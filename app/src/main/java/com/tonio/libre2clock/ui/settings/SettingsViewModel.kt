@@ -56,6 +56,9 @@ class SettingsViewModel(
     val historyRetentionDays: StateFlow<Int> = preferenceManager.historyRetentionDays
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 90)
 
+    val isDemoMode: StateFlow<Boolean> = preferenceManager.isDemoMode
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     val currentGlucose: StateFlow<GlucoseMeasurement?> = repository.currentGlucose
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
@@ -135,6 +138,12 @@ class SettingsViewModel(
     fun updateHistoryRetentionDays(days: Int) {
         viewModelScope.launch {
             preferenceManager.saveHistoryRetentionDays(days)
+        }
+    }
+
+    fun updateDemoMode(enabled: Boolean) {
+        viewModelScope.launch {
+            preferenceManager.saveDemoMode(enabled)
         }
     }
 

@@ -27,21 +27,22 @@ class GlucoseRepositoryImpl(
     private val _sensorStatus = MutableStateFlow<SensorStatus?>(null)
     override val sensorStatus: Flow<SensorStatus?> = _sensorStatus.asStateFlow()
 
-    private var patientId: String? = null
-    private var isDemoMode = false
+    override val isDemoMode: Flow<Boolean> = preferenceManager.isDemoMode
 
-    override fun enableDemoMode() {
-        isDemoMode = true
+    private var patientId: String? = null
+
+    override suspend fun enableDemoMode() {
+        preferenceManager.saveDemoMode(true)
         _sensorStatus.value = SensorStatus(
-            daysRemaining = "12d 0h remaining",
+            daysRemaining = "14d 0h remaining",
             startDate = "Started: Mon, Nov 03, 2025 10:30",
             expiryDate = "Expires: Mon, Nov 17, 2025 10:30",
             serialNumber = "DEMO-12345"
         )
     }
 
-    override fun disableDemoMode() {
-        isDemoMode = false
+    override suspend fun disableDemoMode() {
+        preferenceManager.saveDemoMode(false)
     }
 
     override suspend fun login(email: String, password: String): Result<Unit> {
@@ -61,7 +62,8 @@ class GlucoseRepositoryImpl(
                 val userId = data.user.id
                 LibreService.setAuth(token, userId)
                 preferenceManager.saveAuth(token, userId)
-                isDemoMode = false
+                preferenceManager.saveDemoMode(false)
+                _sensorStatus.value = null // Clear demo status
                 Result.success(Unit)
             } else {
                 Result.failure(Exception("Login failed with status ${response.status}"))
@@ -72,6 +74,10 @@ class GlucoseRepositoryImpl(
     }
 
     override suspend fun fetchLatestGlucose(): Result<GlucoseMeasurement> {
+        // Manual refresh should try real data unless user explicitly wants demo mode via switch?
+        // Actually, if we have a switch in settings, maybe manual refresh shouldn't force-disable demo mode anymore.
+        // The user said: "perhaps have a switch in the settings window to activate or deactivate demo mode"
+        // So I will remove the auto-disable on refresh to respect the switch.
         return fetchLatestGlucoseInternal(persistArchive = true)
     }
 
@@ -80,7 +86,8 @@ class GlucoseRepositoryImpl(
     }
 
     private suspend fun fetchLatestGlucoseInternal(persistArchive: Boolean): Result<GlucoseMeasurement> {
-        if (isDemoMode) {
+        val demoEnabled = preferenceManager.isDemoMode.first()
+        if (demoEnabled) {
             val now = Instant.now()
             val formatter = DateTimeFormatter.ofPattern("HH:mm", Locale.US)
             
@@ -107,6 +114,16 @@ class GlucoseRepositoryImpl(
                 preferenceManager.saveHistoricalGlucoseArchive(mergedHistory)
             }
             
+            // Ensure sensor status is populated for demo mode if missing
+            if (_sensorStatus.value == null || _sensorStatus.value?.serialNumber != "DEMO-12345") {
+                _sensorStatus.value = SensorStatus(
+                    daysRemaining = "14d 0h remaining",
+                    startDate = "Started: Mon, Nov 03, 2025 10:30",
+                    expiryDate = "Expires: Mon, Nov 17, 2025 10:30",
+                    serialNumber = "DEMO-12345"
+                )
+            }
+            
             return Result.success(measurement)
         }
 
@@ -129,9 +146,13 @@ class GlucoseRepositoryImpl(
             
             val measurement = response.data?.connection?.glucoseMeasurement
             val activeSensors = response.data?.activeSensors
+            val connectionSensor = response.data?.connection?.sensor
             
-            if (activeSensors != null && activeSensors.isNotEmpty()) {
-                val sensor = activeSensors[0].sensor
+            // Try picking the newest sensor from activeSensors, fallback to connection sensor
+            val sensor = activeSensors?.map { it.sensor }?.maxByOrNull { it.activationTimestamp }
+                ?: connectionSensor
+            
+            if (sensor != null) {
                 val activationTime = if (sensor.activationTimestamp > 10_000_000_000L) 
                     sensor.activationTimestamp / 1000 
                 else 
@@ -161,6 +182,8 @@ class GlucoseRepositoryImpl(
                     expiryDate = "Expires: $expiryDateStr",
                     serialNumber = sensor.serialNumber
                 )
+            } else {
+                _sensorStatus.value = null
             }
 
             val historicalMeasurements = response.data?.graphData ?: emptyList()

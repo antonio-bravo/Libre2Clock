@@ -42,7 +42,9 @@ class LoginViewModel(
     }
 
     fun startDemoMode() {
-        repository.enableDemoMode()
-        _loginResult.value = Result.success(Unit)
+        viewModelScope.launch {
+            repository.enableDemoMode()
+            _loginResult.value = Result.success(Unit)
+        }
     }
 }

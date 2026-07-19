@@ -52,6 +52,7 @@ fun DashboardScreen(
     val currentGlucose by viewModel.currentGlucose.collectAsStateWithLifecycle()
     val sensorStatus by viewModel.sensorStatus.collectAsStateWithLifecycle()
     val historicalData by viewModel.historicalData.collectAsStateWithLifecycle()
+    val isDemoMode by viewModel.isDemoMode.collectAsStateWithLifecycle()
     val isHistoryRefreshing by viewModel.isHistoryRefreshing.collectAsStateWithLifecycle()
     val dashboardMetrics = remember(historicalData) { calculateDashboardMetrics(historicalData) }
 
@@ -80,7 +81,11 @@ fun DashboardScreen(
         ) {
             GlucoseCard(currentGlucose, dashboardMetrics)
             Spacer(modifier = Modifier.height(16.dp))
-            SensorHealthCard(sensorStatus, onRefresh = viewModel::refresh)
+            SensorHealthCard(
+                status = sensorStatus,
+                isDemoMode = isDemoMode,
+                onRefresh = viewModel::refresh
+            )
             Spacer(modifier = Modifier.height(16.dp))
             DashboardSlidesCard(
                 metrics = dashboardMetrics,
@@ -101,6 +106,7 @@ fun DashboardScreen(
 @Composable
 fun SensorHealthCard(
     status: SensorStatus?,
+    isDemoMode: Boolean,
     onRefresh: () -> Unit
 ) {
     val context = LocalContext.current
@@ -110,7 +116,7 @@ fun SensorHealthCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer
+            containerColor = if (isDemoMode) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.secondaryContainer
         )
     ) {
         Column(
@@ -121,24 +127,41 @@ fun SensorHealthCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "Sensor Health",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-                if (status != null) {
-                    Row {
-                        IconButton(
-                            onClick = onRefresh,
-                            modifier = Modifier.size(24.dp)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "Sensor Health",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = if (isDemoMode) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                    if (isDemoMode) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Surface(
+                            color = MaterialTheme.colorScheme.error,
+                            shape = RoundedCornerShape(4.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Refresh,
-                                contentDescription = "Refresh sensor info",
-                                modifier = Modifier.size(18.dp),
-                                tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                            Text(
+                                text = "DEMO MODE",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onError,
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
                             )
                         }
+                    }
+                }
+                
+                Row {
+                    IconButton(
+                        onClick = onRefresh,
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Refresh sensor info",
+                            modifier = Modifier.size(18.dp),
+                            tint = if (isDemoMode) MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                        )
+                    }
+                    if (status != null) {
                         Spacer(modifier = Modifier.width(8.dp))
                         IconButton(
                             onClick = {
@@ -146,7 +169,7 @@ fun SensorHealthCard(
                                     Sensor SN: ${status.serialNumber}
                                     ${status.startDate}
                                     ${status.expiryDate}
-                                    Remaining: ${status.daysRemaining} days
+                                    Remaining: ${status.daysRemaining}
                                 """.trimIndent()
                                 scope.launch {
                                     clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("Sensor Info", text)))
@@ -159,7 +182,7 @@ fun SensorHealthCard(
                                 imageVector = Icons.Filled.ContentCopy,
                                 contentDescription = "Copy sensor info",
                                 modifier = Modifier.size(18.dp),
-                                tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                                tint = if (isDemoMode) MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                             )
                         }
                     }
@@ -177,30 +200,30 @@ fun SensorHealthCard(
                             text = status.daysRemaining,
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                            color = if (isDemoMode) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSecondaryContainer
                         )
                         Text(
                             text = status.startDate,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                            color = if (isDemoMode) MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                         )
                         Text(
                             text = status.expiryDate,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                            color = if (isDemoMode) MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                         )
                     }
                     Text(
                         text = "SN: ${status.serialNumber}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.5f)
+                        color = if (isDemoMode) MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.5f)
                     )
                 }
             } else {
                 Text(
                     text = "No sensor data available",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                    color = if (isDemoMode) MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                 )
             }
         }

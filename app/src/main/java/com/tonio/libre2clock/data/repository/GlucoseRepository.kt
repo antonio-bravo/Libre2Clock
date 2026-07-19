@@ -8,9 +8,10 @@ interface GlucoseRepository {
     val currentGlucose: Flow<GlucoseMeasurement?>
     val historicalGlucose: Flow<List<GlucoseMeasurement>>
     val sensorStatus: Flow<SensorStatus?>
+    val isDemoMode: Flow<Boolean>
     suspend fun login(email: String, password: String): Result<Unit>
     suspend fun fetchLatestGlucose(): Result<GlucoseMeasurement>
     suspend fun refreshHistoricalGlucoseWindow(): Result<GlucoseMeasurement>
-    fun enableDemoMode()
-    fun disableDemoMode()
+    suspend fun enableDemoMode()
+    suspend fun disableDemoMode()
 }
