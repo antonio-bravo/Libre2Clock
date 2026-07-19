@@ -1,5 +1,30 @@
 # Changelog
 
+## f094fd8 (Jul 19, 2026 14:37:52)
+fix gradle for local and github — antonio-bravo
+[detail](#f094fd8-details)
+
+<details id='f094fd8-details'>
+<summary>Changed files</summary>
+
+- gradle.properties [Modified]
+- gradlew [Modified]
+</details>
+
+
+---
+## d39ad11 (Jul 19, 2026 12:27:37)
+Update changelog — github-actions[bot]
+[detail](#d39ad11-details)
+
+<details id='d39ad11-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 832b549 (Jul 19, 2026 14:27:20)
 burger menu and how manage trends — antonio-bravo
 [detail](#832b549-details)
