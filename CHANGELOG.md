@@ -1,5 +1,37 @@
 # Changelog
 
+## 832b549 (Jul 19, 2026 14:27:20)
+burger menu and how manage trends — antonio-bravo
+[detail](#832b549-details)
+
+<details id='832b549-details'>
+<summary>Changed files</summary>
+
+- .idea/planningMode.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/navigation/Destinations.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/strategy/StrategyScreen.kt [Deleted]
+- app/src/main/res/values-es/strings.xml [Deleted]
+- app/src/main/res/values/strings.xml [Modified]
+- gradle.properties [Modified]
+- gradlew [Modified]
+</details>
+
+
+---
+## 1fe0743 (Jul 19, 2026 11:33:25)
+Update changelog — github-actions[bot]
+[detail](#1fe0743-details)
+
+<details id='1fe0743-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 870aee0 (Jul 19, 2026 13:33:10)
 Demo mode — antonio-bravo
 [detail](#870aee0-details)
