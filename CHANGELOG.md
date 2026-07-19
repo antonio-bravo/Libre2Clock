@@ -1,5 +1,37 @@
 # Changelog
 
+## 870aee0 (Jul 19, 2026 13:33:10)
+Demo mode — antonio-bravo
+[detail](#870aee0-details)
+
+<details id='870aee0-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/model/LibreModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepository.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/login/LoginViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+</details>
+
+
+---
+## dfb7bb8 (Jul 19, 2026 11:09:41)
+Update changelog — github-actions[bot]
+[detail](#dfb7bb8-details)
+
+<details id='dfb7bb8-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Deleted]
+</details>
+
+
+---
 ## 1983539 (Jul 19, 2026 13:09:23)
 fix permissions to write — antonio-bravo
 [detail](#1983539-details)
