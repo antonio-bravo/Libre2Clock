@@ -1,3 +1,40 @@
 <resources>
     <string name="app_name">Libre2Clock</string>
+    <string name="dashboard_title">Libre2Clock</string>
+    <string name="menu_settings">Settings</string>
+    <string name="menu_strategies">Trend Strategies</string>
+    <string name="refresh">Refresh</string>
+    <string name="sensor_health">Sensor Health</string>
+    <string name="demo_mode">DEMO MODE</string>
+    <string name="no_sensor_data">No sensor data available</string>
+    <string name="copy_sensor_info">Sensor info copied to clipboard</string>
+    <string name="last_sync">Last sync: %1$s</string>
+    <string name="fetching_data">Fetching data…</string>
+
+    <string name="strategy_title">Trend Strategies</string>
+    <string name="strategy_insulin_adj">Insulin Adjustment: %1$s</string>
+
+    <string name="trend_rising_very_fast">Rising very fast (&gt; 2 mg/dL/min)</string>
+    <string name="trend_rising_fast">Rising fast (1 – 2 mg/dL/min)</string>
+    <string name="trend_rising_slowly">Rising slowly (&lt; 1 mg/dL/min)</string>
+    <string name="trend_stable">Stable (&lt; 1 mg/dL/min)</string>
+    <string name="trend_falling_slowly">Falling slowly (&lt; 1 mg/dL/min)</string>
+    <string name="trend_falling_fast">Falling fast (1 – 2 mg/dL/min)</string>
+    <string name="trend_falling_very_fast">Falling very fast (&gt; 2 mg/dL/min)</string>
+
+    <string name="desc_rising_very_fast">Avoid additional carbs. Body needs rapid insulin to stop the spike.</string>
+    <string name="desc_rising_fast">Delay carbs if possible or reduce the amount on the plate.</string>
+    <string name="desc_rising_slowly">Monitor; usually your usual meal dose is enough.</string>
+    <string name="desc_stable">Eat as planned according to your usual carb ratio.</string>
+    <string name="desc_falling_slowly">If low or fasting, take 5–8g of rapid carbs to stabilize.</string>
+    <string name="desc_falling_fast">If near 70 mg/dL, take 10–15g rapid carbs (15g Rule).</string>
+    <string name="desc_falling_very_fast">Act now: Take 15–20g of rapid carbs. Prioritize stopping the fall.</string>
+
+    <string name="adj_rising_very_fast">Add 75 mg/dL</string>
+    <string name="adj_rising_fast">Add 50 mg/dL</string>
+    <string name="adj_rising_slowly">Add 25 mg/dL</string>
+    <string name="adj_stable">No changes</string>
+    <string name="adj_falling_slowly">Subtract 25 mg/dL</string>
+    <string name="adj_falling_fast">Subtract 50 mg/dL</string>
+    <string name="adj_falling_very_fast">Subtract 75 mg/dL</string>
 </resources>

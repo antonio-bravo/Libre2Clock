@@ -1,0 +1,40 @@
+<resources>
+    <string name="app_name">Libre2Clock</string>
+    <string name="dashboard_title">Libre2Clock</string>
+    <string name="menu_settings">Configuración</string>
+    <string name="menu_strategies">Estrategias de Tendencia</string>
+    <string name="refresh">Actualizar</string>
+    <string name="sensor_health">Salud del Sensor</string>
+    <string name="demo_mode">MODO DEMO</string>
+    <string name="no_sensor_data">Sin datos del sensor disponibles</string>
+    <string name="copy_sensor_info">Información del sensor copiada al portapapeles</string>
+    <string name="last_sync">Última sinc: %1$s</string>
+    <string name="fetching_data">Obteniendo datos…</string>
+
+    <string name="strategy_title">Estrategias de Tendencia</string>
+    <string name="strategy_insulin_adj">Ajuste de Insulina: %1$s</string>
+
+    <string name="trend_rising_very_fast">Subiendo muy rápido (&gt; 2 mg/dL/min)</string>
+    <string name="trend_rising_fast">Subiendo rápido (1 – 2 mg/dL/min)</string>
+    <string name="trend_rising_slowly">Subiendo lentamente (&lt; 1 mg/dL/min)</string>
+    <string name="trend_stable">Estable (&lt; 1 mg/dL/min)</string>
+    <string name="trend_falling_slowly">Bajando lentamente (&lt; 1 mg/dL/min)</string>
+    <string name="trend_falling_fast">Bajando rápido (1 – 2 mg/dL/min)</string>
+    <string name="trend_falling_very_fast">Bajando muy rápido (&gt; 2 mg/dL/min)</string>
+
+    <string name="desc_rising_very_fast">Evita HC adicionales. El cuerpo necesita insulina rápida para frenar el disparo.</string>
+    <string name="desc_rising_fast">Retrasa HC si es posible o reduce la cantidad del plato.</string>
+    <string name="desc_rising_slowly">Monitorea; suele bastar con tu dosis habitual de comida.</string>
+    <string name="desc_stable">Come lo planificado según tu ratio habitual de hidratos.</string>
+    <string name="desc_falling_slowly">Si estás bajo o en ayunas, toma 5–8g de HC rápidos para estabilizar.</string>
+    <string name="desc_falling_fast">Si estás cerca de 70 mg/dL, toma 10–15g HC rápidos (Regla de los 15g).</string>
+    <string name="desc_falling_very_fast">Actúa ya: Toma 15–20g de HC rápidos. Prioriza frenar la caída.</string>
+
+    <string name="adj_rising_very_fast">Suma 75 mg/dL</string>
+    <string name="adj_rising_fast">Suma 50 mg/dL</string>
+    <string name="adj_rising_slowly">Suma 25 mg/dL</string>
+    <string name="adj_stable">Sin cambios</string>
+    <string name="adj_falling_slowly">Resta 25 mg/dL</string>
+    <string name="adj_falling_fast">Resta 50 mg/dL</string>
+    <string name="adj_falling_very_fast">Resta 75 mg/dL</string>
+</resources>

@@ -3,7 +3,6 @@ package com.tonio.libre2clock.ui.dashboard
 import android.content.ClipData
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -11,9 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,11 +19,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tonio.libre2clock.R
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.SensorStatus
 import com.tonio.libre2clock.data.repository.GlucoseProcessor
@@ -34,20 +33,19 @@ import com.tonio.libre2clock.util.TimestampParser
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
-import java.util.Locale
 import java.time.LocalTime
 import java.time.ZoneId
-import kotlin.math.roundToInt
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
+import java.util.*
+import kotlin.math.roundToInt
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel,
-    onNavigateToSettings: () -> Unit
+    onNavigateToSettings: () -> Unit,
+    onNavigateToStrategy: () -> Unit
 ) {
     val currentGlucose by viewModel.currentGlucose.collectAsStateWithLifecycle()
     val sensorStatus by viewModel.sensorStatus.collectAsStateWithLifecycle()
@@ -56,49 +54,83 @@ fun DashboardScreen(
     val isHistoryRefreshing by viewModel.isHistoryRefreshing.collectAsStateWithLifecycle()
     val dashboardMetrics = remember(historicalData) { calculateDashboardMetrics(historicalData) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Libre2Clock") },
-                actions = {
-                    IconButton(onClick = viewModel::refresh) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Refresh")
-                    }
-                    IconButton(onClick = onNavigateToSettings) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
-                    }
-                }
-            )
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet {
+                Spacer(modifier = Modifier.height(12.dp))
+                NavigationDrawerItem(
+                    label = { Text(stringResource(R.string.menu_settings)) },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        onNavigateToSettings()
+                    },
+                    icon = { Icon(Icons.Default.Settings, contentDescription = null) },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+                NavigationDrawerItem(
+                    label = { Text(stringResource(R.string.menu_strategies)) },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        onNavigateToStrategy()
+                    },
+                    icon = { Icon(Icons.Default.Analytics, contentDescription = null) },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+            }
         }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            GlucoseCard(currentGlucose, dashboardMetrics)
-            Spacer(modifier = Modifier.height(16.dp))
-            SensorHealthCard(
-                status = sensorStatus,
-                isDemoMode = isDemoMode,
-                onRefresh = viewModel::refresh
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            DashboardSlidesCard(
-                metrics = dashboardMetrics,
-                isRefreshing = isHistoryRefreshing,
-                onRefresh = viewModel::refreshHistoryWindow
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            InteractiveTrendGraph(
-                measurements = historicalData,
+    ) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(stringResource(R.string.dashboard_title)) },
+                    navigationIcon = {
+                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                            Icon(Icons.Default.Menu, contentDescription = "Menu")
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = viewModel::refresh) {
+                            Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.refresh))
+                        }
+                    }
+                )
+            }
+        ) { innerPadding ->
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(230.dp)
-            )
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                GlucoseCard(currentGlucose, dashboardMetrics)
+                Spacer(modifier = Modifier.height(16.dp))
+                SensorHealthCard(
+                    status = sensorStatus,
+                    isDemoMode = isDemoMode,
+                    onRefresh = viewModel::refresh
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                DashboardSlidesCard(
+                    metrics = dashboardMetrics,
+                    isRefreshing = isHistoryRefreshing,
+                    onRefresh = viewModel::refreshHistoryWindow
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                InteractiveTrendGraph(
+                    measurements = historicalData,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(230.dp)
+                )
+            }
         }
     }
 }
@@ -129,7 +161,7 @@ fun SensorHealthCard(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "Sensor Health",
+                        text = stringResource(R.string.sensor_health),
                         style = MaterialTheme.typography.titleMedium,
                         color = if (isDemoMode) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSecondaryContainer
                     )
@@ -140,7 +172,7 @@ fun SensorHealthCard(
                             shape = RoundedCornerShape(4.dp)
                         ) {
                             Text(
-                                text = "DEMO MODE",
+                                text = stringResource(R.string.demo_mode),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onError,
                                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
@@ -156,7 +188,7 @@ fun SensorHealthCard(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
-                            contentDescription = "Refresh sensor info",
+                            contentDescription = stringResource(R.string.refresh),
                             modifier = Modifier.size(18.dp),
                             tint = if (isDemoMode) MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                         )
@@ -174,7 +206,7 @@ fun SensorHealthCard(
                                 scope.launch {
                                     clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("Sensor Info", text)))
                                 }
-                                Toast.makeText(context, "Sensor info copied to clipboard", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.copy_sensor_info), Toast.LENGTH_SHORT).show()
                             },
                             modifier = Modifier.size(24.dp)
                         ) {
@@ -221,7 +253,7 @@ fun SensorHealthCard(
                 }
             } else {
                 Text(
-                    text = "No sensor data available",
+                    text = stringResource(R.string.no_sensor_data),
                     style = MaterialTheme.typography.bodyMedium,
                     color = if (isDemoMode) MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                 )
@@ -300,14 +332,13 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
                         }
                     }
                     Text(
-                        // text = "Last sync: ${measurement.timestamp}",
-                        text = "Last sync: ${lastSyncText}",
+                        text = stringResource(R.string.last_sync, lastSyncText),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                     )
                 } else {
                     CircularProgressIndicator()
-                    Text("Fetching data...")
+                    Text(stringResource(R.string.fetching_data))
                 }
             }
         }
