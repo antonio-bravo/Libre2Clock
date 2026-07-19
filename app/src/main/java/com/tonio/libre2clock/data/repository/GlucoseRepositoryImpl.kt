@@ -33,11 +33,15 @@ class GlucoseRepositoryImpl(
     override fun enableDemoMode() {
         isDemoMode = true
         _sensorStatus.value = SensorStatus(
-            daysRemaining = 12,
+            daysRemaining = "12d 0h remaining",
             startDate = "Started: Mon, Nov 03, 2025 10:30",
-            expiryDate = "Expires: Sat, Nov 15, 2025 10:30",
+            expiryDate = "Expires: Mon, Nov 17, 2025 10:30",
             serialNumber = "DEMO-12345"
         )
+    }
+
+    override fun disableDemoMode() {
+        isDemoMode = false
     }
 
     override suspend fun login(email: String, password: String): Result<Unit> {
@@ -57,6 +61,7 @@ class GlucoseRepositoryImpl(
                 val userId = data.user.id
                 LibreService.setAuth(token, userId)
                 preferenceManager.saveAuth(token, userId)
+                isDemoMode = false
                 Result.success(Unit)
             } else {
                 Result.failure(Exception("Login failed with status ${response.status}"))
@@ -127,11 +132,23 @@ class GlucoseRepositoryImpl(
             
             if (activeSensors != null && activeSensors.isNotEmpty()) {
                 val sensor = activeSensors[0].sensor
-                val activationTime = sensor.activationTimestamp
+                val activationTime = if (sensor.activationTimestamp > 10_000_000_000L) 
+                    sensor.activationTimestamp / 1000 
+                else 
+                    sensor.activationTimestamp
+                    
                 val expiryTime = activationTime + (14 * 24 * 60 * 60)
                 val now = Instant.now().epochSecond
                 val remainingSeconds = expiryTime - now
-                val daysRemaining = (remainingSeconds / (24 * 60 * 60)).toInt()
+                
+                val days = (remainingSeconds / (24 * 60 * 60)).toInt()
+                val hours = ((remainingSeconds % (24 * 60 * 60)) / 3600).toInt()
+
+                val remainingStr = when {
+                    remainingSeconds <= 0 -> "Expired"
+                    days > 0 -> "${days}d ${hours}h remaining"
+                    else -> "${hours}h remaining"
+                }
                 
                 val formatter = DateTimeFormatter.ofPattern("EEE, MMM dd, yyyy HH:mm", Locale.US)
                     .withZone(ZoneId.systemDefault())
@@ -139,7 +156,7 @@ class GlucoseRepositoryImpl(
                 val expiryDateStr = formatter.format(Instant.ofEpochSecond(expiryTime))
                 
                 _sensorStatus.value = SensorStatus(
-                    daysRemaining = daysRemaining.coerceAtLeast(0),
+                    daysRemaining = remainingStr,
                     startDate = "Started: $startDateStr",
                     expiryDate = "Expires: $expiryDateStr",
                     serialNumber = sensor.serialNumber

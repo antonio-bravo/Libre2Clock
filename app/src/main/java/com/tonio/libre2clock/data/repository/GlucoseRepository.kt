@@ -12,4 +12,5 @@ interface GlucoseRepository {
     suspend fun fetchLatestGlucose(): Result<GlucoseMeasurement>
     suspend fun refreshHistoricalGlucoseWindow(): Result<GlucoseMeasurement>
     fun enableDemoMode()
+    fun disableDemoMode()
 }

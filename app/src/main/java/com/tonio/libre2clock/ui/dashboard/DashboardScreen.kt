@@ -174,7 +174,7 @@ fun SensorHealthCard(
                 ) {
                     Column {
                         Text(
-                            text = "${status.daysRemaining} days remaining",
+                            text = status.daysRemaining,
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSecondaryContainer
