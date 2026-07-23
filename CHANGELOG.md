@@ -1,5 +1,39 @@
 # Changelog
 
+## 6d780f3 (Jul 23, 2026 20:16:09)
+Capilarity Screen — antonio-bravo
+[detail](#6d780f3-details)
+
+<details id='6d780f3-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/MainActivity.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/capillary/CapillaryScreen.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/navigation/Destinations.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## eac8dc3 (Jul 19, 2026 12:38:03)
+Update changelog — github-actions[bot]
+[detail](#eac8dc3-details)
+
+<details id='eac8dc3-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## f094fd8 (Jul 19, 2026 14:37:52)
 fix gradle for local and github — antonio-bravo
 [detail](#f094fd8-details)
