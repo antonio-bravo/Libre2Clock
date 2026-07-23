@@ -1,5 +1,7 @@
 package com.tonio.libre2clock.data.repository
 
+import android.content.Context
+import com.tonio.libre2clock.R
 import com.tonio.libre2clock.data.api.LibreService
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.LoginRequest
@@ -16,6 +18,7 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 class GlucoseRepositoryImpl(
+    private val context: Context,
     private val preferenceManager: PreferenceManager
 ) : GlucoseRepository {
 
@@ -34,9 +37,9 @@ class GlucoseRepositoryImpl(
     override suspend fun enableDemoMode() {
         preferenceManager.saveDemoMode(true)
         _sensorStatus.value = SensorStatus(
-            daysRemaining = "14d 0h remaining",
-            startDate = "Started: Mon, Nov 03, 2025 10:30",
-            expiryDate = "Expires: Mon, Nov 17, 2025 10:30",
+            daysRemaining = context.getString(R.string.sensor_remaining_days, 14, 0, 0),
+            startDate = context.getString(R.string.sensor_started_label, "Mon, Nov 03, 2025 10:30"),
+            expiryDate = context.getString(R.string.sensor_expires_label, "Mon, Nov 17, 2025 10:30"),
             serialNumber = "DEMO-12345"
         )
     }
@@ -117,9 +120,9 @@ class GlucoseRepositoryImpl(
             // Ensure sensor status is populated for demo mode if missing
             if (_sensorStatus.value == null || _sensorStatus.value?.serialNumber != "DEMO-12345") {
                 _sensorStatus.value = SensorStatus(
-                    daysRemaining = "14d 0h remaining",
-                    startDate = "Started: Mon, Nov 03, 2025 10:30",
-                    expiryDate = "Expires: Mon, Nov 17, 2025 10:30",
+                    daysRemaining = context.getString(R.string.sensor_remaining_days, 14, 0, 0),
+                    startDate = context.getString(R.string.sensor_started_label, "Mon, Nov 03, 2025 10:30"),
+                    expiryDate = context.getString(R.string.sensor_expires_label, "Mon, Nov 17, 2025 10:30"),
                     serialNumber = "DEMO-12345"
                 )
             }
@@ -161,25 +164,27 @@ class GlucoseRepositoryImpl(
                 val expiryTime = activationTime + (14 * 24 * 60 * 60)
                 val now = Instant.now().epochSecond
                 val remainingSeconds = expiryTime - now
-                
+
                 val days = (remainingSeconds / (24 * 60 * 60)).toInt()
                 val hours = ((remainingSeconds % (24 * 60 * 60)) / 3600).toInt()
+                val minutes = ((remainingSeconds % 3600) / 60).toInt()
 
                 val remainingStr = when {
-                    remainingSeconds <= 0 -> "Expired"
-                    days > 0 -> "${days}d ${hours}h remaining"
-                    else -> "${hours}h remaining"
+                    remainingSeconds <= 0 -> context.getString(R.string.sensor_expired)
+                    days > 0 -> context.getString(R.string.sensor_remaining_days, days, hours, minutes)
+                    hours > 0 -> context.getString(R.string.sensor_remaining_hours, hours, minutes)
+                    else -> context.getString(R.string.sensor_remaining_minutes, minutes)
                 }
-                
+
                 val formatter = DateTimeFormatter.ofPattern("EEE, MMM dd, yyyy HH:mm", Locale.US)
                     .withZone(ZoneId.systemDefault())
                 val startDateStr = formatter.format(Instant.ofEpochSecond(activationTime))
                 val expiryDateStr = formatter.format(Instant.ofEpochSecond(expiryTime))
-                
+
                 _sensorStatus.value = SensorStatus(
                     daysRemaining = remainingStr,
-                    startDate = "Started: $startDateStr",
-                    expiryDate = "Expires: $expiryDateStr",
+                    startDate = context.getString(R.string.sensor_started_label, startDateStr),
+                    expiryDate = context.getString(R.string.sensor_expires_label, expiryDateStr),
                     serialNumber = sensor.serialNumber
                 )
             } else {

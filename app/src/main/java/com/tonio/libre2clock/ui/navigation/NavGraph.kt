@@ -17,6 +17,7 @@ import com.tonio.libre2clock.service.GlucoseForegroundService
 import android.content.Intent
 import androidx.compose.ui.platform.LocalContext
 
+import com.tonio.libre2clock.ui.capillary.CapillaryScreen
 import com.tonio.libre2clock.ui.strategy.StrategyScreen
 
 @Composable
@@ -57,6 +58,9 @@ fun NavGraph(
                     },
                     onNavigateToStrategy = {
                         backStack.add(Destination.Strategy)
+                    },
+                    onNavigateToCapillary = {
+                        backStack.add(Destination.Capillary)
                     }
                 )
             }
@@ -75,6 +79,13 @@ fun NavGraph(
             }
             entry<Destination.Strategy> {
                 StrategyScreen(
+                    onBack = { backStack.removeAt(backStack.size - 1) }
+                )
+            }
+            entry<Destination.Capillary> {
+                val settingsViewModel: SettingsViewModel = viewModel { SettingsViewModel(preferenceManager, repository) }
+                CapillaryScreen(
+                    viewModel = settingsViewModel,
                     onBack = { backStack.removeAt(backStack.size - 1) }
                 )
             }

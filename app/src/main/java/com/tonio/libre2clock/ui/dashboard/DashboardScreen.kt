@@ -45,7 +45,8 @@ import kotlin.math.roundToInt
 fun DashboardScreen(
     viewModel: DashboardViewModel,
     onNavigateToSettings: () -> Unit,
-    onNavigateToStrategy: () -> Unit
+    onNavigateToStrategy: () -> Unit,
+    onNavigateToCapillary: () -> Unit
 ) {
     val currentGlucose by viewModel.currentGlucose.collectAsStateWithLifecycle()
     val sensorStatus by viewModel.sensorStatus.collectAsStateWithLifecycle()
@@ -79,7 +80,17 @@ fun DashboardScreen(
                         scope.launch { drawerState.close() }
                         onNavigateToStrategy()
                     },
-                    icon = { Icon(Icons.Default.Analytics, contentDescription = null) },
+                    icon = { Icon(Icons.Default.QueryStats, contentDescription = null) },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+                NavigationDrawerItem(
+                    label = { Text(stringResource(R.string.menu_capillary)) },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        onNavigateToCapillary()
+                    },
+                    icon = { Icon(Icons.Default.WaterDrop, contentDescription = null) },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
             }

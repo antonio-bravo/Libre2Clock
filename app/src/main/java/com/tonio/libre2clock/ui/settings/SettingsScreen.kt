@@ -19,7 +19,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.tonio.libre2clock.data.model.CapillaryMeasurement
 import com.tonio.libre2clock.data.model.GlucoseOffsetRange
 import java.time.Instant
 import java.time.ZoneId
@@ -35,8 +34,6 @@ fun SettingsScreen(
     val offset by viewModel.glucoseOffset.collectAsStateWithLifecycle()
     val ranges by viewModel.glucoseOffsetRanges.collectAsStateWithLifecycle()
     val autoAdjustEnabled by viewModel.autoAdjustEnabled.collectAsStateWithLifecycle()
-    val capillaryReadings by viewModel.capillaryReadings.collectAsStateWithLifecycle()
-    val currentGlucose by viewModel.currentGlucose.collectAsStateWithLifecycle()
     val watchAlertsEnabled by viewModel.watchAlertsEnabled.collectAsStateWithLifecycle()
     val watchAlertIntervalMinutes by viewModel.watchAlertIntervalMinutes.collectAsStateWithLifecycle()
     val watchAlertStartMinute by viewModel.watchAlertStartMinute.collectAsStateWithLifecycle()
@@ -49,9 +46,6 @@ fun SettingsScreen(
 
     var showAddRangeDialog by remember { mutableStateOf(false) }
     var editingRange by remember { mutableStateOf<GlucoseOffsetRange?>(null) }
-    var showCapillaryDialog by remember { mutableStateOf(false) }
-    var capillaryValueText by remember { mutableStateOf("") }
-    var capillaryDateText by remember { mutableStateOf("") }
     val localBackupRestoreLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
@@ -117,73 +111,6 @@ fun SettingsScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(top = 4.dp)
                 )
-
-                Spacer(modifier = Modifier.height(24.dp))
-                HorizontalDivider()
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Text(
-                    text = "Capillary readings",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = "Save finger-stick measurements to let the app estimate a better calibration.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-                OutlinedButton(
-                    onClick = {
-                        capillaryDateText = currentDateTimeText()
-                        showCapillaryDialog = true
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Save capillary reading")
-                }
-                if (capillaryReadings.isEmpty()) {
-                    Text(
-                        text = "No capillary readings saved yet.",
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-                } else {
-                    capillaryReadings.forEach { reading ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(12.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column {
-                                    Text(text = "${reading.value} mg/dL", fontWeight = FontWeight.Bold)
-                                    Text(text = reading.timestamp, style = MaterialTheme.typography.bodySmall)
-                                    reading.sensorValue?.let {
-                                        Text(
-                                            text = "Sensor: $it mg/dL",
-                                            style = MaterialTheme.typography.bodySmall
-                                        )
-                                    }
-                                    reading.delta?.let {
-                                        val deltaText = if (it >= 0) "+$it" else "$it"
-                                        Text(
-                                            text = "Delta capilar-sensor: $deltaText mg/dL",
-                                            style = MaterialTheme.typography.bodySmall
-                                        )
-                                    }
-                                }
-                                IconButton(onClick = { viewModel.removeCapillaryReading(reading) }) {
-                                    Icon(Icons.Default.Delete, contentDescription = "Delete")
-                                }
-                            }
-                        }
-                    }
-                }
 
                 Spacer(modifier = Modifier.height(24.dp))
                 HorizontalDivider()
@@ -546,92 +473,12 @@ fun SettingsScreen(
             }
         )
     }
-
-    if (showCapillaryDialog) {
-        AlertDialog(
-            onDismissRequest = { showCapillaryDialog = false },
-            title = { Text("Save capillary reading") },
-            text = {
-                Column {
-                    OutlinedTextField(
-                        value = capillaryValueText,
-                        onValueChange = { capillaryValueText = it },
-                        label = { Text("Value (mg/dL)") },
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = capillaryDateText,
-                        onValueChange = { capillaryDateText = it },
-                        label = { Text("Date and time (yyyy-MM-dd HH:mm)") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    val sensorValue = currentGlucose?.value
-                    OutlinedTextField(
-                        value = sensorValue?.toString() ?: "No sensor reading available",
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Current sensor reading") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    val capillaryValue = capillaryValueText.toIntOrNull()
-                    val delta = if (capillaryValue != null && sensorValue != null) {
-                        capillaryValue - sensorValue
-                    } else {
-                        null
-                    }
-                    if (delta != null) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        val deltaText = if (delta >= 0) "+$delta" else "$delta"
-                        Text(
-                            text = "Delta at save time: $deltaText mg/dL",
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    val value = capillaryValueText.toIntOrNull() ?: return@TextButton
-                    val sensorValue = currentGlucose?.value
-                    val delta = sensorValue?.let { value - it }
-                    val timestamp = capillaryDateText.ifBlank { currentDateTimeText() }
-                    viewModel.addCapillaryReading(
-                        CapillaryMeasurement(
-                            value = value,
-                            timestamp = timestamp,
-                            sensorValue = sensorValue,
-                            delta = delta
-                        )
-                    )
-                    capillaryValueText = ""
-                    capillaryDateText = currentDateTimeText()
-                    showCapillaryDialog = false
-                }) {
-                    Text("Save")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showCapillaryDialog = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
 }
 
 private fun formatBackupTimestamp(timestamp: Long): String {
     return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
         .withZone(ZoneId.systemDefault())
         .format(Instant.ofEpochMilli(timestamp))
-}
-
-private fun currentDateTimeText(): String {
-    return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
-        .withZone(ZoneId.systemDefault())
-        .format(Instant.now())
 }
 
 @Composable

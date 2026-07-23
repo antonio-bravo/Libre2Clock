@@ -16,4 +16,7 @@ sealed interface Destination : NavKey {
 
     @Serializable
     data object Strategy : Destination
+
+    @Serializable
+    data object Capillary : Destination
 }

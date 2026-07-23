@@ -3,6 +3,7 @@
     <string name="dashboard_title">Libre2Clock</string>
     <string name="menu_settings">Configuración</string>
     <string name="menu_strategies">Estrategias de Tendencia</string>
+    <string name="menu_capillary">Mediciones Capilares</string>
     <string name="refresh">Actualizar</string>
     <string name="sensor_health">Salud del Sensor</string>
     <string name="demo_mode">MODO DEMO</string>
@@ -11,8 +12,27 @@
     <string name="last_sync">Última sinc: %1$s</string>
     <string name="fetching_data">Obteniendo datos…</string>
 
+    <string name="sensor_remaining_days">%1$dd %2$dh %3$dm restantes</string>
+    <string name="sensor_remaining_hours">%1$dh %2$dm restantes</string>
+    <string name="sensor_remaining_minutes">%1$dm restantes</string>
+    <string name="sensor_expired">Expirado</string>
+    <string name="sensor_started_label">Iniciado: %1$s</string>
+    <string name="sensor_expires_label">Expira: %1$s</string>
+
     <string name="strategy_title">Estrategias de Tendencia</string>
     <string name="strategy_insulin_adj">Ajuste de Insulina: %1$s</string>
+
+    <string name="capillary_title">Mediciones Capilares</string>
+    <string name="capillary_avg_deviation">Desviación Promedio: %1$.1f%%</string>
+    <string name="capillary_deviation">Desviación: %1$.1f%%</string>
+    <string name="capillary_delta">Delta: %1$s mg/dL</string>
+    <string name="capillary_sensor_value">Sensor: %1$d mg/dL</string>
+    <string name="save_capillary_reading">Guardar medición capilar</string>
+    <string name="add_capillary_reading">Añadir medición capilar</string>
+    <string name="capillary_value_label">Valor (mg/dL)</string>
+    <string name="capillary_timestamp_label">Fecha y hora (yyyy-MM-dd HH:mm)</string>
+    <string name="capillary_current_sensor">Lectura actual del sensor</string>
+    <string name="capillary_no_readings">No hay mediciones capilares guardadas aún.</string>
 
     <string name="trend_rising_very_fast">Subiendo muy rápido (&gt; 2 mg/dL/min)</string>
     <string name="trend_rising_fast">Subiendo rápido (1 – 2 mg/dL/min)</string>

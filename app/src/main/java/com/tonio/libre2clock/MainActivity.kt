@@ -32,7 +32,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         
         val preferenceManager = PreferenceManager(applicationContext)
-        val repository = GlucoseRepositoryImpl(preferenceManager)
+        val repository = GlucoseRepositoryImpl(applicationContext, preferenceManager)
         
         setContent {
             Libre2ClockTheme {
