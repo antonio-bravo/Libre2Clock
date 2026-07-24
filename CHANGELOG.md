@@ -1,5 +1,43 @@
 # Changelog
 
+## 52a67a1 (Jul 25, 2026 01:05:57)
+Insulin log — antonio-bravo
+[detail](#52a67a1-details)
+
+<details id='52a67a1-details'>
+<summary>Changed files</summary>
+
+- .idea/deploymentTargetSelector.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/InsulinProcessor.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinLogsScreen.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/navigation/Destinations.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## e6ab40d (Jul 24, 2026 21:05:58)
+Update changelog — github-actions[bot]
+[detail](#e6ab40d-details)
+
+<details id='e6ab40d-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## f3becff (Jul 24, 2026 23:05:45)
 fix remaining time — antonio-bravo
 [detail](#f3becff-details)
@@ -705,36 +743,6 @@ workflow — antonio-bravo
 <summary>Changed files</summary>
 
 - .github/workflows/build-release.yml [Modified]
-</details>
-
-
----
-## 04441ef (Jul 14, 2026 21:58:03)
-fix text and workflow name — antonio-bravo
-[detail](#04441ef-details)
-
-<details id='04441ef-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/build-release.yml [Modified]
-- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
-</details>
-
-
----
-## 50ec237 (Jul 14, 2026 21:31:50)
-notificacion real + con offset y letras grandes en reloj — antonio-bravo
-[detail](#50ec237-details)
-
-<details id='50ec237-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/build-release.yml [Deleted]
-- .idea/compiler.xml [Modified]
-- .idea/gradle.xml [Modified]
-- .idea/misc.xml [Modified]
-- .idea/vcs.xml [Deleted]
-- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
 </details>
 
 
