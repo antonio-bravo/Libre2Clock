@@ -9,7 +9,7 @@ import com.tonio.libre2clock.data.model.SensorStatus
 import com.tonio.libre2clock.util.TimestampParser
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.time.Instant
@@ -27,21 +27,33 @@ class GlucoseRepositoryImpl(
 
     override val historicalGlucose: Flow<List<GlucoseMeasurement>> = preferenceManager.historicalGlucoseArchive
 
-    private val _sensorStatus = MutableStateFlow<SensorStatus?>(null)
-    override val sensorStatus: Flow<SensorStatus?> = _sensorStatus.asStateFlow()
+    private val _realSensorStatus = MutableStateFlow<SensorStatus?>(null)
+    override val sensorStatus: Flow<SensorStatus?> = combine(
+        preferenceManager.isDemoMode,
+        _realSensorStatus
+    ) { demoEnabled, realStatus ->
+        if (demoEnabled) {
+            getDemoSensorStatus()
+        } else {
+            realStatus
+        }
+    }
 
     override val isDemoMode: Flow<Boolean> = preferenceManager.isDemoMode
 
     private var patientId: String? = null
 
-    override suspend fun enableDemoMode() {
-        preferenceManager.saveDemoMode(true)
-        _sensorStatus.value = SensorStatus(
+    private fun getDemoSensorStatus(): SensorStatus {
+        return SensorStatus(
             daysRemaining = context.getString(R.string.sensor_remaining_days, 14, 0, 0),
             startDate = context.getString(R.string.sensor_started_label, "Mon, Nov 03, 2025 10:30"),
             expiryDate = context.getString(R.string.sensor_expires_label, "Mon, Nov 17, 2025 10:30"),
             serialNumber = "DEMO-12345"
         )
+    }
+
+    override suspend fun enableDemoMode() {
+        preferenceManager.saveDemoMode(true)
     }
 
     override suspend fun disableDemoMode() {
@@ -66,7 +78,7 @@ class GlucoseRepositoryImpl(
                 LibreService.setAuth(token, userId)
                 preferenceManager.saveAuth(token, userId)
                 preferenceManager.saveDemoMode(false)
-                _sensorStatus.value = null // Clear demo status
+                _realSensorStatus.value = null // Clear real status
                 Result.success(Unit)
             } else {
                 Result.failure(Exception("Login failed with status ${response.status}"))
@@ -115,16 +127,6 @@ class GlucoseRepositoryImpl(
             
             if (persistArchive) {
                 preferenceManager.saveHistoricalGlucoseArchive(mergedHistory)
-            }
-            
-            // Ensure sensor status is populated for demo mode if missing
-            if (_sensorStatus.value == null || _sensorStatus.value?.serialNumber != "DEMO-12345") {
-                _sensorStatus.value = SensorStatus(
-                    daysRemaining = context.getString(R.string.sensor_remaining_days, 14, 0, 0),
-                    startDate = context.getString(R.string.sensor_started_label, "Mon, Nov 03, 2025 10:30"),
-                    expiryDate = context.getString(R.string.sensor_expires_label, "Mon, Nov 17, 2025 10:30"),
-                    serialNumber = "DEMO-12345"
-                )
             }
             
             return Result.success(measurement)
@@ -181,14 +183,14 @@ class GlucoseRepositoryImpl(
                 val startDateStr = formatter.format(Instant.ofEpochSecond(activationTime))
                 val expiryDateStr = formatter.format(Instant.ofEpochSecond(expiryTime))
 
-                _sensorStatus.value = SensorStatus(
+                _realSensorStatus.value = SensorStatus(
                     daysRemaining = remainingStr,
                     startDate = context.getString(R.string.sensor_started_label, startDateStr),
                     expiryDate = context.getString(R.string.sensor_expires_label, expiryDateStr),
                     serialNumber = sensor.serialNumber
                 )
             } else {
-                _sensorStatus.value = null
+                _realSensorStatus.value = null
             }
 
             val historicalMeasurements = response.data?.graphData ?: emptyList()

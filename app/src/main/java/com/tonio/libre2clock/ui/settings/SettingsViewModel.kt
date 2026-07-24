@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 
 class SettingsViewModel(
     private val preferenceManager: PreferenceManager,
-    repository: GlucoseRepository
+    private val repository: GlucoseRepository
 ) : ViewModel() {
 
     private val _backupStatusMessage = MutableStateFlow<String?>(null)
@@ -143,7 +143,11 @@ class SettingsViewModel(
 
     fun updateDemoMode(enabled: Boolean) {
         viewModelScope.launch {
-            preferenceManager.saveDemoMode(enabled)
+            if (enabled) {
+                repository.enableDemoMode()
+            } else {
+                repository.disableDemoMode()
+            }
         }
     }
 
