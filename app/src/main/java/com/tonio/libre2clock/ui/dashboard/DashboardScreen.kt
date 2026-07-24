@@ -15,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
@@ -27,8 +28,12 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tonio.libre2clock.R
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
+import com.tonio.libre2clock.data.model.InsulinDose
+import com.tonio.libre2clock.data.model.InsulinType
 import com.tonio.libre2clock.data.model.SensorStatus
 import com.tonio.libre2clock.data.repository.GlucoseProcessor
+import com.tonio.libre2clock.data.repository.InsulinProcessor
+import com.tonio.libre2clock.ui.insulin.InsulinDoseDialog
 import com.tonio.libre2clock.util.TimestampParser
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -46,11 +51,17 @@ fun DashboardScreen(
     viewModel: DashboardViewModel,
     onNavigateToSettings: () -> Unit,
     onNavigateToStrategy: () -> Unit,
-    onNavigateToCapillary: () -> Unit
+    onNavigateToCapillary: () -> Unit,
+    onNavigateToInsulinHub: () -> Unit,
+    onAddDose: (InsulinDose) -> Unit
 ) {
     val currentGlucose by viewModel.currentGlucose.collectAsStateWithLifecycle()
     val sensorStatus by viewModel.sensorStatus.collectAsStateWithLifecycle()
     val historicalData by viewModel.historicalData.collectAsStateWithLifecycle()
+    val insulinDoses by viewModel.insulinDoses.collectAsStateWithLifecycle()
+    val manualTdi by viewModel.manualTdi.collectAsStateWithLifecycle()
+    val manualIsf by viewModel.manualIsf.collectAsStateWithLifecycle()
+    val isfRuleConstant by viewModel.isfRuleConstant.collectAsStateWithLifecycle()
     val isDemoMode by viewModel.isDemoMode.collectAsStateWithLifecycle()
     val isHistoryRefreshing by viewModel.isHistoryRefreshing.collectAsStateWithLifecycle()
     val dashboardMetrics = remember(historicalData) { calculateDashboardMetrics(historicalData) }
@@ -93,6 +104,16 @@ fun DashboardScreen(
                     icon = { Icon(Icons.Default.WaterDrop, contentDescription = null) },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
+                NavigationDrawerItem(
+                    label = { Text(stringResource(R.string.menu_insulin_hub)) },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        onNavigateToInsulinHub()
+                    },
+                    icon = { Icon(Icons.Default.Vaccines, contentDescription = null) },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
             }
         }
     ) {
@@ -129,6 +150,15 @@ fun DashboardScreen(
                     onRefresh = viewModel::refresh
                 )
                 Spacer(modifier = Modifier.height(16.dp))
+                InsulinHealthCard(
+                    doses = insulinDoses,
+                    onAddDose = onAddDose,
+                    onNavigateToHub = onNavigateToInsulinHub,
+                    manualTdi = manualTdi,
+                    manualIsf = manualIsf,
+                    isfRuleConstant = isfRuleConstant
+                )
+                Spacer(modifier = Modifier.height(16.dp))
                 DashboardSlidesCard(
                     metrics = dashboardMetrics,
                     isRefreshing = isHistoryRefreshing,
@@ -143,6 +173,142 @@ fun DashboardScreen(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun InsulinHealthCard(
+    doses: List<InsulinDose>,
+    onAddDose: (InsulinDose) -> Unit,
+    onNavigateToHub: () -> Unit,
+    manualTdi: Double?,
+    manualIsf: Double?,
+    isfRuleConstant: Int
+) {
+    val pagerState = rememberPagerState(pageCount = { 2 })
+    val today = LocalDate.now()
+    val yesterday = today.minusDays(1)
+    
+    val totalToday = remember(doses) { InsulinProcessor.calculateDailyTotal(doses, today) }
+    val todayRapid = remember(doses) { InsulinProcessor.calculateDailyTotal(doses, today, InsulinType.RAPID) }
+    val todaySlow = remember(doses) { InsulinProcessor.calculateDailyTotal(doses, today, InsulinType.SLOW) }
+
+    val calculatedTdi = remember(doses) { InsulinProcessor.calculateAverageDaily(doses, 30) }
+    val tdi = manualTdi ?: calculatedTdi
+    val currentIsf = InsulinProcessor.calculateISF(tdi, isfRuleConstant, manualIsf)
+    
+    val yesterdaySplit = remember(doses) { InsulinProcessor.calculateDailyTotalSplit(doses, yesterday) }
+    val totalIOB = remember(doses) { InsulinProcessor.calculateTotalIOB(doses) }
+    val rapidIOB = remember(doses) { doses.filter { it.type == InsulinType.RAPID }.let { InsulinProcessor.calculateTotalIOB(it) } }
+    val slowIOB = remember(doses) { doses.filter { it.type == InsulinType.SLOW }.let { InsulinProcessor.calculateTotalIOB(it) } }
+    
+    val activeThreads = remember(doses) { doses.count { InsulinProcessor.calculateIOB(it) > 0 } }
+    
+    val weekAvg = remember(doses) { InsulinProcessor.calculateAverageDailySplit(doses, 7) }
+    val monthAvg = remember(doses) { InsulinProcessor.calculateAverageDailySplit(doses, 30) }
+
+    var showAddDialog by remember { mutableStateOf(false) }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(text = stringResource(R.string.insulin_info), style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        text = stringResource(R.string.insulin_header_breakdown, totalToday, todayRapid, todaySlow),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                Row {
+                    IconButton(onClick = onNavigateToHub) {
+                        Icon(Icons.Default.History, contentDescription = "Hub", tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f))
+                    }
+                    IconButton(onClick = { showAddDialog = true }) {
+                        Icon(Icons.Default.AddCircle, contentDescription = "Add Dose", tint = MaterialTheme.colorScheme.primary)
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.height(80.dp)
+            ) { page ->
+                when (page) {
+                    0 -> Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(text = stringResource(R.string.insulin_active_rapid), style = MaterialTheme.typography.labelSmall)
+                            Text(text = "%.2f U".format(rapidIOB), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                        }
+                        VerticalDivider(modifier = Modifier.height(40.dp).padding(horizontal = 8.dp))
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(text = stringResource(R.string.insulin_active_slow), style = MaterialTheme.typography.labelSmall)
+                            Text(text = "%.2f U".format(slowIOB), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                        }
+                        VerticalDivider(modifier = Modifier.height(40.dp).padding(horizontal = 8.dp))
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(text = "Total IOB", style = MaterialTheme.typography.labelSmall)
+                            Text(text = "%.2f U".format(totalIOB), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                            Text(text = stringResource(R.string.dash_fs_label, currentIsf), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    1 -> Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(text = "%.1f U".format(yesterdaySplit.total), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text(text = "%.1fR/%.1fS".format(yesterdaySplit.rapid, yesterdaySplit.slow), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f))
+                            Text(text = stringResource(R.string.insulin_yesterday), style = MaterialTheme.typography.labelSmall)
+                        }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(text = "%.1f U".format(weekAvg.total), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text(text = "%.1fR/%.1fS".format(weekAvg.rapid, weekAvg.slow), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f))
+                            Text(text = stringResource(R.string.insulin_7d_avg), style = MaterialTheme.typography.labelSmall)
+                        }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(text = "%.1f U".format(monthAvg.total), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text(text = "%.1fR/%.1fS".format(monthAvg.rapid, monthAvg.slow), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f))
+                            Text(text = stringResource(R.string.insulin_30d_avg), style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                }
+            }
+            
+            Row(
+                Modifier.fillMaxWidth().height(12.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                repeat(2) { iteration ->
+                    val color = if (pagerState.currentPage == iteration) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+                    Box(
+                        modifier = Modifier
+                            .padding(2.dp)
+                            .clip(androidx.compose.foundation.shape.CircleShape)
+                            .background(color)
+                            .size(6.dp)
+                    )
+                }
+            }
+        }
+    }
+
+    if (showAddDialog) {
+        InsulinDoseDialog(
+            rapidDuration = 240, // 4h default
+            slowDuration = 1440, // 24h default
+            onDismiss = { showAddDialog = false },
+            onConfirm = {
+                onAddDose(it)
+                showAddDialog = false
+            }
+        )
     }
 }
 

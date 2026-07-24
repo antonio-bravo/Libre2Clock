@@ -61,10 +61,19 @@ class PreferenceManager(private val context: Context) {
     private val WATCH_ALERT_START_MINUTE_KEY = androidx.datastore.preferences.core.intPreferencesKey("watch_alert_start_minute")
     private val LOW_GLUCOSE_ALARM_ENABLED_KEY = booleanPreferencesKey("low_glucose_alarm_enabled")
     private val HIGH_GLUCOSE_ALARM_ENABLED_KEY = booleanPreferencesKey("high_glucose_alarm_enabled")
+    private val USE_CALIBRATED_FOR_ALARMS_KEY = booleanPreferencesKey("use_calibrated_for_alarms")
     private val HISTORICAL_GLUCOSE_KEY = stringPreferencesKey("historical_glucose_archive")
     private val HISTORY_RETENTION_DAYS_KEY = androidx.datastore.preferences.core.intPreferencesKey("history_retention_days")
     private val LAST_HISTORY_BACKUP_REQUEST_AT_KEY = longPreferencesKey("last_history_backup_request_at")
     private val IS_DEMO_MODE_KEY = booleanPreferencesKey("is_demo_mode")
+    private val RAPID_DURATION_MINS_KEY = androidx.datastore.preferences.core.intPreferencesKey("rapid_duration_mins")
+    private val SLOW_DURATION_MINS_KEY = androidx.datastore.preferences.core.intPreferencesKey("slow_duration_mins")
+    private val IC_RULE_CONSTANT_KEY = androidx.datastore.preferences.core.intPreferencesKey("ic_rule_constant")
+    private val ISF_RULE_CONSTANT_KEY = androidx.datastore.preferences.core.intPreferencesKey("isf_rule_constant")
+    private val MANUAL_TDI_KEY = androidx.datastore.preferences.core.doublePreferencesKey("manual_tdi")
+    private val MANUAL_ISF_KEY = androidx.datastore.preferences.core.doublePreferencesKey("manual_isf")
+    private val TARGET_GLUCOSE_KEY = androidx.datastore.preferences.core.intPreferencesKey("target_glucose")
+    private val INSULIN_DOSES_KEY = stringPreferencesKey("insulin_doses")
 
     val authToken: Flow<String?> = context.dataStore.data.map { preferences ->
         preferences[TOKEN_KEY]
@@ -132,6 +141,10 @@ class PreferenceManager(private val context: Context) {
         preferences[HIGH_GLUCOSE_ALARM_ENABLED_KEY] ?: false
     }
 
+    val useCalibratedForAlarms: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[USE_CALIBRATED_FOR_ALARMS_KEY] ?: true
+    }
+
     val historicalGlucoseArchive: Flow<List<GlucoseMeasurement>> = context.dataStore.data.map { preferences ->
         val jsonStr = preferences[HISTORICAL_GLUCOSE_KEY]
         if (jsonStr != null) {
@@ -156,6 +169,47 @@ class PreferenceManager(private val context: Context) {
 
     val isDemoMode: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[IS_DEMO_MODE_KEY] ?: false
+    }
+
+    val rapidDurationMins: Flow<Int> = context.dataStore.data.map { preferences ->
+        preferences[RAPID_DURATION_MINS_KEY] ?: 240 // 4h
+    }
+
+    val slowDurationMins: Flow<Int> = context.dataStore.data.map { preferences ->
+        preferences[SLOW_DURATION_MINS_KEY] ?: 1440 // 24h
+    }
+
+    val icRuleConstant: Flow<Int> = context.dataStore.data.map { preferences ->
+        preferences[IC_RULE_CONSTANT_KEY] ?: 450
+    }
+
+    val isfRuleConstant: Flow<Int> = context.dataStore.data.map { preferences ->
+        preferences[ISF_RULE_CONSTANT_KEY] ?: 1800
+    }
+
+    val manualTdi: Flow<Double?> = context.dataStore.data.map { preferences ->
+        preferences[MANUAL_TDI_KEY]
+    }
+
+    val manualIsf: Flow<Double?> = context.dataStore.data.map { preferences ->
+        preferences[MANUAL_ISF_KEY]
+    }
+
+    val targetGlucose: Flow<Int> = context.dataStore.data.map { preferences ->
+        preferences[TARGET_GLUCOSE_KEY] ?: 100
+    }
+
+    val insulinDoses: Flow<List<com.tonio.libre2clock.data.model.InsulinDose>> = context.dataStore.data.map { preferences ->
+        val jsonStr = preferences[INSULIN_DOSES_KEY]
+        if (jsonStr != null) {
+            try {
+                json.decodeFromString<List<com.tonio.libre2clock.data.model.InsulinDose>>(jsonStr)
+            } catch (e: Exception) {
+                emptyList()
+            }
+        } else {
+            emptyList()
+        }
     }
 
     private fun getDefaultRanges() = listOf(
@@ -201,14 +255,7 @@ class PreferenceManager(private val context: Context) {
         context.dataStore.edit { preferences ->
             preferences[CAPILLARY_READINGS_KEY] = json.encodeToString(readings)
         }
-        val historicalArchive = historicalGlucoseArchive.first()
-        saveHistoryBackupPayload(
-            HistoryBackupPayload(
-                historicalGlucoseArchive = historicalArchive,
-                capillaryReadings = readings
-            )
-        )
-        requestHistoryCloudBackupIfDue()
+        updateBackupPayload()
     }
 
     suspend fun saveWatchAlertsEnabled(enabled: Boolean) {
@@ -250,18 +297,17 @@ class PreferenceManager(private val context: Context) {
         }
     }
 
+    suspend fun saveUseCalibratedForAlarms(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[USE_CALIBRATED_FOR_ALARMS_KEY] = enabled
+        }
+    }
+
     suspend fun saveHistoricalGlucoseArchive(measurements: List<GlucoseMeasurement>) {
         context.dataStore.edit { preferences ->
             preferences[HISTORICAL_GLUCOSE_KEY] = json.encodeToString(measurements)
         }
-        val capillaryArchive = capillaryReadings.first()
-        saveHistoryBackupPayload(
-            HistoryBackupPayload(
-                historicalGlucoseArchive = measurements,
-                capillaryReadings = capillaryArchive
-            )
-        )
-        requestHistoryCloudBackupIfDue()
+        updateBackupPayload()
     }
 
     suspend fun saveHistoryRetentionDays(days: Int) {
@@ -277,6 +323,71 @@ class PreferenceManager(private val context: Context) {
         context.dataStore.edit { preferences ->
             preferences[IS_DEMO_MODE_KEY] = enabled
         }
+    }
+
+    suspend fun saveRapidDurationMins(minutes: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[RAPID_DURATION_MINS_KEY] = minutes
+        }
+    }
+
+    suspend fun saveSlowDurationMins(minutes: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[SLOW_DURATION_MINS_KEY] = minutes
+        }
+    }
+
+    suspend fun saveIcRuleConstant(constant: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[IC_RULE_CONSTANT_KEY] = constant
+        }
+    }
+
+    suspend fun saveIsfRuleConstant(constant: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[ISF_RULE_CONSTANT_KEY] = constant
+        }
+    }
+
+    suspend fun saveManualTdi(tdi: Double?) {
+        context.dataStore.edit { preferences ->
+            if (tdi == null) preferences.remove(MANUAL_TDI_KEY)
+            else preferences[MANUAL_TDI_KEY] = tdi
+        }
+    }
+
+    suspend fun saveManualIsf(isf: Double?) {
+        context.dataStore.edit { preferences ->
+            if (isf == null) preferences.remove(MANUAL_ISF_KEY)
+            else preferences[MANUAL_ISF_KEY] = isf
+        }
+    }
+
+    suspend fun saveTargetGlucose(target: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[TARGET_GLUCOSE_KEY] = target
+        }
+    }
+
+    suspend fun saveInsulinDoses(doses: List<com.tonio.libre2clock.data.model.InsulinDose>) {
+        context.dataStore.edit { preferences ->
+            preferences[INSULIN_DOSES_KEY] = json.encodeToString(doses)
+        }
+        updateBackupPayload()
+    }
+
+    private suspend fun updateBackupPayload() {
+        val historicalArchive = historicalGlucoseArchive.first()
+        val capillaryReadings = capillaryReadings.first()
+        val doses = insulinDoses.first()
+        saveHistoryBackupPayload(
+            HistoryBackupPayload(
+                historicalGlucoseArchive = historicalArchive,
+                capillaryReadings = capillaryReadings,
+                insulinDoses = doses
+            )
+        )
+        requestHistoryCloudBackupIfDue()
     }
 
     fun loadHistoryBackupPayload(): HistoryBackupPayload? {
@@ -307,7 +418,8 @@ class PreferenceManager(private val context: Context) {
 
     suspend fun requestPartialHistoryCloudBackup(
         includeHistoricalGlucose: Boolean,
-        includeCapillaryReadings: Boolean
+        includeCapillaryReadings: Boolean,
+        includeInsulinDoses: Boolean = true
     ): Boolean {
         val payload = HistoryBackupPayload(
             historicalGlucoseArchive = if (includeHistoricalGlucose) {
@@ -317,6 +429,11 @@ class PreferenceManager(private val context: Context) {
             },
             capillaryReadings = if (includeCapillaryReadings) {
                 capillaryReadings.first()
+            } else {
+                emptyList()
+            },
+            insulinDoses = if (includeInsulinDoses) {
+                insulinDoses.first()
             } else {
                 emptyList()
             }
@@ -367,13 +484,15 @@ class PreferenceManager(private val context: Context) {
 
     suspend fun restorePartialHistoryFromBackup(
         includeHistoricalGlucose: Boolean,
-        includeCapillaryReadings: Boolean
+        includeCapillaryReadings: Boolean,
+        includeInsulinDoses: Boolean = true
     ): Boolean {
         val payload = loadHistoryBackupPayload() ?: return false
-        if (!includeHistoricalGlucose && !includeCapillaryReadings) return false
+        if (!includeHistoricalGlucose && !includeCapillaryReadings && !includeInsulinDoses) return false
 
         val currentHistorical = historicalGlucoseArchive.first()
         val currentCapillary = capillaryReadings.first()
+        val currentInsulin = insulinDoses.first()
 
         val restoredHistorical = if (includeHistoricalGlucose) {
             mergeHistoricalMeasurements(currentHistorical, payload.historicalGlucoseArchive)
@@ -385,15 +504,22 @@ class PreferenceManager(private val context: Context) {
         } else {
             currentCapillary
         }
+        val restoredInsulin = if (includeInsulinDoses) {
+            mergeInsulinDoses(currentInsulin, payload.insulinDoses)
+        } else {
+            currentInsulin
+        }
 
         context.dataStore.edit { preferences ->
             preferences[HISTORICAL_GLUCOSE_KEY] = json.encodeToString(restoredHistorical)
             preferences[CAPILLARY_READINGS_KEY] = json.encodeToString(restoredCapillary)
+            preferences[INSULIN_DOSES_KEY] = json.encodeToString(restoredInsulin)
         }
         saveHistoryBackupPayload(
             HistoryBackupPayload(
                 historicalGlucoseArchive = restoredHistorical,
-                capillaryReadings = restoredCapillary
+                capillaryReadings = restoredCapillary,
+                insulinDoses = restoredInsulin
             )
         )
         return true
@@ -414,15 +540,21 @@ class PreferenceManager(private val context: Context) {
                 capillaryReadings.first(),
                 payload.capillaryReadings
             )
+            val mergedInsulin = mergeInsulinDoses(
+                insulinDoses.first(),
+                payload.insulinDoses
+            )
 
             context.dataStore.edit { preferences ->
                 preferences[HISTORICAL_GLUCOSE_KEY] = json.encodeToString(mergedHistorical)
                 preferences[CAPILLARY_READINGS_KEY] = json.encodeToString(mergedCapillary)
+                preferences[INSULIN_DOSES_KEY] = json.encodeToString(mergedInsulin)
             }
             saveHistoryBackupPayload(
                 HistoryBackupPayload(
                     historicalGlucoseArchive = mergedHistorical,
-                    capillaryReadings = mergedCapillary
+                    capillaryReadings = mergedCapillary,
+                    insulinDoses = mergedInsulin
                 )
             )
             Result.success(payload)
@@ -527,6 +659,30 @@ class PreferenceManager(private val context: Context) {
             .mapNotNull { r ->
                 val instant = parseFlexibleInstant(r.timestamp)
                 if (instant != null) instant to r else null
+            }
+            .sortedByDescending { it.first }
+            .map { it.second }
+    }
+
+    private fun mergeInsulinDoses(
+        local: List<com.tonio.libre2clock.data.model.InsulinDose>,
+        backup: List<com.tonio.libre2clock.data.model.InsulinDose>
+    ): List<com.tonio.libre2clock.data.model.InsulinDose> {
+        val mergedMap = LinkedHashMap<String, com.tonio.libre2clock.data.model.InsulinDose>()
+        (local + backup).forEach { d ->
+            val instant = parseFlexibleInstant(d.timestamp)
+            val key = if (instant != null) {
+                "${instant.toEpochMilli()}-${d.units}-${d.type}"
+            } else {
+                "${d.timestamp}-${d.units}-${d.type}"
+            }
+            mergedMap[key] = d
+        }
+
+        return mergedMap.values
+            .mapNotNull { d ->
+                val instant = parseFlexibleInstant(d.timestamp)
+                if (instant != null) instant to d else null
             }
             .sortedByDescending { it.first }
             .map { it.second }

@@ -4,6 +4,8 @@
     <string name="menu_settings">Configuración</string>
     <string name="menu_strategies">Estrategias de Tendencia</string>
     <string name="menu_capillary">Mediciones Capilares</string>
+    <string name="menu_insulin_hub">Gestión de Insulina</string>
+    <string name="menu_insulin_logs">Registros de Insulina</string>
     <string name="refresh">Actualizar</string>
     <string name="sensor_health">Salud del Sensor</string>
     <string name="demo_mode">MODO DEMO</string>
@@ -12,12 +14,70 @@
     <string name="last_sync">Última sinc: %1$s</string>
     <string name="fetching_data">Obteniendo datos…</string>
 
+    <string name="insulin_info">Info. Insulina</string>
+    <string name="insulin_total_today">Total Hoy: %1$.1f U</string>
+    <string name="insulin_yesterday">Ayer</string>
+    <string name="insulin_7d_avg">Media 7d</string>
+    <string name="insulin_30d_avg">Media 30d</string>
+    <string name="insulin_yesterday_total">Total Ayer: %1$.1f U</string>
+    <string name="insulin_active_threads">Hilos Activos: %1$d</string>
+
     <string name="sensor_remaining_days">%1$dd %2$dh %3$dm restantes</string>
     <string name="sensor_remaining_hours">%1$dh %2$dm restantes</string>
     <string name="sensor_remaining_minutes">%1$dm restantes</string>
     <string name="sensor_expired">Expirado</string>
     <string name="sensor_started_label">Iniciado: %1$s</string>
     <string name="sensor_expires_label">Expira: %1$s</string>
+
+    <string name="insulin_hub_title">Gestión de Insulina</string>
+    <string name="insulin_active_total">Total Insulina Activa (IOB)</string>
+    <string name="insulin_active_rapid">Rápida Activa</string>
+    <string name="insulin_active_slow">Lenta Activa</string>
+    <string name="insulin_active_units">%1$.2f Unidades</string>
+    <string name="insulin_active_split">%1$.2f R + %2$.2f S</string>
+    <string name="insulin_injected_total">Total unidades (histórico de activas): %1$.1f U</string>
+    <string name="insulin_today_stats">Totales de Hoy</string>
+    <string name="insulin_avg_stats">Estadísticas Diarias (Media)</string>
+    <string name="insulin_rapid_label">Rápida</string>
+    <string name="insulin_slow_label">Lenta/Basal</string>
+    <string name="insulin_week_avg">Últimos 7 días (Media)</string>
+    <string name="insulin_month_avg">Último mes (Media)</string>
+    <string name="insulin_recent_activity">Actividad Reciente</string>
+    <string name="insulin_view_logs">Historial Completo</string>
+    <string name="insulin_total_breakdown">TDI: %1$.1f U (%2$.1f R + %3$.1f S)</string>
+    <string name="insulin_header_breakdown">Total: %1$.1f U (%2$.1f R + %3$.1f S)</string>
+    <string name="add_insulin_dose">Añadir dosis de insulina</string>
+    <string name="edit_insulin_dose">Editar dosis de insulina</string>
+    <string name="update">Actualizar</string>
+    <string name="insulin_units_label">Unidades (U)</string>
+    <string name="insulin_type_label">Tipo de Insulina</string>
+    <string name="insulin_no_doses">No hay dosis registradas aún.</string>
+
+    <string name="calc_title">Calculadora de Bolo</string>
+    <string name="calc_ratios_header">Ratios Actuales</string>
+    <string name="calc_ic_ratio">Ratio I:HC (Regla del %1$d): %2$.1f g/U</string>
+    <string name="calc_isf">ISF: %1$.1f mg/dL por U</string>
+    <string name="calc_formula_label">Fórmula: %1$d / TDI</string>
+    <string name="calc_manual_label">Valor Manual</string>
+    <string name="dash_fs_label">FS: %1$.1f</string>
+    <string name="calc_bolus_helper">Asistente de Bolo</string>
+    <string name="calc_carbs_label">Carbohidratos (g)</string>
+    <string name="calc_glucose_label">Glucosa Actual (mg/dL)</string>
+    <string name="calc_suggested_bolus">Bolo Sugerido: %1$.2f Unidades</string>
+    <string name="calc_basal_expiring_warning">¡La basal está terminando! Se aplica ajuste del +20%.</string>
+    <string name="calc_considerations_title">Consideraciones</string>
+    <string name="calc_considerations_text">Los cálculos se basan en tu TDI y reglas configuradas. Confirma siempre con tu médico. Si la basal está a menos de 2h de terminar, el bolo se incrementa un 20% para evitar derivas.</string>
+
+    <string name="settings_advanced_insulin">Ajustes Avanzados de Insulina</string>
+    <string name="settings_insulin_durations">Duración de Insulinas</string>
+    <string name="settings_rapid_duration">Duración Rápida (HH:mm)</string>
+    <string name="settings_slow_duration">Duración Lenta/Basal (HH:mm)</string>
+    <string name="settings_calc_rules">Reglas de la Calculadora</string>
+    <string name="settings_ic_rule">Constante Regla I:HC (ej. 450)</string>
+    <string name="settings_isf_rule">Constante Regla ISF (ej. 1800)</string>
+    <string name="settings_manual_tdi">TDI Manual (U) - Vacío para Auto</string>
+    <string name="settings_manual_isf">ISF Manual (mg/dL/U) - Vacío para Auto</string>
+    <string name="settings_target_glucose">Glucosa Objetivo (mg/dL)</string>
 
     <string name="strategy_title">Estrategias de Tendencia</string>
     <string name="strategy_insulin_adj">Ajuste de Insulina: %1$s</string>
@@ -57,4 +117,5 @@
     <string name="adj_falling_slowly">Resta 25 mg/dL</string>
     <string name="adj_falling_fast">Resta 50 mg/dL</string>
     <string name="adj_falling_very_fast">Resta 75 mg/dL</string>
+    <string name="settings_use_calibrated_alarms">Usar valor con offset para las alarmas</string>
 </resources>

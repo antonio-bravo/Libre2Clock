@@ -4,6 +4,8 @@
     <string name="menu_settings">Settings</string>
     <string name="menu_strategies">Trend Strategies</string>
     <string name="menu_capillary">Capillary Readings</string>
+    <string name="menu_insulin_hub">Insulin Management</string>
+    <string name="menu_insulin_logs">Insulin Logs</string>
     <string name="refresh">Refresh</string>
     <string name="sensor_health">Sensor Health</string>
     <string name="demo_mode">DEMO MODE</string>
@@ -12,12 +14,70 @@
     <string name="last_sync">Last sync: %1$s</string>
     <string name="fetching_data">Fetching data…</string>
 
+    <string name="insulin_info">Insulin Info</string>
+    <string name="insulin_total_today">Total Today: %1$.1f U</string>
+    <string name="insulin_yesterday">Yesterday</string>
+    <string name="insulin_7d_avg">7d Avg</string>
+    <string name="insulin_30d_avg">30d Avg</string>
+    <string name="insulin_yesterday_total">Yesterday\'s Total: %1$.1f U</string>
+    <string name="insulin_active_threads">Active Threads: %1$d</string>
+
     <string name="sensor_remaining_days">%1$dd %2$dh %3$dm remaining</string>
     <string name="sensor_remaining_hours">%1$dh %2$dm remaining</string>
     <string name="sensor_remaining_minutes">%1$dm remaining</string>
     <string name="sensor_expired">Expired</string>
     <string name="sensor_started_label">Started: %1$s</string>
     <string name="sensor_expires_label">Expires: %1$s</string>
+
+    <string name="insulin_hub_title">Insulin Management</string>
+    <string name="insulin_active_total">Total Active Insulin (IOB)</string>
+    <string name="insulin_active_rapid">Active Rapid</string>
+    <string name="insulin_active_slow">Active Slow/Basal</string>
+    <string name="insulin_active_units">%1$.2f Units</string>
+    <string name="insulin_active_split">%1$.2f R + %2$.2f S</string>
+    <string name="insulin_injected_total">Total units (historical of active): %1$.1f U</string>
+    <string name="insulin_today_stats">Today\'s Totals</string>
+    <string name="insulin_avg_stats">Average Daily Stats</string>
+    <string name="insulin_rapid_label">Rapid</string>
+    <string name="insulin_slow_label">Slow/Basal</string>
+    <string name="insulin_week_avg">Last 7 Days (Avg)</string>
+    <string name="insulin_month_avg">Last 30 Days (Avg)</string>
+    <string name="insulin_recent_activity">Recent Activity</string>
+    <string name="insulin_view_logs">Full History</string>
+    <string name="insulin_total_breakdown">TDI: %1$.1f U (%2$.1f R + %3$.1f S)</string>
+    <string name="insulin_header_breakdown">Total: %1$.1f U (%2$.1f R + %3$.1f S)</string>
+    <string name="add_insulin_dose">Add insulin dose</string>
+    <string name="edit_insulin_dose">Edit insulin dose</string>
+    <string name="update">Update</string>
+    <string name="insulin_units_label">Units (U)</string>
+    <string name="insulin_type_label">Insulin Type</string>
+    <string name="insulin_no_doses">No doses recorded yet.</string>
+
+    <string name="calc_title">Bolus Calculator</string>
+    <string name="calc_ratios_header">Current Ratios</string>
+    <string name="calc_ic_ratio">I:C Ratio (Rule of %1$d): %2$.1f g/U</string>
+    <string name="calc_isf">ISF: %1$.1f mg/dL per U</string>
+    <string name="calc_formula_label">Formula: %1$d / TDI</string>
+    <string name="calc_manual_label">Manual Override</string>
+    <string name="dash_fs_label">FS: %1$.1f</string>
+    <string name="calc_bolus_helper">Bolus Helper</string>
+    <string name="calc_carbs_label">Carbohydrates (g)</string>
+    <string name="calc_glucose_label">Current Glucose (mg/dL)</string>
+    <string name="calc_suggested_bolus">Suggested Bolus: %1$.2f Units</string>
+    <string name="calc_basal_expiring_warning">Basal is expiring soon! Applied +20% adjustment.</string>
+    <string name="calc_considerations_title">Considerations</string>
+    <string name="calc_considerations_text">Calculations are based on your configured TDI and rules. Always confirm with your physician. If basal is within 2 hours of expiration, bolus is increased by 20% to prevent drift.</string>
+
+    <string name="settings_advanced_insulin">Advanced Insulin Setup</string>
+    <string name="settings_insulin_durations">Insulin Durations</string>
+    <string name="settings_rapid_duration">Rapid Duration (HH:mm)</string>
+    <string name="settings_slow_duration">Slow/Basal Duration (HH:mm)</string>
+    <string name="settings_calc_rules">Calculator Rules</string>
+    <string name="settings_ic_rule">I:C Rule Constant (e.g. 450)</string>
+    <string name="settings_isf_rule">ISF Rule Constant (e.g. 1800)</string>
+    <string name="settings_manual_tdi">Manual TDI (U) - Leave empty for Auto</string>
+    <string name="settings_manual_isf">Manual ISF (mg/dL/U) - Leave empty for Auto</string>
+    <string name="settings_target_glucose">Target Glucose (mg/dL)</string>
 
     <string name="strategy_title">Trend Strategies</string>
     <string name="strategy_insulin_adj">Insulin Adjustment: %1$s</string>
@@ -57,4 +117,5 @@
     <string name="adj_falling_slowly">Subtract 25 mg/dL</string>
     <string name="adj_falling_fast">Subtract 50 mg/dL</string>
     <string name="adj_falling_very_fast">Subtract 75 mg/dL</string>
+    <string name="settings_use_calibrated_alarms">Use value with offset for alarms</string>
 </resources>

@@ -19,6 +19,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.res.stringResource
+import com.tonio.libre2clock.R
 import com.tonio.libre2clock.data.model.GlucoseOffsetRange
 import java.time.Instant
 import java.time.ZoneId
@@ -39,6 +41,7 @@ fun SettingsScreen(
     val watchAlertStartMinute by viewModel.watchAlertStartMinute.collectAsStateWithLifecycle()
     val lowGlucoseAlarmEnabled by viewModel.lowGlucoseAlarmEnabled.collectAsStateWithLifecycle()
     val highGlucoseAlarmEnabled by viewModel.highGlucoseAlarmEnabled.collectAsStateWithLifecycle()
+    val useCalibratedForAlarms by viewModel.useCalibratedForAlarms.collectAsStateWithLifecycle()
     val lastHistoryBackupRequestAt by viewModel.lastHistoryBackupRequestAt.collectAsStateWithLifecycle()
     val historyRetentionDays by viewModel.historyRetentionDays.collectAsStateWithLifecycle()
     val isDemoMode by viewModel.isDemoMode.collectAsStateWithLifecycle()
@@ -218,6 +221,20 @@ fun SettingsScreen(
                     Switch(
                         checked = highGlucoseAlarmEnabled,
                         onCheckedChange = viewModel::updateHighGlucoseAlarmEnabled
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.settings_use_calibrated_alarms),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Switch(
+                        checked = useCalibratedForAlarms,
+                        onCheckedChange = viewModel::updateUseCalibratedForAlarms
                     )
                 }
 

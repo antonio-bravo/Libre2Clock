@@ -50,6 +50,9 @@ class SettingsViewModel(
     val highGlucoseAlarmEnabled: StateFlow<Boolean> = preferenceManager.highGlucoseAlarmEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
+    val useCalibratedForAlarms: StateFlow<Boolean> = preferenceManager.useCalibratedForAlarms
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
     val lastHistoryBackupRequestAt: StateFlow<Long?> = preferenceManager.lastHistoryBackupRequestAt
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
@@ -58,6 +61,30 @@ class SettingsViewModel(
 
     val isDemoMode: StateFlow<Boolean> = preferenceManager.isDemoMode
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val rapidDurationMins: StateFlow<Int> = preferenceManager.rapidDurationMins
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 240)
+
+    val slowDurationMins: StateFlow<Int> = preferenceManager.slowDurationMins
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 1440)
+
+    val icRuleConstant: StateFlow<Int> = preferenceManager.icRuleConstant
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 450)
+
+    val isfRuleConstant: StateFlow<Int> = preferenceManager.isfRuleConstant
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 1800)
+
+    val manualTdi: StateFlow<Double?> = preferenceManager.manualTdi
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val manualIsf: StateFlow<Double?> = preferenceManager.manualIsf
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val targetGlucose: StateFlow<Int> = preferenceManager.targetGlucose
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 100)
+
+    val insulinDoses: StateFlow<List<com.tonio.libre2clock.data.model.InsulinDose>> = preferenceManager.insulinDoses
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val currentGlucose: StateFlow<GlucoseMeasurement?> = repository.currentGlucose
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
@@ -121,6 +148,12 @@ class SettingsViewModel(
     fun updateHighGlucoseAlarmEnabled(enabled: Boolean) {
         viewModelScope.launch {
             preferenceManager.saveHighGlucoseAlarmEnabled(enabled)
+        }
+    }
+
+    fun updateUseCalibratedForAlarms(enabled: Boolean) {
+        viewModelScope.launch {
+            preferenceManager.saveUseCalibratedForAlarms(enabled)
         }
     }
 
@@ -238,6 +271,63 @@ class SettingsViewModel(
                 currentRanges[index] = newRange
                 currentRanges.sortBy { it.min }
                 preferenceManager.saveGlucoseOffsetRanges(currentRanges)
+            }
+        }
+    }
+
+    fun updateRapidDuration(minutes: Int) {
+        viewModelScope.launch { preferenceManager.saveRapidDurationMins(minutes) }
+    }
+
+    fun updateSlowDuration(minutes: Int) {
+        viewModelScope.launch { preferenceManager.saveSlowDurationMins(minutes) }
+    }
+
+    fun updateIcRuleConstant(constant: Int) {
+        viewModelScope.launch { preferenceManager.saveIcRuleConstant(constant) }
+    }
+
+    fun updateIsfRuleConstant(constant: Int) {
+        viewModelScope.launch { preferenceManager.saveIsfRuleConstant(constant) }
+    }
+
+    fun updateManualTdi(tdi: Double?) {
+        viewModelScope.launch { preferenceManager.saveManualTdi(tdi) }
+    }
+
+    fun updateManualIsf(isf: Double?) {
+        viewModelScope.launch { preferenceManager.saveManualIsf(isf) }
+    }
+
+    fun updateTargetGlucose(target: Int) {
+        viewModelScope.launch { preferenceManager.saveTargetGlucose(target) }
+    }
+
+    fun addInsulinDose(dose: com.tonio.libre2clock.data.model.InsulinDose) {
+        viewModelScope.launch {
+            val current = insulinDoses.value.toMutableList()
+            current.add(dose)
+            current.sortByDescending { it.timestamp }
+            preferenceManager.saveInsulinDoses(current)
+        }
+    }
+
+    fun removeInsulinDose(dose: com.tonio.libre2clock.data.model.InsulinDose) {
+        viewModelScope.launch {
+            val current = insulinDoses.value.toMutableList()
+            current.remove(dose)
+            preferenceManager.saveInsulinDoses(current)
+        }
+    }
+
+    fun updateInsulinDose(oldDose: com.tonio.libre2clock.data.model.InsulinDose, newDose: com.tonio.libre2clock.data.model.InsulinDose) {
+        viewModelScope.launch {
+            val current = insulinDoses.value.toMutableList()
+            val index = current.indexOf(oldDose)
+            if (index != -1) {
+                current[index] = newDose
+                current.sortByDescending { it.timestamp }
+                preferenceManager.saveInsulinDoses(current)
             }
         }
     }

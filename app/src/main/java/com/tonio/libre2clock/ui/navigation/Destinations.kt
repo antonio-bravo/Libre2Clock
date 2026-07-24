@@ -19,4 +19,10 @@ sealed interface Destination : NavKey {
 
     @Serializable
     data object Capillary : Destination
+
+    @Serializable
+    data object InsulinHub : Destination
+
+    @Serializable
+    data object InsulinLogs : Destination
 }

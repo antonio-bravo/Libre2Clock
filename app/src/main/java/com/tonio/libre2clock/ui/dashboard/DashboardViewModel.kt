@@ -54,6 +54,18 @@ class DashboardViewModel(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val insulinDoses: StateFlow<List<com.tonio.libre2clock.data.model.InsulinDose>> = preferenceManager.insulinDoses
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val manualTdi: StateFlow<Double?> = preferenceManager.manualTdi
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+    
+    val manualIsf: StateFlow<Double?> = preferenceManager.manualIsf
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+    
+    val isfRuleConstant: StateFlow<Int> = preferenceManager.isfRuleConstant
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 1800)
+
     init {
         startSync()
     }
@@ -82,6 +94,15 @@ class DashboardViewModel(
             } finally {
                 _isHistoryRefreshing.value = false
             }
+        }
+    }
+
+    fun addInsulinDose(dose: com.tonio.libre2clock.data.model.InsulinDose) {
+        viewModelScope.launch {
+            val current = insulinDoses.value.toMutableList()
+            current.add(dose)
+            current.sortByDescending { it.timestamp }
+            preferenceManager.saveInsulinDoses(current)
         }
     }
 }

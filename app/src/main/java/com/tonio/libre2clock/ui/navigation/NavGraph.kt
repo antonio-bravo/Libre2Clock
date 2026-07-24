@@ -18,6 +18,8 @@ import android.content.Intent
 import androidx.compose.ui.platform.LocalContext
 
 import com.tonio.libre2clock.ui.capillary.CapillaryScreen
+import com.tonio.libre2clock.ui.insulin.InsulinHubScreen
+import com.tonio.libre2clock.ui.insulin.InsulinLogsScreen
 import com.tonio.libre2clock.ui.strategy.StrategyScreen
 
 @Composable
@@ -61,6 +63,12 @@ fun NavGraph(
                     },
                     onNavigateToCapillary = {
                         backStack.add(Destination.Capillary)
+                    },
+                    onNavigateToInsulinHub = {
+                        backStack.add(Destination.InsulinHub)
+                    },
+                    onAddDose = { dose ->
+                        dashboardViewModel.addInsulinDose(dose)
                     }
                 )
             }
@@ -85,6 +93,21 @@ fun NavGraph(
             entry<Destination.Capillary> {
                 val settingsViewModel: SettingsViewModel = viewModel { SettingsViewModel(preferenceManager, repository) }
                 CapillaryScreen(
+                    viewModel = settingsViewModel,
+                    onBack = { backStack.removeAt(backStack.size - 1) }
+                )
+            }
+            entry<Destination.InsulinHub> {
+                val settingsViewModel: SettingsViewModel = viewModel { SettingsViewModel(preferenceManager, repository) }
+                InsulinHubScreen(
+                    viewModel = settingsViewModel,
+                    onBack = { backStack.removeAt(backStack.size - 1) },
+                    onNavigateToLogs = { backStack.add(Destination.InsulinLogs) }
+                )
+            }
+            entry<Destination.InsulinLogs> {
+                val settingsViewModel: SettingsViewModel = viewModel { SettingsViewModel(preferenceManager, repository) }
+                InsulinLogsScreen(
                     viewModel = settingsViewModel,
                     onBack = { backStack.removeAt(backStack.size - 1) }
                 )

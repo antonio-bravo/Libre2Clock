@@ -1,0 +1,498 @@
+package com.tonio.libre2clock.ui.insulin
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tonio.libre2clock.R
+import com.tonio.libre2clock.data.model.InsulinDose
+import com.tonio.libre2clock.data.model.InsulinType
+import com.tonio.libre2clock.data.repository.InsulinProcessor
+import com.tonio.libre2clock.ui.settings.SettingsViewModel
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun InsulinHubScreen(
+    viewModel: SettingsViewModel,
+    onBack: () -> Unit,
+    onNavigateToLogs: () -> Unit
+) {
+    val doses by viewModel.insulinDoses.collectAsStateWithLifecycle()
+    val rapidDurationMins by viewModel.rapidDurationMins.collectAsStateWithLifecycle()
+    val slowDurationMins by viewModel.slowDurationMins.collectAsStateWithLifecycle()
+    val icRuleConstant by viewModel.icRuleConstant.collectAsStateWithLifecycle()
+    val isfRuleConstant by viewModel.isfRuleConstant.collectAsStateWithLifecycle()
+    val manualTdi by viewModel.manualTdi.collectAsStateWithLifecycle()
+    val manualIsf by viewModel.manualIsf.collectAsStateWithLifecycle()
+    val targetGlucose by viewModel.targetGlucose.collectAsStateWithLifecycle()
+    val currentGlucoseData by viewModel.currentGlucose.collectAsStateWithLifecycle()
+
+    var showAddDialog by remember { mutableStateOf(false) }
+    var showSettings by remember { mutableStateOf(false) }
+
+    val calculatedTdi = remember(doses) { InsulinProcessor.calculateAverageDaily(doses, 30) }
+    val tdi = manualTdi ?: calculatedTdi
+    val isf = InsulinProcessor.calculateISF(tdi, isfRuleConstant, manualIsf)
+    val icRatio = if (tdi > 0) icRuleConstant.toDouble() / tdi else 0.0
+
+    val totalIOB = remember(doses) { InsulinProcessor.calculateTotalIOB(doses) }
+    val rapidIOB = remember(doses) { doses.filter { it.type == InsulinType.RAPID }.let { InsulinProcessor.calculateTotalIOB(it) } }
+    val slowIOB = remember(doses) { doses.filter { it.type == InsulinType.SLOW }.let { InsulinProcessor.calculateTotalIOB(it) } }
+    val activeThreads = remember(doses) { doses.count { InsulinProcessor.calculateIOB(it) > 0 } }
+
+    val today = LocalDate.now()
+    val todayRapid = remember(doses) { InsulinProcessor.calculateDailyTotal(doses, today, InsulinType.RAPID) }
+    val todaySlow = remember(doses) { InsulinProcessor.calculateDailyTotal(doses, today, InsulinType.SLOW) }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.insulin_hub_title)) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { showSettings = !showSettings }) {
+                        Icon(if (showSettings) Icons.Default.SettingsApplications else Icons.Default.Settings, contentDescription = "Settings")
+                    }
+                }
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = { showAddDialog = true }) {
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_insulin_dose))
+            }
+        }
+    ) { innerPadding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Section 1: ACTIVE STATUS
+            item {
+                ActiveInsulinCard(totalIOB, rapidIOB, slowIOB, isf, activeThreads)
+            }
+
+            // Section 2: CALCULATOR
+            item {
+                BolusCalculatorCard(
+                    tdi = tdi,
+                    icRatio = icRatio,
+                    isf = isf,
+                    manualTdi = manualTdi,
+                    icConstant = icRuleConstant,
+                    isfConstant = isfRuleConstant,
+                    targetGlucose = targetGlucose,
+                    currentGlucose = currentGlucoseData?.value,
+                    doses = doses
+                )
+            }
+
+            // Section 3: TODAY STATS
+            item {
+                TodayStatsCard(todayRapid, todaySlow)
+            }
+
+            // Section 4: VIEW LOGS (Bottom link)
+            item {
+                Button(
+                    onClick = onNavigateToLogs,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                ) {
+                    Icon(Icons.Default.History, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = stringResource(R.string.insulin_view_logs))
+                }
+            }
+
+            // Section 5: SETTINGS (Animated)
+            item {
+                AnimatedVisibility(visible = showSettings) {
+                    AdvancedSettingsCard(
+                        rapidDurationMins,
+                        slowDurationMins,
+                        icRuleConstant,
+                        isfRuleConstant,
+                        manualTdi,
+                        manualIsf,
+                        targetGlucose,
+                        viewModel
+                    )
+                }
+            }
+            
+            item { Spacer(modifier = Modifier.height(80.dp)) }
+        }
+    }
+
+    if (showAddDialog) {
+        InsulinDoseDialog(
+            rapidDuration = rapidDurationMins,
+            slowDuration = slowDurationMins,
+            onDismiss = { showAddDialog = false },
+            onConfirm = {
+                viewModel.addInsulinDose(it)
+                showAddDialog = false
+            }
+        )
+    }
+}
+
+@Composable
+fun ActiveInsulinCard(total: Double, rapid: Double, slow: Double, fs: Double, activeThreads: Int) {
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+    ) {
+        Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(text = stringResource(R.string.insulin_active_total), style = MaterialTheme.typography.titleMedium)
+            Text(
+                text = stringResource(R.string.insulin_active_units, total),
+                style = MaterialTheme.typography.displayMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+            Text(
+                text = stringResource(R.string.insulin_active_split, rapid, slow),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+            )
+            Text(text = stringResource(R.string.insulin_active_threads, activeThreads), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f))
+            Spacer(modifier = Modifier.height(8.dp))
+            Surface(
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f),
+                shape = MaterialTheme.shapes.small
+            ) {
+                Text(
+                    text = stringResource(R.string.dash_fs_label, fs),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun BolusCalculatorCard(
+    tdi: Double,
+    icRatio: Double,
+    isf: Double,
+    manualTdi: Double?,
+    icConstant: Int,
+    isfConstant: Int,
+    targetGlucose: Int,
+    currentGlucose: Int?,
+    doses: List<InsulinDose>
+) {
+    var carbsText by remember { mutableStateOf("") }
+    var glucoseText by remember(currentGlucose) { mutableStateOf(currentGlucose?.toString() ?: "") }
+    val isBasalExpiringSoon = remember(doses) { InsulinProcessor.isBasalExpiringSoon(doses) }
+
+    val suggested = remember(carbsText, glucoseText, tdi, isBasalExpiringSoon, isf) {
+        val carbs = carbsText.toDoubleOrNull() ?: 0.0
+        val glucose = glucoseText.toIntOrNull() ?: 0
+        InsulinProcessor.getSuggestedBolus(carbs, glucose, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon)
+    }
+
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(text = stringResource(R.string.calc_bolus_helper), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = carbsText,
+                    onValueChange = { carbsText = it },
+                    label = { Text(stringResource(R.string.calc_carbs_label)) },
+                    modifier = Modifier.weight(1f),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                )
+                OutlinedTextField(
+                    value = glucoseText,
+                    onValueChange = { glucoseText = it },
+                    label = { Text(stringResource(R.string.calc_glucose_label)) },
+                    modifier = Modifier.weight(1f),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+            }
+
+            if (isBasalExpiringSoon) {
+                Text(
+                    text = stringResource(R.string.calc_basal_expiring_warning),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Text(
+                text = stringResource(R.string.calc_suggested_bolus, suggested),
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            
+            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+            
+            // Ratio info
+            Text(text = stringResource(R.string.calc_ic_ratio, icConstant, icRatio), style = MaterialTheme.typography.labelMedium)
+            Text(text = stringResource(R.string.calc_isf, isf), style = MaterialTheme.typography.labelMedium)
+            Text(
+                text = "TDI: %.1f U %s".format(tdi, if (manualTdi != null) "(Manual)" else "(Auto 30d)"),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            )
+        }
+    }
+}
+
+@Composable
+fun TodayStatsCard(rapid: Double, slow: Double) {
+    Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(text = stringResource(R.string.insulin_today_stats), style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = stringResource(R.string.insulin_total_breakdown, rapid + slow, rapid, slow),
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+@Composable
+fun AdvancedSettingsCard(
+    rapidMin: Int,
+    slowMin: Int,
+    icC: Int,
+    isfC: Int,
+    mTdi: Double?,
+    mIsf: Double?,
+    targetG: Int,
+    viewModel: SettingsViewModel
+) {
+    Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(text = stringResource(R.string.settings_advanced_insulin), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            
+            DurationInput(stringResource(R.string.settings_rapid_duration), rapidMin, viewModel::updateRapidDuration)
+            DurationInput(stringResource(R.string.settings_slow_duration), slowMin, viewModel::updateSlowDuration)
+            
+            OutlinedTextField(
+                value = icC.toString(),
+                onValueChange = { it.toIntOrNull()?.let(viewModel::updateIcRuleConstant) },
+                label = { Text(stringResource(R.string.settings_ic_rule)) },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            )
+            
+            OutlinedTextField(
+                value = isfC.toString(),
+                onValueChange = { it.toIntOrNull()?.let(viewModel::updateIsfRuleConstant) },
+                label = { Text(stringResource(R.string.settings_isf_rule)) },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            )
+
+            OutlinedTextField(
+                value = mTdi?.toString() ?: "",
+                onValueChange = { viewModel.updateManualTdi(it.toDoubleOrNull()) },
+                label = { Text(stringResource(R.string.settings_manual_tdi)) },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+            )
+
+            OutlinedTextField(
+                value = mIsf?.toString() ?: "",
+                onValueChange = { viewModel.updateManualIsf(it.toDoubleOrNull()) },
+                label = { Text(stringResource(R.string.settings_manual_isf)) },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+            )
+
+            OutlinedTextField(
+                value = targetG.toString(),
+                onValueChange = { it.toIntOrNull()?.let(viewModel::updateTargetGlucose) },
+                label = { Text(stringResource(R.string.settings_target_glucose)) },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            )
+        }
+    }
+}
+
+@Composable
+fun DoseItem(
+    dose: InsulinDose,
+    onDelete: () -> Unit,
+    onEdit: () -> Unit
+) {
+    val iob = remember(dose) { InsulinProcessor.calculateIOB(dose) }
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f)) {
+                val typeLabel = if (dose.type == InsulinType.RAPID) stringResource(R.string.insulin_rapid_label) else stringResource(R.string.insulin_slow_label)
+                Text(text = "${dose.units} U - $typeLabel", fontWeight = FontWeight.Bold)
+                Text(text = dose.timestamp, style = MaterialTheme.typography.bodySmall)
+                if (iob > 0) {
+                    Text(
+                        text = "Active: %.2f U".format(iob),
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
+            }
+            Row {
+                IconButton(onClick = onEdit) {
+                    Icon(Icons.Default.Edit, contentDescription = "Edit")
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.Delete, contentDescription = "Delete")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun InsulinDoseDialog(
+    initialDose: InsulinDose? = null,
+    rapidDuration: Int,
+    slowDuration: Int,
+    onDismiss: () -> Unit,
+    onConfirm: (InsulinDose) -> Unit
+) {
+    var unitsText by remember { mutableStateOf(initialDose?.units?.toString() ?: "") }
+    var type by remember { mutableStateOf(initialDose?.type ?: InsulinType.RAPID) }
+    
+    val now = Instant.now().atZone(ZoneId.systemDefault())
+    val currentFormattedDate = DateTimeFormatter.ofPattern("yyyy-MM-dd").format(now)
+    val currentFormattedTime = DateTimeFormatter.ofPattern("HH:mm").format(now)
+
+    var dateText by remember { 
+        mutableStateOf(initialDose?.timestamp?.substringBefore(" ") ?: currentFormattedDate) 
+    }
+    var timeText by remember { 
+        mutableStateOf(initialDose?.timestamp?.substringAfter(" ") ?: currentFormattedTime) 
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(if (initialDose == null) R.string.add_insulin_dose else R.string.edit_insulin_dose)) },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = unitsText,
+                    onValueChange = { unitsText = it },
+                    label = { Text(stringResource(R.string.insulin_units_label)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = dateText,
+                        onValueChange = { dateText = it },
+                        label = { Text("Date (yyyy-MM-dd)") },
+                        modifier = Modifier.weight(1f)
+                    )
+                    OutlinedTextField(
+                        value = timeText,
+                        onValueChange = { timeText = it },
+                        label = { Text("Time (HH:mm)") },
+                        modifier = Modifier.weight(0.7f)
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(text = stringResource(R.string.insulin_type_label), style = MaterialTheme.typography.labelMedium)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(selected = type == InsulinType.RAPID, onClick = { type = InsulinType.RAPID })
+                    Text(stringResource(R.string.insulin_rapid_label))
+                    Spacer(modifier = Modifier.width(16.dp))
+                    RadioButton(selected = type == InsulinType.SLOW, onClick = { type = InsulinType.SLOW })
+                    Text(stringResource(R.string.insulin_slow_label))
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                val units = unitsText.toDoubleOrNull() ?: return@TextButton
+                val timestamp = "$dateText $timeText"
+                onConfirm(
+                    InsulinDose(
+                        units = units,
+                        timestamp = timestamp,
+                        type = type,
+                        durationMinutes = if (type == InsulinType.RAPID) rapidDuration else slowDuration
+                    )
+                )
+            }) {
+                Text(stringResource(if (initialDose == null) android.R.string.ok else R.string.update))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(android.R.string.cancel))
+            }
+        }
+    )
+}
+
+@Composable
+fun DurationInput(
+    label: String,
+    initialMinutes: Int,
+    onValueChange: (Int) -> Unit
+) {
+    val hours = initialMinutes / 60
+    val mins = initialMinutes % 60
+    var textValue by remember(initialMinutes) { mutableStateOf("%02d:%02d".format(hours, mins)) }
+
+    OutlinedTextField(
+        value = textValue,
+        onValueChange = {
+            textValue = it
+            val parts = it.split(":")
+            if (parts.size == 2) {
+                val h = parts[0].toIntOrNull() ?: 0
+                val m = parts[1].toIntOrNull() ?: 0
+                onValueChange(h * 60 + m)
+            }
+        },
+        label = { Text(label) },
+        modifier = Modifier.fillMaxWidth(),
+        placeholder = { Text("HH:mm") },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
+    )
+}

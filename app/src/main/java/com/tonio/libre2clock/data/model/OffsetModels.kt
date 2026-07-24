@@ -19,7 +19,21 @@ data class CapillaryMeasurement(
 )
 
 @Serializable
+enum class InsulinType {
+    RAPID, SLOW
+}
+
+@Serializable
+data class InsulinDose(
+    val units: Double,
+    val timestamp: String,
+    val type: InsulinType,
+    val durationMinutes: Int
+)
+
+@Serializable
 data class HistoryBackupPayload(
     val historicalGlucoseArchive: List<GlucoseMeasurement> = emptyList(),
-    val capillaryReadings: List<CapillaryMeasurement> = emptyList()
+    val capillaryReadings: List<CapillaryMeasurement> = emptyList(),
+    val insulinDoses: List<InsulinDose> = emptyList()
 )

@@ -38,6 +38,7 @@ class GlucoseForegroundService : Service() {
     private var watchAlertStartMinuteCached: Int = 0
     private var lowGlucoseAlarmEnabledCached: Boolean = false
     private var highGlucoseAlarmEnabledCached: Boolean = false
+    private var useCalibratedForAlarmsCached: Boolean = true
     private var glucoseOffsetCached: Int = 0
     private var glucoseOffsetRangesCached: List<com.tonio.libre2clock.data.model.GlucoseOffsetRange> = emptyList()
     private var autoAdjustEnabledCached: Boolean = false
@@ -113,6 +114,12 @@ class GlucoseForegroundService : Service() {
             launch {
                 preferenceManager.highGlucoseAlarmEnabled.collect {
                     highGlucoseAlarmEnabledCached = it
+                }
+            }
+
+            launch {
+                preferenceManager.useCalibratedForAlarms.collect {
+                    useCalibratedForAlarmsCached = it
                 }
             }
 
@@ -334,16 +341,16 @@ class GlucoseForegroundService : Service() {
                 private fun maybeSendGlucoseAlarms(measurement: GlucoseMeasurement) {
                     val now = System.currentTimeMillis()
                     val processed = processMeasurement(measurement)
-                    val calibrated = processed.calibratedValue
+                    val valueToCheck = if (useCalibratedForAlarmsCached) processed.calibratedValue else processed.value
 
-                    if (lowGlucoseAlarmEnabledCached && calibrated < LOW_GLUCOSE_THRESHOLD) {
+                    if (lowGlucoseAlarmEnabledCached && valueToCheck < LOW_GLUCOSE_THRESHOLD) {
                         if (now - lastLowAlarmAtMillis >= GLUCOSE_ALARM_COOLDOWN_MS) {
                             sendThresholdAlarmNotification(processed, isLow = true)
                             lastLowAlarmAtMillis = now
                         }
                     }
 
-                    if (highGlucoseAlarmEnabledCached && calibrated > HIGH_GLUCOSE_THRESHOLD) {
+                    if (highGlucoseAlarmEnabledCached && valueToCheck > HIGH_GLUCOSE_THRESHOLD) {
                         if (now - lastHighAlarmAtMillis >= GLUCOSE_ALARM_COOLDOWN_MS) {
                             sendThresholdAlarmNotification(processed, isLow = false)
                             lastHighAlarmAtMillis = now
