@@ -1,5 +1,30 @@
 # Changelog
 
+## f3becff (Jul 24, 2026 23:05:45)
+fix remaining time — antonio-bravo
+[detail](#f3becff-details)
+
+<details id='f3becff-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+</details>
+
+
+---
+## 25c74f0 (Jul 23, 2026 18:16:25)
+Update changelog — github-actions[bot]
+[detail](#25c74f0-details)
+
+<details id='25c74f0-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 6d780f3 (Jul 23, 2026 20:16:09)
 Capilarity Screen — antonio-bravo
 [detail](#6d780f3-details)
@@ -710,87 +735,6 @@ notificacion real + con offset y letras grandes en reloj — antonio-bravo
 - .idea/misc.xml [Modified]
 - .idea/vcs.xml [Deleted]
 - app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
-</details>
-
-
----
-## b115991 (Jul 14, 2026 21:10:23)
-initial commit — antonio-bravo
-[detail](#b115991-details)
-
-<details id='b115991-details'>
-<summary>Changed files</summary>
-
-- .agent/.aiexclude [Added]
-- .agent/plan.md [Added]
-- .gitignore [Added]
-- .idea/AndroidProjectSystem.xml [Added]
-- .idea/compiler.xml [Added]
-- .idea/deploymentTargetSelector.xml [Added]
-- .idea/gradle.xml [Added]
-- .idea/inspectionProfiles/Project_Default.xml [Added]
-- .idea/markdown.xml [Added]
-- .idea/misc.xml [Added]
-- .idea/planningMode.xml [Added]
-- .idea/runConfigurations.xml [Added]
-- .idea/studiobot.xml [Added]
-- app/.gitignore [Added]
-- app/build.gradle.kts [Added]
-- app/proguard-rules.pro [Added]
-- app/src/androidTest/java/com/tonio/libre2clock/ExampleInstrumentedTest.kt [Added]
-- app/src/main/AndroidManifest.xml [Added]
-- app/src/main/java/com/tonio/libre2clock/MainActivity.kt [Added]
-- app/src/main/java/com/tonio/libre2clock/data/api/LibreLinkUpApi.kt [Added]
-- app/src/main/java/com/tonio/libre2clock/data/api/LibreService.kt [Added]
-- app/src/main/java/com/tonio/libre2clock/data/model/LibreModels.kt [Added]
-- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Added]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseProcessor.kt [Added]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepository.kt [Added]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Added]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Added]
-- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Added]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Added]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Added]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Added]
-- app/src/main/java/com/tonio/libre2clock/ui/login/LoginScreen.kt [Added]
-- app/src/main/java/com/tonio/libre2clock/ui/login/LoginViewModel.kt [Added]
-- app/src/main/java/com/tonio/libre2clock/ui/navigation/Destinations.kt [Added]
-- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Added]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Added]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Added]
-- app/src/main/java/com/tonio/libre2clock/ui/theme/Color.kt [Added]
-- app/src/main/java/com/tonio/libre2clock/ui/theme/Theme.kt [Added]
-- app/src/main/java/com/tonio/libre2clock/ui/theme/Type.kt [Added]
-- app/src/main/res/drawable/ic_launcher_background.xml [Added]
-- app/src/main/res/drawable/ic_launcher_foreground.xml [Added]
-- app/src/main/res/drawable/placeholder.png [Added]
-- app/src/main/res/mipmap-anydpi/ic_launcher.xml [Added]
-- app/src/main/res/mipmap-anydpi/ic_launcher_round.xml [Added]
-- app/src/main/res/mipmap-hdpi/ic_launcher.webp [Added]
-- app/src/main/res/mipmap-hdpi/ic_launcher_round.webp [Added]
-- app/src/main/res/mipmap-mdpi/ic_launcher.webp [Added]
-- app/src/main/res/mipmap-mdpi/ic_launcher_round.webp [Added]
-- app/src/main/res/mipmap-xhdpi/ic_launcher.webp [Added]
-- app/src/main/res/mipmap-xhdpi/ic_launcher_round.webp [Added]
-- app/src/main/res/mipmap-xxhdpi/ic_launcher.webp [Added]
-- app/src/main/res/mipmap-xxhdpi/ic_launcher_round.webp [Added]
-- app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp [Added]
-- app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp [Added]
-- app/src/main/res/values/colors.xml [Added]
-- app/src/main/res/values/strings.xml [Added]
-- app/src/main/res/values/themes.xml [Added]
-- app/src/main/res/xml/backup_rules.xml [Added]
-- app/src/main/res/xml/data_extraction_rules.xml [Added]
-- app/src/test/java/com/tonio/libre2clock/ExampleUnitTest.kt [Added]
-- build.gradle.kts [Added]
-- gradle.properties [Added]
-- gradle/gradle-daemon-jvm.properties [Added]
-- gradle/libs.versions.toml [Added]
-- gradle/wrapper/gradle-wrapper.jar [Added]
-- gradle/wrapper/gradle-wrapper.properties [Added]
-- gradlew [Added]
-- gradlew.bat [Added]
-- settings.gradle.kts [Added]
 </details>
 
 
