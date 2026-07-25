@@ -1,5 +1,35 @@
 # Changelog
 
+## 3d30e3c (Jul 25, 2026 18:14:27)
+Add documentation and adjust insulin processor — antonio-bravo
+[detail](#3d30e3c-details)
+
+<details id='3d30e3c-details'>
+<summary>Changed files</summary>
+
+- ARCHITECTURE.md [Deleted]
+- BACKUP_AND_RESTORE.md [Deleted]
+- CALIBRATION_SYSTEM.md [Deleted]
+- DIABETES_CALCULATOR.md [Deleted]
+- INSULIN_IOB_ALGORITHM.md [Deleted]
+- README.md [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/InsulinProcessor.kt [Modified]
+</details>
+
+
+---
+## 86c2df4 (Jul 25, 2026 12:54:28)
+Update changelog — github-actions[bot]
+[detail](#86c2df4-details)
+
+<details id='86c2df4-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 7f45599 (Jul 25, 2026 14:54:08)
 Insulin Management — antonio-bravo
 [detail](#7f45599-details)
@@ -728,33 +758,6 @@ Add how to fix — antonio-bravo
 - .idea/misc.xml [Modified]
 - gradle.properties [Modified]
 - how to fix.md [Deleted]
-</details>
-
-
----
-## c34aae5 (Jul 14, 2026 23:04:23)
-Readme and oh-my-posh — antonio-bravo
-[detail](#c34aae5-details)
-
-<details id='c34aae5-details'>
-<summary>Changed files</summary>
-
-- README.md [Deleted]
-- oh-my-posh/.zshrc [Deleted]
-- oh-my-posh/emodipt-extend.omp.json [Deleted]
-- oh-my-posh/glucosa.py [Deleted]
-</details>
-
-
----
-## ab222e8 (Jul 14, 2026 22:28:11)
-add _debug.apk — antonio-bravo
-[detail](#ab222e8-details)
-
-<details id='ab222e8-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/build-release.yml [Modified]
 </details>
 
 
