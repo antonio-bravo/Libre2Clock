@@ -62,7 +62,7 @@ class GlucoseForegroundService : Service() {
     override fun onCreate() {
         super.onCreate()
         preferenceManager = PreferenceManager(applicationContext)
-        repository = GlucoseRepositoryImpl(applicationContext, preferenceManager)
+        repository = GlucoseRepositoryImpl(preferenceManager)
         createNotificationChannel()
     }
 

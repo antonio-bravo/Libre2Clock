@@ -52,7 +52,7 @@ fun NavGraph(
                 )
             }
             entry<Destination.Dashboard> {
-                val dashboardViewModel: DashboardViewModel = viewModel { DashboardViewModel(repository, preferenceManager) }
+                val dashboardViewModel: DashboardViewModel = viewModel { DashboardViewModel(repository, preferenceManager, context.applicationContext) }
                 DashboardScreen(
                     viewModel = dashboardViewModel,
                     onNavigateToSettings = {

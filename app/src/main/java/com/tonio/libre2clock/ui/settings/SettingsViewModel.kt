@@ -8,10 +8,12 @@ import com.tonio.libre2clock.data.model.GlucoseOffsetRange
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.repository.GlucoseRepository
 import com.tonio.libre2clock.data.repository.PreferenceManager
+import com.tonio.libre2clock.data.repository.GlucoseProcessor
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -86,8 +88,17 @@ class SettingsViewModel(
     val insulinDoses: StateFlow<List<com.tonio.libre2clock.data.model.InsulinDose>> = preferenceManager.insulinDoses
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val currentGlucose: StateFlow<GlucoseMeasurement?> = repository.currentGlucose
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+    val currentGlucose: StateFlow<GlucoseMeasurement?> = combine(
+        repository.currentGlucose,
+        preferenceManager.glucoseOffset,
+        preferenceManager.glucoseOffsetRanges,
+        preferenceManager.autoAdjustEnabled,
+        preferenceManager.capillaryReadings
+    ) { current, manualOffset, ranges, autoAdjust, capillaries ->
+        current?.let {
+            GlucoseProcessor.process(it, manualOffset, ranges, autoAdjust, capillaries)
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     fun updateOffset(offset: Int) {
         viewModelScope.launch {

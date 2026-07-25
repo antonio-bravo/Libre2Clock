@@ -1,6 +1,5 @@
 package com.tonio.libre2clock.ui.insulin
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
@@ -17,6 +16,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tonio.libre2clock.R
+import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.InsulinDose
 import com.tonio.libre2clock.data.model.InsulinType
 import com.tonio.libre2clock.data.repository.InsulinProcessor
@@ -44,7 +44,6 @@ fun InsulinHubScreen(
     val currentGlucoseData by viewModel.currentGlucose.collectAsStateWithLifecycle()
 
     var showAddDialog by remember { mutableStateOf(false) }
-    var showSettings by remember { mutableStateOf(false) }
 
     val calculatedTdi = remember(doses) { InsulinProcessor.calculateAverageDaily(doses, 30) }
     val tdi = manualTdi ?: calculatedTdi
@@ -67,11 +66,6 @@ fun InsulinHubScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { showSettings = !showSettings }) {
-                        Icon(if (showSettings) Icons.Default.SettingsApplications else Icons.Default.Settings, contentDescription = "Settings")
                     }
                 }
             )
@@ -104,8 +98,9 @@ fun InsulinHubScreen(
                     icConstant = icRuleConstant,
                     isfConstant = isfRuleConstant,
                     targetGlucose = targetGlucose,
-                    currentGlucose = currentGlucoseData?.value,
-                    doses = doses
+                    currentGlucose = currentGlucoseData,
+                    doses = doses,
+                    viewModel = viewModel
                 )
             }
 
@@ -127,20 +122,17 @@ fun InsulinHubScreen(
                 }
             }
 
-            // Section 5: SETTINGS (Animated)
+            // Section 5: SETTINGS (Always Visible)
             item {
-                AnimatedVisibility(visible = showSettings) {
-                    AdvancedSettingsCard(
-                        rapidDurationMins,
-                        slowDurationMins,
-                        icRuleConstant,
-                        isfRuleConstant,
-                        manualTdi,
-                        manualIsf,
-                        targetGlucose,
-                        viewModel
-                    )
-                }
+                AdvancedSettingsCard(
+                    rapidDurationMins,
+                    slowDurationMins,
+                    icRuleConstant,
+                    isfRuleConstant,
+                    manualTdi,
+                    manualIsf,
+                    viewModel
+                )
             }
             
             item { Spacer(modifier = Modifier.height(80.dp)) }
@@ -206,17 +198,36 @@ fun BolusCalculatorCard(
     icConstant: Int,
     isfConstant: Int,
     targetGlucose: Int,
-    currentGlucose: Int?,
-    doses: List<InsulinDose>
+    currentGlucose: GlucoseMeasurement?,
+    doses: List<InsulinDose>,
+    viewModel: SettingsViewModel
 ) {
     var carbsText by remember { mutableStateOf("") }
-    var glucoseText by remember(currentGlucose) { mutableStateOf(currentGlucose?.toString() ?: "") }
+    
+    val initialGlucoseText = remember(currentGlucose) {
+        currentGlucose?.let {
+            if (it.value != it.calibratedValue) {
+                "${it.value}(${it.calibratedValue})"
+            } else {
+                it.value.toString()
+            }
+        } ?: ""
+    }
+    
+    var glucoseText by remember(initialGlucoseText) { mutableStateOf(initialGlucoseText) }
     val isBasalExpiringSoon = remember(doses) { InsulinProcessor.isBasalExpiringSoon(doses) }
 
-    val suggested = remember(carbsText, glucoseText, tdi, isBasalExpiringSoon, isf) {
+    val suggestedResults = remember(carbsText, glucoseText, tdi, isBasalExpiringSoon, isf, targetGlucose) {
         val carbs = carbsText.toDoubleOrNull() ?: 0.0
-        val glucose = glucoseText.toIntOrNull() ?: 0
-        InsulinProcessor.getSuggestedBolus(carbs, glucose, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon)
+        
+        val glucoseParts = glucoseText.replace(")", "").split("(")
+        val realG = glucoseParts.getOrNull(0)?.toIntOrNull() ?: 0
+        val calG = glucoseParts.getOrNull(1)?.toIntOrNull() ?: realG
+        
+        val breakdownReal = InsulinProcessor.getSuggestedBolusDetailed(carbs, realG, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon)
+        val breakdownCal = InsulinProcessor.getSuggestedBolusDetailed(carbs, calG, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon)
+        
+        realG to calG to (breakdownReal to breakdownCal)
     }
 
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -237,9 +248,19 @@ fun BolusCalculatorCard(
                     onValueChange = { glucoseText = it },
                     label = { Text(stringResource(R.string.calc_glucose_label)) },
                     modifier = Modifier.weight(1f),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    placeholder = { Text("Real(Offset)") }
                 )
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            OutlinedTextField(
+                value = targetGlucose.toString(),
+                onValueChange = { it.toIntOrNull()?.let(viewModel::updateTargetGlucose) },
+                label = { Text(stringResource(R.string.settings_target_glucose)) },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            )
 
             if (isBasalExpiringSoon) {
                 Text(
@@ -252,12 +273,35 @@ fun BolusCalculatorCard(
 
             Spacer(modifier = Modifier.height(16.dp))
             
-            Text(
-                text = stringResource(R.string.calc_suggested_bolus, suggested),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
+            val (gs, breakdowns) = suggestedResults
+            val (realG, calG) = gs
+            val (bReal, bCal) = breakdowns
+
+            val isDual = realG != calG && realG > 0
+            val suggestedText = if (isDual) {
+                InsulinProcessor.formatDualValue(bReal.total, bCal.total)
+            } else {
+                "%.2f".format(bReal.total)
+            }
+
+            Column {
+                Text(
+                    text = stringResource(R.string.calc_suggested_bolus_dual, suggestedText),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                
+                Text(
+                    text = if (isDual) {
+                        "R: (HC: %.2f + Corr: %.2f) | O: (HC: %.2f + Corr: %.2f)".format(bReal.carbDose, bReal.correctionDose, bCal.carbDose, bCal.correctionDose)
+                    } else {
+                        stringResource(R.string.calc_breakdown_label, bReal.carbDose, bReal.correctionDose)
+                    },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+            }
             
             HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
             
@@ -296,7 +340,6 @@ fun AdvancedSettingsCard(
     isfC: Int,
     mTdi: Double?,
     mIsf: Double?,
-    targetG: Int,
     viewModel: SettingsViewModel
 ) {
     Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))) {
@@ -336,14 +379,6 @@ fun AdvancedSettingsCard(
                 label = { Text(stringResource(R.string.settings_manual_isf)) },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
-            )
-
-            OutlinedTextField(
-                value = targetG.toString(),
-                onValueChange = { it.toIntOrNull()?.let(viewModel::updateTargetGlucose) },
-                label = { Text(stringResource(R.string.settings_target_glucose)) },
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
         }
     }

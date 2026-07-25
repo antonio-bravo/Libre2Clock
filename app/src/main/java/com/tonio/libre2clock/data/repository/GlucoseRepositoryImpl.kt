@@ -1,8 +1,7 @@
 package com.tonio.libre2clock.data.repository
 
-import android.content.Context
-import com.tonio.libre2clock.R
 import com.tonio.libre2clock.data.api.LibreService
+import com.tonio.libre2clock.data.model.ActiveSensorInfo
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.LoginRequest
 import com.tonio.libre2clock.data.model.SensorStatus
@@ -18,7 +17,6 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 class GlucoseRepositoryImpl(
-    private val context: Context,
     private val preferenceManager: PreferenceManager
 ) : GlucoseRepository {
 
@@ -27,30 +25,16 @@ class GlucoseRepositoryImpl(
 
     override val historicalGlucose: Flow<List<GlucoseMeasurement>> = preferenceManager.historicalGlucoseArchive
 
-    private val _realSensorStatus = MutableStateFlow<SensorStatus?>(null)
-    override val sensorStatus: Flow<SensorStatus?> = combine(
-        preferenceManager.isDemoMode,
-        _realSensorStatus
-    ) { demoEnabled, realStatus ->
-        if (demoEnabled) {
-            getDemoSensorStatus()
-        } else {
-            realStatus
-        }
+    override val activeSensorInfo: Flow<ActiveSensorInfo?> = combine(
+        preferenceManager.activeSensorSerialNumber,
+        preferenceManager.activeSensorStartTime
+    ) { sn, start ->
+        if (sn != null && start != null) ActiveSensorInfo(sn, start) else null
     }
 
     override val isDemoMode: Flow<Boolean> = preferenceManager.isDemoMode
 
     private var patientId: String? = null
-
-    private fun getDemoSensorStatus(): SensorStatus {
-        return SensorStatus(
-            daysRemaining = context.getString(R.string.sensor_remaining_days, 14, 0, 0),
-            startDate = context.getString(R.string.sensor_started_label, "Mon, Nov 03, 2025 10:30"),
-            expiryDate = context.getString(R.string.sensor_expires_label, "Mon, Nov 17, 2025 10:30"),
-            serialNumber = "DEMO-12345"
-        )
-    }
 
     override suspend fun enableDemoMode() {
         preferenceManager.saveDemoMode(true)
@@ -78,7 +62,7 @@ class GlucoseRepositoryImpl(
                 LibreService.setAuth(token, userId)
                 preferenceManager.saveAuth(token, userId)
                 preferenceManager.saveDemoMode(false)
-                _realSensorStatus.value = null // Clear real status
+                preferenceManager.clearActiveSensorInfo()
                 Result.success(Unit)
             } else {
                 Result.failure(Exception("Login failed with status ${response.status}"))
@@ -163,34 +147,7 @@ class GlucoseRepositoryImpl(
                 else 
                     sensor.activationTimestamp
                     
-                val expiryTime = activationTime + (14 * 24 * 60 * 60)
-                val now = Instant.now().epochSecond
-                val remainingSeconds = expiryTime - now
-
-                val days = (remainingSeconds / (24 * 60 * 60)).toInt()
-                val hours = ((remainingSeconds % (24 * 60 * 60)) / 3600).toInt()
-                val minutes = ((remainingSeconds % 3600) / 60).toInt()
-
-                val remainingStr = when {
-                    remainingSeconds <= 0 -> context.getString(R.string.sensor_expired)
-                    days > 0 -> context.getString(R.string.sensor_remaining_days, days, hours, minutes)
-                    hours > 0 -> context.getString(R.string.sensor_remaining_hours, hours, minutes)
-                    else -> context.getString(R.string.sensor_remaining_minutes, minutes)
-                }
-
-                val formatter = DateTimeFormatter.ofPattern("EEE, MMM dd, yyyy HH:mm", Locale.US)
-                    .withZone(ZoneId.systemDefault())
-                val startDateStr = formatter.format(Instant.ofEpochSecond(activationTime))
-                val expiryDateStr = formatter.format(Instant.ofEpochSecond(expiryTime))
-
-                _realSensorStatus.value = SensorStatus(
-                    daysRemaining = remainingStr,
-                    startDate = context.getString(R.string.sensor_started_label, startDateStr),
-                    expiryDate = context.getString(R.string.sensor_expires_label, expiryDateStr),
-                    serialNumber = sensor.serialNumber
-                )
-            } else {
-                _realSensorStatus.value = null
+                preferenceManager.saveActiveSensorInfo(sensor.serialNumber, activationTime)
             }
 
             val historicalMeasurements = response.data?.graphData ?: emptyList()

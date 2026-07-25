@@ -75,7 +75,13 @@ object InsulinProcessor {
         return isfConstant.toDouble() / tdi
     }
 
-    fun getSuggestedBolus(
+    data class BolusBreakdown(
+        val carbDose: Double,
+        val correctionDose: Double,
+        val total: Double
+    )
+
+    fun getSuggestedBolusDetailed(
         carbs: Double,
         currentGlucose: Int,
         targetGlucose: Int,
@@ -83,10 +89,10 @@ object InsulinProcessor {
         icConstant: Int,
         isf: Double,
         isBasalExpiringSoon: Boolean
-    ): Double {
-        if (tdi <= 0.0) return 0.0
+    ): BolusBreakdown {
+        if (tdi <= 0.0 && isf <= 0.0) return BolusBreakdown(0.0, 0.0, 0.0)
         
-        val icRatio = icConstant / tdi // grams per unit
+        val icRatio = if (tdi > 0) icConstant / tdi else 0.0
         
         val carbDose = if (icRatio > 0) carbs / icRatio else 0.0
         val correctionDose = if (isf > 0) (currentGlucose - targetGlucose).toDouble() / isf else 0.0
@@ -96,7 +102,27 @@ object InsulinProcessor {
             total *= 1.20
         }
         
-        return max(0.0, total)
+        return BolusBreakdown(
+            carbDose = carbDose,
+            correctionDose = max(0.0, correctionDose),
+            total = max(0.0, total)
+        )
+    }
+
+    fun getSuggestedBolus(
+        carbs: Double,
+        currentGlucose: Int,
+        targetGlucose: Int,
+        tdi: Double,
+        icConstant: Int,
+        isf: Double,
+        isBasalExpiringSoon: Boolean
+    ): Double {
+        return getSuggestedBolusDetailed(carbs, currentGlucose, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon).total
+    }
+
+    fun formatDualValue(real: Double, calibrated: Double): String {
+        return "%.2f(%.2f)".format(real, calibrated)
     }
 
     fun isBasalExpiringSoon(doses: List<InsulinDose>, now: Instant = Instant.now(), warningWindowMinutes: Int = 120): Boolean {

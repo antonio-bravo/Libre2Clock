@@ -79,6 +79,11 @@ data class Sensor(
     @param:Json(name = "w") val warmupMinutes: Int
 )
 
+data class ActiveSensorInfo(
+    val serialNumber: String,
+    val activationTimestamp: Long
+)
+
 data class SensorStatus(
     val daysRemaining: String,
     val startDate: String,

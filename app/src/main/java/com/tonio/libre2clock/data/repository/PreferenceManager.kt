@@ -66,6 +66,8 @@ class PreferenceManager(private val context: Context) {
     private val HISTORY_RETENTION_DAYS_KEY = androidx.datastore.preferences.core.intPreferencesKey("history_retention_days")
     private val LAST_HISTORY_BACKUP_REQUEST_AT_KEY = longPreferencesKey("last_history_backup_request_at")
     private val IS_DEMO_MODE_KEY = booleanPreferencesKey("is_demo_mode")
+    private val ACTIVE_SENSOR_SN_KEY = stringPreferencesKey("active_sensor_sn")
+    private val ACTIVE_SENSOR_START_TIME_KEY = longPreferencesKey("active_sensor_start_time")
     private val RAPID_DURATION_MINS_KEY = androidx.datastore.preferences.core.intPreferencesKey("rapid_duration_mins")
     private val SLOW_DURATION_MINS_KEY = androidx.datastore.preferences.core.intPreferencesKey("slow_duration_mins")
     private val IC_RULE_CONSTANT_KEY = androidx.datastore.preferences.core.intPreferencesKey("ic_rule_constant")
@@ -171,6 +173,14 @@ class PreferenceManager(private val context: Context) {
         preferences[IS_DEMO_MODE_KEY] ?: false
     }
 
+    val activeSensorSerialNumber: Flow<String?> = context.dataStore.data.map { preferences ->
+        preferences[ACTIVE_SENSOR_SN_KEY]
+    }
+
+    val activeSensorStartTime: Flow<Long?> = context.dataStore.data.map { preferences ->
+        preferences[ACTIVE_SENSOR_START_TIME_KEY]
+    }
+
     val rapidDurationMins: Flow<Int> = context.dataStore.data.map { preferences ->
         preferences[RAPID_DURATION_MINS_KEY] ?: 240 // 4h
     }
@@ -196,7 +206,7 @@ class PreferenceManager(private val context: Context) {
     }
 
     val targetGlucose: Flow<Int> = context.dataStore.data.map { preferences ->
-        preferences[TARGET_GLUCOSE_KEY] ?: 100
+        preferences[TARGET_GLUCOSE_KEY] ?: 80
     }
 
     val insulinDoses: Flow<List<com.tonio.libre2clock.data.model.InsulinDose>> = context.dataStore.data.map { preferences ->
@@ -322,6 +332,20 @@ class PreferenceManager(private val context: Context) {
     suspend fun saveDemoMode(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[IS_DEMO_MODE_KEY] = enabled
+        }
+    }
+
+    suspend fun saveActiveSensorInfo(sn: String, startTime: Long) {
+        context.dataStore.edit { preferences ->
+            preferences[ACTIVE_SENSOR_SN_KEY] = sn
+            preferences[ACTIVE_SENSOR_START_TIME_KEY] = startTime
+        }
+    }
+
+    suspend fun clearActiveSensorInfo() {
+        context.dataStore.edit { preferences ->
+            preferences.remove(ACTIVE_SENSOR_SN_KEY)
+            preferences.remove(ACTIVE_SENSOR_START_TIME_KEY)
         }
     }
 

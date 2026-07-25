@@ -63,7 +63,11 @@
     <string name="calc_bolus_helper">Asistente de Bolo</string>
     <string name="calc_carbs_label">Carbohidratos (g)</string>
     <string name="calc_glucose_label">Glucosa Actual (mg/dL)</string>
-    <string name="calc_suggested_bolus">Bolo Sugerido: %1$.2f Unidades</string>
+    <string name="calc_suggested_bolus">Unidades Sugeridas: %1$.2f</string>
+    <string name="calc_suggested_bolus_dual">Unidades Sugeridas: %1$s</string>
+    <string name="calc_suggested_real">Bolo Sugerido (Real)</string>
+    <string name="calc_suggested_offset">Bolo Sugerido (Offset)</string>
+    <string name="calc_breakdown_label">(HC: %1$.2f + Corr: %2$.2f)</string>
     <string name="calc_basal_expiring_warning">¡La basal está terminando! Se aplica ajuste del +20%.</string>
     <string name="calc_considerations_title">Consideraciones</string>
     <string name="calc_considerations_text">Los cálculos se basan en tu TDI y reglas configuradas. Confirma siempre con tu médico. Si la basal está a menos de 2h de terminar, el bolo se incrementa un 20% para evitar derivas.</string>

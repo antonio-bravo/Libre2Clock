@@ -63,7 +63,11 @@
     <string name="calc_bolus_helper">Bolus Helper</string>
     <string name="calc_carbs_label">Carbohydrates (g)</string>
     <string name="calc_glucose_label">Current Glucose (mg/dL)</string>
-    <string name="calc_suggested_bolus">Suggested Bolus: %1$.2f Units</string>
+    <string name="calc_suggested_bolus">Suggested Units: %1$.2f</string>
+    <string name="calc_suggested_bolus_dual">Suggested Units: %1$s</string>
+    <string name="calc_suggested_real">Suggested Bolus (Real)</string>
+    <string name="calc_suggested_offset">Suggested Bolus (Offset)</string>
+    <string name="calc_breakdown_label">(Carbs: %1$.2f + Corr: %2$.2f)</string>
     <string name="calc_basal_expiring_warning">Basal is expiring soon! Applied +20% adjustment.</string>
     <string name="calc_considerations_title">Considerations</string>
     <string name="calc_considerations_text">Calculations are based on your configured TDI and rules. Always confirm with your physician. If basal is within 2 hours of expiration, bolus is increased by 20% to prevent drift.</string>
