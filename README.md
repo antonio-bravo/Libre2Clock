@@ -1,80 +1,62 @@
 # Libre2Clock
 
-Libre2Clock is an Android app that connects to LibreLinkUp, fetches glucose data, and mirrors readable glucose updates to a smartwatch via Android notifications (for example, Amazfit Bip S through Zepp Life notification mirroring).
+Libre2Clock is an Android app that connects to LibreLinkUp, fetches glucose data, and mirrors readable glucose updates to a smartwatch via Android notifications. It also provides advanced insulin tracking and a bolus calculator to help manage diabetes more effectively.
 
 The app focuses on:
-- Clear glucose display in dual format: raw(offset-adjusted) mg/dL + trend arrow.
-- Continuous background sync with a foreground service.
-- Configurable periodic watch push notifications.
-- Optional high/low glucose alarms (disabled by default unless explicitly enabled).
-- Flexible calibration tools (manual offset, range-based offsets, optional capillary auto-adjust).
+- **Clear glucose display** in dual format: `raw(offset-adjusted)` mg/dL + trend arrow.
+- **Continuous background sync** with a foreground service.
+- **Advanced Insulin Tracking**: Manage rapid and slow/basal doses with a realistic IOB decay model.
+- **Diabetes Calculator**: Bolus helper based on the Rule of 450/1800 with dual suggestions.
+- **Flexible Calibration**: Manual offset, range-based offsets, and capillary auto-adjust.
+- **Data Safety**: Local JSON backups and integrated Google Cloud backup.
 
 ## Main Features
 
+### Glucose & Sensor
 - LibreLinkUp login and token persistence.
 - Demo mode with mock glucose and sensor data.
 - Dashboard with:
-  - Current glucose card.
-  - Trend arrow.
-  - Sensor health card (remaining days, expiry, serial).
+  - Current glucose card (Dual format).
+  - Sensor health card with **real-time countdown**.
   - Historical trend graph.
-- Calibration system:
-  - Global manual offset.
-  - Range-based offsets.
-  - Optional capillary-based auto-adjust.
-- Watch notifications:
-  - Periodic push at user-defined interval (5 to 180 minutes).
-  - Message format optimized for watch readability.
-  - Test notification from Settings.
-- Alarm controls:
-  - Independent low and high glucose alarm toggles.
-  - Both are OFF by default.
-  - Cooldown protection to avoid repeated alarm spam.
 
-## Glucose Display Format
+### Insulin Management (Insulin Hub)
+- **IOB Tracking**: Real-time Insulin On Board with a 4-stage realistic decay curve for rapid insulin.
+- **Bolus Calculator**:
+  - Rule of 450 (I:C Ratio) and Rule of 1800 (ISF) calculation.
+  - Dual suggestions: `Real(Offset)` dosage for informed decisions.
+  - Target glucose adjustment (default 80 mg/dL).
+  - Warning for expiring basal (suggests +20% bolus increase).
+- **Log Management**: Full history with edit/delete capabilities.
+- **Stats**: Today's totals and 7d/30d averages with Rapid/Slow breakdown.
 
-The app standard display is:
+### Calibration & Alarms
+- Global manual offset and range-based offsets.
+- Optional capillary-based auto-adjust.
+- Configurable watch push notifications (5 to 180 mins).
+- Independent low and high glucose alarm toggles (OFF by default).
 
-raw_value(calibrated_value) mg/dL + trend_arrow
+## Documentación Detallada
 
-Example:
+Para profundizar en el funcionamiento de cada sistema, consulta los siguientes archivos:
 
-135(155) mg/dL ↗
+### Algoritmos y Lógica Médica
+- [Calculadora de Diabetes](file:///DIABETES_CALCULATOR.md): Detalles de la Regla de 450/1800 y bolos de corrección.
+- [Algoritmo de Insulina (IOB)](file:///INSULIN_IOB_ALGORITHM.md): Detalle de la curva de decaimiento de 4 tramos.
+- [Sistema de Calibración](file:///CALIBRATION_SYSTEM.md): Cómo funcionan los offsets y el auto-ajuste.
 
-This same format is used consistently in app notifications intended for watch mirroring.
-
-## Watch Behavior
-
-Libre2Clock supports two independent notification channels in behavior:
-
-1. Periodic watch push:
-- Sends glucose + trend at your configured interval.
-- Controlled by "Enable periodic watch push".
-
-2. Threshold alarms:
-- Low glucose alarm when calibrated value < 70 mg/dL.
-- High glucose alarm when calibrated value > 180 mg/dL.
-- Controlled independently by dedicated toggles in Settings.
-- Disabled by default.
-
-This means you can keep periodic watch updates ON while keeping alarms OFF.
+### Guía Técnica
+- [Arquitectura del Software](file:///ARCHITECTURE.md): Tecnologías usadas y estructura del código.
+- [Respaldo y Seguridad](file:///BACKUP_AND_RESTORE.md): Gestión de backups locales y en la nube.
+- [Solución de Problemas (ADB)](file:///EMULATOR_FIX.md): Pasos para arreglar errores del emulador.
 
 ## Tech Stack
 
-- Kotlin
-- Jetpack Compose (Material 3)
+- Kotlin & Jetpack Compose (Material 3)
 - Coroutines + Flow
 - DataStore Preferences
 - Retrofit + OkHttp + Moshi
-- KSP (Moshi codegen)
-- Android foreground service for continuous sync
-
-## Requirements
-
-- Android Studio (latest stable recommended)
-- JDK 17 or newer (project uses modern Android Gradle Plugin)
-- Android SDK configured
-- For watch mirroring: a smartwatch app that mirrors Android notifications (such as Zepp Life)
+- Android Foreground Service for continuous sync
 
 ## Getting Started
 
@@ -86,111 +68,17 @@ This means you can keep periodic watch updates ON while keeping alarms OFF.
 
 ## Build APKs Locally
 
-Release APK:
+```bash
+./gradlew assembleRelease # Release APK
+./gradlew assembleDebug   # Debug APK
+```
 
-./gradlew assembleRelease
-
-Debug APK:
-
-./gradlew assembleDebug
-
-Output folders:
-- app/build/outputs/apk/release/
-- app/build/outputs/apk/debug/
-
-## GitHub Actions Release Pipeline
-
-The project includes a manual workflow in:
-
-.github/workflows/build-release.yml
-
-What it does:
-- Accepts optional version input.
-- If version is empty, generates: 1.YYYYMMDD.HHmmss (UTC).
-- Builds both release and debug APKs.
-- Publishes a GitHub Release with both files:
-  - libre2clock-vVERSION.apk
-  - libre2clock-vVERSION_debug.apk
-
-## Project Structure (Simplified)
-
-- app/src/main/java/com/tonio/libre2clock/
-  - data/
-    - api/ (LibreLinkUp networking)
-    - model/ (DTOs and domain models)
-    - repository/ (sync, calibration, preferences)
-  - service/
-    - GlucoseForegroundService.kt
-  - ui/
-    - login/
-    - dashboard/
-    - settings/
-    - navigation/
-
-## Security and Privacy Notes
-
-- Authentication tokens are stored in DataStore preferences on-device.
-- The app communicates with LibreView endpoints over HTTPS.
-- Notification mirroring may expose glucose values on paired devices; configure lockscreen and watch privacy settings as needed.
+Output folders: `app/build/outputs/apk/release/` and `app/build/outputs/apk/debug/`.
 
 ## Medical Disclaimer
 
 This software is not a medical device and does not replace professional medical advice, diagnosis, or treatment. Always follow guidance from qualified healthcare professionals.
 
-## Development Environment: Oh My Posh (macOS + zsh)
-
-If you want the same terminal prompt style while working on this project, use your existing Oh My Posh config from this repository.
-
-### 1) Install Oh My Posh
-
-brew install jandedobbeleer/oh-my-posh/oh-my-posh
-
-### 2) Install a Nerd Font (recommended)
-
-brew tap homebrew/cask-fonts
-brew install --cask font-meslo-lg-nerd-font
-
-Then set your terminal font to "MesloLGS NF".
-
-### 3) Use your current prompt config
-
-This repository uses:
-
-.oh-my-posh/libre2clock.omp.json
-
-Add this line to your ~/.zshrc:
-
-eval "$(oh-my-posh init zsh --config $HOME/oh-my-posh/emodipt-extend.omp.json)"
-
-If your preferred file has a different name, replace libre2clock.omp.json with your own file name.
-
-Then reload your shell:
-
-source ~/.zshrc
-
-### 4) Optional quality-of-life aliases
-
-Add to ~/.zshrc:
-
-alias gs='git status -sb'
-alias ga='git add'
-alias gc='git commit'
-alias gp='git push'
-alias ll='ls -lah'
-
-## Troubleshooting
-
-- No watch updates:
-  - Ensure periodic watch push is enabled in Settings.
-  - Verify notification permission is granted.
-  - Confirm your watch app is mirroring this app notifications.
-- Too many sounds/alerts:
-  - Disable low/high glucose alarm toggles.
-  - Keep periodic push enabled if you only want passive updates.
-- Login issues:
-  - Recheck LibreLinkUp credentials.
-  - Verify network connectivity.
-
 ## License
 
-No license file is currently included in this repository. If you plan to publish or accept contributions, consider adding a LICENSE file.
+No license file is currently included. Contact the author for permissions.

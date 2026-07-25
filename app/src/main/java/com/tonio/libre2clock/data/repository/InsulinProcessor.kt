@@ -9,17 +9,46 @@ import java.time.LocalDate
 import java.time.ZoneId
 import kotlin.math.max
 
+import kotlin.math.roundToInt
+
 object InsulinProcessor {
 
     fun calculateIOB(dose: InsulinDose, atInstant: Instant = Instant.now()): Double {
         val doseInstant = TimestampParser.parseFlexibleInstant(dose.timestamp) ?: return 0.0
-        val minutesPassed = Duration.between(doseInstant, atInstant).toMinutes()
+        val minutesPassed = Duration.between(doseInstant, atInstant).toMinutes().toInt()
         
-        if (minutesPassed < 0) return 0.0
+        if (minutesPassed <= 0) return dose.units
         if (minutesPassed >= dose.durationMinutes) return 0.0
         
-        // Linear decay: IOB = Units * (1 - t/D)
-        return dose.units * (1.0 - (minutesPassed.toDouble() / dose.durationMinutes.toDouble()))
+        return if (dose.type == InsulinType.RAPID) {
+            // Personalized 4-stage algorithm for Rapid Insulin
+            val factorRestante: Double = when {
+                // Tramo 1: Hora 1 (0 a 59 min)
+                minutesPassed < 60 -> {
+                    1.0 - (0.0033 * minutesPassed)
+                }
+                // Tramo 2: Hora 2 y 3 (60 a 179 min)
+                minutesPassed in 60..179 -> {
+                    val progreso = (minutesPassed - 60).toDouble() / 120.0
+                    0.802 - (0.53885 * progreso)
+                }
+                // Tramo 3: Ventana crítica (180 a 184 min)
+                minutesPassed in 180..184 -> {
+                    val minDesde3Horas = minutesPassed - 180
+                    0.26315 - (0.013155 * minDesde3Horas)
+                }
+                // Tramo 4: Cola final (185 a 239 min)
+                else -> {
+                    val progresoFinal = (minutesPassed - 184).toDouble() / (dose.durationMinutes - 184).toDouble()
+                    0.21053 * (1.0 - progresoFinal)
+                }
+            }
+            (dose.units * factorRestante).roundToInt().toDouble()
+        } else {
+            // Linear decay for SLOW/Basal: IOB = Units * (1 - t/D)
+            val timeFraction = minutesPassed.toDouble() / dose.durationMinutes.toDouble()
+            dose.units * (1.0 - timeFraction)
+        }
     }
 
     fun calculateTotalIOB(doses: List<InsulinDose>, atInstant: Instant = Instant.now()): Double {
