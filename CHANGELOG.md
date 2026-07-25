@@ -1,5 +1,44 @@
 # Changelog
 
+## 7f45599 (Jul 25, 2026 14:54:08)
+Insulin Management — antonio-bravo
+[detail](#7f45599-details)
+
+<details id='7f45599-details'>
+<summary>Changed files</summary>
+
+- .idea/deviceManager.xml [Deleted]
+- EMULATOR_FIX.md [Deleted]
+- app/src/main/java/com/tonio/libre2clock/MainActivity.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/model/LibreModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepository.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/InsulinProcessor.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+- fix_emulator.sh [Deleted]
+</details>
+
+
+---
+## c30f79d (Jul 24, 2026 23:06:12)
+Update changelog — github-actions[bot]
+[detail](#c30f79d-details)
+
+<details id='c30f79d-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 52a67a1 (Jul 25, 2026 01:05:57)
 Insulin log — antonio-bravo
 [detail](#52a67a1-details)
@@ -713,33 +752,6 @@ add _debug.apk — antonio-bravo
 [detail](#ab222e8-details)
 
 <details id='ab222e8-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/build-release.yml [Modified]
-</details>
-
-
----
-## 29ac5d8 (Jul 14, 2026 22:17:06)
-alarms off by default — antonio-bravo
-[detail](#29ac5d8-details)
-
-<details id='29ac5d8-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-</details>
-
-
----
-## d50e1df (Jul 14, 2026 22:06:33)
-workflow — antonio-bravo
-[detail](#d50e1df-details)
-
-<details id='d50e1df-details'>
 <summary>Changed files</summary>
 
 - .github/workflows/build-release.yml [Modified]
