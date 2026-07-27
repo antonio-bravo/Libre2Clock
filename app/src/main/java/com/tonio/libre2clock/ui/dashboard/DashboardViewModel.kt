@@ -9,6 +9,8 @@ import com.tonio.libre2clock.R
 import com.tonio.libre2clock.data.model.ActiveSensorInfo
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.SensorStatus
+import com.tonio.libre2clock.util.TimestampParser
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,6 +19,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -43,7 +47,8 @@ class DashboardViewModel(
         current?.let {
             GlucoseProcessor.process(it, manualOffset, ranges, autoAdjust, capillaries)
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+    }.flowOn(Dispatchers.Default)
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     private val ticker = flow {
         while (true) {
@@ -73,7 +78,27 @@ class DashboardViewModel(
         historical.map {
             GlucoseProcessor.process(it, manualOffset, ranges, autoAdjust, capillaries)
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    }.flowOn(Dispatchers.Default)
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val graphData: StateFlow<List<GlucoseMeasurement>> = historicalData
+        .map { data ->
+            val cutoff = Instant.now().minus(java.time.Duration.ofHours(24))
+            data.filter { m ->
+                val instant = TimestampParser.parseFlexibleInstant(m.factoryTimestamp) ?: TimestampParser.parseFlexibleInstant(m.timestamp)
+                instant?.isAfter(cutoff) == true
+            }
+        }.flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val dashboardMetrics: StateFlow<DashboardMetrics> = historicalData
+        .map { DashboardMetricsCalculator.calculate(it) }
+        .flowOn(Dispatchers.Default)
+        .stateIn(
+            viewModelScope, 
+            SharingStarted.WhileSubscribed(5000), 
+            DashboardMetricsCalculator.calculate(emptyList())
+        )
 
     val insulinDoses: StateFlow<List<com.tonio.libre2clock.data.model.InsulinDose>> = preferenceManager.insulinDoses
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -88,17 +113,8 @@ class DashboardViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 1800)
 
     init {
-        startSync()
-    }
-
-    private fun startSync() {
-        viewModelScope.launch {
-            while (true) {
-                repository.fetchLatestGlucose()
-                // If we have no data, retry faster. Otherwise, sync every minute.
-                delay(if (historicalData.value.isEmpty()) 2000 else 60000)
-            }
-        }
+        // startSync() was removed to optimize performance and avoid redundant work. 
+        // GlucoseForegroundService already handles background sync.
     }
 
     fun refresh() {

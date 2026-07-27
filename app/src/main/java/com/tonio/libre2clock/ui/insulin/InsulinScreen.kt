@@ -85,7 +85,7 @@ fun InsulinHubScreen(
         ) {
             // Section 1: ACTIVE STATUS
             item {
-                ActiveInsulinCard(totalIOB, rapidIOB, slowIOB, isf, activeThreads)
+                ActiveInsulinCard(totalIOB, rapidIOB, slowIOB, isf, activeThreads, manualIsf != null)
             }
 
             // Section 2: CALCULATOR
@@ -94,6 +94,7 @@ fun InsulinHubScreen(
                     tdi = tdi,
                     icRatio = icRatio,
                     isf = isf,
+                    manualIsf = manualIsf,
                     manualTdi = manualTdi,
                     icConstant = icRuleConstant,
                     isfConstant = isfRuleConstant,
@@ -153,7 +154,7 @@ fun InsulinHubScreen(
 }
 
 @Composable
-fun ActiveInsulinCard(total: Double, rapid: Double, slow: Double, fs: Double, activeThreads: Int) {
+fun ActiveInsulinCard(total: Double, rapid: Double, slow: Double, fs: Double, activeThreads: Int, isManualFs: Boolean) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
@@ -178,12 +179,19 @@ fun ActiveInsulinCard(total: Double, rapid: Double, slow: Double, fs: Double, ac
                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f),
                 shape = MaterialTheme.shapes.small
             ) {
-                Text(
-                    text = stringResource(R.string.dash_fs_label, fs),
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = stringResource(R.string.dash_fs_label, fs),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (isManualFs) "(Manual)" else "(Calculado)",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
+                    )
+                }
             }
         }
     }
@@ -194,6 +202,7 @@ fun BolusCalculatorCard(
     tdi: Double,
     icRatio: Double,
     isf: Double,
+    manualIsf: Double?,
     manualTdi: Double?,
     icConstant: Int,
     isfConstant: Int,
@@ -307,7 +316,10 @@ fun BolusCalculatorCard(
             
             // Ratio info
             Text(text = stringResource(R.string.calc_ic_ratio, icConstant, icRatio), style = MaterialTheme.typography.labelMedium)
-            Text(text = stringResource(R.string.calc_isf, isf), style = MaterialTheme.typography.labelMedium)
+            Text(
+                text = stringResource(R.string.calc_isf, isf) + if (manualIsf != null) " (Manual)" else " (Calculado)",
+                style = MaterialTheme.typography.labelMedium
+            )
             Text(
                 text = "TDI: %.1f U %s".format(tdi, if (manualTdi != null) "(Manual)" else "(Auto 30d)"),
                 style = MaterialTheme.typography.labelSmall,

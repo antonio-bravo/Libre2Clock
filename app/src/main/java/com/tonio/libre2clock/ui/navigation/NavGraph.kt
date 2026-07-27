@@ -32,6 +32,9 @@ fun NavGraph(
     val backStack = rememberNavBackStack(
         if (isLoggedIn) Destination.Dashboard else Destination.Login
     )
+    
+    // Shared ViewModel for settings across screens
+    val settingsViewModel: SettingsViewModel = viewModel { SettingsViewModel(preferenceManager, repository) }
 
     NavDisplay(
         backStack = backStack,
@@ -73,7 +76,6 @@ fun NavGraph(
                 )
             }
             entry<Destination.Settings> {
-                val settingsViewModel: SettingsViewModel = viewModel { SettingsViewModel(preferenceManager, repository) }
                 SettingsScreen(
                     viewModel = settingsViewModel,
                     onBack = { backStack.removeAt(backStack.size - 1) },
@@ -91,14 +93,12 @@ fun NavGraph(
                 )
             }
             entry<Destination.Capillary> {
-                val settingsViewModel: SettingsViewModel = viewModel { SettingsViewModel(preferenceManager, repository) }
                 CapillaryScreen(
                     viewModel = settingsViewModel,
                     onBack = { backStack.removeAt(backStack.size - 1) }
                 )
             }
             entry<Destination.InsulinHub> {
-                val settingsViewModel: SettingsViewModel = viewModel { SettingsViewModel(preferenceManager, repository) }
                 InsulinHubScreen(
                     viewModel = settingsViewModel,
                     onBack = { backStack.removeAt(backStack.size - 1) },
@@ -106,7 +106,6 @@ fun NavGraph(
                 )
             }
             entry<Destination.InsulinLogs> {
-                val settingsViewModel: SettingsViewModel = viewModel { SettingsViewModel(preferenceManager, repository) }
                 InsulinLogsScreen(
                     viewModel = settingsViewModel,
                     onBack = { backStack.removeAt(backStack.size - 1) }
