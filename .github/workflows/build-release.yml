@@ -54,6 +54,7 @@ jobs:
             -Djava.awt.headless=true \
             -Dkotlin.daemon.enabled=false \
             -Pkotlin.incremental=false \
+            -PappVersion=${{ env.VERSION }} \
             clean assembleRelease
 
       - name: Build Debug APK
@@ -65,6 +66,7 @@ jobs:
             -Djava.awt.headless=true \
             -Dkotlin.daemon.enabled=false \
             -Pkotlin.incremental=false \
+            -PappVersion=${{ env.VERSION }} \
             assembleDebug
 
       - name: Prepare APK for Release

@@ -558,10 +558,12 @@ fun InsulinDoseDialog(
     val currentFormattedTime = DateTimeFormatter.ofPattern("HH:mm").format(now)
 
     var dateText by remember { 
-        mutableStateOf(initialDose?.timestamp?.substringBefore(" ") ?: currentFormattedDate) 
+        val initialDate = initialDose?.timestamp?.substringBefore(" ") ?: ""
+        mutableStateOf(if (initialDate.isBlank()) currentFormattedDate else initialDate) 
     }
     var timeText by remember { 
-        mutableStateOf(initialDose?.timestamp?.substringAfter(" ") ?: currentFormattedTime) 
+        val initialTime = initialDose?.timestamp?.substringAfter(" ") ?: ""
+        mutableStateOf(if (initialTime.isBlank()) currentFormattedTime else initialTime) 
     }
 
     AlertDialog(

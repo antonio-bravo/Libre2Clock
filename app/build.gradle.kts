@@ -1,3 +1,7 @@
+import java.time.format.DateTimeFormatter
+import java.time.ZoneId
+import java.time.Instant
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -16,8 +20,15 @@ android {
         applicationId = "com.tonio.libre2clock"
         minSdk = 28
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        
+        val appVersion = project.findProperty("appVersion")?.toString() ?: "1.local"
+        versionName = appVersion
+        
+        // Generate a versionCode from YYYYMMDDHH format (fits in Int)
+        val datePart = DateTimeFormatter.ofPattern("yyyyMMddHH")
+            .withZone(ZoneId.of("UTC"))
+            .format(Instant.now())
+        versionCode = datePart.toInt()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

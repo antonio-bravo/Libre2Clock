@@ -690,11 +690,7 @@ class PreferenceManager(private val context: Context) {
         val mergedMap = LinkedHashMap<String, GlucoseMeasurement>()
         (local + backup).forEach { m ->
             val instant = parseFlexibleInstant(m.factoryTimestamp) ?: parseFlexibleInstant(m.timestamp)
-            val key = if (instant != null) {
-                "${instant.toEpochMilli()}-${m.value}"
-            } else {
-                "${m.timestamp}-${m.value}"
-            }
+            val key = instant?.toEpochMilli()?.toString() ?: m.timestamp
             mergedMap[key] = m
         }
 
@@ -714,11 +710,7 @@ class PreferenceManager(private val context: Context) {
         val mergedMap = LinkedHashMap<String, CapillaryMeasurement>()
         (local + backup).forEach { r ->
             val instant = parseFlexibleInstant(r.timestamp)
-            val key = if (instant != null) {
-                "${instant.toEpochMilli()}-${r.value}"
-            } else {
-                "${r.timestamp}-${r.value}"
-            }
+            val key = instant?.toEpochMilli()?.toString() ?: r.timestamp
             mergedMap[key] = r
         }
 
@@ -738,10 +730,11 @@ class PreferenceManager(private val context: Context) {
         val mergedMap = LinkedHashMap<String, com.tonio.libre2clock.data.model.InsulinDose>()
         (local + backup).forEach { d ->
             val instant = parseFlexibleInstant(d.timestamp)
+            // Include type in key in case rapid and slow are taken at the same time
             val key = if (instant != null) {
-                "${instant.toEpochMilli()}-${d.units}-${d.type}"
+                "${instant.toEpochMilli()}-${d.type}"
             } else {
-                "${d.timestamp}-${d.units}-${d.type}"
+                "${d.timestamp}-${d.type}"
             }
             mergedMap[key] = d
         }
