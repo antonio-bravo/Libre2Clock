@@ -1,5 +1,33 @@
 # Changelog
 
+## 8e4d12a (Jul 27, 2026 15:36:19)
+Optimize app and reduce battery consumption — antonio-bravo
+[detail](#8e4d12a-details)
+
+<details id='8e4d12a-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
+</details>
+
+
+---
+## 60b03bc (Jul 25, 2026 16:14:51)
+Update changelog — github-actions[bot]
+[detail](#60b03bc-details)
+
+<details id='60b03bc-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 3d30e3c (Jul 25, 2026 18:14:27)
 Add documentation and adjust insulin processor — antonio-bravo
 [detail](#3d30e3c-details)
@@ -725,39 +753,6 @@ añadir % sobre el valor real — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseProcessor.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
 - app/src/test/java/com/tonio/libre2clock/ExampleUnitTest.kt [Modified]
-</details>
-
-
----
-## 05aa850 (Jul 15, 2026 13:34:51)
-medida capilar + medida sensor y notificacion cada x min empezando en minuto y — antonio-bravo
-[detail](#05aa850-details)
-
-<details id='05aa850-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseProcessor.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-</details>
-
-
----
-## b142714 (Jul 15, 2026 11:41:55)
-Add how to fix — antonio-bravo
-[detail](#b142714-details)
-
-<details id='b142714-details'>
-<summary>Changed files</summary>
-
-- .idea/compiler.xml [Modified]
-- .idea/misc.xml [Modified]
-- gradle.properties [Modified]
-- how to fix.md [Deleted]
 </details>
 
 
