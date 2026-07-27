@@ -1,5 +1,32 @@
 # Changelog
 
+## 3d63f14 (Jul 27, 2026 22:48:00)
+fix reports and matrix to generate apk — antonio-bravo
+[detail](#3d63f14-details)
+
+<details id='3d63f14-details'>
+<summary>Changed files</summary>
+
+- .github/workflows/build-release.yml [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/PdfReportGenerator.kt [Modified]
+</details>
+
+
+---
+## e6014fa (Jul 27, 2026 20:33:58)
+Update changelog — github-actions[bot]
+[detail](#e6014fa-details)
+
+<details id='e6014fa-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 3cd6024 (Jul 27, 2026 22:33:45)
 fix versioning & add default datetime when enter insulin — antonio-bravo
 [detail](#3cd6024-details)
@@ -728,32 +755,6 @@ fix mobile notification — antonio-bravo
 <summary>Changed files</summary>
 
 - app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
-</details>
-
-
----
-## 86f1563 (Jul 16, 2026 20:25:00)
-Merge pull request #1 from antonio-bravo/copilot/fix-failing-github-actions-job
-
-Fix CI: replace softprops/action-gh-release@v2 with gh CLI — antonio-bravo
-[detail](#86f1563-details)
-
-<details id='86f1563-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/build-release.yml [Modified]
-</details>
-
-
----
-## eb6e3e9 (Jul 16, 2026 18:22:44)
-Fix failing CI: replace softprops/action-gh-release@v2 with gh CLI — copilot-swe-agent[bot]
-[detail](#eb6e3e9-details)
-
-<details id='eb6e3e9-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/build-release.yml [Modified]
 </details>
 
 
