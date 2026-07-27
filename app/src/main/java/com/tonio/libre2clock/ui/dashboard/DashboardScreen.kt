@@ -259,7 +259,11 @@ fun InsulinHealthCard(
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(text = "Total IOB", style = MaterialTheme.typography.labelSmall)
                             Text(text = "%.2f U".format(totalIOB), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-                            Text(text = stringResource(R.string.dash_fs_label, currentIsf), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = stringResource(R.string.dash_fs_label, currentIsf) + if (manualIsf != null) " (M)" else " (C)",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                     1 -> Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {

@@ -80,25 +80,30 @@ object GlucoseProcessor {
     ): Int {
         if (capillaryReadings.isEmpty()) return 0
 
-        val measurementInstant = measurementTimestamp?.let(::parseTimestampToInstant)
-        val candidates = capillaryReadings.mapNotNull { reading ->
-            val readingInstant = parseTimestampToInstant(reading.timestamp) ?: return@mapNotNull null
-            val hoursDifference = measurementInstant?.let {
-                abs(Duration.between(it, readingInstant).toMinutes().toDouble() / 60.0)
-            } ?: 0.0
-            if (hoursDifference <= maxHoursDifference) {
-                reading to hoursDifference
-            } else {
-                null
+        val measurementInstant = measurementTimestamp?.let(::parseTimestampToInstant) ?: return 0
+        
+        // Optimization: Capillary readings are usually sorted by timestamp descending.
+        // We find the one with the smallest time difference.
+        var bestAdjustment = 0
+        var minDiffMinutes = Long.MAX_VALUE
+
+        for (reading in capillaryReadings) {
+            val readingInstant = parseTimestampToInstant(reading.timestamp) ?: continue
+            val diffMinutes = abs(Duration.between(measurementInstant, readingInstant).toMinutes())
+            
+            if (diffMinutes < minDiffMinutes) {
+                minDiffMinutes = diffMinutes
+                bestAdjustment = reading.delta
+                    ?: reading.sensorValue?.let { reading.value - it }
+                    ?: (reading.value - rawValue)
             }
+            
+            // If we found a very close match or we are moving further away in time, we could break,
+            // but for simplicity and safety with small lists, a single pass is fine.
+            // With large lists, we'd use a binary search or a TreeMap.
         }
 
-        val bestMatch = candidates.minByOrNull { it.second }
-        return bestMatch?.let { (reading, _) ->
-            reading.delta
-                ?: reading.sensorValue?.let { reading.value - it }
-                ?: (reading.value - rawValue)
-        } ?: 0
+        return if (minDiffMinutes <= maxHoursDifference * 60) bestAdjustment else 0
     }
 
     private fun parseTimestampToInstant(timestamp: String): Instant? {

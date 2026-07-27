@@ -214,13 +214,15 @@ fun BolusCalculatorCard(
     var carbsText by remember { mutableStateOf("") }
     
     val initialGlucoseText = remember(currentGlucose) {
-        currentGlucose?.let {
-            if (it.value != it.calibratedValue) {
-                "${it.value}(${it.calibratedValue})"
-            } else {
-                it.value.toString()
-            }
-        } ?: ""
+        val real = currentGlucose?.value ?: 0
+        val cal = currentGlucose?.calibratedValue ?: 0
+        if (real > 0 && real != cal) {
+            "$real($cal)"
+        } else if (real > 0) {
+            "$real"
+        } else {
+            ""
+        }
     }
     
     var glucoseText by remember(initialGlucoseText) { mutableStateOf(initialGlucoseText) }
@@ -229,14 +231,15 @@ fun BolusCalculatorCard(
     val suggestedResults = remember(carbsText, glucoseText, tdi, isBasalExpiringSoon, isf, targetGlucose) {
         val carbs = carbsText.toDoubleOrNull() ?: 0.0
         
-        val glucoseParts = glucoseText.replace(")", "").split("(")
+        val cleanText = glucoseText.replace(" ", "")
+        val glucoseParts = cleanText.replace(")", "").split("(")
         val realG = glucoseParts.getOrNull(0)?.toIntOrNull() ?: 0
         val calG = glucoseParts.getOrNull(1)?.toIntOrNull() ?: realG
         
         val breakdownReal = InsulinProcessor.getSuggestedBolusDetailed(carbs, realG, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon)
         val breakdownCal = InsulinProcessor.getSuggestedBolusDetailed(carbs, calG, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon)
         
-        realG to calG to (breakdownReal to breakdownCal)
+        Triple(realG, calG, breakdownReal to breakdownCal)
     }
 
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -282,8 +285,7 @@ fun BolusCalculatorCard(
 
             Spacer(modifier = Modifier.height(16.dp))
             
-            val (gs, breakdowns) = suggestedResults
-            val (realG, calG) = gs
+            val (realG, calG, breakdowns) = suggestedResults
             val (bReal, bCal) = breakdowns
 
             val isDual = realG != calG && realG > 0
@@ -301,15 +303,19 @@ fun BolusCalculatorCard(
                     color = MaterialTheme.colorScheme.primary
                 )
                 
-                Text(
-                    text = if (isDual) {
-                        "R: (HC: %.2f + Corr: %.2f) | O: (HC: %.2f + Corr: %.2f)".format(bReal.carbDose, bReal.correctionDose, bCal.carbDose, bCal.correctionDose)
-                    } else {
-                        stringResource(R.string.calc_breakdown_label, bReal.carbDose, bReal.correctionDose)
-                    },
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                )
+                if (isDual) {
+                    Text(
+                        text = "R: (HC: %.2f + Corr: %.2f) | O: (HC: %.2f + Corr: %.2f)".format(bReal.carbDose, bReal.correctionDose, bCal.carbDose, bCal.correctionDose),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                } else {
+                    Text(
+                        text = stringResource(R.string.calc_breakdown_label, bReal.carbDose, bReal.correctionDose),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                }
             }
             
             HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
@@ -354,13 +360,25 @@ fun AdvancedSettingsCard(
     mIsf: Double?,
     viewModel: SettingsViewModel
 ) {
-    Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(text = stringResource(R.string.settings_advanced_insulin), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            
+    var tdiText by remember(mTdi) { mutableStateOf(mTdi?.toString() ?: "") }
+    var isfText by remember(mIsf) { mutableStateOf(mIsf?.toString() ?: "") }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+    ) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(
+                text = stringResource(R.string.settings_advanced_insulin),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+
             DurationInput(stringResource(R.string.settings_rapid_duration), rapidMin, viewModel::updateRapidDuration)
             DurationInput(stringResource(R.string.settings_slow_duration), slowMin, viewModel::updateSlowDuration)
-            
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), thickness = 0.5.dp)
+
             OutlinedTextField(
                 value = icC.toString(),
                 onValueChange = { it.toIntOrNull()?.let(viewModel::updateIcRuleConstant) },
@@ -368,7 +386,7 @@ fun AdvancedSettingsCard(
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
-            
+
             OutlinedTextField(
                 value = isfC.toString(),
                 onValueChange = { it.toIntOrNull()?.let(viewModel::updateIsfRuleConstant) },
@@ -377,21 +395,73 @@ fun AdvancedSettingsCard(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
 
-            OutlinedTextField(
-                value = mTdi?.toString() ?: "",
-                onValueChange = { viewModel.updateManualTdi(it.toDoubleOrNull()) },
-                label = { Text(stringResource(R.string.settings_manual_tdi)) },
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
-            )
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), thickness = 0.5.dp)
 
-            OutlinedTextField(
-                value = mIsf?.toString() ?: "",
-                onValueChange = { viewModel.updateManualIsf(it.toDoubleOrNull()) },
-                label = { Text(stringResource(R.string.settings_manual_isf)) },
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
-            )
+            // Manual TDI with Switch
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = stringResource(R.string.settings_manual_tdi), style = MaterialTheme.typography.bodyMedium)
+                    Switch(
+                        checked = mTdi != null,
+                        onCheckedChange = { isEnabled ->
+                            if (!isEnabled) {
+                                viewModel.updateManualTdi(null)
+                            } else {
+                                viewModel.updateManualTdi(tdiText.toDoubleOrNull() ?: 0.0)
+                            }
+                        }
+                    )
+                }
+                if (mTdi != null) {
+                    OutlinedTextField(
+                        value = tdiText,
+                        onValueChange = {
+                            tdiText = it
+                            viewModel.updateManualTdi(it.toDoubleOrNull())
+                        },
+                        label = { Text("Valor TDI (U)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                    )
+                }
+            }
+
+            // Manual ISF with Switch
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = stringResource(R.string.settings_manual_isf), style = MaterialTheme.typography.bodyMedium)
+                    Switch(
+                        checked = mIsf != null,
+                        onCheckedChange = { isEnabled ->
+                            if (!isEnabled) {
+                                viewModel.updateManualIsf(null)
+                            } else {
+                                viewModel.updateManualIsf(isfText.toDoubleOrNull() ?: 0.0)
+                            }
+                        }
+                    )
+                }
+                if (mIsf != null) {
+                    OutlinedTextField(
+                        value = isfText,
+                        onValueChange = {
+                            isfText = it
+                            viewModel.updateManualIsf(it.toDoubleOrNull())
+                        },
+                        label = { Text("Valor ISF (mg/dL/U)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                    )
+                }
+            }
         }
     }
 }
