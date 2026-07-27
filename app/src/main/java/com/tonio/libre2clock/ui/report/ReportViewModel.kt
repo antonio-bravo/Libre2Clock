@@ -7,10 +7,10 @@ import com.tonio.libre2clock.data.repository.GlucoseProcessor
 import com.tonio.libre2clock.data.repository.PreferenceManager
 import com.tonio.libre2clock.data.repository.GlucoseRepository
 import com.tonio.libre2clock.util.TimestampParser
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalTime
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import kotlin.math.sqrt
@@ -32,12 +32,12 @@ enum class ReportLayout {
 data class ReportMetrics(
     val avgGlucose: Double,
     val gmi: Double,
-    val cv: Double, // Coefficient of Variation
-    val tir: Double,      // 70-180
-    val tarHigh: Double,  // 181-250
-    val tarVHigh: Double, // > 250
-    val tbrLow: Double,   // 54-69
-    val tbrVLow: Double,  // < 54
+    val cv: Double,
+    val tir: Double,
+    val tarHigh: Double,
+    val tarVHigh: Double,
+    val tbrLow: Double,
+    val tbrVLow: Double,
     val avgTdi: Double,
     val basalPercentage: Double,
     val bolusPercentage: Double,
@@ -73,9 +73,24 @@ class ReportViewModel(
     private val _useOffsetValues = MutableStateFlow(true)
     val useOffsetValues: StateFlow<Boolean> = _useOffsetValues.asStateFlow()
 
-    val reportMetrics: StateFlow<ReportMetrics?> = combine(
+    private val _isGenerating = MutableStateFlow(false)
+    val isGenerating: StateFlow<Boolean> = _isGenerating.asStateFlow()
+
+    // 1. Optimized Base Window: Only filter the archive once when range changes
+    private val windowedData: Flow<Pair<List<GlucoseMeasurement>, List<InsulinDose>>> = combine(
         repository.historicalGlucose,
         preferenceManager.insulinDoses,
+        _selectedRange
+    ) { glucose, doses, range ->
+        val cutoff = Instant.now().minus(range.days.toLong(), ChronoUnit.DAYS)
+        val filteredG = glucose.filter { parseInstant(it)?.isAfter(cutoff) == true }
+        val filteredD = doses.filter { TimestampParser.parseFlexibleInstant(it.timestamp)?.isAfter(cutoff) == true }
+        filteredG to filteredD
+    }.flowOn(Dispatchers.Default).shareIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 1)
+
+    // 2. Metrics calculated from optimized window
+    val reportMetrics: StateFlow<ReportMetrics?> = combine(
+        windowedData,
         preferenceManager.glucoseOffset,
         preferenceManager.glucoseOffsetRanges,
         preferenceManager.autoAdjustEnabled,
@@ -84,57 +99,54 @@ class ReportViewModel(
         _useOffsetValues
     ) { args ->
         @Suppress("UNCHECKED_CAST")
-        calculateMetrics(
-            args[0] as List<GlucoseMeasurement>,
-            args[1] as List<InsulinDose>,
-            args[2] as Int,
-            args[3] as List<GlucoseOffsetRange>,
-            args[4] as Boolean,
-            args[5] as List<CapillaryMeasurement>,
-            args[6] as ReportRange,
-            args[7] as Boolean
-        )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+        val data = args[0] as Pair<List<GlucoseMeasurement>, List<InsulinDose>>
+        val offset = args[1] as Int
+        val ranges = args[2] as List<GlucoseOffsetRange>
+        val auto = args[3] as Boolean
+        val caps = args[4] as List<CapillaryMeasurement>
+        val range = args[5] as ReportRange
+        val useOffset = args[6] as Boolean
+        
+        calculateMetrics(data.first, data.second, offset, ranges, auto, caps, range, useOffset)
+    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    // 3. AGP Data calculated from optimized window
     val agpData: StateFlow<List<AgpPoint>> = combine(
-        repository.historicalGlucose,
+        windowedData,
         preferenceManager.glucoseOffset,
         preferenceManager.glucoseOffsetRanges,
         preferenceManager.autoAdjustEnabled,
         preferenceManager.capillaryReadings,
-        _selectedRange,
         _useOffsetValues
     ) { args ->
-        calculateAgpData(
-            args[0] as List<GlucoseMeasurement>,
-            args[1] as Int,
-            args[2] as List<GlucoseOffsetRange>,
-            args[3] as Boolean,
-            args[4] as List<CapillaryMeasurement>,
-            args[5] as ReportRange,
-            args[6] as Boolean
-        )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        @Suppress("UNCHECKED_CAST")
+        val data = args[0] as Pair<List<GlucoseMeasurement>, List<InsulinDose>>
+        val offset = args[1] as Int
+        val ranges = args[2] as List<GlucoseOffsetRange>
+        val auto = args[3] as Boolean
+        val caps = args[4] as List<CapillaryMeasurement>
+        val useOffset = args[5] as Boolean
+        
+        calculateAgpData(data.first, offset, ranges, auto, caps, useOffset)
+    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    // 4. Daily Summaries calculated from optimized window
     val dailySummaries: StateFlow<List<DailySummary>> = combine(
-        repository.historicalGlucose,
-        preferenceManager.insulinDoses,
+        windowedData,
         preferenceManager.glucoseOffset,
         preferenceManager.glucoseOffsetRanges,
         preferenceManager.autoAdjustEnabled,
-        preferenceManager.capillaryReadings,
-        _selectedRange
+        preferenceManager.capillaryReadings
     ) { args ->
-        calculateDailySummaries(
-            args[0] as List<GlucoseMeasurement>,
-            args[1] as List<InsulinDose>,
-            args[2] as Int,
-            args[3] as List<GlucoseOffsetRange>,
-            args[4] as Boolean,
-            args[5] as List<CapillaryMeasurement>,
-            args[6] as ReportRange
-        )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        @Suppress("UNCHECKED_CAST")
+        val data = args[0] as Pair<List<GlucoseMeasurement>, List<InsulinDose>>
+        val offset = args[1] as Int
+        val ranges = args[2] as List<GlucoseOffsetRange>
+        val auto = args[3] as Boolean
+        val caps = args[4] as List<CapillaryMeasurement>
+        
+        calculateDailySummaries(data.first, data.second, offset, ranges, auto, caps)
+    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun setRange(range: ReportRange) {
         _selectedRange.value = range
@@ -144,9 +156,13 @@ class ReportViewModel(
         _useOffsetValues.value = useOffset
     }
 
+    fun setGenerating(generating: Boolean) {
+        _isGenerating.value = generating
+    }
+
     private fun calculateMetrics(
-        rawGlucose: List<GlucoseMeasurement>,
-        doses: List<InsulinDose>,
+        windowedGlucose: List<GlucoseMeasurement>,
+        windowedDoses: List<InsulinDose>,
         offset: Int,
         ranges: List<GlucoseOffsetRange>,
         auto: Boolean,
@@ -154,35 +170,26 @@ class ReportViewModel(
         range: ReportRange,
         useOffset: Boolean
     ): ReportMetrics {
-        val cutoff = Instant.now().minus(range.days.toLong(), ChronoUnit.DAYS)
-        val glucose = rawGlucose.filter { m ->
-            val instant = parseInstant(m)
-            instant?.isAfter(cutoff) == true
-        }.map { GlucoseProcessor.process(it, offset, ranges, auto, caps) }
+        if (windowedGlucose.isEmpty()) return ReportMetrics(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0)
 
-        if (glucose.isEmpty()) return ReportMetrics(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0)
-
-        val values = if (useOffset) glucose.map { it.calibratedValue.toDouble() } else glucose.map { it.value.toDouble() }
+        val processed = windowedGlucose.map { GlucoseProcessor.process(it, offset, ranges, auto, caps) }
+        val values = if (useOffset) processed.map { it.calibratedValue.toDouble() } else processed.map { it.value.toDouble() }
+        
         val avg = values.average()
         val stdDev = calculateStdDev(values, avg)
         val cv = if (avg > 0) (stdDev / avg) * 100 else 0.0
         val gmi = if (avg > 0) (avg + 46.7) / 28.7 else 0.0
 
-        val readingsCount = values.size
-        val tir = values.count { it in 70.0..180.0 }.toDouble() / readingsCount * 100
-        val tarHigh = values.count { it in 181.0..250.0 }.toDouble() / readingsCount * 100
-        val tarVHigh = values.count { it > 250.0 }.toDouble() / readingsCount * 100
-        val tbrLow = values.count { it in 54.0..69.0 }.toDouble() / readingsCount * 100
-        val tbrVLow = values.count { it < 54.0 }.toDouble() / readingsCount * 100
+        val count = values.size.toDouble()
+        val tir = values.count { it in 70.0..180.0 } / count * 100
+        val tarHigh = values.count { it in 181.0..250.0 } / count * 100
+        val tarVHigh = values.count { it > 250.0 } / count * 100
+        val tbrLow = values.count { it in 54.0..69.0 } / count * 100
+        val tbrVLow = values.count { it < 54.0 } / count * 100
 
-        // Insulin
-        val filteredDoses = doses.filter { d ->
-            val instant = TimestampParser.parseFlexibleInstant(d.timestamp)
-            instant?.isAfter(cutoff) == true
-        }
-        val totalInsulin = filteredDoses.sumOf { it.units }
-        val basal = filteredDoses.filter { it.type == InsulinType.SLOW }.sumOf { it.units }
-        val bolus = filteredDoses.filter { it.type == InsulinType.RAPID }.sumOf { it.units }
+        val totalInsulin = windowedDoses.sumOf { it.units }
+        val basal = windowedDoses.filter { it.type == InsulinType.SLOW }.sumOf { it.units }
+        val bolus = windowedDoses.filter { it.type == InsulinType.RAPID }.sumOf { it.units }
 
         return ReportMetrics(
             avgGlucose = avg, gmi = gmi, cv = cv,
@@ -191,19 +198,18 @@ class ReportViewModel(
             avgTdi = totalInsulin / range.days,
             basalPercentage = if (totalInsulin > 0) (basal / totalInsulin) * 100 else 0.0,
             bolusPercentage = if (totalInsulin > 0) (bolus / totalInsulin) * 100 else 0.0,
-            readingsCount = readingsCount
+            readingsCount = values.size
         )
     }
 
     private fun calculateAgpData(
-        rawGlucose: List<GlucoseMeasurement>,
+        windowedGlucose: List<GlucoseMeasurement>,
         offset: Int, ranges: List<GlucoseOffsetRange>, auto: Boolean, caps: List<CapillaryMeasurement>,
-        range: ReportRange, useOffset: Boolean
+        useOffset: Boolean
     ): List<AgpPoint> {
-        val cutoff = Instant.now().minus(range.days.toLong(), ChronoUnit.DAYS)
         val zone = ZoneId.systemDefault()
         
-        val readingsByHour = rawGlucose.filter { parseInstant(it)?.isAfter(cutoff) == true }
+        val readingsByHour = windowedGlucose
             .map { m ->
                 val instant = parseInstant(m)!!
                 val processed = GlucoseProcessor.process(m, offset, ranges, auto, caps)
@@ -228,18 +234,16 @@ class ReportViewModel(
     }
 
     private fun calculateDailySummaries(
-        rawGlucose: List<GlucoseMeasurement>, doses: List<InsulinDose>,
-        offset: Int, ranges: List<GlucoseOffsetRange>, auto: Boolean, caps: List<CapillaryMeasurement>,
-        range: ReportRange
+        windowedGlucose: List<GlucoseMeasurement>, windowedDoses: List<InsulinDose>,
+        offset: Int, ranges: List<GlucoseOffsetRange>, auto: Boolean, caps: List<CapillaryMeasurement>
     ): List<DailySummary> {
-        val cutoff = Instant.now().minus(range.days.toLong(), ChronoUnit.DAYS)
         val zone = ZoneId.systemDefault()
         
-        val glucoseByDate = rawGlucose.filter { parseInstant(it)?.isAfter(cutoff) == true }
+        val glucoseByDate = windowedGlucose
             .map { GlucoseProcessor.process(it, offset, ranges, auto, caps) }
             .groupBy { parseInstant(it)!!.atZone(zone).toLocalDate() }
             
-        val dosesByDate = doses.filter { TimestampParser.parseFlexibleInstant(it.timestamp)?.isAfter(cutoff) == true }
+        val dosesByDate = windowedDoses
             .groupBy { TimestampParser.parseFlexibleInstant(it.timestamp)!!.atZone(zone).toLocalDate() }
 
         val dates = glucoseByDate.keys.union(dosesByDate.keys).sortedDescending()

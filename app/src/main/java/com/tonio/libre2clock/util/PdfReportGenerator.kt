@@ -26,7 +26,6 @@ object PdfReportGenerator {
         layout: ReportLayout
     ): File? {
         val pdfDocument = PdfDocument()
-        val paint = Paint()
 
         // Page 1: Summary & AGP (if SNAPSHOT or FULL)
         if (layout == ReportLayout.SNAPSHOT || layout == ReportLayout.FULL) {
@@ -37,7 +36,7 @@ object PdfReportGenerator {
             y = drawHeader(canvas, "Ambulatory Glucose Profile (AGP)", range, useOffset, y)
             y = drawExecutiveSummary(canvas, metrics, y)
             y += 20f
-            y = drawAgpPatternGraph(canvas, agpData, y)
+            drawAgpPatternGraph(canvas, agpData, y)
             
             pdfDocument.finishPage(page)
         }
@@ -52,7 +51,7 @@ object PdfReportGenerator {
                 var y = MARGIN
                 
                 y = drawHeader(canvas, "Daily Glucose Profiles (Page ${index + 1})", range, useOffset, y)
-                y = drawDailyLogsGrid(canvas, chunk, useOffset, y)
+                drawDailyLogsGrid(canvas, chunk, useOffset, y)
                 
                 pdfDocument.finishPage(page)
             }
@@ -130,28 +129,25 @@ object PdfReportGenerator {
         val p = Paint().apply { style = Paint.Style.FILL }
         var currX = x
         
-        // Very Low (Dark Red)
-        p.color = Color.parseColor("#8B0000"); drawPart(canvas, m.tbrVLow, currX, y, w, h, p); currX += (m.tbrVLow / 100f * w).toFloat()
-        // Low (Red)
-        p.color = Color.RED; drawPart(canvas, m.tbrLow, currX, y, w, h, p); currX += (m.tbrLow / 100f * w).toFloat()
-        // Target (Green)
-        p.color = Color.parseColor("#008000"); drawPart(canvas, m.tir, currX, y, w, h, p); currX += (m.tir / 100f * w).toFloat()
-        // High (Yellow/Orange)
-        p.color = Color.parseColor("#FFA500"); drawPart(canvas, m.tarHigh, currX, y, w, h, p); currX += (m.tarHigh / 100f * w).toFloat()
-        // Very High (Orange-Red)
-        p.color = Color.parseColor("#FF4500"); drawPart(canvas, m.tarVHigh, currX, y, w, h, p)
+        // Use constants for colors
+        val colors = listOf("#8B0000", "#FF0000", "#008000", "#FFA500", "#FF4500")
+        val pcts = listOf(m.tbrVLow, m.tbrLow, m.tir, m.tarHigh, m.tarVHigh)
+
+        pcts.forEachIndexed { i, pct ->
+            if (pct > 0) {
+                p.color = Color.parseColor(colors[i])
+                val partW = (pct / 100f * w).toFloat()
+                canvas.drawRect(currX, y, currX + partW, y + h, p)
+                currX += partW
+            }
+        }
 
         // Text Labels
         val tp = Paint().apply { color = Color.BLACK; textSize = 9f; textAlign = Paint.Align.CENTER }
         if (m.tir > 5) canvas.drawText("Range: %.0f%%".format(m.tir), x + w/2, y + h + 12f, tp)
     }
 
-    private fun drawPart(canvas: Canvas, pct: Double, x: Float, y: Float, w: Float, h: Float, p: Paint) {
-        if (pct <= 0) return
-        canvas.drawRect(x, y, x + (pct / 100f * w).toFloat(), y + h, p)
-    }
-
-    private fun drawAgpPatternGraph(canvas: Canvas, points: List<AgpPoint>, startY: Float): Float {
+    private fun drawAgpPatternGraph(canvas: Canvas, points: List<AgpPoint>, startY: Float) {
         val h = 200f
         val w = PAGE_WIDTH - 2 * MARGIN
         val y = startY + 20f
@@ -160,7 +156,7 @@ object PdfReportGenerator {
         val paint = Paint().apply { style = Paint.Style.STROKE; strokeWidth = 1f; color = Color.LTGRAY }
         canvas.drawRect(x, y, x + w, y + h, paint)
 
-        if (points.isEmpty()) return y + h + 20f
+        if (points.isEmpty()) return
 
         val minG = 40f
         val maxG = 350f
@@ -171,11 +167,8 @@ object PdfReportGenerator {
         val p2575Paint = Paint().apply { color = Color.parseColor("#BDBDBD"); style = Paint.Style.FILL }
         val medianPaint = Paint().apply { color = Color.parseColor("#1A73E8"); style = Paint.Style.STROKE; strokeWidth = 3f; isAntiAlias = true }
 
-        // Draw 10-90 area
         drawArea(canvas, points, { it.p10 }, { it.p90 }, x, y, w, h, minG, rangeG, p1090Paint)
-        // Draw 25-75 area
         drawArea(canvas, points, { it.p25 }, { it.p75 }, x, y, w, h, minG, rangeG, p2575Paint)
-        // Draw Median line
         drawLine(canvas, points, { it.median }, x, y, w, h, minG, rangeG, medianPaint)
 
         // Target lines
@@ -192,8 +185,6 @@ object PdfReportGenerator {
         canvas.drawText("Midnight", x, y + h + 15f, tp)
         canvas.drawText("Noon", x + w/2 - 10f, y + h + 15f, tp)
         canvas.drawText("11 PM", x + w - 20f, y + h + 15f, tp)
-
-        return y + h + 40f
     }
 
     private fun drawArea(canvas: Canvas, pts: List<AgpPoint>, low: (AgpPoint) -> Double, high: (AgpPoint) -> Double, x: Float, y: Float, w: Float, h: Float, minG: Float, rangeG: Float, p: Paint) {
@@ -226,7 +217,7 @@ object PdfReportGenerator {
         canvas.drawPath(path, p)
     }
 
-    private fun drawDailyLogsGrid(canvas: Canvas, summaries: List<DailySummary>, useOffset: Boolean, startY: Float): Float {
+    private fun drawDailyLogsGrid(canvas: Canvas, summaries: List<DailySummary>, useOffset: Boolean, startY: Float) {
         var y = startY
         val itemH = 110f
         val itemW = PAGE_WIDTH - 2 * MARGIN
@@ -235,7 +226,6 @@ object PdfReportGenerator {
             drawDailyProfile(canvas, s, useOffset, MARGIN, y, itemW, itemH)
             y += itemH + 15f
         }
-        return y
     }
 
     private fun drawDailyProfile(canvas: Canvas, s: DailySummary, useOffset: Boolean, x: Float, y: Float, w: Float, h: Float) {
@@ -249,15 +239,20 @@ object PdfReportGenerator {
         if (s.glucose.isNotEmpty()) {
             val linePaint = Paint().apply { color = Color.parseColor("#1A73E8"); strokeWidth = 1.5f; style = Paint.Style.STROKE; isAntiAlias = true }
             val path = Path()
-            val firstTime = TimestampParser.parseFlexibleInstant(s.glucose.first().timestamp)?.epochSecond ?: 0L
-            val lastTime = firstTime + 86400 // Full day
             
-            s.glucose.forEachIndexed { i, m ->
+            // OPTIMIZATION: Downsample daily data to max 144 points (one every 10 mins approx)
+            val step = if (s.glucose.size > 144) s.glucose.size / 144 else 1
+            val sampled = s.glucose.filterIndexed { i, _ -> i % step == 0 }
+            
+            val firstTime = TimestampParser.parseFlexibleInstant(s.glucose.first().timestamp)?.epochSecond ?: 0L
+            
+            sampled.forEachIndexed { i, m ->
                 val instant = TimestampParser.parseFlexibleInstant(m.timestamp)?.epochSecond ?: firstTime
                 val valG = if (useOffset) m.calibratedValue else m.value
                 val px = x + ((instant - firstTime).toFloat() / 86400f) * w
                 val py = chartY + chartH - (valG - 40f) / 310f * chartH
-                if (i == 0) path.moveTo(px, py.coerceIn(chartY, chartY + chartH)) else path.lineTo(px, py.coerceIn(chartY, chartY + chartH))
+                val pyC = py.coerceIn(chartY, chartY + chartH)
+                if (i == 0) path.moveTo(px, pyC) else path.lineTo(px, pyC)
             }
             canvas.drawPath(path, linePaint)
         }
