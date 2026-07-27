@@ -1,5 +1,31 @@
 # Changelog
 
+## aa9d1c3 (Jul 27, 2026 16:05:40)
+fix auto values — antonio-bravo
+[detail](#aa9d1c3-details)
+
+<details id='aa9d1c3-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseProcessor.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
+</details>
+
+
+---
+## 7cd23c8 (Jul 27, 2026 13:36:32)
+Update changelog — github-actions[bot]
+[detail](#7cd23c8-details)
+
+<details id='7cd23c8-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 8e4d12a (Jul 27, 2026 15:36:19)
 Optimize app and reduce battery consumption — antonio-bravo
 [detail](#8e4d12a-details)
@@ -722,37 +748,6 @@ separar 2 endpoints para traer 90 dias y hacer calculos — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-</details>
-
-
----
-## 95d03fa (Jul 16, 2026 10:30:06)
-dow cuando termina el sensor y slide window para ver los promedios e hipos — antonio-bravo
-[detail](#95d03fa-details)
-
-<details id='95d03fa-details'>
-<summary>Changed files</summary>
-
-- .idea/misc.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- gradle/libs.versions.toml [Modified]
-- gradle/wrapper/gradle-wrapper.properties [Modified]
-</details>
-
-
----
-## f172ddc (Jul 15, 2026 23:32:30)
-añadir % sobre el valor real — antonio-bravo
-[detail](#f172ddc-details)
-
-<details id='f172ddc-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseProcessor.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
-- app/src/test/java/com/tonio/libre2clock/ExampleUnitTest.kt [Modified]
 </details>
 
 
