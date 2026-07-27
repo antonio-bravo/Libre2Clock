@@ -1,5 +1,29 @@
 # Changelog
 
+## b2ee15f (Jul 27, 2026 22:53:40)
+fix workflow — antonio-bravo
+[detail](#b2ee15f-details)
+
+<details id='b2ee15f-details'>
+<summary>Changed files</summary>
+
+- .github/workflows/build-release.yml [Modified]
+</details>
+
+
+---
+## 609ca47 (Jul 27, 2026 20:48:21)
+Update changelog — github-actions[bot]
+[detail](#609ca47-details)
+
+<details id='609ca47-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 3d63f14 (Jul 27, 2026 22:48:00)
 fix reports and matrix to generate apk — antonio-bravo
 [detail](#3d63f14-details)
@@ -728,33 +752,6 @@ fix workflow — antonio-bravo
 
 - .github/workflows/build-release.yml [Modified]
 - app/src/main/java/com/tonio/libre2clock/data/model/LibreModels.kt [Modified]
-</details>
-
-
----
-## 607a5de (Jul 17, 2026 10:20:29)
-fix history and added day retention — antonio-bravo
-[detail](#607a5de-details)
-
-<details id='607a5de-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-</details>
-
-
----
-## 2cad27a (Jul 16, 2026 20:51:25)
-fix mobile notification — antonio-bravo
-[detail](#2cad27a-details)
-
-<details id='2cad27a-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
 </details>
 
 
