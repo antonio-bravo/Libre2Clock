@@ -1,5 +1,44 @@
 # Changelog
 
+## 45e467e (Jul 27, 2026 21:48:02)
+add reports — antonio-bravo
+[detail](#45e467e-details)
+
+<details id='45e467e-details'>
+<summary>Changed files</summary>
+
+- .idea/planningMode.xml [Modified]
+- app/src/main/AndroidManifest.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/navigation/Destinations.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportScreen.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/PdfReportGenerator.kt [Deleted]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+- app/src/main/res/xml/file_paths.xml [Deleted]
+</details>
+
+
+---
+## d273ae2 (Jul 27, 2026 14:05:55)
+Update changelog — github-actions[bot]
+[detail](#d273ae2-details)
+
+<details id='d273ae2-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## aa9d1c3 (Jul 27, 2026 16:05:40)
 fix auto values — antonio-bravo
 [detail](#aa9d1c3-details)
@@ -710,44 +749,6 @@ Export Local — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-</details>
-
-
----
-## bd3886a (Jul 16, 2026 14:06:46)
-fix alarmas periodicas al reloj y backup parcial — antonio-bravo
-[detail](#bd3886a-details)
-
-<details id='bd3886a-details'>
-<summary>Changed files</summary>
-
-- APK_DECOMPILATION_ENDPOINT_CHECKLIST.md [Deleted]
-- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/login/LoginScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/res/xml/backup_rules.xml [Modified]
-- app/src/main/res/xml/data_extraction_rules.xml [Modified]
-</details>
-
-
----
-## c29bdf6 (Jul 16, 2026 10:56:55)
-separar 2 endpoints para traer 90 dias y hacer calculos — antonio-bravo
-[detail](#c29bdf6-details)
-
-<details id='c29bdf6-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/model/LibreModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepository.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
 </details>
 
 
