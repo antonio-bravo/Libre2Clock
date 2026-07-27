@@ -1,5 +1,32 @@
 # Changelog
 
+## 3cd6024 (Jul 27, 2026 22:33:45)
+fix versioning & add default datetime when enter insulin — antonio-bravo
+[detail](#3cd6024-details)
+
+<details id='3cd6024-details'>
+<summary>Changed files</summary>
+
+- .github/workflows/build-release.yml [Modified]
+- app/build.gradle.kts [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
+</details>
+
+
+---
+## cf84a9f (Jul 27, 2026 19:48:17)
+Update changelog — github-actions[bot]
+[detail](#cf84a9f-details)
+
+<details id='cf84a9f-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 45e467e (Jul 27, 2026 21:48:02)
 add reports — antonio-bravo
 [detail](#45e467e-details)
@@ -727,28 +754,6 @@ Fix failing CI: replace softprops/action-gh-release@v2 with gh CLI — copilot-s
 <summary>Changed files</summary>
 
 - .github/workflows/build-release.yml [Modified]
-</details>
-
-
----
-## c970129 (Jul 16, 2026 18:17:29)
-Initial plan — copilot-swe-agent[bot]
-[detail](#c970129-details)
-
-No files changed in this commit.
-
-
----
-## 66c3d5a (Jul 16, 2026 19:12:06)
-Export Local — antonio-bravo
-[detail](#66c3d5a-details)
-
-<details id='66c3d5a-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
 </details>
 
 
