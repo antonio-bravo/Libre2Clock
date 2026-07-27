@@ -53,6 +53,7 @@ fun DashboardScreen(
     onNavigateToStrategy: () -> Unit,
     onNavigateToCapillary: () -> Unit,
     onNavigateToInsulinHub: () -> Unit,
+    onNavigateToReports: () -> Unit,
     onAddDose: (InsulinDose) -> Unit
 ) {
     val currentGlucose by viewModel.currentGlucose.collectAsStateWithLifecycle()
@@ -113,6 +114,16 @@ fun DashboardScreen(
                         onNavigateToInsulinHub()
                     },
                     icon = { Icon(Icons.Default.Vaccines, contentDescription = null) },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+                NavigationDrawerItem(
+                    label = { Text(stringResource(R.string.menu_reports)) },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        onNavigateToReports()
+                    },
+                    icon = { Icon(Icons.Default.Assessment, contentDescription = null) },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
             }

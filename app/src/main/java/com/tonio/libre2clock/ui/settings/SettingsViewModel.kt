@@ -195,11 +195,16 @@ class SettingsViewModel(
         }
     }
 
-    fun requestPartialHistoryBackup(includeHistoricalGlucose: Boolean, includeCapillaryReadings: Boolean) {
+    fun requestPartialHistoryBackup(
+        includeHistoricalGlucose: Boolean,
+        includeCapillaryReadings: Boolean,
+        includeInsulinDoses: Boolean = true
+    ) {
         viewModelScope.launch {
             val requested = preferenceManager.requestPartialHistoryCloudBackup(
                 includeHistoricalGlucose = includeHistoricalGlucose,
-                includeCapillaryReadings = includeCapillaryReadings
+                includeCapillaryReadings = includeCapillaryReadings,
+                includeInsulinDoses = includeInsulinDoses
             )
             _backupStatusMessage.value = if (requested) {
                 "Partial Google backup requested."
@@ -209,11 +214,16 @@ class SettingsViewModel(
         }
     }
 
-    fun restorePartialHistoryFromBackup(includeHistoricalGlucose: Boolean, includeCapillaryReadings: Boolean) {
+    fun restorePartialHistoryFromBackup(
+        includeHistoricalGlucose: Boolean,
+        includeCapillaryReadings: Boolean,
+        includeInsulinDoses: Boolean = true
+    ) {
         viewModelScope.launch {
             val restored = preferenceManager.restorePartialHistoryFromBackup(
                 includeHistoricalGlucose = includeHistoricalGlucose,
-                includeCapillaryReadings = includeCapillaryReadings
+                includeCapillaryReadings = includeCapillaryReadings,
+                includeInsulinDoses = includeInsulinDoses
             )
             _backupStatusMessage.value = if (restored) {
                 "Partial restore completed."

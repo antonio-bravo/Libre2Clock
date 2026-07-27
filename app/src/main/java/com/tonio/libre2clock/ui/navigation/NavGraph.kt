@@ -70,6 +70,9 @@ fun NavGraph(
                     onNavigateToInsulinHub = {
                         backStack.add(Destination.InsulinHub)
                     },
+                    onNavigateToReports = {
+                        backStack.add(Destination.Reports)
+                    },
                     onAddDose = { dose ->
                         dashboardViewModel.addInsulinDose(dose)
                     }
@@ -108,6 +111,15 @@ fun NavGraph(
             entry<Destination.InsulinLogs> {
                 InsulinLogsScreen(
                     viewModel = settingsViewModel,
+                    onBack = { backStack.removeAt(backStack.size - 1) }
+                )
+            }
+            entry<Destination.Reports> {
+                val reportViewModel: com.tonio.libre2clock.ui.report.ReportViewModel = viewModel { 
+                    com.tonio.libre2clock.ui.report.ReportViewModel(repository, preferenceManager) 
+                }
+                com.tonio.libre2clock.ui.report.ReportScreen(
+                    viewModel = reportViewModel,
                     onBack = { backStack.removeAt(backStack.size - 1) }
                 )
             }

@@ -28,12 +28,34 @@ data class InsulinDose(
     val units: Double,
     val timestamp: String,
     val type: InsulinType,
-    val durationMinutes: Int
+    val durationMinutes: Int,
+    val carbs: Double? = null
 )
 
 @Serializable
 data class HistoryBackupPayload(
     val historicalGlucoseArchive: List<GlucoseMeasurement> = emptyList(),
     val capillaryReadings: List<CapillaryMeasurement> = emptyList(),
-    val insulinDoses: List<InsulinDose> = emptyList()
+    val insulinDoses: List<InsulinDose> = emptyList(),
+    // Glucose Config
+    val glucoseOffset: Int? = null,
+    val glucoseOffsetRanges: List<GlucoseOffsetRange>? = null,
+    val autoAdjustEnabled: Boolean? = null,
+    // Insulin Config
+    val rapidDurationMins: Int? = null,
+    val slowDurationMins: Int? = null,
+    val icRuleConstant: Int? = null,
+    val isfRuleConstant: Int? = null,
+    val manualTdi: Double? = null,
+    val manualIsf: Double? = null,
+    val targetGlucose: Int? = null,
+    // Alert Config
+    val watchAlertsEnabled: Boolean? = null,
+    val watchAlertIntervalMinutes: Int? = null,
+    val watchAlertStartMinute: Int? = null,
+    val lowGlucoseAlarmEnabled: Boolean? = null,
+    val highGlucoseAlarmEnabled: Boolean? = null,
+    val useCalibratedForAlarms: Boolean? = null,
+    // App Config
+    val historyRetentionDays: Int? = null
 )

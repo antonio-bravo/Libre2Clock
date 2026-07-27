@@ -25,4 +25,7 @@ sealed interface Destination : NavKey {
 
     @Serializable
     data object InsulinLogs : Destination
+
+    @Serializable
+    data object Reports : Destination
 }

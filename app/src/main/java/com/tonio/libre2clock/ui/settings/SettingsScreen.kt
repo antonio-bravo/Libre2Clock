@@ -115,6 +115,34 @@ fun SettingsScreen(
                     modifier = Modifier.padding(top = 4.dp)
                 )
 
+                OutlinedButton(
+                    onClick = {
+                        viewModel.requestPartialHistoryBackup(
+                            includeHistoricalGlucose = false,
+                            includeCapillaryReadings = false,
+                            includeInsulinDoses = true
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                ) {
+                    Text(stringResource(R.string.settings_backup_insulin))
+                }
+                OutlinedButton(
+                    onClick = {
+                        viewModel.restorePartialHistoryFromBackup(
+                            includeHistoricalGlucose = false,
+                            includeCapillaryReadings = false,
+                            includeInsulinDoses = true
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                ) {
+                    Text(stringResource(R.string.settings_restore_insulin))
+                }
                 Spacer(modifier = Modifier.height(24.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(24.dp))
@@ -181,6 +209,34 @@ fun SettingsScreen(
                     modifier = Modifier.padding(top = 4.dp)
                 )
 
+                OutlinedButton(
+                    onClick = {
+                        viewModel.requestPartialHistoryBackup(
+                            includeHistoricalGlucose = false,
+                            includeCapillaryReadings = false,
+                            includeInsulinDoses = true
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                ) {
+                    Text(stringResource(R.string.settings_backup_insulin))
+                }
+                OutlinedButton(
+                    onClick = {
+                        viewModel.restorePartialHistoryFromBackup(
+                            includeHistoricalGlucose = false,
+                            includeCapillaryReadings = false,
+                            includeInsulinDoses = true
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                ) {
+                    Text(stringResource(R.string.settings_restore_insulin))
+                }
                 Spacer(modifier = Modifier.height(24.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(24.dp))
@@ -238,6 +294,34 @@ fun SettingsScreen(
                     )
                 }
 
+                OutlinedButton(
+                    onClick = {
+                        viewModel.requestPartialHistoryBackup(
+                            includeHistoricalGlucose = false,
+                            includeCapillaryReadings = false,
+                            includeInsulinDoses = true
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                ) {
+                    Text(stringResource(R.string.settings_backup_insulin))
+                }
+                OutlinedButton(
+                    onClick = {
+                        viewModel.restorePartialHistoryFromBackup(
+                            includeHistoricalGlucose = false,
+                            includeCapillaryReadings = false,
+                            includeInsulinDoses = true
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                ) {
+                    Text(stringResource(R.string.settings_restore_insulin))
+                }
                 Spacer(modifier = Modifier.height(24.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(24.dp))
@@ -267,6 +351,34 @@ fun SettingsScreen(
                     )
                 }
 
+                OutlinedButton(
+                    onClick = {
+                        viewModel.requestPartialHistoryBackup(
+                            includeHistoricalGlucose = false,
+                            includeCapillaryReadings = false,
+                            includeInsulinDoses = true
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                ) {
+                    Text(stringResource(R.string.settings_backup_insulin))
+                }
+                OutlinedButton(
+                    onClick = {
+                        viewModel.restorePartialHistoryFromBackup(
+                            includeHistoricalGlucose = false,
+                            includeCapillaryReadings = false,
+                            includeInsulinDoses = true
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                ) {
+                    Text(stringResource(R.string.settings_restore_insulin))
+                }
                 Spacer(modifier = Modifier.height(24.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(24.dp))
@@ -396,6 +508,34 @@ fun SettingsScreen(
                     Text("Restore only capillary readings (merge)")
                 }
 
+                OutlinedButton(
+                    onClick = {
+                        viewModel.requestPartialHistoryBackup(
+                            includeHistoricalGlucose = false,
+                            includeCapillaryReadings = false,
+                            includeInsulinDoses = true
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                ) {
+                    Text(stringResource(R.string.settings_backup_insulin))
+                }
+                OutlinedButton(
+                    onClick = {
+                        viewModel.restorePartialHistoryFromBackup(
+                            includeHistoricalGlucose = false,
+                            includeCapillaryReadings = false,
+                            includeInsulinDoses = true
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                ) {
+                    Text(stringResource(R.string.settings_restore_insulin))
+                }
                 Spacer(modifier = Modifier.height(24.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(24.dp))

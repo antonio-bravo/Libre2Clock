@@ -6,6 +6,7 @@
     <string name="menu_capillary">Mediciones Capilares</string>
     <string name="menu_insulin_hub">Gestión de Insulina</string>
     <string name="menu_insulin_logs">Registros de Insulina</string>
+    <string name="menu_reports">Informes y Estadísticas</string>
     <string name="refresh">Actualizar</string>
     <string name="sensor_health">Salud del Sensor</string>
     <string name="demo_mode">MODO DEMO</string>
@@ -121,5 +122,27 @@
     <string name="adj_falling_slowly">Resta 25 mg/dL</string>
     <string name="adj_falling_fast">Resta 50 mg/dL</string>
     <string name="adj_falling_very_fast">Resta 75 mg/dL</string>
+    <string name="settings_backup_insulin">Solo historial de insulina</string>
+    <string name="settings_restore_insulin">Solo historial de insulina (unir)</string>
     <string name="settings_use_calibrated_alarms">Usar valor con offset para las alarmas</string>
+
+    <string name="report_title">Informes y Estadísticas</string>
+    <string name="report_range_1d">1 Día</string>
+    <string name="report_range_7d">7 Días</string>
+    <string name="report_range_14d">14 Días</string>
+    <string name="report_range_30d">30 Días</string>
+    <string name="report_range_90d">90 Días</string>
+    <string name="report_tir">Tiempo en Rango (70–180)</string>
+    <string name="report_tar">Sobre el Rango (&gt;180)</string>
+    <string name="report_tbr">Bajo el Rango (&lt;70)</string>
+    <string name="report_avg_glucose">Glucosa Media</string>
+    <string name="report_gmi">GMI (Est. A1c)</string>
+    <string name="report_insulin_stats">Estadísticas de Insulina</string>
+    <string name="report_avg_tdi">Insulina Diaria Media</string>
+    <string name="report_basal_bolus">Basal vs Bolo</string>
+    <string name="report_layout_snapshot">Resumen (1 pág)</string>
+    <string name="report_layout_daily">Registros Diarios</string>
+    <string name="report_layout_full">Informe Completo</string>
+    <string name="report_share">Compartir Resumen</string>
+    <string name="report_summary_header">Informe Libre2Clock (%1$s)\nRango: %2$s al %3$s\n</string>
 </resources>

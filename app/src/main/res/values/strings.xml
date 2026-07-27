@@ -6,6 +6,7 @@
     <string name="menu_capillary">Capillary Readings</string>
     <string name="menu_insulin_hub">Insulin Management</string>
     <string name="menu_insulin_logs">Insulin Logs</string>
+    <string name="menu_reports">Reports &amp; Analytics</string>
     <string name="refresh">Refresh</string>
     <string name="sensor_health">Sensor Health</string>
     <string name="demo_mode">DEMO MODE</string>
@@ -121,5 +122,27 @@
     <string name="adj_falling_slowly">Subtract 25 mg/dL</string>
     <string name="adj_falling_fast">Subtract 50 mg/dL</string>
     <string name="adj_falling_very_fast">Subtract 75 mg/dL</string>
+    <string name="settings_backup_insulin">Backup only insulin history</string>
+    <string name="settings_restore_insulin">Restore only insulin history (merge)</string>
     <string name="settings_use_calibrated_alarms">Use value with offset for alarms</string>
+
+    <string name="report_title">Reports &amp; Analytics</string>
+    <string name="report_range_1d">1 Day</string>
+    <string name="report_range_7d">7 Days</string>
+    <string name="report_range_14d">14 Days</string>
+    <string name="report_range_30d">30 Days</string>
+    <string name="report_range_90d">90 Days</string>
+    <string name="report_tir">Time in Range (70–180)</string>
+    <string name="report_tar">Above Range (&gt;180)</string>
+    <string name="report_tbr">Below Range (&lt;70)</string>
+    <string name="report_avg_glucose">Avg Glucose</string>
+    <string name="report_gmi">GMI (Est. A1c)</string>
+    <string name="report_insulin_stats">Insulin Statistics</string>
+    <string name="report_avg_tdi">Avg. Daily Insulin</string>
+    <string name="report_basal_bolus">Basal vs Bolus</string>
+    <string name="report_layout_snapshot">Snapshot (1 pg)</string>
+    <string name="report_layout_daily">Daily Logs</string>
+    <string name="report_layout_full">Full Report</string>
+    <string name="report_share">Share Summary</string>
+    <string name="report_summary_header">Libre2Clock Report (%1$s)\nRange: %2$s to %3$s\n</string>
 </resources>

@@ -247,18 +247,21 @@ class PreferenceManager(private val context: Context) {
         context.dataStore.edit { preferences ->
             preferences[GLUCOSE_OFFSET_KEY] = offset
         }
+        updateBackupPayload()
     }
 
     suspend fun saveGlucoseOffsetRanges(ranges: List<GlucoseOffsetRange>) {
         context.dataStore.edit { preferences ->
             preferences[GLUCOSE_OFFSET_RANGES_KEY] = json.encodeToString(ranges)
         }
+        updateBackupPayload()
     }
 
     suspend fun saveAutoAdjustEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[AUTO_ADJUST_ENABLED_KEY] = enabled
         }
+        updateBackupPayload()
     }
 
     suspend fun saveCapillaryReadings(readings: List<CapillaryMeasurement>) {
@@ -272,6 +275,7 @@ class PreferenceManager(private val context: Context) {
         context.dataStore.edit { preferences ->
             preferences[WATCH_ALERTS_ENABLED_KEY] = enabled
         }
+        updateBackupPayload()
     }
 
     suspend fun initializeWatchAlertStartMinuteIfMissing() {
@@ -281,36 +285,42 @@ class PreferenceManager(private val context: Context) {
                 preferences[WATCH_ALERT_START_MINUTE_KEY] = currentMinute.coerceIn(0, 59)
             }
         }
+        updateBackupPayload()
     }
 
     suspend fun saveWatchAlertIntervalMinutes(minutes: Int) {
         context.dataStore.edit { preferences ->
             preferences[WATCH_ALERT_INTERVAL_MINUTES_KEY] = minutes.coerceIn(5, 180)
         }
+        updateBackupPayload()
     }
 
     suspend fun saveWatchAlertStartMinute(minute: Int) {
         context.dataStore.edit { preferences ->
             preferences[WATCH_ALERT_START_MINUTE_KEY] = minute.coerceIn(0, 59)
         }
+        updateBackupPayload()
     }
 
     suspend fun saveLowGlucoseAlarmEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[LOW_GLUCOSE_ALARM_ENABLED_KEY] = enabled
         }
+        updateBackupPayload()
     }
 
     suspend fun saveHighGlucoseAlarmEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[HIGH_GLUCOSE_ALARM_ENABLED_KEY] = enabled
         }
+        updateBackupPayload()
     }
 
     suspend fun saveUseCalibratedForAlarms(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[USE_CALIBRATED_FOR_ALARMS_KEY] = enabled
         }
+        updateBackupPayload()
     }
 
     suspend fun saveHistoricalGlucoseArchive(measurements: List<GlucoseMeasurement>) {
@@ -327,6 +337,7 @@ class PreferenceManager(private val context: Context) {
                 MAX_HISTORY_RETENTION_DAYS
             )
         }
+        updateBackupPayload()
     }
 
     suspend fun saveDemoMode(enabled: Boolean) {
@@ -353,24 +364,28 @@ class PreferenceManager(private val context: Context) {
         context.dataStore.edit { preferences ->
             preferences[RAPID_DURATION_MINS_KEY] = minutes
         }
+        updateBackupPayload()
     }
 
     suspend fun saveSlowDurationMins(minutes: Int) {
         context.dataStore.edit { preferences ->
             preferences[SLOW_DURATION_MINS_KEY] = minutes
         }
+        updateBackupPayload()
     }
 
     suspend fun saveIcRuleConstant(constant: Int) {
         context.dataStore.edit { preferences ->
             preferences[IC_RULE_CONSTANT_KEY] = constant
         }
+        updateBackupPayload()
     }
 
     suspend fun saveIsfRuleConstant(constant: Int) {
         context.dataStore.edit { preferences ->
             preferences[ISF_RULE_CONSTANT_KEY] = constant
         }
+        updateBackupPayload()
     }
 
     suspend fun saveManualTdi(tdi: Double?) {
@@ -378,6 +393,7 @@ class PreferenceManager(private val context: Context) {
             if (tdi == null) preferences.remove(MANUAL_TDI_KEY)
             else preferences[MANUAL_TDI_KEY] = tdi
         }
+        updateBackupPayload()
     }
 
     suspend fun saveManualIsf(isf: Double?) {
@@ -385,12 +401,14 @@ class PreferenceManager(private val context: Context) {
             if (isf == null) preferences.remove(MANUAL_ISF_KEY)
             else preferences[MANUAL_ISF_KEY] = isf
         }
+        updateBackupPayload()
     }
 
     suspend fun saveTargetGlucose(target: Int) {
         context.dataStore.edit { preferences ->
             preferences[TARGET_GLUCOSE_KEY] = target
         }
+        updateBackupPayload()
     }
 
     suspend fun saveInsulinDoses(doses: List<com.tonio.libre2clock.data.model.InsulinDose>) {
@@ -401,16 +419,8 @@ class PreferenceManager(private val context: Context) {
     }
 
     private suspend fun updateBackupPayload() {
-        val historicalArchive = historicalGlucoseArchive.first()
-        val capillaryReadings = capillaryReadings.first()
-        val doses = insulinDoses.first()
-        saveHistoryBackupPayload(
-            HistoryBackupPayload(
-                historicalGlucoseArchive = historicalArchive,
-                capillaryReadings = capillaryReadings,
-                insulinDoses = doses
-            )
-        )
+        val payload = buildCurrentHistoryBackupPayload()
+        saveHistoryBackupPayload(payload)
         requestHistoryCloudBackupIfDue()
     }
 
@@ -445,22 +455,11 @@ class PreferenceManager(private val context: Context) {
         includeCapillaryReadings: Boolean,
         includeInsulinDoses: Boolean = true
     ): Boolean {
-        val payload = HistoryBackupPayload(
-            historicalGlucoseArchive = if (includeHistoricalGlucose) {
-                historicalGlucoseArchive.first()
-            } else {
-                emptyList()
-            },
-            capillaryReadings = if (includeCapillaryReadings) {
-                capillaryReadings.first()
-            } else {
-                emptyList()
-            },
-            insulinDoses = if (includeInsulinDoses) {
-                insulinDoses.first()
-            } else {
-                emptyList()
-            }
+        val fullPayload = buildCurrentHistoryBackupPayload()
+        val payload = fullPayload.copy(
+            historicalGlucoseArchive = if (includeHistoricalGlucose) fullPayload.historicalGlucoseArchive else emptyList(),
+            capillaryReadings = if (includeCapillaryReadings) fullPayload.capillaryReadings else emptyList(),
+            insulinDoses = if (includeInsulinDoses) fullPayload.insulinDoses else emptyList()
         )
         saveHistoryBackupPayload(payload)
         return requestHistoryCloudBackupIfDue(force = true)
@@ -512,8 +511,7 @@ class PreferenceManager(private val context: Context) {
         includeInsulinDoses: Boolean = true
     ): Boolean {
         val payload = loadHistoryBackupPayload() ?: return false
-        if (!includeHistoricalGlucose && !includeCapillaryReadings && !includeInsulinDoses) return false
-
+        
         val currentHistorical = historicalGlucoseArchive.first()
         val currentCapillary = capillaryReadings.first()
         val currentInsulin = insulinDoses.first()
@@ -538,14 +536,27 @@ class PreferenceManager(private val context: Context) {
             preferences[HISTORICAL_GLUCOSE_KEY] = json.encodeToString(restoredHistorical)
             preferences[CAPILLARY_READINGS_KEY] = json.encodeToString(restoredCapillary)
             preferences[INSULIN_DOSES_KEY] = json.encodeToString(restoredInsulin)
+
+            // Overwrite configuration settings if present in the payload
+            payload.glucoseOffset?.let { preferences[GLUCOSE_OFFSET_KEY] = it }
+            payload.glucoseOffsetRanges?.let { preferences[GLUCOSE_OFFSET_RANGES_KEY] = json.encodeToString(it) }
+            payload.autoAdjustEnabled?.let { preferences[AUTO_ADJUST_ENABLED_KEY] = it }
+            payload.rapidDurationMins?.let { preferences[RAPID_DURATION_MINS_KEY] = it }
+            payload.slowDurationMins?.let { preferences[SLOW_DURATION_MINS_KEY] = it }
+            payload.icRuleConstant?.let { preferences[IC_RULE_CONSTANT_KEY] = it }
+            payload.isfRuleConstant?.let { preferences[ISF_RULE_CONSTANT_KEY] = it }
+            payload.manualTdi?.let { preferences[MANUAL_TDI_KEY] = it }
+            payload.manualIsf?.let { preferences[MANUAL_ISF_KEY] = it }
+            payload.targetGlucose?.let { preferences[TARGET_GLUCOSE_KEY] = it }
+            payload.watchAlertsEnabled?.let { preferences[WATCH_ALERTS_ENABLED_KEY] = it }
+            payload.watchAlertIntervalMinutes?.let { preferences[WATCH_ALERT_INTERVAL_MINUTES_KEY] = it }
+            payload.watchAlertStartMinute?.let { preferences[WATCH_ALERT_START_MINUTE_KEY] = it }
+            payload.lowGlucoseAlarmEnabled?.let { preferences[LOW_GLUCOSE_ALARM_ENABLED_KEY] = it }
+            payload.highGlucoseAlarmEnabled?.let { preferences[HIGH_GLUCOSE_ALARM_ENABLED_KEY] = it }
+            payload.useCalibratedForAlarms?.let { preferences[USE_CALIBRATED_FOR_ALARMS_KEY] = it }
+            payload.historyRetentionDays?.let { preferences[HISTORY_RETENTION_DAYS_KEY] = it }
         }
-        saveHistoryBackupPayload(
-            HistoryBackupPayload(
-                historicalGlucoseArchive = restoredHistorical,
-                capillaryReadings = restoredCapillary,
-                insulinDoses = restoredInsulin
-            )
-        )
+        updateBackupPayload()
         return true
     }
 
@@ -570,17 +581,31 @@ class PreferenceManager(private val context: Context) {
             )
 
             context.dataStore.edit { preferences ->
+                // Overwrite configuration settings if present in the backup payload
+                payload.glucoseOffset?.let { preferences[GLUCOSE_OFFSET_KEY] = it }
+                payload.glucoseOffsetRanges?.let { preferences[GLUCOSE_OFFSET_RANGES_KEY] = json.encodeToString(it) }
+                payload.autoAdjustEnabled?.let { preferences[AUTO_ADJUST_ENABLED_KEY] = it }
+                payload.rapidDurationMins?.let { preferences[RAPID_DURATION_MINS_KEY] = it }
+                payload.slowDurationMins?.let { preferences[SLOW_DURATION_MINS_KEY] = it }
+                payload.icRuleConstant?.let { preferences[IC_RULE_CONSTANT_KEY] = it }
+                payload.isfRuleConstant?.let { preferences[ISF_RULE_CONSTANT_KEY] = it }
+                payload.manualTdi?.let { preferences[MANUAL_TDI_KEY] = it }
+                payload.manualIsf?.let { preferences[MANUAL_ISF_KEY] = it }
+                payload.targetGlucose?.let { preferences[TARGET_GLUCOSE_KEY] = it }
+                payload.watchAlertsEnabled?.let { preferences[WATCH_ALERTS_ENABLED_KEY] = it }
+                payload.watchAlertIntervalMinutes?.let { preferences[WATCH_ALERT_INTERVAL_MINUTES_KEY] = it }
+                payload.watchAlertStartMinute?.let { preferences[WATCH_ALERT_START_MINUTE_KEY] = it }
+                payload.lowGlucoseAlarmEnabled?.let { preferences[LOW_GLUCOSE_ALARM_ENABLED_KEY] = it }
+                payload.highGlucoseAlarmEnabled?.let { preferences[HIGH_GLUCOSE_ALARM_ENABLED_KEY] = it }
+                payload.useCalibratedForAlarms?.let { preferences[USE_CALIBRATED_FOR_ALARMS_KEY] = it }
+                payload.historyRetentionDays?.let { preferences[HISTORY_RETENTION_DAYS_KEY] = it }
+
+                // Merge data
                 preferences[HISTORICAL_GLUCOSE_KEY] = json.encodeToString(mergedHistorical)
                 preferences[CAPILLARY_READINGS_KEY] = json.encodeToString(mergedCapillary)
                 preferences[INSULIN_DOSES_KEY] = json.encodeToString(mergedInsulin)
             }
-            saveHistoryBackupPayload(
-                HistoryBackupPayload(
-                    historicalGlucoseArchive = mergedHistorical,
-                    capillaryReadings = mergedCapillary,
-                    insulinDoses = mergedInsulin
-                )
-            )
+            updateBackupPayload()
             Result.success(payload)
         } catch (e: Exception) {
             Result.failure(e)
@@ -609,7 +634,25 @@ class PreferenceManager(private val context: Context) {
     private suspend fun buildCurrentHistoryBackupPayload(): HistoryBackupPayload {
         return HistoryBackupPayload(
             historicalGlucoseArchive = historicalGlucoseArchive.first(),
-            capillaryReadings = capillaryReadings.first()
+            capillaryReadings = capillaryReadings.first(),
+            insulinDoses = insulinDoses.first(),
+            glucoseOffset = glucoseOffset.first(),
+            glucoseOffsetRanges = glucoseOffsetRanges.first(),
+            autoAdjustEnabled = autoAdjustEnabled.first(),
+            rapidDurationMins = rapidDurationMins.first(),
+            slowDurationMins = slowDurationMins.first(),
+            icRuleConstant = icRuleConstant.first(),
+            isfRuleConstant = isfRuleConstant.first(),
+            manualTdi = manualTdi.first(),
+            manualIsf = manualIsf.first(),
+            targetGlucose = targetGlucose.first(),
+            watchAlertsEnabled = watchAlertsEnabled.first(),
+            watchAlertIntervalMinutes = watchAlertIntervalMinutes.first(),
+            watchAlertStartMinute = watchAlertStartMinute.first(),
+            lowGlucoseAlarmEnabled = lowGlucoseAlarmEnabled.first(),
+            highGlucoseAlarmEnabled = highGlucoseAlarmEnabled.first(),
+            useCalibratedForAlarms = useCalibratedForAlarms.first(),
+            historyRetentionDays = historyRetentionDays.first()
         )
     }
 

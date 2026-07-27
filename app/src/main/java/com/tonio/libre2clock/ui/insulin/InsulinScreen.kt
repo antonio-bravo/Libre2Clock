@@ -47,7 +47,8 @@ fun InsulinHubScreen(
 
     val calculatedTdi = remember(doses) { InsulinProcessor.calculateAverageDaily(doses, 30) }
     val tdi = manualTdi ?: calculatedTdi
-    val isf = InsulinProcessor.calculateISF(tdi, isfRuleConstant, manualIsf)
+    val calculatedIsf = if (tdi > 0) isfRuleConstant.toDouble() / tdi else 0.0
+    val isf = manualIsf ?: calculatedIsf
     val icRatio = if (tdi > 0) icRuleConstant.toDouble() / tdi else 0.0
 
     val totalIOB = remember(doses) { InsulinProcessor.calculateTotalIOB(doses) }
@@ -94,6 +95,7 @@ fun InsulinHubScreen(
                     tdi = tdi,
                     icRatio = icRatio,
                     isf = isf,
+                    calculatedIsf = calculatedIsf,
                     manualIsf = manualIsf,
                     manualTdi = manualTdi,
                     icConstant = icRuleConstant,
@@ -202,6 +204,7 @@ fun BolusCalculatorCard(
     tdi: Double,
     icRatio: Double,
     isf: Double,
+    calculatedIsf: Double,
     manualIsf: Double?,
     manualTdi: Double?,
     icConstant: Int,
@@ -289,19 +292,55 @@ fun BolusCalculatorCard(
             val (bReal, bCal) = breakdowns
 
             val isDual = realG != calG && realG > 0
+            
+            // Format with floor(x * 100) / 100 to match user's 3.86 expectation
+            val formatValue = { v: Double -> (Math.floor(v * 100) / 100.0) }
+            
             val suggestedText = if (isDual) {
-                InsulinProcessor.formatDualValue(bReal.total, bCal.total)
+                "${"%.2f".format(formatValue(bReal.total))}(${"%.2f".format(formatValue(bCal.total))})"
             } else {
-                "%.2f".format(bReal.total)
+                "%.2f".format(formatValue(bReal.total))
             }
+            
+            var showLogDialog by remember { mutableStateOf(false) }
 
             Column {
-                Text(
-                    text = stringResource(R.string.calc_suggested_bolus_dual, suggestedText),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.calc_suggested_bolus_dual, suggestedText),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.weight(1f)
+                    )
+                    IconButton(onClick = { showLogDialog = true }) {
+                        Icon(Icons.Default.AddCircle, contentDescription = "Log Suggested Dose")
+                    }
+                }
+                
+                if (showLogDialog) {
+                    val initialUnits = if (viewModel.useCalibratedForAlarms.collectAsState(initial = true).value) bCal.total else bReal.total
+                    InsulinDoseDialog(
+                        initialDose = InsulinDose(
+                            units = (Math.floor(initialUnits * 100) / 100.0),
+                            timestamp = "", // Handled by dialog
+                            type = InsulinType.RAPID,
+                            durationMinutes = 0, // Handled by dialog
+                            carbs = carbsText.toDoubleOrNull()
+                        ),
+                        rapidDuration = viewModel.rapidDurationMins.collectAsState(initial = 240).value,
+                        slowDuration = viewModel.slowDurationMins.collectAsState(initial = 1440).value,
+                        onDismiss = { showLogDialog = false },
+                        onConfirm = {
+                            viewModel.addInsulinDose(it)
+                            showLogDialog = false
+                        }
+                    )
+                }
                 
                 if (isDual) {
                     Text(
@@ -480,7 +519,7 @@ fun DoseItem(
         Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
                 val typeLabel = if (dose.type == InsulinType.RAPID) stringResource(R.string.insulin_rapid_label) else stringResource(R.string.insulin_slow_label)
-                Text(text = "${dose.units} U - $typeLabel", fontWeight = FontWeight.Bold)
+                Text(text = "${dose.units} U - $typeLabel" + (if (dose.carbs != null) " (${dose.carbs}g HC)" else ""), fontWeight = FontWeight.Bold)
                 Text(text = dose.timestamp, style = MaterialTheme.typography.bodySmall)
                 if (iob > 0) {
                     Text(
@@ -511,6 +550,7 @@ fun InsulinDoseDialog(
     onConfirm: (InsulinDose) -> Unit
 ) {
     var unitsText by remember { mutableStateOf(initialDose?.units?.toString() ?: "") }
+    var carbsText by remember { mutableStateOf(initialDose?.carbs?.toString() ?: "") }
     var type by remember { mutableStateOf(initialDose?.type ?: InsulinType.RAPID) }
     
     val now = Instant.now().atZone(ZoneId.systemDefault())
@@ -529,13 +569,22 @@ fun InsulinDoseDialog(
         title = { Text(stringResource(if (initialDose == null) R.string.add_insulin_dose else R.string.edit_insulin_dose)) },
         text = {
             Column {
-                OutlinedTextField(
-                    value = unitsText,
-                    onValueChange = { unitsText = it },
-                    label = { Text(stringResource(R.string.insulin_units_label)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
-                )
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = unitsText,
+                        onValueChange = { unitsText = it },
+                        label = { Text(stringResource(R.string.insulin_units_label)) },
+                        modifier = Modifier.weight(1f),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                    )
+                    OutlinedTextField(
+                        value = carbsText,
+                        onValueChange = { carbsText = it },
+                        label = { Text(stringResource(R.string.calc_carbs_label)) },
+                        modifier = Modifier.weight(1f),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                    )
+                }
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
@@ -565,13 +614,15 @@ fun InsulinDoseDialog(
         confirmButton = {
             TextButton(onClick = {
                 val units = unitsText.toDoubleOrNull() ?: return@TextButton
+                val carbs = carbsText.toDoubleOrNull()
                 val timestamp = "$dateText $timeText"
                 onConfirm(
                     InsulinDose(
                         units = units,
                         timestamp = timestamp,
                         type = type,
-                        durationMinutes = if (type == InsulinType.RAPID) rapidDuration else slowDuration
+                        durationMinutes = if (type == InsulinType.RAPID) rapidDuration else slowDuration,
+                        carbs = carbs
                     )
                 )
             }) {
