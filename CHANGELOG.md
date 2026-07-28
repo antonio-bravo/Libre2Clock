@@ -1,5 +1,29 @@
 # Changelog
 
+## 4834209 (Jul 28, 2026 13:29:58)
+update actions in workflow — antonio-bravo
+[detail](#4834209-details)
+
+<details id='4834209-details'>
+<summary>Changed files</summary>
+
+- .github/workflows/build-release.yml [Modified]
+</details>
+
+
+---
+## 21c676f (Jul 28, 2026 08:46:11)
+Update changelog — github-actions[bot]
+[detail](#21c676f-details)
+
+<details id='21c676f-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 33c2ca9 (Jul 28, 2026 10:45:54)
 Added Alarm Schedule and clean backup buttons — antonio-bravo
 [detail](#33c2ca9-details)
@@ -713,46 +737,6 @@ get history — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/util/TimestampParser.kt [Modified]
-</details>
-
-
----
-## 93f9b8b (Jul 17, 2026 14:37:22)
-fix graph — antonio-bravo
-[detail](#93f9b8b-details)
-
-<details id='93f9b8b-details'>
-<summary>Changed files</summary>
-
-- .artifacts/76ba2fa8-9c16-45d3-8563-a7f26621847d/implementation_plan.artifact.md [Deleted]
-- .artifacts/76ba2fa8-9c16-45d3-8563-a7f26621847d/task.artifact.md [Deleted]
-- .artifacts/76ba2fa8-9c16-45d3-8563-a7f26621847d/walkthrough.artifact.md [Deleted]
-- .artifacts/a0a33dbc-2e5d-4c62-a073-96b724944422/implementation_plan.artifact.md [Deleted]
-- .artifacts/a0a33dbc-2e5d-4c62-a073-96b724944422/task.artifact.md [Deleted]
-- .artifacts/a0a33dbc-2e5d-4c62-a073-96b724944422/walkthrough.artifact.md [Deleted]
-- app/build.gradle.kts [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
-- gradle/wrapper/gradle-wrapper.jar [Modified]
-- gradle/wrapper/gradle-wrapper.properties [Modified]
-- gradlew [Modified]
-- gradlew.bat [Modified]
-</details>
-
-
----
-## 962d1b9 (Jul 17, 2026 11:13:50)
-fix graph — antonio-bravo
-[detail](#962d1b9-details)
-
-<details id='962d1b9-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseProcessor.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/TimestampParser.kt [Deleted]
 </details>
 
 
