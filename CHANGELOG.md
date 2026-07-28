@@ -1,5 +1,34 @@
 # Changelog
 
+## 33c2ca9 (Jul 28, 2026 10:45:54)
+Added Alarm Schedule and clean backup buttons — antonio-bravo
+[detail](#33c2ca9-details)
+
+<details id='33c2ca9-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/model/AlarmSchedule.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+</details>
+
+
+---
+## 9971929 (Jul 27, 2026 20:54:01)
+Update changelog — github-actions[bot]
+[detail](#9971929-details)
+
+<details id='9971929-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## b2ee15f (Jul 27, 2026 22:53:40)
 fix workflow — antonio-bravo
 [detail](#b2ee15f-details)
@@ -724,34 +753,6 @@ fix graph — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/util/TimestampParser.kt [Deleted]
-</details>
-
-
----
-## 4daeff3 (Jul 17, 2026 10:44:06)
-fix workflow — antonio-bravo
-[detail](#4daeff3-details)
-
-<details id='4daeff3-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/build-release.yml [Modified]
-- app/build.gradle.kts [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/model/LibreModels.kt [Modified]
-- build.gradle.kts [Modified]
-</details>
-
-
----
-## 6673b28 (Jul 17, 2026 10:34:52)
-fix workflow — antonio-bravo
-[detail](#6673b28-details)
-
-<details id='6673b28-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/build-release.yml [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/model/LibreModels.kt [Modified]
 </details>
 
 
