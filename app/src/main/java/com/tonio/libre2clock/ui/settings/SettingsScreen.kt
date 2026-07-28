@@ -11,6 +11,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,6 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.stringResource
 import com.tonio.libre2clock.R
 import com.tonio.libre2clock.data.model.GlucoseOffsetRange
@@ -46,9 +49,18 @@ fun SettingsScreen(
     val historyRetentionDays by viewModel.historyRetentionDays.collectAsStateWithLifecycle()
     val isDemoMode by viewModel.isDemoMode.collectAsStateWithLifecycle()
     val backupStatusMessage by viewModel.backupStatusMessage.collectAsStateWithLifecycle()
+    val watchSchedules by viewModel.watchNotificationSchedules.collectAsStateWithLifecycle()
+    val alarmSchedules by viewModel.glucoseAlarmSchedules.collectAsStateWithLifecycle()
 
     var showAddRangeDialog by remember { mutableStateOf(false) }
     var editingRange by remember { mutableStateOf<GlucoseOffsetRange?>(null) }
+    
+    var showAddWatchScheduleDialog by remember { mutableStateOf(false) }
+    var editingWatchSchedule by remember { mutableStateOf<com.tonio.libre2clock.data.model.AlarmSchedule?>(null) }
+    
+    var showAddAlarmScheduleDialog by remember { mutableStateOf(false) }
+    var editingAlarmSchedule by remember { mutableStateOf<com.tonio.libre2clock.data.model.AlarmSchedule?>(null) }
+
     val localBackupRestoreLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
@@ -114,35 +126,6 @@ fun SettingsScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(top = 4.dp)
                 )
-
-                OutlinedButton(
-                    onClick = {
-                        viewModel.requestPartialHistoryBackup(
-                            includeHistoricalGlucose = false,
-                            includeCapillaryReadings = false,
-                            includeInsulinDoses = true
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
-                ) {
-                    Text(stringResource(R.string.settings_backup_insulin))
-                }
-                OutlinedButton(
-                    onClick = {
-                        viewModel.restorePartialHistoryFromBackup(
-                            includeHistoricalGlucose = false,
-                            includeCapillaryReadings = false,
-                            includeInsulinDoses = true
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
-                ) {
-                    Text(stringResource(R.string.settings_restore_insulin))
-                }
                 Spacer(modifier = Modifier.height(24.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(24.dp))
@@ -209,34 +192,29 @@ fun SettingsScreen(
                     modifier = Modifier.padding(top = 4.dp)
                 )
 
-                OutlinedButton(
-                    onClick = {
-                        viewModel.requestPartialHistoryBackup(
-                            includeHistoricalGlucose = false,
-                            includeCapillaryReadings = false,
-                            includeInsulinDoses = true
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
-                ) {
-                    Text(stringResource(R.string.settings_backup_insulin))
+                // Watch Schedules
+                Spacer(modifier = Modifier.height(12.dp))
+                Text("Watch Active Schedules", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                if (watchSchedules.isEmpty()) {
+                    Text("Always active (Global switch). Add a schedule to restrict.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                }
+                watchSchedules.forEach { schedule ->
+                    ScheduleItem(
+                        schedule = schedule,
+                        onDelete = { viewModel.removeWatchSchedule(schedule) },
+                        onEdit = { editingWatchSchedule = schedule },
+                        onToggle = { viewModel.updateWatchSchedule(schedule.copy(isEnabled = it)) }
+                    )
                 }
                 OutlinedButton(
-                    onClick = {
-                        viewModel.restorePartialHistoryFromBackup(
-                            includeHistoricalGlucose = false,
-                            includeCapillaryReadings = false,
-                            includeInsulinDoses = true
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
+                    onClick = { showAddWatchScheduleDialog = true },
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                    contentPadding = PaddingValues(4.dp)
                 ) {
-                    Text(stringResource(R.string.settings_restore_insulin))
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Text("Add Watch Schedule", style = MaterialTheme.typography.labelMedium)
                 }
+                
                 Spacer(modifier = Modifier.height(24.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(24.dp))
@@ -293,35 +271,30 @@ fun SettingsScreen(
                         onCheckedChange = viewModel::updateUseCalibratedForAlarms
                     )
                 }
+                
+                // Alarm Schedules
+                Spacer(modifier = Modifier.height(12.dp))
+                Text("Alarm Active Schedules", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                if (alarmSchedules.isEmpty()) {
+                    Text("Always active (Global switches). Add a schedule to restrict.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                }
+                alarmSchedules.forEach { schedule ->
+                    ScheduleItem(
+                        schedule = schedule,
+                        onDelete = { viewModel.removeAlarmSchedule(schedule) },
+                        onEdit = { editingAlarmSchedule = schedule },
+                        onToggle = { viewModel.updateAlarmSchedule(schedule.copy(isEnabled = it)) }
+                    )
+                }
+                OutlinedButton(
+                    onClick = { showAddAlarmScheduleDialog = true },
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                    contentPadding = PaddingValues(4.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Text("Add Alarm Schedule", style = MaterialTheme.typography.labelMedium)
+                }
 
-                OutlinedButton(
-                    onClick = {
-                        viewModel.requestPartialHistoryBackup(
-                            includeHistoricalGlucose = false,
-                            includeCapillaryReadings = false,
-                            includeInsulinDoses = true
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
-                ) {
-                    Text(stringResource(R.string.settings_backup_insulin))
-                }
-                OutlinedButton(
-                    onClick = {
-                        viewModel.restorePartialHistoryFromBackup(
-                            includeHistoricalGlucose = false,
-                            includeCapillaryReadings = false,
-                            includeInsulinDoses = true
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
-                ) {
-                    Text(stringResource(R.string.settings_restore_insulin))
-                }
                 Spacer(modifier = Modifier.height(24.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(24.dp))
@@ -350,41 +323,12 @@ fun SettingsScreen(
                         onCheckedChange = viewModel::updateDemoMode
                     )
                 }
-
-                OutlinedButton(
-                    onClick = {
-                        viewModel.requestPartialHistoryBackup(
-                            includeHistoricalGlucose = false,
-                            includeCapillaryReadings = false,
-                            includeInsulinDoses = true
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
-                ) {
-                    Text(stringResource(R.string.settings_backup_insulin))
-                }
-                OutlinedButton(
-                    onClick = {
-                        viewModel.restorePartialHistoryFromBackup(
-                            includeHistoricalGlucose = false,
-                            includeCapillaryReadings = false,
-                            includeInsulinDoses = true
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
-                ) {
-                    Text(stringResource(R.string.settings_restore_insulin))
-                }
                 Spacer(modifier = Modifier.height(24.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Text(
-                    text = "History Backup",
+                    text = "History & Backup",
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -406,135 +350,118 @@ fun SettingsScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
                 Text(
-                    text = "Libre2Clock keeps the historical glucose archive locally for the configured retention days and asks Android to back it up to your Google account. Restore happens automatically when Android restores app data.",
+                    text = "Libre2Clock keeps your history locally and asks Android to back it up to your Google account.",
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
-                Text(
-                    text = lastHistoryBackupRequestAt?.let {
-                        "Last backup request: ${formatBackupTimestamp(it)}"
-                    } ?: "No backup request has been sent yet.",
-                    style = MaterialTheme.typography.bodySmall
-                )
-                OutlinedButton(
-                    onClick = viewModel::requestHistoryBackupNow,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 12.dp)
+
+                // Google Cloud Backup Section
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                 ) {
-                    Text("Request Google Backup Now")
-                }
-                Text(
-                    text = "Partial backup/restore works over the same Google backup payload file.",
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-                OutlinedButton(
-                    onClick = viewModel::exportLocalBackupToDownloads,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
-                ) {
-                    Text("Export local backup to Downloads/Libre2Clock")
-                }
-                OutlinedButton(
-                    onClick = {
-                        localBackupRestoreLauncher.launch(arrayOf("application/json"))
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
-                ) {
-                    Text("Restore local backup from file")
-                }
-                backupStatusMessage?.let { message ->
-                    Text(
-                        text = message,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-                }
-                OutlinedButton(
-                    onClick = {
-                        viewModel.requestPartialHistoryBackup(
-                            includeHistoricalGlucose = true,
-                            includeCapillaryReadings = false
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Google Cloud Backup", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = lastHistoryBackupRequestAt?.let { "Last request: ${formatBackupTimestamp(it)}" } ?: "No request sent yet.",
+                            style = MaterialTheme.typography.bodySmall
                         )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
-                ) {
-                    Text("Backup only glucose history")
-                }
-                OutlinedButton(
-                    onClick = {
-                        viewModel.requestPartialHistoryBackup(
-                            includeHistoricalGlucose = false,
-                            includeCapillaryReadings = true
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
-                ) {
-                    Text("Backup only capillary readings")
-                }
-                OutlinedButton(
-                    onClick = {
-                        viewModel.restorePartialHistoryFromBackup(
-                            includeHistoricalGlucose = true,
-                            includeCapillaryReadings = false
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
-                ) {
-                    Text("Restore only glucose history (merge)")
-                }
-                OutlinedButton(
-                    onClick = {
-                        viewModel.restorePartialHistoryFromBackup(
-                            includeHistoricalGlucose = false,
-                            includeCapillaryReadings = true
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
-                ) {
-                    Text("Restore only capillary readings (merge)")
+                        Button(
+                            onClick = viewModel::requestHistoryBackupNow,
+                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                        ) {
+                            Text("Request Google Backup Now")
+                        }
+                    }
                 }
 
-                OutlinedButton(
-                    onClick = {
-                        viewModel.requestPartialHistoryBackup(
-                            includeHistoricalGlucose = false,
-                            includeCapillaryReadings = false,
-                            includeInsulinDoses = true
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
+                // Local File Section
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                 ) {
-                    Text(stringResource(R.string.settings_backup_insulin))
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Local JSON Backup", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                        Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(onClick = viewModel::exportLocalBackupToDownloads, modifier = Modifier.weight(1f)) {
+                                Text("Export")
+                            }
+                            OutlinedButton(onClick = { localBackupRestoreLauncher.launch(arrayOf("application/json")) }, modifier = Modifier.weight(1f)) {
+                                Text("Restore")
+                            }
+                        }
+                    }
                 }
-                OutlinedButton(
-                    onClick = {
-                        viewModel.restorePartialHistoryFromBackup(
-                            includeHistoricalGlucose = false,
-                            includeCapillaryReadings = false,
-                            includeInsulinDoses = true
+
+                if (backupStatusMessage != null) {
+                    Text(
+                        text = backupStatusMessage!!,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
+
+                // Advanced Actions Dropdown
+                var showAdvancedDropdown by remember { mutableStateOf(false) }
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedButton(
+                        onClick = { showAdvancedDropdown = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Advanced Partial Actions")
+                    }
+                    DropdownMenu(
+                        expanded = showAdvancedDropdown,
+                        onDismissRequest = { showAdvancedDropdown = false },
+                        modifier = Modifier.fillMaxWidth(0.9f)
+                    ) {
+                        Text("BACKUP ONLY", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(12.dp), color = MaterialTheme.colorScheme.secondary)
+                        DropdownMenuItem(
+                            text = { Text("Glucose History") },
+                            onClick = { 
+                                showAdvancedDropdown = false
+                                viewModel.requestPartialHistoryBackup(includeHistoricalGlucose = true, includeCapillaryReadings = false, includeInsulinDoses = false)
+                            }
                         )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
-                ) {
-                    Text(stringResource(R.string.settings_restore_insulin))
+                        DropdownMenuItem(
+                            text = { Text("Capillary Readings") },
+                            onClick = { 
+                                showAdvancedDropdown = false
+                                viewModel.requestPartialHistoryBackup(includeHistoricalGlucose = false, includeCapillaryReadings = true, includeInsulinDoses = false)
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Insulin Doses") },
+                            onClick = { 
+                                showAdvancedDropdown = false
+                                viewModel.requestPartialHistoryBackup(includeHistoricalGlucose = false, includeCapillaryReadings = false, includeInsulinDoses = true)
+                            }
+                        )
+                        HorizontalDivider()
+                        Text("RESTORE ONLY (Merge)", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(12.dp), color = MaterialTheme.colorScheme.secondary)
+                        DropdownMenuItem(
+                            text = { Text("Glucose History") },
+                            onClick = { 
+                                showAdvancedDropdown = false
+                                viewModel.restorePartialHistoryFromBackup(includeHistoricalGlucose = true, includeCapillaryReadings = false, includeInsulinDoses = false)
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Capillary Readings") },
+                            onClick = { 
+                                showAdvancedDropdown = false
+                                viewModel.restorePartialHistoryFromBackup(includeHistoricalGlucose = false, includeCapillaryReadings = true, includeInsulinDoses = false)
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Insulin Doses") },
+                            onClick = { 
+                                showAdvancedDropdown = false
+                                viewModel.restorePartialHistoryFromBackup(includeHistoricalGlucose = false, includeCapillaryReadings = false, includeInsulinDoses = true)
+                            }
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.height(24.dp))
                 HorizontalDivider()
@@ -630,6 +557,184 @@ fun SettingsScreen(
             }
         )
     }
+
+    if (showAddWatchScheduleDialog) {
+        ScheduleDialog(
+            isWatchSchedule = true,
+            onDismiss = { showAddWatchScheduleDialog = false },
+            onConfirm = { 
+                viewModel.addWatchSchedule(it)
+                showAddWatchScheduleDialog = false
+            }
+        )
+    }
+
+    editingWatchSchedule?.let { schedule ->
+        ScheduleDialog(
+            isWatchSchedule = true,
+            initialSchedule = schedule,
+            onDismiss = { editingWatchSchedule = null },
+            onConfirm = {
+                viewModel.updateWatchSchedule(it)
+                editingWatchSchedule = null
+            }
+        )
+    }
+
+    if (showAddAlarmScheduleDialog) {
+        ScheduleDialog(
+            isWatchSchedule = false,
+            onDismiss = { showAddAlarmScheduleDialog = false },
+            onConfirm = { 
+                viewModel.addAlarmSchedule(it)
+                showAddAlarmScheduleDialog = false
+            }
+        )
+    }
+
+    editingAlarmSchedule?.let { schedule ->
+        ScheduleDialog(
+            isWatchSchedule = false,
+            initialSchedule = schedule,
+            onDismiss = { editingAlarmSchedule = null },
+            onConfirm = {
+                viewModel.updateAlarmSchedule(it)
+                editingAlarmSchedule = null
+            }
+        )
+    }
+}
+
+@Composable
+fun ScheduleItem(
+    schedule: com.tonio.libre2clock.data.model.AlarmSchedule,
+    onDelete: () -> Unit,
+    onEdit: () -> Unit,
+    onToggle: (Boolean) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
+    ) {
+        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = schedule.name, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "${schedule.startTime} - ${schedule.endTime}",
+                    style = MaterialTheme.typography.bodySmall
+                )
+                if (schedule.intervalMinutes != null || schedule.startMinute != null) {
+                    val intv = schedule.intervalMinutes ?: "Global"
+                    val start = schedule.startMinute ?: "Global"
+                    Text(text = "Interval: ${intv}m | Start: :${start}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
+                }
+                val days = schedule.daysOfWeek.sorted().joinToString(", ") { day ->
+                    when (day) {
+                        1 -> "Mon"
+                        2 -> "Tue"
+                        3 -> "Wed"
+                        4 -> "Thu"
+                        5 -> "Fri"
+                        6 -> "Sat"
+                        7 -> "Sun"
+                        else -> ""
+                    }
+                }
+                Text(text = days, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Switch(checked = schedule.isEnabled, onCheckedChange = onToggle, modifier = Modifier.scale(0.7f))
+                IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, contentDescription = "Edit", modifier = Modifier.size(18.dp)) }
+                IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, contentDescription = "Delete", modifier = Modifier.size(18.dp)) }
+            }
+        }
+    }
+}
+
+@Composable
+fun ScheduleDialog(
+    isWatchSchedule: Boolean,
+    initialSchedule: com.tonio.libre2clock.data.model.AlarmSchedule? = null,
+    onDismiss: () -> Unit,
+    onConfirm: (com.tonio.libre2clock.data.model.AlarmSchedule) -> Unit
+) {
+    var name by remember { mutableStateOf(initialSchedule?.name ?: "Normal Schedule") }
+    var startTime by remember { mutableStateOf(initialSchedule?.startTime ?: "09:00") }
+    var endTime by remember { mutableStateOf(initialSchedule?.endTime ?: "22:00") }
+    var selectedDays by remember { mutableStateOf(initialSchedule?.daysOfWeek?.toSet() ?: (1..7).toSet()) }
+    
+    var intervalText by remember { mutableStateOf(initialSchedule?.intervalMinutes?.toString() ?: "") }
+    var startMinuteText by remember { mutableStateOf(initialSchedule?.startMinute?.toString() ?: "") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (initialSchedule == null) "Add Active Schedule" else "Edit Schedule") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") }, modifier = Modifier.fillMaxWidth())
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(value = startTime, onValueChange = { startTime = it }, label = { Text("Start (HH:mm)") }, modifier = Modifier.weight(1f))
+                    OutlinedTextField(value = endTime, onValueChange = { endTime = it }, label = { Text("End (HH:mm)") }, modifier = Modifier.weight(1f))
+                }
+                
+                if (isWatchSchedule) {
+                    HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
+                    Text("Watch Overrides (Optional)", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = intervalText,
+                            onValueChange = { intervalText = it },
+                            label = { Text("Interval (m)") },
+                            modifier = Modifier.weight(1f),
+                            placeholder = { Text("Global") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+                        OutlinedTextField(
+                            value = startMinuteText,
+                            onValueChange = { startMinuteText = it },
+                            label = { Text("Start Minute") },
+                            modifier = Modifier.weight(1f),
+                            placeholder = { Text("Global") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+                    }
+                }
+
+                Text("Active Days", style = MaterialTheme.typography.labelMedium)
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    (1..7).forEach { day ->
+                        val label = when(day) { 1 -> "M"; 2 -> "T"; 3 -> "W"; 4 -> "T"; 5 -> "F"; 6 -> "S"; 7 -> "S"; else -> "" }
+                        FilterChip(
+                            selected = day in selectedDays,
+                            onClick = {
+                                if (day in selectedDays) selectedDays = selectedDays - day
+                                else selectedDays = selectedDays + day
+                            },
+                            label = { Text(label) },
+                            modifier = Modifier.width(42.dp)
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                onConfirm(
+                    com.tonio.libre2clock.data.model.AlarmSchedule(
+                        id = initialSchedule?.id ?: java.util.UUID.randomUUID().toString(),
+                        name = name,
+                        startTime = startTime,
+                        endTime = endTime,
+                        daysOfWeek = selectedDays.toList(),
+                        isEnabled = initialSchedule?.isEnabled ?: true,
+                        intervalMinutes = intervalText.toIntOrNull(),
+                        startMinute = startMinuteText.toIntOrNull()
+                    )
+                )
+            }) { Text("Save") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+    )
 }
 
 private fun formatBackupTimestamp(timestamp: Long): String {

@@ -39,6 +39,8 @@ class GlucoseForegroundService : Service() {
     private var lowGlucoseAlarmEnabledCached: Boolean = false
     private var highGlucoseAlarmEnabledCached: Boolean = false
     private var useCalibratedForAlarmsCached: Boolean = true
+    private var watchSchedulesCached: List<com.tonio.libre2clock.data.model.AlarmSchedule> = emptyList()
+    private var alarmSchedulesCached: List<com.tonio.libre2clock.data.model.AlarmSchedule> = emptyList()
     private var glucoseOffsetCached: Int = 0
     private var glucoseOffsetRangesCached: List<com.tonio.libre2clock.data.model.GlucoseOffsetRange> = emptyList()
     private var autoAdjustEnabledCached: Boolean = false
@@ -120,6 +122,18 @@ class GlucoseForegroundService : Service() {
             launch {
                 preferenceManager.useCalibratedForAlarms.collect {
                     useCalibratedForAlarmsCached = it
+                }
+            }
+
+            launch {
+                preferenceManager.watchNotificationSchedules.collect {
+                    watchSchedulesCached = it
+                }
+            }
+
+            launch {
+                preferenceManager.glucoseAlarmSchedules.collect {
+                    alarmSchedulesCached = it
                 }
             }
 
@@ -294,21 +308,44 @@ class GlucoseForegroundService : Service() {
 
                 private suspend fun maybeSendWatchAlert(measurement: GlucoseMeasurement) {
                     if (!watchAlertsEnabledCached) return
-
-                    val intervalMinutes = watchAlertIntervalMinutesCached.coerceIn(5, 180)
-                    val startMinute = watchAlertStartMinuteCached.coerceIn(0, 59)
+                    
                     val nowMillis = System.currentTimeMillis()
                     val epochMinute = nowMillis / 60_000L
+                    if (epochMinute == lastWatchAlertEpochMinute) return
+                    
                     val nowLocal = Instant.ofEpochMilli(nowMillis).atZone(ZoneId.systemDefault())
+                    val enabledSchedules = watchSchedulesCached.filter { it.isEnabled }
+                    
+                    val shouldTrigger = if (enabledSchedules.isEmpty()) {
+                        // Legacy behavior: No schedules, use global settings
+                        isTriggerMinute(
+                            nowLocal = nowLocal,
+                            interval = watchAlertIntervalMinutesCached,
+                            startMinute = watchAlertStartMinuteCached
+                        )
+                    } else {
+                        // Check each schedule that is active right now
+                        val activeSchedules = enabledSchedules.filter { isCurrentTimeInSchedule(it, nowLocal) }
+                        activeSchedules.any { schedule ->
+                            isTriggerMinute(
+                                nowLocal = nowLocal,
+                                interval = schedule.intervalMinutes ?: watchAlertIntervalMinutesCached,
+                                startMinute = schedule.startMinute ?: watchAlertStartMinuteCached
+                            )
+                        }
+                    }
+
+                    if (shouldTrigger) {
+                        val processed = processMeasurement(measurement)
+                        sendWatchAlertNotification(processed)
+                        lastWatchAlertEpochMinute = epochMinute
+                    }
+                }
+
+                private fun isTriggerMinute(nowLocal: java.time.ZonedDateTime, interval: Int, startMinute: Int): Boolean {
                     val minuteOfDay = (nowLocal.hour * 60) + nowLocal.minute
                     val offsetFromStart = (minuteOfDay - startMinute).mod(24 * 60)
-
-                    if (offsetFromStart % intervalMinutes != 0) return
-                    if (epochMinute == lastWatchAlertEpochMinute) return
-
-                    val processed = processMeasurement(measurement)
-                    sendWatchAlertNotification(processed)
-                    lastWatchAlertEpochMinute = epochMinute
+                    return offsetFromStart % interval.coerceAtLeast(1) == 0
                 }
 
                 private fun sendWatchAlertNotification(measurement: GlucoseMeasurement) {
@@ -339,6 +376,8 @@ class GlucoseForegroundService : Service() {
                 }
 
                 private fun maybeSendGlucoseAlarms(measurement: GlucoseMeasurement) {
+                    if (!isWithinAnyActiveSchedule(alarmSchedulesCached)) return
+                    
                     val now = System.currentTimeMillis()
                     val processed = processMeasurement(measurement)
                     val valueToCheck = if (useCalibratedForAlarmsCached) processed.calibratedValue else processed.value
@@ -420,4 +459,29 @@ class GlucoseForegroundService : Service() {
                         )
                     }
                 }
+
+    private fun isWithinAnyActiveSchedule(schedules: List<com.tonio.libre2clock.data.model.AlarmSchedule>): Boolean {
+        if (schedules.isEmpty()) return true
+        val enabledSchedules = schedules.filter { it.isEnabled }
+        if (enabledSchedules.isEmpty()) return false
+
+        val now = java.time.ZonedDateTime.now(ZoneId.systemDefault())
+        return enabledSchedules.any { isCurrentTimeInSchedule(it, now) }
+    }
+
+    private fun isCurrentTimeInSchedule(schedule: com.tonio.libre2clock.data.model.AlarmSchedule, now: java.time.ZonedDateTime): Boolean {
+        val dayOfWeek = now.dayOfWeek.value // 1 to 7
+        if (dayOfWeek !in schedule.daysOfWeek) return false
+
+        val currentTime = now.toLocalTime()
+        val start = java.time.LocalTime.parse(schedule.startTime)
+        val end = java.time.LocalTime.parse(schedule.endTime)
+
+        return if (start.isBefore(end)) {
+            currentTime >= start && currentTime < end
+        } else {
+            // Spans midnight (e.g. 22:00 to 06:00)
+            currentTime >= start || currentTime < end
+        }
+    }
 }

@@ -88,6 +88,12 @@ class SettingsViewModel(
     val insulinDoses: StateFlow<List<com.tonio.libre2clock.data.model.InsulinDose>> = preferenceManager.insulinDoses
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val watchNotificationSchedules: StateFlow<List<com.tonio.libre2clock.data.model.AlarmSchedule>> = preferenceManager.watchNotificationSchedules
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val glucoseAlarmSchedules: StateFlow<List<com.tonio.libre2clock.data.model.AlarmSchedule>> = preferenceManager.glucoseAlarmSchedules
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     val currentGlucose: StateFlow<GlucoseMeasurement?> = combine(
         repository.currentGlucose,
         preferenceManager.glucoseOffset,
@@ -350,6 +356,60 @@ class SettingsViewModel(
                 current.sortByDescending { it.timestamp }
                 preferenceManager.saveInsulinDoses(current)
             }
+        }
+    }
+
+    fun addWatchSchedule(schedule: com.tonio.libre2clock.data.model.AlarmSchedule) {
+        viewModelScope.launch {
+            val current = watchNotificationSchedules.value.toMutableList()
+            current.add(schedule)
+            preferenceManager.saveWatchNotificationSchedules(current)
+        }
+    }
+
+    fun updateWatchSchedule(schedule: com.tonio.libre2clock.data.model.AlarmSchedule) {
+        viewModelScope.launch {
+            val current = watchNotificationSchedules.value.toMutableList()
+            val index = current.indexOfFirst { it.id == schedule.id }
+            if (index != -1) {
+                current[index] = schedule
+                preferenceManager.saveWatchNotificationSchedules(current)
+            }
+        }
+    }
+
+    fun removeWatchSchedule(schedule: com.tonio.libre2clock.data.model.AlarmSchedule) {
+        viewModelScope.launch {
+            val current = watchNotificationSchedules.value.toMutableList()
+            current.removeIf { it.id == schedule.id }
+            preferenceManager.saveWatchNotificationSchedules(current)
+        }
+    }
+
+    fun addAlarmSchedule(schedule: com.tonio.libre2clock.data.model.AlarmSchedule) {
+        viewModelScope.launch {
+            val current = glucoseAlarmSchedules.value.toMutableList()
+            current.add(schedule)
+            preferenceManager.saveGlucoseAlarmSchedules(current)
+        }
+    }
+
+    fun updateAlarmSchedule(schedule: com.tonio.libre2clock.data.model.AlarmSchedule) {
+        viewModelScope.launch {
+            val current = glucoseAlarmSchedules.value.toMutableList()
+            val index = current.indexOfFirst { it.id == schedule.id }
+            if (index != -1) {
+                current[index] = schedule
+                preferenceManager.saveGlucoseAlarmSchedules(current)
+            }
+        }
+    }
+
+    fun removeAlarmSchedule(schedule: com.tonio.libre2clock.data.model.AlarmSchedule) {
+        viewModelScope.launch {
+            val current = glucoseAlarmSchedules.value.toMutableList()
+            current.removeIf { it.id == schedule.id }
+            preferenceManager.saveGlucoseAlarmSchedules(current)
         }
     }
 }

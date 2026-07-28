@@ -57,5 +57,8 @@ data class HistoryBackupPayload(
     val highGlucoseAlarmEnabled: Boolean? = null,
     val useCalibratedForAlarms: Boolean? = null,
     // App Config
-    val historyRetentionDays: Int? = null
+    val historyRetentionDays: Int? = null,
+    // Schedules
+    val watchNotificationSchedules: List<AlarmSchedule> = emptyList(),
+    val glucoseAlarmSchedules: List<AlarmSchedule> = emptyList()
 )

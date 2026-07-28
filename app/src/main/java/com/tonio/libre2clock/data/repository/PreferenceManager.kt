@@ -76,6 +76,8 @@ class PreferenceManager(private val context: Context) {
     private val MANUAL_ISF_KEY = androidx.datastore.preferences.core.doublePreferencesKey("manual_isf")
     private val TARGET_GLUCOSE_KEY = androidx.datastore.preferences.core.intPreferencesKey("target_glucose")
     private val INSULIN_DOSES_KEY = stringPreferencesKey("insulin_doses")
+    private val WATCH_NOTIFICATION_SCHEDULES_KEY = stringPreferencesKey("watch_notification_schedules")
+    private val GLUCOSE_ALARM_SCHEDULES_KEY = stringPreferencesKey("glucose_alarm_schedules")
 
     val authToken: Flow<String?> = context.dataStore.data.map { preferences ->
         preferences[TOKEN_KEY]
@@ -214,6 +216,32 @@ class PreferenceManager(private val context: Context) {
         if (jsonStr != null) {
             try {
                 json.decodeFromString<List<com.tonio.libre2clock.data.model.InsulinDose>>(jsonStr)
+            } catch (e: Exception) {
+                emptyList()
+            }
+        } else {
+            emptyList()
+        }
+    }
+
+    val watchNotificationSchedules: Flow<List<com.tonio.libre2clock.data.model.AlarmSchedule>> = context.dataStore.data.map { preferences ->
+        val jsonStr = preferences[WATCH_NOTIFICATION_SCHEDULES_KEY]
+        if (jsonStr != null) {
+            try {
+                json.decodeFromString<List<com.tonio.libre2clock.data.model.AlarmSchedule>>(jsonStr)
+            } catch (e: Exception) {
+                emptyList()
+            }
+        } else {
+            emptyList()
+        }
+    }
+
+    val glucoseAlarmSchedules: Flow<List<com.tonio.libre2clock.data.model.AlarmSchedule>> = context.dataStore.data.map { preferences ->
+        val jsonStr = preferences[GLUCOSE_ALARM_SCHEDULES_KEY]
+        if (jsonStr != null) {
+            try {
+                json.decodeFromString<List<com.tonio.libre2clock.data.model.AlarmSchedule>>(jsonStr)
             } catch (e: Exception) {
                 emptyList()
             }
@@ -418,6 +446,20 @@ class PreferenceManager(private val context: Context) {
         updateBackupPayload()
     }
 
+    suspend fun saveWatchNotificationSchedules(schedules: List<com.tonio.libre2clock.data.model.AlarmSchedule>) {
+        context.dataStore.edit { preferences ->
+            preferences[WATCH_NOTIFICATION_SCHEDULES_KEY] = json.encodeToString(schedules)
+        }
+        updateBackupPayload()
+    }
+
+    suspend fun saveGlucoseAlarmSchedules(schedules: List<com.tonio.libre2clock.data.model.AlarmSchedule>) {
+        context.dataStore.edit { preferences ->
+            preferences[GLUCOSE_ALARM_SCHEDULES_KEY] = json.encodeToString(schedules)
+        }
+        updateBackupPayload()
+    }
+
     private suspend fun updateBackupPayload() {
         val payload = buildCurrentHistoryBackupPayload()
         saveHistoryBackupPayload(payload)
@@ -537,6 +579,10 @@ class PreferenceManager(private val context: Context) {
             preferences[CAPILLARY_READINGS_KEY] = json.encodeToString(restoredCapillary)
             preferences[INSULIN_DOSES_KEY] = json.encodeToString(restoredInsulin)
 
+            // Overwrite schedules
+            preferences[WATCH_NOTIFICATION_SCHEDULES_KEY] = json.encodeToString(payload.watchNotificationSchedules)
+            preferences[GLUCOSE_ALARM_SCHEDULES_KEY] = json.encodeToString(payload.glucoseAlarmSchedules)
+
             // Overwrite configuration settings if present in the payload
             payload.glucoseOffset?.let { preferences[GLUCOSE_OFFSET_KEY] = it }
             payload.glucoseOffsetRanges?.let { preferences[GLUCOSE_OFFSET_RANGES_KEY] = json.encodeToString(it) }
@@ -604,6 +650,10 @@ class PreferenceManager(private val context: Context) {
                 preferences[HISTORICAL_GLUCOSE_KEY] = json.encodeToString(mergedHistorical)
                 preferences[CAPILLARY_READINGS_KEY] = json.encodeToString(mergedCapillary)
                 preferences[INSULIN_DOSES_KEY] = json.encodeToString(mergedInsulin)
+
+                // Overwrite schedules
+                preferences[WATCH_NOTIFICATION_SCHEDULES_KEY] = json.encodeToString(payload.watchNotificationSchedules)
+                preferences[GLUCOSE_ALARM_SCHEDULES_KEY] = json.encodeToString(payload.glucoseAlarmSchedules)
             }
             updateBackupPayload()
             Result.success(payload)
@@ -652,7 +702,9 @@ class PreferenceManager(private val context: Context) {
             lowGlucoseAlarmEnabled = lowGlucoseAlarmEnabled.first(),
             highGlucoseAlarmEnabled = highGlucoseAlarmEnabled.first(),
             useCalibratedForAlarms = useCalibratedForAlarms.first(),
-            historyRetentionDays = historyRetentionDays.first()
+            historyRetentionDays = historyRetentionDays.first(),
+            watchNotificationSchedules = watchNotificationSchedules.first(),
+            glucoseAlarmSchedules = glucoseAlarmSchedules.first()
         )
     }
 
