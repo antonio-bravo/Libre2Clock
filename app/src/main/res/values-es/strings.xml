@@ -84,6 +84,28 @@
     <string name="settings_manual_isf">ISF Manual (mg/dL/U) - Vacío para Auto</string>
     <string name="settings_target_glucose">Glucosa Objetivo (mg/dL)</string>
 
+    <string name="insulin_summary_title">Resumen Rápido</string>
+    <string name="insulin_tdi_full">TDI (Insulina Total Diaria)</string>
+    <string name="insulin_isf_full">ISF (Factor Sensibilidad)</string>
+    <string name="insulin_ic_full">Ratio I:HC (Insulina a Hidratos)</string>
+    <string name="insulin_manual">Manual</string>
+    <string name="insulin_auto_30d">Auto 30d</string>
+    <string name="insulin_calculated">Calculado</string>
+    <string name="insulin_calculated_with_tdi">Calculado con TDI</string>
+    <string name="insulin_daily_total_today_label">Total diario hoy</string>
+    <string name="insulin_daily_total_today_val">Total diario hoy: %1$.1f U</string>
+    <string name="insulin_isf_calc_val">ISF calculado: %1$.1f mg/dL/U</string>
+    <string name="insulin_isf_auto_from_tdi">ISF auto desde TDI: %1$.1f mg/dL/U</string>
+    <string name="insulin_tdi_30d_val">TDI 30d: %1$.1f U %2$s</string>
+    <string name="insulin_tdi_used_val">TDI usado: %1$.1f U %2$s</string>
+    <string name="insulin_tdi_calc_30d_val">TDI calculado 30d: %1$.1f U</string>
+    <string name="insulin_tdi_calc_short">TDI calculado: %1$.1f U</string>
+    <string name="insulin_placeholder_real_offset">Real(Offset)</string>
+    <string name="insulin_date_format_label">Fecha (yyyy-MM-dd)</string>
+    <string name="insulin_time_format_label">Hora (HH:mm)</string>
+    <string name="insulin_manual_tdi_value_label">Valor TDI (U)</string>
+    <string name="insulin_manual_isf_value_label">Valor ISF (mg/dL/U)</string>
+
     <string name="strategy_title">Estrategias de Tendencia</string>
     <string name="strategy_insulin_adj">Ajuste de Insulina: %1$s</string>
 

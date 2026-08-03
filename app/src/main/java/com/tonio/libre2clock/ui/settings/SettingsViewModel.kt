@@ -94,6 +94,15 @@ class SettingsViewModel(
     val glucoseAlarmSchedules: StateFlow<List<com.tonio.libre2clock.data.model.AlarmSchedule>> = preferenceManager.glucoseAlarmSchedules
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val batteryLowThreshold: StateFlow<Int> = preferenceManager.batteryLowThreshold
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 15)
+
+    val batteryCriticalThreshold: StateFlow<Int> = preferenceManager.batteryCriticalThreshold
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 5)
+
+    val disableFastRefreshOnSlowCharge: StateFlow<Boolean> = preferenceManager.disableFastRefreshOnSlowCharge
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
     val currentGlucose: StateFlow<GlucoseMeasurement?> = combine(
         repository.currentGlucose,
         preferenceManager.glucoseOffset,
@@ -411,5 +420,17 @@ class SettingsViewModel(
             current.removeIf { it.id == schedule.id }
             preferenceManager.saveGlucoseAlarmSchedules(current)
         }
+    }
+
+    fun updateBatteryLowThreshold(threshold: Int) {
+        viewModelScope.launch { preferenceManager.saveBatteryLowThreshold(threshold) }
+    }
+
+    fun updateBatteryCriticalThreshold(threshold: Int) {
+        viewModelScope.launch { preferenceManager.saveBatteryCriticalThreshold(threshold) }
+    }
+
+    fun updateDisableFastRefreshOnSlowCharge(disabled: Boolean) {
+        viewModelScope.launch { preferenceManager.saveDisableFastRefreshOnSlowCharge(disabled) }
     }
 }

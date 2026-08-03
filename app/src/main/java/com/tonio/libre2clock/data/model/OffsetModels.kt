@@ -60,5 +60,9 @@ data class HistoryBackupPayload(
     val historyRetentionDays: Int? = null,
     // Schedules
     val watchNotificationSchedules: List<AlarmSchedule> = emptyList(),
-    val glucoseAlarmSchedules: List<AlarmSchedule> = emptyList()
+    val glucoseAlarmSchedules: List<AlarmSchedule> = emptyList(),
+    // Battery Optimization
+    val batteryLowThreshold: Int? = null,
+    val batteryCriticalThreshold: Int? = null,
+    val disableFastRefreshOnSlowCharge: Boolean? = null
 )

@@ -2,9 +2,11 @@ package com.tonio.libre2clock.service
 
 import android.app.*
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Typeface
 import android.os.Build
 import android.os.IBinder
+import android.os.BatteryManager
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.RelativeSizeSpan
@@ -41,6 +43,9 @@ class GlucoseForegroundService : Service() {
     private var useCalibratedForAlarmsCached: Boolean = true
     private var watchSchedulesCached: List<com.tonio.libre2clock.data.model.AlarmSchedule> = emptyList()
     private var alarmSchedulesCached: List<com.tonio.libre2clock.data.model.AlarmSchedule> = emptyList()
+    private var batteryLowThresholdCached: Int = 15
+    private var batteryCriticalThresholdCached: Int = 5
+    private var disableFastOnSlowChargeCached: Boolean = true
     private var glucoseOffsetCached: Int = 0
     private var glucoseOffsetRangesCached: List<com.tonio.libre2clock.data.model.GlucoseOffsetRange> = emptyList()
     private var autoAdjustEnabledCached: Boolean = false
@@ -138,6 +143,24 @@ class GlucoseForegroundService : Service() {
             }
 
             launch {
+                preferenceManager.batteryLowThreshold.collect {
+                    batteryLowThresholdCached = it
+                }
+            }
+
+            launch {
+                preferenceManager.batteryCriticalThreshold.collect {
+                    batteryCriticalThresholdCached = it
+                }
+            }
+
+            launch {
+                preferenceManager.disableFastRefreshOnSlowCharge.collect {
+                    disableFastOnSlowChargeCached = it
+                }
+            }
+
+            launch {
                 preferenceManager.glucoseOffset.collect {
                     glucoseOffsetCached = it
                     repository.currentGlucose.first()?.let { updateNotification(it) }
@@ -165,6 +188,7 @@ class GlucoseForegroundService : Service() {
                 }
             }
 
+            var firstPoll = true
             while (isActive) {
                 val fetchResult = repository.fetchLatestGlucose()
                 val measurement = fetchResult.getOrNull()
@@ -172,7 +196,22 @@ class GlucoseForegroundService : Service() {
                     maybeSendWatchAlert(measurement)
                     maybeSendGlucoseAlarms(measurement)
                 }
-                delay(60000) // Sync every minute
+
+                val batteryStatus = getDetailedBatteryStatus()
+                val hasActiveAlerts = watchAlertsEnabledCached || lowGlucoseAlarmEnabledCached || highGlucoseAlarmEnabledCached || watchSchedulesCached.isNotEmpty() || alarmSchedulesCached.isNotEmpty()
+                
+                val pollingIntervalMs = when {
+                    firstPoll -> 60_000L
+                    batteryStatus == BatteryState.CRITICAL -> 900_000L // 15 min mandatory
+                    batteryStatus == BatteryState.LOW && hasActiveAlerts -> 300_000L // 5 min max
+                    batteryStatus == BatteryState.LOW -> 900_000L // 15 min
+                    batteryStatus == BatteryState.SLOW_CHARGING && disableFastOnSlowChargeCached -> 300_000L // 5 min to charge faster
+                    hasActiveAlerts -> 60_000L // Normal fast refresh
+                    else -> 300_000L // Normal baseline
+                }
+
+                firstPoll = false
+                delay(pollingIntervalMs)
             }
         }
 
@@ -237,6 +276,29 @@ class GlucoseForegroundService : Service() {
         lastForegroundNotificationContent = content
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(NOTIFICATION_ID, createNotification(content))
+    }
+
+    private fun getDetailedBatteryStatus(): BatteryState {
+        val batteryIntent = registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED)) ?: return BatteryState.NORMAL
+        
+        val level = batteryIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+        val scale = batteryIntent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
+        val status = batteryIntent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
+        val plugType = batteryIntent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)
+
+        if (level < 0 || scale <= 0) return BatteryState.NORMAL
+        val batteryPercent = (level * 100) / scale
+
+        return when {
+            batteryPercent <= batteryCriticalThresholdCached -> BatteryState.CRITICAL
+            batteryPercent <= batteryLowThresholdCached -> BatteryState.LOW
+            status == BatteryManager.BATTERY_STATUS_CHARGING && plugType == BatteryManager.BATTERY_PLUGGED_USB -> BatteryState.SLOW_CHARGING
+            else -> BatteryState.NORMAL
+        }
+    }
+
+    private enum class BatteryState {
+        NORMAL, LOW, CRITICAL, SLOW_CHARGING
     }
 
     private fun processMeasurement(measurement: GlucoseMeasurement): GlucoseMeasurement {

@@ -51,6 +51,9 @@ fun SettingsScreen(
     val backupStatusMessage by viewModel.backupStatusMessage.collectAsStateWithLifecycle()
     val watchSchedules by viewModel.watchNotificationSchedules.collectAsStateWithLifecycle()
     val alarmSchedules by viewModel.glucoseAlarmSchedules.collectAsStateWithLifecycle()
+    val batteryLowThreshold by viewModel.batteryLowThreshold.collectAsStateWithLifecycle()
+    val batteryCriticalThreshold by viewModel.batteryCriticalThreshold.collectAsStateWithLifecycle()
+    val disableFastOnSlowCharge by viewModel.disableFastRefreshOnSlowCharge.collectAsStateWithLifecycle()
 
     var showAddRangeDialog by remember { mutableStateOf(false) }
     var editingRange by remember { mutableStateOf<GlucoseOffsetRange?>(null) }
@@ -293,6 +296,58 @@ fun SettingsScreen(
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                     Text("Add Alarm Schedule", style = MaterialTheme.typography.labelMedium)
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Text(
+                    text = "Battery Optimization",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = "Control how the app saves energy during low battery states.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+
+                // Low Battery Threshold
+                Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+                    Text(text = "Low Battery Threshold: $batteryLowThreshold%", style = MaterialTheme.typography.bodyMedium)
+                    Slider(
+                        value = batteryLowThreshold.toFloat(),
+                        onValueChange = { viewModel.updateBatteryLowThreshold(it.toInt()) },
+                        valueRange = 5f..50f,
+                        steps = 8
+                    )
+                    Text(text = "Fast refresh (60s) is disabled below this level.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                }
+
+                // Critical Battery Threshold
+                Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+                    Text(text = "Critical Battery Threshold: $batteryCriticalThreshold%", style = MaterialTheme.typography.bodyMedium)
+                    Slider(
+                        value = batteryCriticalThreshold.toFloat(),
+                        onValueChange = { viewModel.updateBatteryCriticalThreshold(it.toInt()) },
+                        valueRange = 1f..15f,
+                        steps = 13
+                    )
+                    Text(text = "Polling is reduced to 15m below this level to prevent shutdown.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                }
+
+                // Slow Charge Protection
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(text = "Slow Charge Protection", style = MaterialTheme.typography.bodyMedium)
+                        Text(text = "Enter battery saving mode when charging via USB.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                    }
+                    Switch(checked = disableFastOnSlowCharge, onCheckedChange = viewModel::updateDisableFastRefreshOnSlowCharge)
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))

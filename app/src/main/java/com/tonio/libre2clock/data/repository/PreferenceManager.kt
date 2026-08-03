@@ -78,6 +78,9 @@ class PreferenceManager(private val context: Context) {
     private val INSULIN_DOSES_KEY = stringPreferencesKey("insulin_doses")
     private val WATCH_NOTIFICATION_SCHEDULES_KEY = stringPreferencesKey("watch_notification_schedules")
     private val GLUCOSE_ALARM_SCHEDULES_KEY = stringPreferencesKey("glucose_alarm_schedules")
+    private val BATTERY_LOW_THRESHOLD_KEY = androidx.datastore.preferences.core.intPreferencesKey("battery_low_threshold")
+    private val BATTERY_CRITICAL_THRESHOLD_KEY = androidx.datastore.preferences.core.intPreferencesKey("battery_critical_threshold")
+    private val DISABLE_FAST_REFRESH_ON_SLOW_CHARGE_KEY = booleanPreferencesKey("disable_fast_refresh_on_slow_charge")
 
     val authToken: Flow<String?> = context.dataStore.data.map { preferences ->
         preferences[TOKEN_KEY]
@@ -248,6 +251,18 @@ class PreferenceManager(private val context: Context) {
         } else {
             emptyList()
         }
+    }
+
+    val batteryLowThreshold: Flow<Int> = context.dataStore.data.map { preferences ->
+        preferences[BATTERY_LOW_THRESHOLD_KEY] ?: 15
+    }
+
+    val batteryCriticalThreshold: Flow<Int> = context.dataStore.data.map { preferences ->
+        preferences[BATTERY_CRITICAL_THRESHOLD_KEY] ?: 5
+    }
+
+    val disableFastRefreshOnSlowCharge: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[DISABLE_FAST_REFRESH_ON_SLOW_CHARGE_KEY] ?: true
     }
 
     private fun getDefaultRanges() = listOf(
@@ -460,6 +475,27 @@ class PreferenceManager(private val context: Context) {
         updateBackupPayload()
     }
 
+    suspend fun saveBatteryLowThreshold(threshold: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[BATTERY_LOW_THRESHOLD_KEY] = threshold.coerceIn(5, 50)
+        }
+        updateBackupPayload()
+    }
+
+    suspend fun saveBatteryCriticalThreshold(threshold: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[BATTERY_CRITICAL_THRESHOLD_KEY] = threshold.coerceIn(1, 15)
+        }
+        updateBackupPayload()
+    }
+
+    suspend fun saveDisableFastRefreshOnSlowCharge(disabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[DISABLE_FAST_REFRESH_ON_SLOW_CHARGE_KEY] = disabled
+        }
+        updateBackupPayload()
+    }
+
     private suspend fun updateBackupPayload() {
         val payload = buildCurrentHistoryBackupPayload()
         saveHistoryBackupPayload(payload)
@@ -601,6 +637,9 @@ class PreferenceManager(private val context: Context) {
             payload.highGlucoseAlarmEnabled?.let { preferences[HIGH_GLUCOSE_ALARM_ENABLED_KEY] = it }
             payload.useCalibratedForAlarms?.let { preferences[USE_CALIBRATED_FOR_ALARMS_KEY] = it }
             payload.historyRetentionDays?.let { preferences[HISTORY_RETENTION_DAYS_KEY] = it }
+            payload.batteryLowThreshold?.let { preferences[BATTERY_LOW_THRESHOLD_KEY] = it }
+            payload.batteryCriticalThreshold?.let { preferences[BATTERY_CRITICAL_THRESHOLD_KEY] = it }
+            payload.disableFastRefreshOnSlowCharge?.let { preferences[DISABLE_FAST_REFRESH_ON_SLOW_CHARGE_KEY] = it }
         }
         updateBackupPayload()
         return true
@@ -645,6 +684,9 @@ class PreferenceManager(private val context: Context) {
                 payload.highGlucoseAlarmEnabled?.let { preferences[HIGH_GLUCOSE_ALARM_ENABLED_KEY] = it }
                 payload.useCalibratedForAlarms?.let { preferences[USE_CALIBRATED_FOR_ALARMS_KEY] = it }
                 payload.historyRetentionDays?.let { preferences[HISTORY_RETENTION_DAYS_KEY] = it }
+                payload.batteryLowThreshold?.let { preferences[BATTERY_LOW_THRESHOLD_KEY] = it }
+                payload.batteryCriticalThreshold?.let { preferences[BATTERY_CRITICAL_THRESHOLD_KEY] = it }
+                payload.disableFastRefreshOnSlowCharge?.let { preferences[DISABLE_FAST_REFRESH_ON_SLOW_CHARGE_KEY] = it }
 
                 // Merge data
                 preferences[HISTORICAL_GLUCOSE_KEY] = json.encodeToString(mergedHistorical)
@@ -704,7 +746,10 @@ class PreferenceManager(private val context: Context) {
             useCalibratedForAlarms = useCalibratedForAlarms.first(),
             historyRetentionDays = historyRetentionDays.first(),
             watchNotificationSchedules = watchNotificationSchedules.first(),
-            glucoseAlarmSchedules = glucoseAlarmSchedules.first()
+            glucoseAlarmSchedules = glucoseAlarmSchedules.first(),
+            batteryLowThreshold = batteryLowThreshold.first(),
+            batteryCriticalThreshold = batteryCriticalThreshold.first(),
+            disableFastRefreshOnSlowCharge = disableFastRefreshOnSlowCharge.first()
         )
     }
 
