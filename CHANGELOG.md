@@ -1,5 +1,39 @@
 # Changelog
 
+## 32e7182 (Aug 03, 2026 13:42:06)
+fix automatic IFS, TDI + battery optmizer and large name in acronym — antonio-bravo
+[detail](#32e7182-details)
+
+<details id='32e7182-details'>
+<summary>Changed files</summary>
+
+- .idea/misc.xml [Modified]
+- .idea/planningMode.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+- gradle/gradle-daemon-jvm.properties [Modified]
+</details>
+
+
+---
+## f981855 (Jul 28, 2026 11:30:11)
+Update changelog — github-actions[bot]
+[detail](#f981855-details)
+
+<details id='f981855-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 4834209 (Jul 28, 2026 13:29:58)
 update actions in workflow — antonio-bravo
 [detail](#4834209-details)
@@ -703,40 +737,6 @@ Fix after offset change — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
-</details>
-
-
----
-## b2fda17 (Jul 17, 2026 15:46:59)
-sh call and documentation from colleage in github — antonio-bravo
-[detail](#b2fda17-details)
-
-<details id='b2fda17-details'>
-<summary>Changed files</summary>
-
-- cmd_call/libre2clock.sh [Deleted]
-- cmd_call/libre2clock2.sh [Deleted]
-- libre-link-up-http-dump.md [Deleted]
-- oh-my-posh/glucosa.py [Modified]
-</details>
-
-
----
-## b62df69 (Jul 17, 2026 15:42:12)
-get history — antonio-bravo
-[detail](#b62df69-details)
-
-<details id='b62df69-details'>
-<summary>Changed files</summary>
-
-- .artifacts/a0a33dbc-2e5d-4c62-a073-96b724944422/implementation_plan.artifact.md [Modified]
-- .artifacts/a0a33dbc-2e5d-4c62-a073-96b724944422/task.artifact.md [Modified]
-- .artifacts/a0a33dbc-2e5d-4c62-a073-96b724944422/walkthrough.artifact.md [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/api/LibreService.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/model/LibreModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/TimestampParser.kt [Modified]
 </details>
 
 
