@@ -15,9 +15,11 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.tonio.libre2clock.data.model.CapillaryMeasurement
+import com.tonio.libre2clock.data.model.AutoRangeOffsetMode
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.GlucoseOffsetRange
 import com.tonio.libre2clock.data.model.HistoryBackupPayload
+import com.tonio.libre2clock.data.model.WatchNotificationMode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -55,8 +57,11 @@ class PreferenceManager(private val context: Context) {
     private val GLUCOSE_OFFSET_KEY = androidx.datastore.preferences.core.intPreferencesKey("glucose_offset")
     private val GLUCOSE_OFFSET_RANGES_KEY = stringPreferencesKey("glucose_offset_ranges")
     private val AUTO_ADJUST_ENABLED_KEY = booleanPreferencesKey("auto_adjust_enabled")
+    private val AUTO_RANGE_OFFSETS_ENABLED_KEY = booleanPreferencesKey("auto_range_offsets_enabled")
+    private val AUTO_RANGE_OFFSET_MODE_KEY = stringPreferencesKey("auto_range_offset_mode")
     private val CAPILLARY_READINGS_KEY = stringPreferencesKey("capillary_readings")
     private val WATCH_ALERTS_ENABLED_KEY = booleanPreferencesKey("watch_alerts_enabled")
+    private val WATCH_NOTIFICATION_MODE_KEY = stringPreferencesKey("watch_notification_mode")
     private val WATCH_ALERT_INTERVAL_MINUTES_KEY = androidx.datastore.preferences.core.intPreferencesKey("watch_alert_interval_minutes")
     private val WATCH_ALERT_START_MINUTE_KEY = androidx.datastore.preferences.core.intPreferencesKey("watch_alert_start_minute")
     private val LOW_GLUCOSE_ALARM_ENABLED_KEY = booleanPreferencesKey("low_glucose_alarm_enabled")
@@ -115,6 +120,36 @@ class PreferenceManager(private val context: Context) {
         preferences[AUTO_ADJUST_ENABLED_KEY] ?: false
     }
 
+    val autoRangeOffsetMode: Flow<AutoRangeOffsetMode> = context.dataStore.data.map { preferences ->
+        val persisted = preferences[AUTO_RANGE_OFFSET_MODE_KEY]
+        if (!persisted.isNullOrBlank()) {
+            val mode = AutoRangeOffsetMode.entries.firstOrNull { it.name == persisted }
+                ?: AutoRangeOffsetMode.OFF
+            if (mode == AutoRangeOffsetMode.GLOBAL) {
+                AutoRangeOffsetMode.BY_RANGE
+            } else {
+                mode
+            }
+        } else {
+            if (preferences[AUTO_RANGE_OFFSETS_ENABLED_KEY] == true) {
+                AutoRangeOffsetMode.BY_RANGE
+            } else {
+                AutoRangeOffsetMode.OFF
+            }
+        }
+    }
+
+    val autoRangeOffsetsEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        val persisted = preferences[AUTO_RANGE_OFFSET_MODE_KEY]
+        if (!persisted.isNullOrBlank()) {
+            val mode = AutoRangeOffsetMode.entries.firstOrNull { it.name == persisted }
+                ?: AutoRangeOffsetMode.OFF
+            mode != AutoRangeOffsetMode.OFF
+        } else {
+            preferences[AUTO_RANGE_OFFSETS_ENABLED_KEY] ?: false
+        }
+    }
+
     val capillaryReadings: Flow<List<CapillaryMeasurement>> = context.dataStore.data.map { preferences ->
         val jsonStr = preferences[CAPILLARY_READINGS_KEY]
         if (jsonStr != null) {
@@ -130,6 +165,20 @@ class PreferenceManager(private val context: Context) {
 
     val watchAlertsEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
         preferences[WATCH_ALERTS_ENABLED_KEY] ?: false
+    }
+
+    val watchNotificationMode: Flow<WatchNotificationMode> = context.dataStore.data.map { preferences ->
+        val persisted = preferences[WATCH_NOTIFICATION_MODE_KEY]
+        if (!persisted.isNullOrBlank()) {
+            WatchNotificationMode.entries.firstOrNull { it.name == persisted }
+                ?: WatchNotificationMode.OFF
+        } else {
+            if (preferences[WATCH_ALERTS_ENABLED_KEY] == true) {
+                WatchNotificationMode.PERIODIC_AND_SCHEDULES
+            } else {
+                WatchNotificationMode.OFF
+            }
+        }
     }
 
     val watchAlertIntervalMinutes: Flow<Int> = context.dataStore.data.map { preferences ->
@@ -307,6 +356,26 @@ class PreferenceManager(private val context: Context) {
         updateBackupPayload()
     }
 
+    suspend fun saveAutoRangeOffsetsEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[AUTO_RANGE_OFFSETS_ENABLED_KEY] = enabled
+            preferences[AUTO_RANGE_OFFSET_MODE_KEY] = if (enabled) {
+                AutoRangeOffsetMode.BY_RANGE.name
+            } else {
+                AutoRangeOffsetMode.OFF.name
+            }
+        }
+        updateBackupPayload()
+    }
+
+    suspend fun saveAutoRangeOffsetMode(mode: AutoRangeOffsetMode) {
+        context.dataStore.edit { preferences ->
+            preferences[AUTO_RANGE_OFFSET_MODE_KEY] = mode.name
+            preferences[AUTO_RANGE_OFFSETS_ENABLED_KEY] = mode != AutoRangeOffsetMode.OFF
+        }
+        updateBackupPayload()
+    }
+
     suspend fun saveCapillaryReadings(readings: List<CapillaryMeasurement>) {
         context.dataStore.edit { preferences ->
             preferences[CAPILLARY_READINGS_KEY] = json.encodeToString(readings)
@@ -317,6 +386,19 @@ class PreferenceManager(private val context: Context) {
     suspend fun saveWatchAlertsEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[WATCH_ALERTS_ENABLED_KEY] = enabled
+            preferences[WATCH_NOTIFICATION_MODE_KEY] = if (enabled) {
+                WatchNotificationMode.PERIODIC_AND_SCHEDULES.name
+            } else {
+                WatchNotificationMode.OFF.name
+            }
+        }
+        updateBackupPayload()
+    }
+
+    suspend fun saveWatchNotificationMode(mode: WatchNotificationMode) {
+        context.dataStore.edit { preferences ->
+            preferences[WATCH_NOTIFICATION_MODE_KEY] = mode.name
+            preferences[WATCH_ALERTS_ENABLED_KEY] = mode != WatchNotificationMode.OFF
         }
         updateBackupPayload()
     }
@@ -623,6 +705,8 @@ class PreferenceManager(private val context: Context) {
             payload.glucoseOffset?.let { preferences[GLUCOSE_OFFSET_KEY] = it }
             payload.glucoseOffsetRanges?.let { preferences[GLUCOSE_OFFSET_RANGES_KEY] = json.encodeToString(it) }
             payload.autoAdjustEnabled?.let { preferences[AUTO_ADJUST_ENABLED_KEY] = it }
+            payload.autoRangeOffsetsEnabled?.let { preferences[AUTO_RANGE_OFFSETS_ENABLED_KEY] = it }
+            payload.autoRangeOffsetMode?.let { preferences[AUTO_RANGE_OFFSET_MODE_KEY] = it.name }
             payload.rapidDurationMins?.let { preferences[RAPID_DURATION_MINS_KEY] = it }
             payload.slowDurationMins?.let { preferences[SLOW_DURATION_MINS_KEY] = it }
             payload.icRuleConstant?.let { preferences[IC_RULE_CONSTANT_KEY] = it }
@@ -631,6 +715,7 @@ class PreferenceManager(private val context: Context) {
             payload.manualIsf?.let { preferences[MANUAL_ISF_KEY] = it }
             payload.targetGlucose?.let { preferences[TARGET_GLUCOSE_KEY] = it }
             payload.watchAlertsEnabled?.let { preferences[WATCH_ALERTS_ENABLED_KEY] = it }
+            payload.watchNotificationMode?.let { preferences[WATCH_NOTIFICATION_MODE_KEY] = it.name }
             payload.watchAlertIntervalMinutes?.let { preferences[WATCH_ALERT_INTERVAL_MINUTES_KEY] = it }
             payload.watchAlertStartMinute?.let { preferences[WATCH_ALERT_START_MINUTE_KEY] = it }
             payload.lowGlucoseAlarmEnabled?.let { preferences[LOW_GLUCOSE_ALARM_ENABLED_KEY] = it }
@@ -670,6 +755,8 @@ class PreferenceManager(private val context: Context) {
                 payload.glucoseOffset?.let { preferences[GLUCOSE_OFFSET_KEY] = it }
                 payload.glucoseOffsetRanges?.let { preferences[GLUCOSE_OFFSET_RANGES_KEY] = json.encodeToString(it) }
                 payload.autoAdjustEnabled?.let { preferences[AUTO_ADJUST_ENABLED_KEY] = it }
+                payload.autoRangeOffsetsEnabled?.let { preferences[AUTO_RANGE_OFFSETS_ENABLED_KEY] = it }
+                payload.autoRangeOffsetMode?.let { preferences[AUTO_RANGE_OFFSET_MODE_KEY] = it.name }
                 payload.rapidDurationMins?.let { preferences[RAPID_DURATION_MINS_KEY] = it }
                 payload.slowDurationMins?.let { preferences[SLOW_DURATION_MINS_KEY] = it }
                 payload.icRuleConstant?.let { preferences[IC_RULE_CONSTANT_KEY] = it }
@@ -678,6 +765,7 @@ class PreferenceManager(private val context: Context) {
                 payload.manualIsf?.let { preferences[MANUAL_ISF_KEY] = it }
                 payload.targetGlucose?.let { preferences[TARGET_GLUCOSE_KEY] = it }
                 payload.watchAlertsEnabled?.let { preferences[WATCH_ALERTS_ENABLED_KEY] = it }
+                payload.watchNotificationMode?.let { preferences[WATCH_NOTIFICATION_MODE_KEY] = it.name }
                 payload.watchAlertIntervalMinutes?.let { preferences[WATCH_ALERT_INTERVAL_MINUTES_KEY] = it }
                 payload.watchAlertStartMinute?.let { preferences[WATCH_ALERT_START_MINUTE_KEY] = it }
                 payload.lowGlucoseAlarmEnabled?.let { preferences[LOW_GLUCOSE_ALARM_ENABLED_KEY] = it }
@@ -731,6 +819,8 @@ class PreferenceManager(private val context: Context) {
             glucoseOffset = glucoseOffset.first(),
             glucoseOffsetRanges = glucoseOffsetRanges.first(),
             autoAdjustEnabled = autoAdjustEnabled.first(),
+            autoRangeOffsetsEnabled = autoRangeOffsetsEnabled.first(),
+            autoRangeOffsetMode = autoRangeOffsetMode.first(),
             rapidDurationMins = rapidDurationMins.first(),
             slowDurationMins = slowDurationMins.first(),
             icRuleConstant = icRuleConstant.first(),
@@ -739,6 +829,7 @@ class PreferenceManager(private val context: Context) {
             manualIsf = manualIsf.first(),
             targetGlucose = targetGlucose.first(),
             watchAlertsEnabled = watchAlertsEnabled.first(),
+            watchNotificationMode = watchNotificationMode.first(),
             watchAlertIntervalMinutes = watchAlertIntervalMinutes.first(),
             watchAlertStartMinute = watchAlertStartMinute.first(),
             lowGlucoseAlarmEnabled = lowGlucoseAlarmEnabled.first(),

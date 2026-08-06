@@ -14,7 +14,13 @@ Permite definir correcciones distintas según el nivel de glucosa. Esto es útil
   - 70 a 150: +20
   - 150 a 300: +30
 
-## 3. Auto-Ajuste Capilar (Algoritmo Inteligente)
+## 3. Sistema de Auditoría de Sensor (Prueba de Error)
+Para cada rango definido, la aplicación realiza un análisis estadístico automático comparando tus mediciones capilares con lo que marcó el sensor de fábrica.
+- **Error Sensor (Sesgo/Bias)**: Calcula el porcentaje técnico de error del hardware. Un valor de -15% indica que el sensor mide sistemáticamente un 15% por debajo de la realidad.
+- **Comparativa de Medias**: Muestra el valor promedio del sensor frente al promedio capilar en ese rango específico.
+- **Validación**: Indica cuántas pruebas respaldan este cálculo para dar validez técnica a tus reclamaciones o ajustes.
+
+## 4. Auto-Ajuste Capilar (Algoritmo Inteligente)
 Si se activa, la aplicación utiliza tus últimas mediciones capilares guardadas para calcular una desviación media.
 - **Funcionamiento**: La app compara tus lecturas capilares con lo que marcaba el sensor en ese mismo minuto.
 - **Aplicación**: Calcula el porcentaje de error medio y lo aplica a la lectura actual para predecir un valor más cercano a la realidad capilar.

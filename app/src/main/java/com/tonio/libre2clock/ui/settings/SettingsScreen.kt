@@ -11,7 +11,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,13 +20,16 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.stringResource
 import com.tonio.libre2clock.R
+import com.tonio.libre2clock.data.model.AutoRangeOffsetMode
 import com.tonio.libre2clock.data.model.GlucoseOffsetRange
+import com.tonio.libre2clock.data.model.RangeOffsetInsight
+import com.tonio.libre2clock.data.model.WatchNotificationMode
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,9 +41,11 @@ fun SettingsScreen(
     val offset by viewModel.glucoseOffset.collectAsStateWithLifecycle()
     val ranges by viewModel.glucoseOffsetRanges.collectAsStateWithLifecycle()
     val autoAdjustEnabled by viewModel.autoAdjustEnabled.collectAsStateWithLifecycle()
-    val watchAlertsEnabled by viewModel.watchAlertsEnabled.collectAsStateWithLifecycle()
+    val autoRangeOffsetMode by viewModel.autoRangeOffsetMode.collectAsStateWithLifecycle()
+    val watchNotificationMode by viewModel.watchNotificationMode.collectAsStateWithLifecycle()
     val watchAlertIntervalMinutes by viewModel.watchAlertIntervalMinutes.collectAsStateWithLifecycle()
     val watchAlertStartMinute by viewModel.watchAlertStartMinute.collectAsStateWithLifecycle()
+    val rangeInsights by viewModel.rangeOffsetInsights.collectAsStateWithLifecycle()
     val lowGlucoseAlarmEnabled by viewModel.lowGlucoseAlarmEnabled.collectAsStateWithLifecycle()
     val highGlucoseAlarmEnabled by viewModel.highGlucoseAlarmEnabled.collectAsStateWithLifecycle()
     val useCalibratedForAlarms by viewModel.useCalibratedForAlarms.collectAsStateWithLifecycle()
@@ -80,7 +84,7 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings") },
+                title = { Text(stringResource(R.string.settings_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -97,13 +101,13 @@ fun SettingsScreen(
         ) {
             item {
                 Text(
-                    text = "Global Manual Offset",
+                    text = stringResource(R.string.settings_global_manual_offset),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(top = 16.dp)
                 )
                 Text(
-                    text = "Applied to ALL readings in addition to range-based offsets.",
+                    text = stringResource(R.string.settings_global_offset_desc),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
@@ -117,7 +121,7 @@ fun SettingsScreen(
                             viewModel.updateOffset(newOffset)
                         }
                     },
-                    label = { Text("Manual Offset (mg/dL)") },
+                    label = { Text(stringResource(R.string.settings_manual_offset_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                 )
@@ -125,7 +129,7 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(12.dp))
                 Switch(checked = autoAdjustEnabled, onCheckedChange = viewModel::updateAutoAdjustEnabled)
                 Text(
-                    text = "Auto-adjust using stored capillary readings",
+                    text = stringResource(R.string.settings_auto_adjust_capillary),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(top = 4.dp)
                 )
@@ -134,29 +138,50 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Text(
-                    text = "Watch notifications",
+                    text = stringResource(R.string.settings_watch_notifications),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "Send glucose and trend notifications at a fixed interval so Zepp Life can mirror them to your Bip S.",
+                    text = stringResource(R.string.settings_watch_notifications_desc),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(
-                        text = "Enable periodic watch push",
-                        style = MaterialTheme.typography.bodyMedium
+                    FilterChip(
+                        selected = watchNotificationMode == WatchNotificationMode.OFF,
+                        onClick = { viewModel.updateWatchNotificationMode(WatchNotificationMode.OFF) },
+                        label = { Text(stringResource(R.string.settings_watch_mode_off)) }
                     )
-                    Switch(
-                        checked = watchAlertsEnabled,
-                        onCheckedChange = viewModel::updateWatchAlertsEnabled
+                    FilterChip(
+                        selected = watchNotificationMode == WatchNotificationMode.PERIODIC_ONLY,
+                        onClick = { viewModel.updateWatchNotificationMode(WatchNotificationMode.PERIODIC_ONLY) },
+                        label = { Text(stringResource(R.string.settings_watch_mode_periodic)) }
+                    )
+                    FilterChip(
+                        selected = watchNotificationMode == WatchNotificationMode.SCHEDULES_ONLY,
+                        onClick = { viewModel.updateWatchNotificationMode(WatchNotificationMode.SCHEDULES_ONLY) },
+                        label = { Text(stringResource(R.string.settings_watch_mode_schedules)) }
+                    )
+                    FilterChip(
+                        selected = watchNotificationMode == WatchNotificationMode.PERIODIC_AND_SCHEDULES,
+                        onClick = { viewModel.updateWatchNotificationMode(WatchNotificationMode.PERIODIC_AND_SCHEDULES) },
+                        label = { Text(stringResource(R.string.settings_watch_mode_all)) }
                     )
                 }
+                Text(
+                    text = when (watchNotificationMode) {
+                        WatchNotificationMode.OFF -> stringResource(R.string.settings_watch_desc_off)
+                        WatchNotificationMode.PERIODIC_ONLY -> stringResource(R.string.settings_watch_desc_periodic)
+                        WatchNotificationMode.SCHEDULES_ONLY -> stringResource(R.string.settings_watch_desc_schedules)
+                        WatchNotificationMode.PERIODIC_AND_SCHEDULES -> stringResource(R.string.settings_watch_desc_all)
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
                 var watchIntervalText by remember(watchAlertIntervalMinutes) {
                     mutableStateOf(watchAlertIntervalMinutes.toString())
                 }
@@ -168,10 +193,10 @@ fun SettingsScreen(
                             viewModel.updateWatchAlertIntervalMinutes(minutes)
                         }
                     },
-                    label = { Text("Interval (minutes, 5-180)") },
+                    label = { Text(stringResource(R.string.settings_watch_interval_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    enabled = watchAlertsEnabled
+                    enabled = watchNotificationMode != WatchNotificationMode.OFF
                 )
                 var watchStartMinuteText by remember(watchAlertStartMinute) {
                     mutableStateOf(watchAlertStartMinute.toString())
@@ -184,22 +209,22 @@ fun SettingsScreen(
                             viewModel.updateWatchAlertStartMinute(minute)
                         }
                     },
-                    label = { Text("Start minute (0-59)") },
+                    label = { Text(stringResource(R.string.settings_watch_start_minute_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    enabled = watchAlertsEnabled
+                    enabled = watchNotificationMode != WatchNotificationMode.OFF
                 )
                 Text(
-                    text = "Notifications are sent when minute matches this start point and then every interval.",
+                    text = stringResource(R.string.settings_watch_trigger_desc),
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 4.dp)
                 )
 
                 // Watch Schedules
                 Spacer(modifier = Modifier.height(12.dp))
-                Text("Watch Active Schedules", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.settings_watch_active_schedules), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                 if (watchSchedules.isEmpty()) {
-                    Text("Always active (Global switch). Add a schedule to restrict.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                    Text(stringResource(R.string.settings_schedules_global_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                 }
                 watchSchedules.forEach { schedule ->
                     ScheduleItem(
@@ -215,7 +240,7 @@ fun SettingsScreen(
                     contentPadding = PaddingValues(4.dp)
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Text("Add Watch Schedule", style = MaterialTheme.typography.labelMedium)
+                    Text(stringResource(R.string.settings_add_watch_schedule), style = MaterialTheme.typography.labelMedium)
                 }
                 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -223,12 +248,12 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Text(
-                    text = "Glucose alarms",
+                    text = stringResource(R.string.settings_glucose_alarms),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "Enable or disable high/low alarms independently. Periodic watch push remains independent.",
+                    text = stringResource(R.string.settings_glucose_alarms_desc),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
@@ -238,7 +263,7 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Low glucose alarm (< 70 mg/dL)",
+                        text = stringResource(R.string.settings_low_glucose_alarm_label),
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Switch(
@@ -252,7 +277,7 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "High glucose alarm (> 180 mg/dL)",
+                        text = stringResource(R.string.settings_high_glucose_alarm_label),
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Switch(
@@ -277,9 +302,9 @@ fun SettingsScreen(
                 
                 // Alarm Schedules
                 Spacer(modifier = Modifier.height(12.dp))
-                Text("Alarm Active Schedules", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.settings_alarm_active_schedules), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                 if (alarmSchedules.isEmpty()) {
-                    Text("Always active (Global switches). Add a schedule to restrict.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                    Text(stringResource(R.string.settings_schedules_global_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                 }
                 alarmSchedules.forEach { schedule ->
                     ScheduleItem(
@@ -295,7 +320,7 @@ fun SettingsScreen(
                     contentPadding = PaddingValues(4.dp)
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Text("Add Alarm Schedule", style = MaterialTheme.typography.labelMedium)
+                    Text(stringResource(R.string.settings_add_alarm_schedule), style = MaterialTheme.typography.labelMedium)
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -303,38 +328,38 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Text(
-                    text = "Battery Optimization",
+                    text = stringResource(R.string.settings_battery_optimization),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "Control how the app saves energy during low battery states.",
+                    text = stringResource(R.string.settings_battery_optimization_desc),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
 
                 // Low Battery Threshold
                 Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
-                    Text(text = "Low Battery Threshold: $batteryLowThreshold%", style = MaterialTheme.typography.bodyMedium)
+                    Text(text = stringResource(R.string.settings_battery_low_threshold, batteryLowThreshold), style = MaterialTheme.typography.bodyMedium)
                     Slider(
                         value = batteryLowThreshold.toFloat(),
                         onValueChange = { viewModel.updateBatteryLowThreshold(it.toInt()) },
                         valueRange = 5f..50f,
                         steps = 8
                     )
-                    Text(text = "Fast refresh (60s) is disabled below this level.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                    Text(text = stringResource(R.string.settings_battery_low_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                 }
 
                 // Critical Battery Threshold
                 Column(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
-                    Text(text = "Critical Battery Threshold: $batteryCriticalThreshold%", style = MaterialTheme.typography.bodyMedium)
+                    Text(text = stringResource(R.string.settings_battery_critical_threshold, batteryCriticalThreshold), style = MaterialTheme.typography.bodyMedium)
                     Slider(
                         value = batteryCriticalThreshold.toFloat(),
                         onValueChange = { viewModel.updateBatteryCriticalThreshold(it.toInt()) },
                         valueRange = 1f..15f,
                         steps = 13
                     )
-                    Text(text = "Polling is reduced to 15m below this level to prevent shutdown.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                    Text(text = stringResource(R.string.settings_battery_critical_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                 }
 
                 // Slow Charge Protection
@@ -344,8 +369,8 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(text = "Slow Charge Protection", style = MaterialTheme.typography.bodyMedium)
-                        Text(text = "Enter battery saving mode when charging via USB.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                        Text(text = stringResource(R.string.settings_slow_charge_protection), style = MaterialTheme.typography.bodyMedium)
+                        Text(text = stringResource(R.string.settings_slow_charge_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                     }
                     Switch(checked = disableFastOnSlowCharge, onCheckedChange = viewModel::updateDisableFastRefreshOnSlowCharge)
                 }
@@ -355,12 +380,12 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Text(
-                    text = "Demo Mode",
+                    text = stringResource(R.string.demo_mode),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "Simulate glucose readings and sensor status for testing purposes.",
+                    text = stringResource(R.string.settings_demo_mode_desc),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
@@ -370,7 +395,7 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Enable Demo Mode",
+                        text = stringResource(R.string.settings_enable_demo_mode),
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Switch(
@@ -383,7 +408,7 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Text(
-                    text = "History & Backup",
+                    text = stringResource(R.string.settings_history_backup),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -398,14 +423,14 @@ fun SettingsScreen(
                             viewModel.updateHistoryRetentionDays(days)
                         }
                     },
-                    label = { Text("Retention days (30-365)") },
+                    label = { Text(stringResource(R.string.settings_retention_days_label)) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 8.dp),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
                 Text(
-                    text = "Libre2Clock keeps your history locally and asks Android to back it up to your Google account.",
+                    text = stringResource(R.string.settings_history_backup_desc),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
@@ -416,16 +441,16 @@ fun SettingsScreen(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                 ) {
                     Column(modifier = Modifier.padding(12.dp)) {
-                        Text("Google Cloud Backup", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.settings_google_cloud_backup), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                         Text(
-                            text = lastHistoryBackupRequestAt?.let { "Last request: ${formatBackupTimestamp(it)}" } ?: "No request sent yet.",
+                            text = lastHistoryBackupRequestAt?.let { stringResource(R.string.settings_last_request, formatBackupTimestamp(it)) } ?: stringResource(R.string.settings_no_request),
                             style = MaterialTheme.typography.bodySmall
                         )
                         Button(
                             onClick = viewModel::requestHistoryBackupNow,
                             modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                         ) {
-                            Text("Request Google Backup Now")
+                            Text(stringResource(R.string.settings_request_backup_now))
                         }
                     }
                 }
@@ -436,13 +461,13 @@ fun SettingsScreen(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                 ) {
                     Column(modifier = Modifier.padding(12.dp)) {
-                        Text("Local JSON Backup", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.settings_local_json_backup), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                         Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             OutlinedButton(onClick = viewModel::exportLocalBackupToDownloads, modifier = Modifier.weight(1f)) {
-                                Text("Export")
+                                Text(stringResource(R.string.settings_export))
                             }
                             OutlinedButton(onClick = { localBackupRestoreLauncher.launch(arrayOf("application/json")) }, modifier = Modifier.weight(1f)) {
-                                Text("Restore")
+                                Text(stringResource(R.string.settings_restore))
                             }
                         }
                     }
@@ -464,53 +489,53 @@ fun SettingsScreen(
                         onClick = { showAdvancedDropdown = true },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Advanced Partial Actions")
+                        Text(stringResource(R.string.settings_advanced_partial_actions))
                     }
                     DropdownMenu(
                         expanded = showAdvancedDropdown,
                         onDismissRequest = { showAdvancedDropdown = false },
                         modifier = Modifier.fillMaxWidth(0.9f)
                     ) {
-                        Text("BACKUP ONLY", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(12.dp), color = MaterialTheme.colorScheme.secondary)
+                        Text(stringResource(R.string.settings_backup_only_header), style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(12.dp), color = MaterialTheme.colorScheme.secondary)
                         DropdownMenuItem(
-                            text = { Text("Glucose History") },
+                            text = { Text(stringResource(R.string.settings_glucose_history)) },
                             onClick = { 
                                 showAdvancedDropdown = false
                                 viewModel.requestPartialHistoryBackup(includeHistoricalGlucose = true, includeCapillaryReadings = false, includeInsulinDoses = false)
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("Capillary Readings") },
+                            text = { Text(stringResource(R.string.menu_capillary)) },
                             onClick = { 
                                 showAdvancedDropdown = false
                                 viewModel.requestPartialHistoryBackup(includeHistoricalGlucose = false, includeCapillaryReadings = true, includeInsulinDoses = false)
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("Insulin Doses") },
+                            text = { Text(stringResource(R.string.menu_insulin_logs)) },
                             onClick = { 
                                 showAdvancedDropdown = false
                                 viewModel.requestPartialHistoryBackup(includeHistoricalGlucose = false, includeCapillaryReadings = false, includeInsulinDoses = true)
                             }
                         )
                         HorizontalDivider()
-                        Text("RESTORE ONLY (Merge)", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(12.dp), color = MaterialTheme.colorScheme.secondary)
+                        Text(stringResource(R.string.settings_restore_only_header), style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(12.dp), color = MaterialTheme.colorScheme.secondary)
                         DropdownMenuItem(
-                            text = { Text("Glucose History") },
+                            text = { Text(stringResource(R.string.settings_glucose_history)) },
                             onClick = { 
                                 showAdvancedDropdown = false
                                 viewModel.restorePartialHistoryFromBackup(includeHistoricalGlucose = true, includeCapillaryReadings = false, includeInsulinDoses = false)
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("Capillary Readings") },
+                            text = { Text(stringResource(R.string.menu_capillary)) },
                             onClick = { 
                                 showAdvancedDropdown = false
                                 viewModel.restorePartialHistoryFromBackup(includeHistoricalGlucose = false, includeCapillaryReadings = true, includeInsulinDoses = false)
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("Insulin Doses") },
+                            text = { Text(stringResource(R.string.menu_insulin_logs)) },
                             onClick = { 
                                 showAdvancedDropdown = false
                                 viewModel.restorePartialHistoryFromBackup(includeHistoricalGlucose = false, includeCapillaryReadings = false, includeInsulinDoses = true)
@@ -523,28 +548,88 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Text(
-                    text = "Range-Based Offsets",
+                    text = stringResource(R.string.settings_range_based_offsets),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "Define specific offsets for different glucose ranges.",
+                    text = stringResource(R.string.settings_range_based_offsets_desc),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
+
+                // Total Tests Counter
+                val totalTests = rangeInsights.sumOf { it.sampleCount }
+                if (totalTests > 0) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.4f),
+                        shape = MaterialTheme.shapes.small,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.settings_range_total_tests, totalTests),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.settings_auto_range_label),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Switch(
+                        checked = autoRangeOffsetMode != AutoRangeOffsetMode.OFF,
+                        onCheckedChange = { enabled ->
+                            viewModel.updateAutoRangeOffsetMode(
+                                if (enabled) AutoRangeOffsetMode.BY_RANGE else AutoRangeOffsetMode.OFF
+                            )
+                        }
+                    )
+                }
+                Text(
+                    text = when (autoRangeOffsetMode) {
+                        AutoRangeOffsetMode.OFF -> stringResource(R.string.settings_auto_range_off_desc)
+                        AutoRangeOffsetMode.GLOBAL -> stringResource(R.string.settings_auto_range_global_desc)
+                        AutoRangeOffsetMode.BY_RANGE -> stringResource(R.string.settings_auto_range_by_range_desc)
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = 2.dp)
+                )
+
+                if (rangeInsights.isNotEmpty()) {
+                    val applicable = rangeInsights.count { it.sampleCount >= 2 }
+                    OutlinedButton(
+                        onClick = { viewModel.applySuggestedRangeOffsets() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp)
+                    ) {
+                        Text(stringResource(R.string.settings_apply_intelligent_suggestions, applicable))
+                    }
+                }
             }
             if (ranges.isEmpty()) {
                 item {
                     Text(
-                        text = "No ranges defined. Click 'Add Range' to start.",
+                        text = stringResource(R.string.settings_no_ranges_defined),
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(vertical = 16.dp)
                     )
                 }
             } else {
                 items(ranges) { range ->
+                    val insight = rangeInsights.firstOrNull { it.min == range.min && it.max == range.max }
                     RangeItem(
                         range = range,
+                        insight = insight,
                         onDelete = { viewModel.removeRange(range) },
                         onEdit = { editingRange = range }
                     )
@@ -559,7 +644,7 @@ fun SettingsScreen(
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Add Range")
+                        Text(stringResource(R.string.settings_add_range))
                     }
                 }
             }
@@ -570,12 +655,12 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Text(
-                    text = "Watch Sync Test",
+                    text = stringResource(R.string.settings_watch_sync_test),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "Trigger a mock notification to verify that glucose data is correctly mirrored to your Amazfit Bip S.",
+                    text = stringResource(R.string.settings_watch_sync_test_desc),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
@@ -586,7 +671,7 @@ fun SettingsScreen(
                         .fillMaxWidth()
                         .padding(bottom = 80.dp) // Space for FAB
                 ) {
-                    Text("Test Notification")
+                    Text(stringResource(R.string.settings_test_notification))
                 }
             }
         }
@@ -723,39 +808,39 @@ fun ScheduleDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (initialSchedule == null) "Add Active Schedule" else "Edit Schedule") },
+        title = { Text(stringResource(if (initialSchedule == null) R.string.settings_add_active_schedule else R.string.settings_edit_schedule)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(stringResource(R.string.settings_schedule_name)) }, modifier = Modifier.fillMaxWidth())
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(value = startTime, onValueChange = { startTime = it }, label = { Text("Start (HH:mm)") }, modifier = Modifier.weight(1f))
-                    OutlinedTextField(value = endTime, onValueChange = { endTime = it }, label = { Text("End (HH:mm)") }, modifier = Modifier.weight(1f))
+                    OutlinedTextField(value = startTime, onValueChange = { startTime = it }, label = { Text(stringResource(R.string.settings_schedule_start)) }, modifier = Modifier.weight(1f))
+                    OutlinedTextField(value = endTime, onValueChange = { endTime = it }, label = { Text(stringResource(R.string.settings_schedule_end)) }, modifier = Modifier.weight(1f))
                 }
                 
                 if (isWatchSchedule) {
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
-                    Text("Watch Overrides (Optional)", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
+                    Text(stringResource(R.string.settings_watch_overrides), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedTextField(
                             value = intervalText,
                             onValueChange = { intervalText = it },
-                            label = { Text("Interval (m)") },
+                            label = { Text(stringResource(R.string.settings_override_interval)) },
                             modifier = Modifier.weight(1f),
-                            placeholder = { Text("Global") },
+                            placeholder = { Text(stringResource(R.string.settings_global_placeholder)) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                         )
                         OutlinedTextField(
                             value = startMinuteText,
                             onValueChange = { startMinuteText = it },
-                            label = { Text("Start Minute") },
+                            label = { Text(stringResource(R.string.settings_override_start_minute)) },
                             modifier = Modifier.weight(1f),
-                            placeholder = { Text("Global") },
+                            placeholder = { Text(stringResource(R.string.settings_global_placeholder)) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                         )
                     }
                 }
 
-                Text("Active Days", style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.settings_active_days), style = MaterialTheme.typography.labelMedium)
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     (1..7).forEach { day ->
                         val label = when(day) { 1 -> "M"; 2 -> "T"; 3 -> "W"; 4 -> "T"; 5 -> "F"; 6 -> "S"; 7 -> "S"; else -> "" }
@@ -786,9 +871,9 @@ fun ScheduleDialog(
                         startMinute = startMinuteText.toIntOrNull()
                     )
                 )
-            }) { Text("Save") }
+            }) { Text(stringResource(R.string.settings_save)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(android.R.string.cancel)) } }
     )
 }
 
@@ -801,6 +886,7 @@ private fun formatBackupTimestamp(timestamp: Long): String {
 @Composable
 fun RangeItem(
     range: GlucoseOffsetRange,
+    insight: RangeOffsetInsight?,
     onDelete: () -> Unit,
     onEdit: () -> Unit
 ) {
@@ -822,18 +908,41 @@ fun RangeItem(
             Column(modifier = Modifier.weight(1f)) {
                 val maxText = range.max?.toString() ?: "∞"
                 Text(
-                    text = "Range: ${range.min} - $maxText mg/dL",
+                    text = stringResource(R.string.settings_range_label, range.min, maxText),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Fixed offset: ${if (range.offset >= 0) "+" else ""}${range.offset} mg/dL",
+                    text = stringResource(R.string.settings_range_fixed_offset, if (range.offset >= 0) "+" else "", range.offset),
                     style = MaterialTheme.typography.bodyMedium
                 )
+                
                 Text(
-                    text = "Percentage offset: ${if (range.percentage >= 0) "+" else ""}${range.percentage}%",
+                    text = stringResource(R.string.settings_range_percentage_offset, if (range.percentage >= 0) "+" else "", range.percentage),
                     style = MaterialTheme.typography.bodyMedium
                 )
+
+                if (insight != null) {
+                    Text(
+                        text = stringResource(
+                            R.string.settings_range_sensor_audit,
+                            if (insight.signedRawDeviationPct >= 0) "+" else "",
+                            insight.signedRawDeviationPct,
+                            insight.sampleCount
+                        ),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (abs(insight.signedRawDeviationPct) > 15.0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.ExtraBold,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                } else {
+                    Text(
+                        text = stringResource(R.string.settings_range_no_data_hint),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
             }
             Row {
                 IconButton(onClick = onEdit) {
@@ -860,13 +969,13 @@ fun RangeDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (initialRange == null) "Add Range" else "Edit Range") },
+        title = { Text(stringResource(if (initialRange == null) R.string.settings_add_range else R.string.settings_edit_range)) },
         text = {
             Column {
                 OutlinedTextField(
                     value = minText,
                     onValueChange = { minText = it },
-                    label = { Text("Min Glucose") },
+                    label = { Text(stringResource(R.string.settings_min_glucose)) },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
@@ -874,7 +983,7 @@ fun RangeDialog(
                 OutlinedTextField(
                     value = maxText,
                     onValueChange = { maxText = it },
-                    label = { Text("Max Glucose (leave empty for ∞)") },
+                    label = { Text(stringResource(R.string.settings_max_glucose_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
@@ -882,7 +991,7 @@ fun RangeDialog(
                 OutlinedTextField(
                     value = offsetText,
                     onValueChange = { offsetText = it },
-                    label = { Text("Fixed offset (mg/dL)") },
+                    label = { Text(stringResource(R.string.settings_fixed_offset_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                 )
@@ -890,7 +999,7 @@ fun RangeDialog(
                 OutlinedTextField(
                     value = percentageText,
                     onValueChange = { percentageText = it },
-                    label = { Text("Percentage offset (%)") },
+                    label = { Text(stringResource(R.string.settings_percentage_offset_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                 )
@@ -906,12 +1015,12 @@ fun RangeDialog(
                     onConfirm(GlucoseOffsetRange(min, max, offset, percentage))
                 }
             ) {
-                Text("Confirm")
+                Text(stringResource(R.string.settings_confirm))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(android.R.string.cancel))
             }
         }
     )

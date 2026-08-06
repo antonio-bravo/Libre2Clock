@@ -11,6 +11,37 @@ data class GlucoseOffsetRange(
 )
 
 @Serializable
+enum class WatchNotificationMode {
+    OFF,
+    PERIODIC_ONLY,
+    SCHEDULES_ONLY,
+    PERIODIC_AND_SCHEDULES
+}
+
+@Serializable
+enum class AutoRangeOffsetMode {
+    OFF,
+    GLOBAL,
+    BY_RANGE
+}
+
+data class RangeOffsetInsight(
+    val min: Int,
+    val max: Int?,
+    val sampleCount: Int,
+    val suggestedOffset: Int,
+    val suggestedPercentage: Int,
+    val currentMae: Double,
+    val suggestedMae: Double,
+    val currentDeviationPct: Double,
+    val suggestedDeviationPct: Double,
+    val avgCapillaryValue: Double = 0.0,
+    val avgSensorValue: Double = 0.0,
+    val signedCalibratedDeviationPct: Double = 0.0,
+    val signedRawDeviationPct: Double = 0.0
+)
+
+@Serializable
 data class CapillaryMeasurement(
     val value: Int,
     val timestamp: String,
@@ -41,6 +72,8 @@ data class HistoryBackupPayload(
     val glucoseOffset: Int? = null,
     val glucoseOffsetRanges: List<GlucoseOffsetRange>? = null,
     val autoAdjustEnabled: Boolean? = null,
+    val autoRangeOffsetsEnabled: Boolean? = null,
+    val autoRangeOffsetMode: AutoRangeOffsetMode? = null,
     // Insulin Config
     val rapidDurationMins: Int? = null,
     val slowDurationMins: Int? = null,
@@ -51,6 +84,7 @@ data class HistoryBackupPayload(
     val targetGlucose: Int? = null,
     // Alert Config
     val watchAlertsEnabled: Boolean? = null,
+    val watchNotificationMode: WatchNotificationMode? = null,
     val watchAlertIntervalMinutes: Int? = null,
     val watchAlertStartMinute: Int? = null,
     val lowGlucoseAlarmEnabled: Boolean? = null,

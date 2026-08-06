@@ -2,6 +2,7 @@ package com.tonio.libre2clock.ui.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tonio.libre2clock.data.model.AutoRangeOffsetMode
 import com.tonio.libre2clock.data.repository.GlucoseRepository
 import com.tonio.libre2clock.data.repository.PreferenceManager
 import com.tonio.libre2clock.data.repository.GlucoseProcessor
@@ -38,14 +39,26 @@ class DashboardViewModel(
     val isHistoryRefreshing: StateFlow<Boolean> = _isHistoryRefreshing.asStateFlow()
 
     val currentGlucose: StateFlow<GlucoseMeasurement?> = combine(
-        repository.currentGlucose,
-        preferenceManager.glucoseOffset,
-        preferenceManager.glucoseOffsetRanges,
-        preferenceManager.autoAdjustEnabled,
+        combine(
+            repository.currentGlucose,
+            preferenceManager.glucoseOffset,
+            preferenceManager.glucoseOffsetRanges,
+            preferenceManager.autoAdjustEnabled,
+            preferenceManager.autoRangeOffsetMode
+        ) { current, manualOffset, ranges, autoAdjust, autoRangeMode ->
+            DashboardInputs(current, manualOffset, ranges, autoAdjust, autoRangeMode)
+        },
         preferenceManager.capillaryReadings
-    ) { current, manualOffset, ranges, autoAdjust, capillaries ->
-        current?.let {
-            GlucoseProcessor.process(it, manualOffset, ranges, autoAdjust, capillaries)
+    ) { inputs, capillaries ->
+        inputs.current?.let {
+            GlucoseProcessor.process(
+                measurement = it,
+                manualOffset = inputs.manualOffset,
+                userRanges = inputs.ranges,
+                autoAdjustEnabled = inputs.autoAdjust,
+                autoRangeOffsetMode = inputs.autoRangeMode,
+                capillaryReadings = capillaries
+            )
         }
     }.flowOn(Dispatchers.Default)
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
@@ -69,14 +82,26 @@ class DashboardViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     val historicalData: StateFlow<List<GlucoseMeasurement>> = combine(
-        repository.historicalGlucose,
-        preferenceManager.glucoseOffset,
-        preferenceManager.glucoseOffsetRanges,
-        preferenceManager.autoAdjustEnabled,
+        combine(
+            repository.historicalGlucose,
+            preferenceManager.glucoseOffset,
+            preferenceManager.glucoseOffsetRanges,
+            preferenceManager.autoAdjustEnabled,
+            preferenceManager.autoRangeOffsetMode
+        ) { historical, manualOffset, ranges, autoAdjust, autoRangeMode ->
+            HistoricalInputs(historical, manualOffset, ranges, autoAdjust, autoRangeMode)
+        },
         preferenceManager.capillaryReadings
-    ) { historical, manualOffset, ranges, autoAdjust, capillaries ->
-        historical.map {
-            GlucoseProcessor.process(it, manualOffset, ranges, autoAdjust, capillaries)
+    ) { inputs, capillaries ->
+        inputs.historical.map {
+            GlucoseProcessor.process(
+                measurement = it,
+                manualOffset = inputs.manualOffset,
+                userRanges = inputs.ranges,
+                autoAdjustEnabled = inputs.autoAdjust,
+                autoRangeOffsetMode = inputs.autoRangeMode,
+                capillaryReadings = capillaries
+            )
         }
     }.flowOn(Dispatchers.Default)
     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -182,4 +207,20 @@ class DashboardViewModel(
             serialNumber = info.serialNumber
         )
     }
+
+    private data class DashboardInputs(
+        val current: GlucoseMeasurement?,
+        val manualOffset: Int,
+        val ranges: List<com.tonio.libre2clock.data.model.GlucoseOffsetRange>,
+        val autoAdjust: Boolean,
+        val autoRangeMode: AutoRangeOffsetMode
+    )
+
+    private data class HistoricalInputs(
+        val historical: List<GlucoseMeasurement>,
+        val manualOffset: Int,
+        val ranges: List<com.tonio.libre2clock.data.model.GlucoseOffsetRange>,
+        val autoAdjust: Boolean,
+        val autoRangeMode: AutoRangeOffsetMode
+    )
 }

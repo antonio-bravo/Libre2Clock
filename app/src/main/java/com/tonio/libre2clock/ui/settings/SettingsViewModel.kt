@@ -4,8 +4,11 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tonio.libre2clock.data.model.CapillaryMeasurement
+import com.tonio.libre2clock.data.model.AutoRangeOffsetMode
 import com.tonio.libre2clock.data.model.GlucoseOffsetRange
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
+import com.tonio.libre2clock.data.model.RangeOffsetInsight
+import com.tonio.libre2clock.data.model.WatchNotificationMode
 import com.tonio.libre2clock.data.repository.GlucoseRepository
 import com.tonio.libre2clock.data.repository.PreferenceManager
 import com.tonio.libre2clock.data.repository.GlucoseProcessor
@@ -16,6 +19,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
 class SettingsViewModel(
     private val preferenceManager: PreferenceManager,
@@ -34,11 +39,17 @@ class SettingsViewModel(
     val autoAdjustEnabled: StateFlow<Boolean> = preferenceManager.autoAdjustEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
+    val autoRangeOffsetMode: StateFlow<AutoRangeOffsetMode> = preferenceManager.autoRangeOffsetMode
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AutoRangeOffsetMode.OFF)
+
     val capillaryReadings: StateFlow<List<CapillaryMeasurement>> = preferenceManager.capillaryReadings
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val watchAlertsEnabled: StateFlow<Boolean> = preferenceManager.watchAlertsEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val watchNotificationMode: StateFlow<WatchNotificationMode> = preferenceManager.watchNotificationMode
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), WatchNotificationMode.OFF)
 
     val watchAlertIntervalMinutes: StateFlow<Int> = preferenceManager.watchAlertIntervalMinutes
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 60)
@@ -104,16 +115,92 @@ class SettingsViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
     val currentGlucose: StateFlow<GlucoseMeasurement?> = combine(
-        repository.currentGlucose,
-        preferenceManager.glucoseOffset,
-        preferenceManager.glucoseOffsetRanges,
-        preferenceManager.autoAdjustEnabled,
+        combine(
+            repository.currentGlucose,
+            preferenceManager.glucoseOffset,
+            preferenceManager.glucoseOffsetRanges,
+            preferenceManager.autoAdjustEnabled,
+            preferenceManager.autoRangeOffsetMode
+        ) { current, manualOffset, ranges, autoAdjust, autoRangeMode ->
+            CurrentGlucoseInputs(current, manualOffset, ranges, autoAdjust, autoRangeMode)
+        },
         preferenceManager.capillaryReadings
-    ) { current, manualOffset, ranges, autoAdjust, capillaries ->
-        current?.let {
-            GlucoseProcessor.process(it, manualOffset, ranges, autoAdjust, capillaries)
+    ) { inputs, capillaries ->
+        inputs.current?.let {
+            GlucoseProcessor.process(
+                measurement = it,
+                manualOffset = inputs.manualOffset,
+                userRanges = inputs.ranges,
+                autoAdjustEnabled = inputs.autoAdjust,
+                autoRangeOffsetMode = inputs.autoRangeMode,
+                capillaryReadings = capillaries
+            )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val rangeOffsetInsights: StateFlow<List<RangeOffsetInsight>> = combine(
+        preferenceManager.glucoseOffsetRanges,
+        preferenceManager.capillaryReadings
+    ) { ranges, capillaries ->
+        ranges.mapNotNull { range ->
+            val estimate = GlucoseProcessor.estimateOffsetsForRange(range, capillaries) ?: return@mapNotNull null
+            val points = capillaries.mapNotNull { reading ->
+                val sensor = reading.sensorValue ?: return@mapNotNull null
+                if (sensor == 0) return@mapNotNull null
+                if (sensor < range.min) return@mapNotNull null
+                if (range.max != null && sensor >= range.max) return@mapNotNull null
+                sensor to reading.value
+            }
+            if (points.isEmpty()) return@mapNotNull null
+
+            val avgSensor = points.map { it.first.toDouble() }.average()
+            val avgCapillary = points.map { it.second.toDouble() }.average()
+
+            val currentMae = points.map { (sensor, capillary) ->
+                abs(sensor - capillary).toDouble()
+            }.average()
+
+            // Raw sensor deviation (absolute baseline)
+            val currentDeviationPct = points.map { (sensor, capillary) ->
+                if (capillary <= 0) 0.0 else (abs(sensor - capillary).toDouble() / capillary) * 100.0
+            }.average()
+
+            // Signed error (BIAS) of the RAW sensor
+            val signedRawBias = points.map { (sensor, capillary) ->
+                if (capillary <= 0) 0.0 else ((sensor - capillary).toDouble() / capillary) * 100.0
+            }.average()
+
+            // Signed error with CURRENT user offsets applied
+            val signedCalibratedError = points.map { (sensor, capillary) ->
+                val calibrated = sensor + range.offset + (sensor * (range.percentage / 100.0))
+                if (capillary <= 0) 0.0 else ((calibrated - capillary) / capillary) * 100.0
+            }.average()
+
+            val suggestedMae = points.map { (sensor, capillary) ->
+                val predicted = sensor + estimate.offset + (sensor * (estimate.percentage / 100.0))
+                abs(predicted - capillary)
+            }.average()
+            val suggestedDeviationPct = points.map { (sensor, capillary) ->
+                if (capillary <= 0) 0.0 else (abs((sensor + estimate.offset + (sensor * (estimate.percentage / 100.0))) - capillary) / capillary) * 100.0
+            }.average()
+
+            RangeOffsetInsight(
+                min = range.min,
+                max = range.max,
+                sampleCount = estimate.sampleCount,
+                suggestedOffset = estimate.offset,
+                suggestedPercentage = estimate.percentage,
+                currentMae = currentMae,
+                suggestedMae = suggestedMae,
+                currentDeviationPct = currentDeviationPct,
+                suggestedDeviationPct = suggestedDeviationPct,
+                avgSensorValue = avgSensor,
+                avgCapillaryValue = avgCapillary,
+                signedCalibratedDeviationPct = signedCalibratedError,
+                signedRawDeviationPct = signedRawBias
+            )
+        }.sortedBy { it.min }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun updateOffset(offset: Int) {
         viewModelScope.launch {
@@ -124,6 +211,12 @@ class SettingsViewModel(
     fun updateAutoAdjustEnabled(enabled: Boolean) {
         viewModelScope.launch {
             preferenceManager.saveAutoAdjustEnabled(enabled)
+        }
+    }
+
+    fun updateAutoRangeOffsetMode(mode: AutoRangeOffsetMode) {
+        viewModelScope.launch {
+            preferenceManager.saveAutoRangeOffsetMode(mode)
         }
     }
 
@@ -150,6 +243,15 @@ class SettingsViewModel(
                 preferenceManager.initializeWatchAlertStartMinuteIfMissing()
             }
             preferenceManager.saveWatchAlertsEnabled(enabled)
+        }
+    }
+
+    fun updateWatchNotificationMode(mode: WatchNotificationMode) {
+        viewModelScope.launch {
+            if (mode != WatchNotificationMode.OFF) {
+                preferenceManager.initializeWatchAlertStartMinuteIfMissing()
+            }
+            preferenceManager.saveWatchNotificationMode(mode)
         }
     }
 
@@ -310,6 +412,37 @@ class SettingsViewModel(
             }
         }
     }
+
+    fun applySuggestedRangeOffsets(minSamples: Int = 2) {
+        viewModelScope.launch {
+            val insightsByKey = rangeOffsetInsights.value
+                .filter { it.sampleCount >= minSamples }
+                .associateBy { insightKey(it.min, it.max) }
+
+            val updated = glucoseOffsetRanges.value.map { range ->
+                val insight = insightsByKey[insightKey(range.min, range.max)]
+                if (insight != null) {
+                    range.copy(
+                        offset = insight.suggestedOffset,
+                        percentage = insight.suggestedPercentage
+                    )
+                } else {
+                    range
+                }
+            }
+            preferenceManager.saveGlucoseOffsetRanges(updated)
+        }
+    }
+
+    private fun insightKey(min: Int, max: Int?): String = "$min:${max ?: "inf"}"
+
+    private data class CurrentGlucoseInputs(
+        val current: GlucoseMeasurement?,
+        val manualOffset: Int,
+        val ranges: List<GlucoseOffsetRange>,
+        val autoAdjust: Boolean,
+        val autoRangeMode: AutoRangeOffsetMode
+    )
 
     fun updateRapidDuration(minutes: Int) {
         viewModelScope.launch { preferenceManager.saveRapidDurationMins(minutes) }

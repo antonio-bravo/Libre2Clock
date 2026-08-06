@@ -1,6 +1,7 @@
 package com.tonio.libre2clock.data.repository
 
 import com.tonio.libre2clock.data.model.CapillaryMeasurement
+import com.tonio.libre2clock.data.model.AutoRangeOffsetMode
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.GlucoseOffsetRange
 import com.tonio.libre2clock.util.TimestampParser
@@ -26,6 +27,7 @@ object GlucoseProcessor {
         manualOffset: Int = 0,
         userRanges: List<GlucoseOffsetRange> = emptyList(),
         autoAdjustEnabled: Boolean = false,
+        autoRangeOffsetMode: AutoRangeOffsetMode = AutoRangeOffsetMode.OFF,
         capillaryReadings: List<CapillaryMeasurement> = emptyList()
     ): GlucoseMeasurement {
         val rawValue = measurement.value
@@ -35,6 +37,7 @@ object GlucoseProcessor {
             manualOffset = manualOffset,
             userRanges = userRanges,
             autoAdjustEnabled = autoAdjustEnabled,
+            autoRangeOffsetMode = autoRangeOffsetMode,
             capillaryReadings = capillaryReadings,
             measurementTimestamp = measurement.timestamp
         )
@@ -52,6 +55,7 @@ object GlucoseProcessor {
         manualOffset: Int = 0,
         userRanges: List<GlucoseOffsetRange> = emptyList(),
         autoAdjustEnabled: Boolean = false,
+        autoRangeOffsetMode: AutoRangeOffsetMode = AutoRangeOffsetMode.OFF,
         capillaryReadings: List<CapillaryMeasurement> = emptyList(),
         measurementTimestamp: String? = null
     ): Int {
@@ -59,10 +63,24 @@ object GlucoseProcessor {
             rawValue >= range.min && (range.max == null || rawValue < range.max)
         }
 
-        val rangeFixedOffset = matchingRange?.offset ?: 0
-        val rangePercentageOffset = matchingRange?.let { range ->
-            (rawValue * (range.percentage / 100.0)).roundToInt()
-        } ?: 0
+        val selectedEstimate = when (autoRangeOffsetMode) {
+            AutoRangeOffsetMode.OFF -> null
+            AutoRangeOffsetMode.GLOBAL -> estimateGlobalOffsets(capillaryReadings)
+            AutoRangeOffsetMode.BY_RANGE -> matchingRange?.let { estimateOffsetsForRange(it, capillaryReadings) }
+        }
+
+        val rangeFixedOffset = if (selectedEstimate != null) {
+            selectedEstimate.offset
+        } else {
+            matchingRange?.offset ?: 0
+        }
+        val rangePercentageOffset = if (selectedEstimate != null) {
+            (rawValue * (selectedEstimate.percentage / 100.0)).roundToInt()
+        } else {
+            matchingRange?.let { range ->
+                (rawValue * (range.percentage / 100.0)).roundToInt()
+            } ?: 0
+        }
         val autoAdjustment = if (autoAdjustEnabled) {
             getAutoAdjustment(rawValue, measurementTimestamp, capillaryReadings)
         } else {
@@ -104,6 +122,65 @@ object GlucoseProcessor {
         }
 
         return if (minDiffMinutes <= maxHoursDifference * 60) bestAdjustment else 0
+    }
+
+    data class RangeOffsetEstimate(
+        val offset: Int,
+        val percentage: Int,
+        val sampleCount: Int
+    )
+
+    fun estimateOffsetsForRange(
+        range: GlucoseOffsetRange,
+        capillaryReadings: List<CapillaryMeasurement>
+    ): RangeOffsetEstimate? {
+        return estimateOffsetsInternal(capillaryReadings) { sensor ->
+            sensor >= range.min && (range.max == null || sensor < range.max)
+        }
+    }
+
+    fun estimateGlobalOffsets(
+        capillaryReadings: List<CapillaryMeasurement>
+    ): RangeOffsetEstimate? {
+        return estimateOffsetsInternal(capillaryReadings) { true }
+    }
+
+    private fun estimateOffsetsInternal(
+        capillaryReadings: List<CapillaryMeasurement>,
+        sensorFilter: (Int) -> Boolean
+    ): RangeOffsetEstimate? {
+        val points = capillaryReadings.mapNotNull { reading ->
+            val sensor = reading.sensorValue ?: return@mapNotNull null
+            if (sensor == 0) return@mapNotNull null
+            if (!sensorFilter(sensor)) return@mapNotNull null
+            sensor.toDouble() to (reading.value - sensor).toDouble()
+        }
+
+        if (points.isEmpty()) return null
+        if (points.size == 1) {
+            val delta = points.first().second.roundToInt()
+            return RangeOffsetEstimate(offset = delta, percentage = 0, sampleCount = 1)
+        }
+
+        val meanX = points.map { it.first }.average()
+        val meanY = points.map { it.second }.average()
+
+        var varianceX = 0.0
+        var covariance = 0.0
+        points.forEach { (x, y) ->
+            val dx = x - meanX
+            varianceX += dx * dx
+            covariance += dx * (y - meanY)
+        }
+
+        val slope = if (varianceX > 1e-9) covariance / varianceX else 0.0
+        val intercept = meanY - slope * meanX
+
+        return RangeOffsetEstimate(
+            offset = intercept.roundToInt(),
+            percentage = (slope * 100.0).roundToInt(),
+            sampleCount = points.size
+        )
     }
 
     private fun parseTimestampToInstant(timestamp: String): Instant? {

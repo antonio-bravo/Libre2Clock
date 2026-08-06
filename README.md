@@ -1,70 +1,69 @@
 # Libre2Clock
 
-Libre2Clock is an Android app that connects to LibreLinkUp, fetches glucose data, and mirrors readable glucose updates to a smartwatch via Android notifications. It also provides advanced insulin tracking and a bolus calculator to help manage diabetes more effectively.
+Libre2Clock is an advanced Android application that bridges LibreLinkUp glucose data with your smartwatch and provides comprehensive diabetes management tools. It focuses on precision, clarity, and user control, offering dual-value glucose displays, sophisticated insulin tracking, and customizable notification systems.
 
-The app focuses on:
-- **Clear glucose display** in dual format: `raw(offset-adjusted)` mg/dL + trend arrow.
-- **Continuous background sync** with a foreground service.
-- **Advanced Insulin Tracking**: Manage rapid and slow/basal doses with a realistic IOB decay model.
-- **Diabetes Calculator**: Bolus helper based on the Rule of 450/1800 with dual suggestions.
-- **Flexible Calibration**: Manual offset, range-based offsets, and capillary auto-adjust.
-- **Data Safety**: Local JSON backups and integrated Google Cloud backup.
+The app is fully localized in **English** and **Spanish**, respecting your device's system settings.
 
-## Main Features
+## 📱 Screenshots (English)
 
-### Glucose & Sensor
-- LibreLinkUp login and token persistence.
-- Demo mode with mock glucose and sensor data.
-- Dashboard with:
-  - Current glucose card (Dual format).
-  - Sensor health card with **real-time countdown**.
-  - Historical trend graph.
+| Dashboard | Insulin Management | Settings & Calibration |
+|:---:|:---:|:---:|
+| ![Dashboard Placeholder](https://via.placeholder.com/300x600?text=Dashboard+English) | ![Insulin Placeholder](https://via.placeholder.com/300x600?text=Insulin+Hub+English) | ![Settings Placeholder](https://via.placeholder.com/300x600?text=Settings+Audit+English) |
 
-### Insulin Management (Insulin Hub)
-- **IOB Tracking**: Real-time Insulin On Board with a 4-stage realistic decay curve for rapid insulin.
-- **Bolus Calculator**:
-  - Rule of 450 (I:C Ratio) and Rule of 1800 (ISF) calculation.
-  - Dual suggestions: `Real(Offset)` dosage for informed decisions.
-  - Target glucose adjustment (default 80 mg/dL).
-  - Warning for expiring basal (suggests +20% bolus increase).
-- **Log Management**: Full history with edit/delete capabilities.
-- **Stats**: Today's totals and 7d/30d averages with Rapid/Slow breakdown.
+---
 
-### Calibration & Alarms
-- Global manual offset and range-based offsets.
-- Optional capillary-based auto-adjust.
-- Configurable watch push notifications (5 to 180 mins).
-- Independent low and high glucose alarm toggles (OFF by default).
+## 🚀 Key Features
 
-## Documentación Detallada
+### 🩸 Glucose Monitoring & Calibration
+- **Dual Display**: See your raw sensor value and your calibrated value side-by-side: `raw(calibrated)` mg/dL.
+- **Range-Based Offsets**: Define specific calibration rules for different glucose ranges (e.g., more correction at high values).
+- **Sensor Audit System**: A specialized tool to **prove sensor inaccuracy**. For each range, the app calculates:
+    - **Bias (Error %)**: Technical percentage of how much the hardware drifts from your capillary readings.
+    - **Averages Comparison**: Directly compare mean sensor values vs. mean capillary values.
+    - **Sample Validation**: Track how many tests support the error claim.
+- **Capillary Auto-Adjust**: Automatically applies the latest capillary deviation to current readings for up to 6 hours.
 
-Para profundizar en el funcionamiento de cada sistema, consulta los siguientes archivos:
+### 💉 Advanced Insulin Hub
+- **IOB (Insulin On Board)**: Uses a realistic 4-stage decay model for rapid-acting insulin.
+- **Bolus Helper**: 
+    - Based on the **Rule of 450** (I:C Ratio) and **Rule of 1800** (ISF).
+    - Suggests dosages for both `Real` and `Offset` values.
+    - **Basal Expiration Warning**: Suggests a +20% bolus increase if your basal insulin is within 2 hours of expiring.
+- **Insulin Stats**: Detailed 7-day and 30-day averages with rapid vs. slow insulin breakdown.
 
-### Algoritmos y Lógica Médica
-- [Calculadora de Diabetes](file:///DIABETES_CALCULATOR.md): Detalles de la Regla de 450/1800 y bolos de corrección.
-- [Algoritmo de Insulina (IOB)](file:///INSULIN_IOB_ALGORITHM.md): Detalle de la curva de decaimiento de 4 tramos.
-- [Sistema de Calibración](file:///CALIBRATION_SYSTEM.md): Cómo funcionan los offsets y el auto-ajuste.
+### ⌚ Smartwatch Integration
+- **Watch Notifications**: Mirrors readable glucose updates to your watch via standard Android notifications.
+- **Flexible Modes**:
+    - **Off**: No watch updates.
+    - **Periodic**: Sends updates at a fixed interval (e.g., every 30 mins) regardless of rules.
+    - **Schedules**: Only sends updates during active time windows (e.g., "Work hours").
+    - **All**: Combines periodic updates with specific schedules.
+- **Zepp Life / Bip S Optimized**: Designed for clear legibility on limited-screen devices.
 
-### Guía Técnica
-- [Arquitectura del Software](file:///ARCHITECTURE.md): Tecnologías usadas y estructura del código.
-- [Respaldo y Seguridad](file:///BACKUP_AND_RESTORE.md): Gestión de backups locales y en la nube.
-- [Solución de Problemas (ADB)](file:///EMULATOR_FIX.md): Pasos para arreglar errores del emulador.
+### 🔋 Reliability & Safety
+- **Battery Optimization**: 
+    - Automatically disables fast refresh (60s) below a configurable threshold.
+    - Reduces polling to 15m on critical battery to prevent phone shutdown.
+- **Data Protection**: 
+    - Automatic **Google Cloud Backup** integration.
+    - Manual **JSON Export/Import** for local history management.
 
-## Tech Stack
+## 📚 Detailed Documentation
 
-- Kotlin & Jetpack Compose (Material 3)
-- Coroutines + Flow
-- DataStore Preferences
-- Retrofit + OkHttp + Moshi
-- Android Foreground Service for continuous sync
+For in-depth logic and technical details, please refer to:
 
-## Getting Started
+- [Diabetes Calculator Logic](file:///DIABETES_CALCULATOR.md)
+- [Insulin IOB Algorithm](file:///INSULIN_IOB_ALGORITHM.md)
+- [Calibration & Offset System](file:///CALIBRATION_SYSTEM.md)
+- [Software Architecture](file:///ARCHITECTURE.md)
+- [Backup & Restore Guide](file:///BACKUP_AND_RESTORE.md)
+
+## 🛠️ Getting Started
 
 1. Clone the repository.
-2. Open in Android Studio.
-3. Sync Gradle.
-4. Run the app on a device with internet access.
-5. Sign in with LibreLinkUp credentials, or start Demo Mode.
+2. Open in **Android Studio**.
+3. Sync Gradle and run on an Android 9.0+ device.
+4. Sign in with your **LibreLinkUp** credentials.
 
 ## Build APKs Locally
 
@@ -75,7 +74,7 @@ Para profundizar en el funcionamiento de cada sistema, consulta los siguientes a
 
 Output folders: `app/build/outputs/apk/release/` and `app/build/outputs/apk/debug/`.
 
-## Medical Disclaimer
+## ⚖️ Medical Disclaimer
 
 This software is not a medical device and does not replace professional medical advice, diagnosis, or treatment. Always follow guidance from qualified healthcare professionals.
 

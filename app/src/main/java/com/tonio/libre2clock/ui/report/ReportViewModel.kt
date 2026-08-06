@@ -172,7 +172,15 @@ class ReportViewModel(
     ): ReportMetrics {
         if (windowedGlucose.isEmpty()) return ReportMetrics(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0)
 
-        val processed = windowedGlucose.map { GlucoseProcessor.process(it, offset, ranges, auto, caps) }
+        val processed = windowedGlucose.map {
+            GlucoseProcessor.process(
+                measurement = it,
+                manualOffset = offset,
+                userRanges = ranges,
+                autoAdjustEnabled = auto,
+                capillaryReadings = caps
+            )
+        }
         val values = if (useOffset) processed.map { it.calibratedValue.toDouble() } else processed.map { it.value.toDouble() }
         
         val avg = values.average()
@@ -212,7 +220,13 @@ class ReportViewModel(
         val readingsByHour = windowedGlucose
             .map { m ->
                 val instant = parseInstant(m)!!
-                val processed = GlucoseProcessor.process(m, offset, ranges, auto, caps)
+                val processed = GlucoseProcessor.process(
+                    measurement = m,
+                    manualOffset = offset,
+                    userRanges = ranges,
+                    autoAdjustEnabled = auto,
+                    capillaryReadings = caps
+                )
                 val value = if (useOffset) processed.calibratedValue else processed.value
                 instant.atZone(zone).hour to value.toDouble()
             }
@@ -240,7 +254,15 @@ class ReportViewModel(
         val zone = ZoneId.systemDefault()
         
         val glucoseByDate = windowedGlucose
-            .map { GlucoseProcessor.process(it, offset, ranges, auto, caps) }
+            .map {
+                GlucoseProcessor.process(
+                    measurement = it,
+                    manualOffset = offset,
+                    userRanges = ranges,
+                    autoAdjustEnabled = auto,
+                    capillaryReadings = caps
+                )
+            }
             .groupBy { parseInstant(it)!!.atZone(zone).toLocalDate() }
             
         val dosesByDate = windowedDoses

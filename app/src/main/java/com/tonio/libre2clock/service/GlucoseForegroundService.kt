@@ -14,7 +14,9 @@ import android.text.style.StyleSpan
 import androidx.core.app.NotificationCompat
 import com.tonio.libre2clock.MainActivity
 import com.tonio.libre2clock.R
+import com.tonio.libre2clock.data.model.AutoRangeOffsetMode
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
+import com.tonio.libre2clock.data.model.WatchNotificationMode
 import com.tonio.libre2clock.data.repository.GlucoseRepository
 import com.tonio.libre2clock.data.repository.GlucoseRepositoryImpl
 import com.tonio.libre2clock.data.repository.PreferenceManager
@@ -36,6 +38,7 @@ class GlucoseForegroundService : Service() {
     
     // Calibration Cache
     private var watchAlertsEnabledCached: Boolean = false
+    private var watchNotificationModeCached: WatchNotificationMode = WatchNotificationMode.OFF
     private var watchAlertIntervalMinutesCached: Int = 60
     private var watchAlertStartMinuteCached: Int = 0
     private var lowGlucoseAlarmEnabledCached: Boolean = false
@@ -49,6 +52,7 @@ class GlucoseForegroundService : Service() {
     private var glucoseOffsetCached: Int = 0
     private var glucoseOffsetRangesCached: List<com.tonio.libre2clock.data.model.GlucoseOffsetRange> = emptyList()
     private var autoAdjustEnabledCached: Boolean = false
+    private var autoRangeOffsetModeCached: AutoRangeOffsetMode = AutoRangeOffsetMode.OFF
     private var capillaryReadingsCached: List<com.tonio.libre2clock.data.model.CapillaryMeasurement> = emptyList()
 
     private var lastLowAlarmAtMillis: Long = 0L
@@ -97,6 +101,12 @@ class GlucoseForegroundService : Service() {
             launch {
                 preferenceManager.watchAlertsEnabled.collect {
                     watchAlertsEnabledCached = it
+                }
+            }
+
+            launch {
+                preferenceManager.watchNotificationMode.collect {
+                    watchNotificationModeCached = it
                 }
             }
 
@@ -182,6 +192,13 @@ class GlucoseForegroundService : Service() {
             }
 
             launch {
+                preferenceManager.autoRangeOffsetMode.collect {
+                    autoRangeOffsetModeCached = it
+                    repository.currentGlucose.first()?.let { updateNotification(it) }
+                }
+            }
+
+            launch {
                 preferenceManager.capillaryReadings.collect {
                     capillaryReadingsCached = it
                     repository.currentGlucose.first()?.let { updateNotification(it) }
@@ -198,7 +215,7 @@ class GlucoseForegroundService : Service() {
                 }
 
                 val batteryStatus = getDetailedBatteryStatus()
-                val hasActiveAlerts = watchAlertsEnabledCached || lowGlucoseAlarmEnabledCached || highGlucoseAlarmEnabledCached || watchSchedulesCached.isNotEmpty() || alarmSchedulesCached.isNotEmpty()
+                val hasActiveAlerts = (watchNotificationModeCached != WatchNotificationMode.OFF) || lowGlucoseAlarmEnabledCached || highGlucoseAlarmEnabledCached || watchSchedulesCached.isNotEmpty() || alarmSchedulesCached.isNotEmpty()
                 
                 val pollingIntervalMs = when {
                     firstPoll -> 60_000L
@@ -307,6 +324,7 @@ class GlucoseForegroundService : Service() {
             manualOffset = glucoseOffsetCached,
             userRanges = glucoseOffsetRangesCached,
             autoAdjustEnabled = autoAdjustEnabledCached,
+            autoRangeOffsetMode = autoRangeOffsetModeCached,
             capillaryReadings = capillaryReadingsCached
         )
     }
@@ -369,7 +387,8 @@ class GlucoseForegroundService : Service() {
     }
 
                 private suspend fun maybeSendWatchAlert(measurement: GlucoseMeasurement) {
-                    if (!watchAlertsEnabledCached) return
+                    val mode = watchNotificationModeCached
+                    if (mode == WatchNotificationMode.OFF) return
                     
                     val nowMillis = System.currentTimeMillis()
                     val epochMinute = nowMillis / 60_000L
@@ -377,23 +396,29 @@ class GlucoseForegroundService : Service() {
                     
                     val nowLocal = Instant.ofEpochMilli(nowMillis).atZone(ZoneId.systemDefault())
                     val enabledSchedules = watchSchedulesCached.filter { it.isEnabled }
-                    
-                    val shouldTrigger = if (enabledSchedules.isEmpty()) {
-                        // Legacy behavior: No schedules, use global settings
-                        isTriggerMinute(
-                            nowLocal = nowLocal,
-                            interval = watchAlertIntervalMinutesCached,
-                            startMinute = watchAlertStartMinuteCached
-                        )
-                    } else {
-                        // Check each schedule that is active right now
-                        val activeSchedules = enabledSchedules.filter { isCurrentTimeInSchedule(it, nowLocal) }
-                        activeSchedules.any { schedule ->
+
+                    val periodicTrigger = isTriggerMinute(
+                        nowLocal = nowLocal,
+                        interval = watchAlertIntervalMinutesCached,
+                        startMinute = watchAlertStartMinuteCached
+                    )
+
+                    val scheduleTrigger = enabledSchedules
+                        .filter { isCurrentTimeInSchedule(it, nowLocal) }
+                        .any { schedule ->
                             isTriggerMinute(
                                 nowLocal = nowLocal,
                                 interval = schedule.intervalMinutes ?: watchAlertIntervalMinutesCached,
                                 startMinute = schedule.startMinute ?: watchAlertStartMinuteCached
                             )
+                        }
+                    
+                    val shouldTrigger = when (mode) {
+                        WatchNotificationMode.OFF -> false
+                        WatchNotificationMode.PERIODIC_ONLY -> periodicTrigger
+                        WatchNotificationMode.SCHEDULES_ONLY -> scheduleTrigger
+                        WatchNotificationMode.PERIODIC_AND_SCHEDULES -> {
+                            if (enabledSchedules.isEmpty()) periodicTrigger else periodicTrigger || scheduleTrigger
                         }
                     }
 
