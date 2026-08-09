@@ -13,12 +13,20 @@ import java.util.Locale
 object TimestampParser {
 
     private val localDateTimeFormats = listOf(
+        DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss", Locale.US),
+        DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.US),
+        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS", Locale.US),
+        DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ", Locale.US),
+        DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US),
         DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm", Locale.US),
         DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.US),
+        DateTimeFormatter.ofPattern("M/d/yyyy h:mm a", Locale.US),
         DateTimeFormatter.ofPattern("M/d/yyyy H:mm", Locale.US),
         DateTimeFormatter.ofPattern("M/d/yyyy H:mm:ss", Locale.US),
         DateTimeFormatter.ofPattern("M/d/yyyy h:mm a", Locale.US),
         DateTimeFormatter.ofPattern("M/d/yyyy h:mm:ss a", Locale.US),
+        DateTimeFormatter.ofPattern("M/d/yyyy h:mm:ss.SSS a", Locale.US),
+        DateTimeFormatter.ofPattern("MM/dd/yyyy h:mm a", Locale.US),
         DateTimeFormatter.ofPattern("MM/dd/yyyy h:mm:ss a", Locale.US)
     )
 

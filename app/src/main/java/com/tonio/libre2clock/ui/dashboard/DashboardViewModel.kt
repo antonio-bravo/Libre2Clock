@@ -138,8 +138,14 @@ class DashboardViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 1800)
 
     init {
-        // startSync() was removed to optimize performance and avoid redundant work. 
-        // GlucoseForegroundService already handles background sync.
+        // Foreground fallback sync while dashboard is open.
+        // This keeps UI updated even if the background service is stopped by the OS.
+        viewModelScope.launch {
+            while (true) {
+                runCatching { repository.fetchLatestGlucose() }
+                delay(60_000)
+            }
+        }
     }
 
     fun refresh() {

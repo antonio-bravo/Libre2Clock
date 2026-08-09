@@ -229,6 +229,10 @@
     <string name="settings_watch_sync_test">Watch Sync Test</string>
     <string name="settings_watch_sync_test_desc">Trigger a mock notification to verify that glucose data is correctly mirrored to your Amazfit Bip S.</string>
     <string name="settings_test_notification">Test Notification</string>
+    <string name="settings_api_diagnostic_title">API Diagnostic</string>
+    <string name="settings_api_diagnostic_desc">Call LibreLinkUp directly and show raw response fields/error details to diagnose sync issues.</string>
+    <string name="settings_api_diagnostic_run">Run API Diagnostic</string>
+    <string name="settings_api_diagnostic_clear">Clear Diagnostic Output</string>
     <string name="settings_add_active_schedule">Add Active Schedule</string>
     <string name="settings_edit_schedule">Edit Schedule</string>
     <string name="settings_schedule_name">Name</string>

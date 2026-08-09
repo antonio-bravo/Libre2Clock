@@ -3,6 +3,7 @@ package com.tonio.libre2clock.ui.settings
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tonio.libre2clock.data.api.LibreService
 import com.tonio.libre2clock.data.model.CapillaryMeasurement
 import com.tonio.libre2clock.data.model.AutoRangeOffsetMode
 import com.tonio.libre2clock.data.model.GlucoseOffsetRange
@@ -17,8 +18,10 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.time.Instant
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -29,6 +32,12 @@ class SettingsViewModel(
 
     private val _backupStatusMessage = MutableStateFlow<String?>(null)
     val backupStatusMessage = _backupStatusMessage.asStateFlow()
+
+    private val _apiDebugOutput = MutableStateFlow<String?>(null)
+    val apiDebugOutput: StateFlow<String?> = _apiDebugOutput.asStateFlow()
+
+    private val _isApiDebugLoading = MutableStateFlow(false)
+    val isApiDebugLoading: StateFlow<Boolean> = _isApiDebugLoading.asStateFlow()
 
     val glucoseOffset: StateFlow<Int> = preferenceManager.glucoseOffset
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
@@ -372,6 +381,109 @@ class SettingsViewModel(
 
     fun clearBackupStatusMessage() {
         _backupStatusMessage.value = null
+    }
+
+    fun clearApiDebugOutput() {
+        _apiDebugOutput.value = null
+    }
+
+    fun runDirectApiDiagnostic() {
+        viewModelScope.launch {
+            _isApiDebugLoading.value = true
+            _apiDebugOutput.value = null
+            try {
+                val startedAt = Instant.now().toString()
+                val report = buildString {
+                    appendLine("=== LibreLinkUp API Diagnostic ===")
+                    appendLine("Started at: $startedAt")
+
+                    try {
+                        val token = preferenceManager.authToken.first()
+                        val userId = preferenceManager.userId.first()
+                        val storedPatientId = preferenceManager.patientId.first()
+                        val demoEnabled = preferenceManager.isDemoMode.first()
+
+                        appendLine("Demo mode: $demoEnabled")
+                        appendLine("Has token: ${!token.isNullOrBlank()}")
+                        appendLine("Has userId: ${!userId.isNullOrBlank()}")
+                        appendLine("Stored patientId: ${storedPatientId ?: "<none>"}")
+
+                        if (token.isNullOrBlank() || userId.isNullOrBlank()) {
+                            appendLine()
+                            appendLine("Result: FAIL")
+                            appendLine("Reason: Missing credentials. Please login again.")
+                        } else {
+                            LibreService.setAuth(token, userId)
+
+                            val connectionsResponse = LibreService.api.getConnections()
+                            val connections = connectionsResponse.data ?: emptyList()
+                            val firstConnectionPatientId = connections.firstOrNull()?.patientId
+
+                            appendLine()
+                            appendLine("GET /llu/connections")
+                            appendLine("status: ${connectionsResponse.status}")
+                            appendLine("connectionsCount: ${connections.size}")
+                            appendLine("firstConnectionPatientId: ${firstConnectionPatientId ?: "<none>"}")
+
+                            val patientId = storedPatientId ?: firstConnectionPatientId
+                            if (patientId.isNullOrBlank()) {
+                                appendLine()
+                                appendLine("Result: FAIL")
+                                appendLine("Reason: No patientId available from stored settings or connections endpoint.")
+                                appendLine("Raw connections object: $connectionsResponse")
+                            } else {
+                                val graphResponse = LibreService.api.getGlucoseGraph(patientId)
+                                val measurement = graphResponse.data?.connection?.glucoseMeasurement
+                                val graphData = graphResponse.data?.graphData ?: emptyList()
+                                val latestFromGraph = graphData.lastOrNull()
+
+                                appendLine()
+                                appendLine("GET /llu/connections/{patientId}/graph")
+                                appendLine("patientId used: $patientId")
+                                appendLine("status: ${graphResponse.status}")
+                                appendLine("graphDataCount: ${graphData.size}")
+
+                                appendLine()
+                                appendLine("connection.glucoseMeasurement (raw object):")
+                                appendLine(measurement?.toString() ?: "<null>")
+
+                                appendLine()
+                                appendLine("latest graphData item (raw object):")
+                                appendLine(latestFromGraph?.toString() ?: "<null>")
+
+                                val effective = measurement ?: latestFromGraph
+                                appendLine()
+                                appendLine("effective value used by app:")
+                                if (effective != null) {
+                                    appendLine("Value: ${effective.value}")
+                                    appendLine("ValueInMgPerDl: ${effective.valueInMgPerDl}")
+                                    appendLine("TrendArrow: ${effective.trendArrow}")
+                                    appendLine("FactoryTimestamp: ${effective.factoryTimestamp}")
+                                    appendLine("Timestamp: ${effective.timestamp}")
+                                    appendLine("Result: OK")
+                                } else {
+                                    appendLine("<null>")
+                                    appendLine("Result: FAIL")
+                                    appendLine("Reason: API returned no glucoseMeasurement and empty graphData.")
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        appendLine()
+                        appendLine("Result: FAIL")
+                        appendLine("Exception: ${e::class.java.simpleName}")
+                        appendLine("Message: ${e.message ?: "<no message>"}")
+                        val stack = e.stackTrace.take(8).joinToString("\n") { "  at $it" }
+                        appendLine("Stack (top 8):")
+                        appendLine(stack)
+                    }
+                }
+
+                _apiDebugOutput.value = report
+            } finally {
+                _isApiDebugLoading.value = false
+            }
+        }
     }
 
     fun addRange(range: GlucoseOffsetRange) {
