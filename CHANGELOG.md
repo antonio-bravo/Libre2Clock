@@ -1,5 +1,56 @@
 # Changelog
 
+## 8320f74 (Aug 09, 2026 22:50:37)
+api test & fix parsing datetime — antonio-bravo
+[detail](#8320f74-details)
+
+<details id='8320f74-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/TimestampParser.kt [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## d319c4d (Aug 06, 2026 23:18:22)
+audot calibrated per range — antonio-bravo
+[detail](#d319c4d-details)
+
+<details id='d319c4d-details'>
+<summary>Changed files</summary>
+
+- CALIBRATION_SYSTEM.md [Modified]
+- README.md [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseProcessor.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## f69f5b5 (Aug 03, 2026 11:42:21)
+Update changelog — github-actions[bot]
+[detail](#f69f5b5-details)
+
+<details id='f69f5b5-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 32e7182 (Aug 03, 2026 13:42:06)
 fix automatic IFS, TDI + battery optmizer and large name in acronym — antonio-bravo
 [detail](#32e7182-details)
@@ -685,58 +736,6 @@ fix restore — antonio-bravo
 - .artifacts/a0a33dbc-2e5d-4c62-a073-96b724944422/walkthrough.artifact.md [Modified]
 - app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-</details>
-
-
----
-## 27cd5c3 (Jul 18, 2026 19:42:25)
-Fix graph, nontification to phone real(real_with_offset) and refresh senson when is changed — antonio-bravo
-[detail](#27cd5c3-details)
-
-<details id='27cd5c3-details'>
-<summary>Changed files</summary>
-
-- .artifacts/a0a33dbc-2e5d-4c62-a073-96b724944422/implementation_plan.artifact.md [Modified]
-- .artifacts/a0a33dbc-2e5d-4c62-a073-96b724944422/task.artifact.md [Modified]
-- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
-</details>
-
-
----
-## 85d1079 (Jul 18, 2026 00:21:04)
-Adjustes en Health Status y en Avg — antonio-bravo
-[detail](#85d1079-details)
-
-<details id='85d1079-details'>
-<summary>Changed files</summary>
-
-- .artifacts/a0a33dbc-2e5d-4c62-a073-96b724944422/implementation_plan.artifact.md [Modified]
-- .artifacts/a0a33dbc-2e5d-4c62-a073-96b724944422/task.artifact.md [Modified]
-- .artifacts/a0a33dbc-2e5d-4c62-a073-96b724944422/walkthrough.artifact.md [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/model/LibreModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-</details>
-
-
----
-## 370bc73 (Jul 17, 2026 22:56:54)
-Fix after offset change — antonio-bravo
-[detail](#370bc73-details)
-
-<details id='370bc73-details'>
-<summary>Changed files</summary>
-
-- .artifacts/a0a33dbc-2e5d-4c62-a073-96b724944422/implementation_plan.artifact.md [Modified]
-- .artifacts/a0a33dbc-2e5d-4c62-a073-96b724944422/task.artifact.md [Modified]
-- .artifacts/a0a33dbc-2e5d-4c62-a073-96b724944422/walkthrough.artifact.md [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
 </details>
 
 
