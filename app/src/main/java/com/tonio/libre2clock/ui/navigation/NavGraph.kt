@@ -34,8 +34,13 @@ fun NavGraph(
         if (isLoggedIn) Destination.Dashboard else Destination.Login
     )
     
-    // Shared ViewModel for settings across screens
+    // Shared ViewModels for persistent state and better performance
     val settingsViewModel: SettingsViewModel = viewModel { SettingsViewModel(preferenceManager, repository, context.applicationContext) }
+    val dashboardViewModel: DashboardViewModel = viewModel { DashboardViewModel(repository, preferenceManager, context.applicationContext) }
+    val loginViewModel: LoginViewModel = viewModel { LoginViewModel(repository) }
+    val reportViewModel: com.tonio.libre2clock.ui.report.ReportViewModel = viewModel { 
+        com.tonio.libre2clock.ui.report.ReportViewModel(repository, preferenceManager, context.applicationContext) 
+    }
 
     NavDisplay(
         backStack = backStack,
@@ -46,7 +51,6 @@ fun NavGraph(
         },
         entryProvider = entryProvider {
             entry<Destination.Login> {
-                val loginViewModel: LoginViewModel = viewModel { LoginViewModel(repository) }
                 LoginScreen(
                     viewModel = loginViewModel,
                     onLoginSuccess = {
@@ -56,7 +60,6 @@ fun NavGraph(
                 )
             }
             entry<Destination.Dashboard> {
-                val dashboardViewModel: DashboardViewModel = viewModel { DashboardViewModel(repository, preferenceManager, context.applicationContext) }
                 DashboardScreen(
                     viewModel = dashboardViewModel,
                     onNavigateToSettings = {
@@ -125,9 +128,6 @@ fun NavGraph(
                 )
             }
             entry<Destination.Reports> {
-                val reportViewModel: com.tonio.libre2clock.ui.report.ReportViewModel = viewModel { 
-                    com.tonio.libre2clock.ui.report.ReportViewModel(repository, preferenceManager, context.applicationContext) 
-                }
                 com.tonio.libre2clock.ui.report.ReportScreen(
                     viewModel = reportViewModel,
                     onBack = { backStack.removeAt(backStack.size - 1) }

@@ -508,33 +508,36 @@ fun SensorHealthCard(
             }
             Spacer(modifier = Modifier.height(8.dp))
             if (status != null) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = status.daysRemaining,
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = if (isDemoMode) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSecondaryContainer
-                        )
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = status.daysRemaining,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isDemoMode) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
                             text = status.startDate,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = if (isDemoMode) MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                            color = if (isDemoMode) MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
+                            modifier = Modifier.weight(1f)
                         )
                         Text(
-                            text = status.expiryDate,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = if (isDemoMode) MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                            text = "SN: ${status.serialNumber}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (isDemoMode) MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.5f),
+                            textAlign = TextAlign.End
                         )
                     }
                     Text(
-                        text = "SN: ${status.serialNumber}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = if (isDemoMode) MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.5f)
+                        text = status.expiryDate,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (isDemoMode) MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                     )
                 }
             } else {

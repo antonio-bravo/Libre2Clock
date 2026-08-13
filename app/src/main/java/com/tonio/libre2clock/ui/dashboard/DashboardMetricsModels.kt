@@ -42,6 +42,8 @@ enum class MealSlot { BREAKFAST, LUNCH, DINNER }
 object DashboardMetricsCalculator {
 
     fun calculate(measurements: List<GlucoseMeasurement>): DashboardMetrics {
+        if (measurements.isEmpty()) return emptyDashboardMetrics()
+
         val now = Instant.now()
         val zone = ZoneId.systemDefault()
         val today = LocalDate.now(zone)
@@ -51,37 +53,60 @@ object DashboardMetricsCalculator {
         val startOfMonthWindow = now.minusSeconds(30L * 24L * 60L * 60L)
         val startOfA1cWindow = now.minusSeconds(90L * 24L * 60L * 60L)
 
-        val dated = measurements.mapNotNull { m ->
-            parseMeasurementInstant(m)?.let { instant -> instant to m }
+        val todayItems = mutableListOf<GlucoseMeasurement>()
+        val yesterdayItems = mutableListOf<GlucoseMeasurement>()
+        val weekItems = mutableListOf<GlucoseMeasurement>()
+        val monthItems = mutableListOf<GlucoseMeasurement>()
+        val a1cItems = mutableListOf<GlucoseMeasurement>()
+        
+        val breakfastMonth = mutableListOf<GlucoseMeasurement>()
+        val lunchMonth = mutableListOf<GlucoseMeasurement>()
+        val dinnerMonth = mutableListOf<GlucoseMeasurement>()
+
+        measurements.forEach { m ->
+            // CRITICAL: Filter out invalid values and extreme outliers
+            if (m.value <= 39 || m.value > 500) return@forEach
+
+            val instant = parseMeasurementInstant(m) ?: return@forEach
+            
+            // Only group measurements that have a clear date relative to Today
+            if (!instant.isBefore(startOfToday)) {
+                todayItems.add(m)
+            } else if (!instant.isBefore(startOfYesterday) && instant.isBefore(startOfToday)) {
+                yesterdayItems.add(m)
+            }
+            
+            if (!instant.isBefore(startOfWeekWindow)) {
+                weekItems.add(m)
+            }
+            
+            if (!instant.isBefore(startOfMonthWindow)) {
+                monthItems.add(m)
+                when (mealSlotOf(instant, zone)) {
+                    MealSlot.BREAKFAST -> breakfastMonth.add(m)
+                    MealSlot.LUNCH -> lunchMonth.add(m)
+                    MealSlot.DINNER -> dinnerMonth.add(m)
+                    null -> {}
+                }
+            }
+            
+            if (!instant.isBefore(startOfA1cWindow)) {
+                a1cItems.add(m)
+            }
         }
 
-        val todayItems = dated.filter { (instant, _) -> !instant.isBefore(startOfToday) }.map { it.second }
-        val yesterdayItems = dated.filter { (instant, _) -> instant >= startOfYesterday && instant < startOfToday }.map { it.second }
-        val weekItems = dated.filter { (instant, _) -> !instant.isBefore(startOfWeekWindow) }.map { it.second }
-        val monthItems = dated.filter { (instant, _) -> !instant.isBefore(startOfMonthWindow) }.map { it.second }
-
-        val breakfastMonth = dated.filter { (instant, _) ->
-            !instant.isBefore(startOfMonthWindow) && mealSlotOf(instant, zone) == MealSlot.BREAKFAST
-        }.map { it.second }
-        val lunchMonth = dated.filter { (instant, _) ->
-            !instant.isBefore(startOfMonthWindow) && mealSlotOf(instant, zone) == MealSlot.LUNCH
-        }.map { it.second }
-        val dinnerMonth = dated.filter { (instant, _) ->
-            !instant.isBefore(startOfMonthWindow) && mealSlotOf(instant, zone) == MealSlot.DINNER
-        }.map { it.second }
-
-        val a1cWindowItems = dated.filter { (instant, _) -> !instant.isBefore(startOfA1cWindow) }.map { it.second }
-        val allForA1c = if (a1cWindowItems.isNotEmpty()) a1cWindowItems else measurements
+        // HbA1c (GMI) Calculation
+        // Standard clinical recommendation is to use at least 14 days of data for a reliable GMI.
+        // We use the 90-day window. If it's empty, we don't show the estimate.
+        val avgRawForA1c = if (a1cItems.isNotEmpty()) a1cItems.map { it.value }.average() else 0.0
+        val avgCalibratedForA1c = if (a1cItems.isNotEmpty()) a1cItems.map { it.calibratedValue }.average() else 0.0
         
-        val avgRawForA1c = if (allForA1c.isNotEmpty()) allForA1c.map { it.value }.average() else 0.0
-        val avgCalibratedForA1c = if (allForA1c.isNotEmpty()) allForA1c.map { it.calibratedValue }.average() else 0.0
-        
-        val estimatedA1c = if (avgCalibratedForA1c > 0.0) {
+        val estimatedA1c = if (avgCalibratedForA1c > 39.0 && a1cItems.size > 10) { 
             val a1cRaw = (avgRawForA1c + 46.7) / 28.7
             val a1cCalibrated = (avgCalibratedForA1c + 46.7) / 28.7
             DisplayMetric(
-                primary = String.format(Locale.US, "%.1f%%(%.1f%%)", a1cRaw, a1cCalibrated),
-                secondary = ""
+                primary = String.format(Locale.US, "%.1f%%", a1cCalibrated),
+                secondary = String.format(Locale.US, "(raw: %.1f%%)", a1cRaw)
             )
         } else {
             DisplayMetric("--", "")
@@ -101,6 +126,20 @@ object DashboardMetricsCalculator {
             dinnerHypos = buildHypoCountMetric(dinnerMonth)
         )
     }
+
+    private fun emptyDashboardMetrics() = DashboardMetrics(
+        estimatedA1c = DisplayMetric("--", ""),
+        todayAvg = DisplayMetric("--", ""),
+        yesterdayAvg = DisplayMetric("--", ""),
+        weekAvg = DisplayMetric("--", ""),
+        monthAvg = DisplayMetric("--", ""),
+        breakfastMonthAvg = DisplayMetric("--", ""),
+        lunchMonthAvg = DisplayMetric("--", ""),
+        dinnerMonthAvg = DisplayMetric("--", ""),
+        breakfastHypos = CountMetric(0, 0),
+        lunchHypos = CountMetric(0, 0),
+        dinnerHypos = CountMetric(0, 0)
+    )
 
     private fun buildDisplayMetric(measurements: List<GlucoseMeasurement>): DisplayMetric {
         if (measurements.isEmpty()) {

@@ -97,6 +97,8 @@ class DashboardViewModel(
         },
         preferenceManager.capillaryReadings
     ) { inputs, capillaries ->
+        // OPTIMIZATION: Only process items within a reasonable window for the Dashboard
+        // (e.g., 90 days for A1c, but we can limit the processed list here)
         inputs.historical.map {
             GlucoseProcessor.process(
                 measurement = it,
@@ -108,17 +110,38 @@ class DashboardViewModel(
             )
         }
     }.flowOn(Dispatchers.Default)
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    val graphData: StateFlow<List<GlucoseMeasurement>> = historicalData
-        .map { data ->
-            val cutoff = Instant.now().minus(java.time.Duration.ofHours(24))
-            data.filter { m ->
+    val graphData: StateFlow<List<GlucoseMeasurement>> = combine(
+        combine(
+            repository.historicalGlucose,
+            preferenceManager.glucoseOffset,
+            preferenceManager.glucoseOffsetRanges,
+            preferenceManager.autoAdjustEnabled,
+            preferenceManager.autoRangeOffsetMode
+        ) { historical, manualOffset, ranges, autoAdjust, autoRangeMode ->
+            HistoricalInputs(historical, manualOffset, ranges, autoAdjust, autoRangeMode)
+        },
+        preferenceManager.capillaryReadings
+    ) { inputs, capillaries ->
+        val cutoff = Instant.now().minus(java.time.Duration.ofHours(24))
+        inputs.historical
+            .filter { m ->
                 val instant = TimestampParser.parseFlexibleInstant(m.factoryTimestamp) ?: TimestampParser.parseFlexibleInstant(m.timestamp)
                 instant?.isAfter(cutoff) == true
             }
-        }.flowOn(Dispatchers.Default)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+            .map {
+                GlucoseProcessor.process(
+                    measurement = it,
+                    manualOffset = inputs.manualOffset,
+                    userRanges = inputs.ranges,
+                    autoAdjustEnabled = inputs.autoAdjust,
+                    autoRangeOffsetMode = inputs.autoRangeMode,
+                    capillaryReadings = capillaries
+                )
+            }
+    }.flowOn(Dispatchers.Default)
+    .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     val dashboardMetrics: StateFlow<DashboardMetrics> = combine(
         historicalData,
