@@ -19,6 +19,9 @@ import androidx.compose.ui.platform.LocalContext
 import com.tonio.libre2clock.service.GlucoseForegroundService
 import android.content.Intent
 
+import androidx.compose.ui.res.stringResource
+import com.tonio.libre2clock.R
+
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel,
@@ -48,13 +51,13 @@ fun LoginScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Libre2Clock",
+                text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.headlineLarge,
                 color = MaterialTheme.colorScheme.primary
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Sign in with your LibreLinkUp account",
+                text = stringResource(R.string.login_welcome),
                 style = MaterialTheme.typography.bodyMedium
             )
             Spacer(modifier = Modifier.height(32.dp))
@@ -62,7 +65,7 @@ fun LoginScreen(
             OutlinedTextField(
                 value = email,
                 onValueChange = viewModel::onEmailChanged,
-                label = { Text("Email") },
+                label = { Text(stringResource(R.string.login_email_label)) },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isLoading,
                 singleLine = true,
@@ -73,7 +76,7 @@ fun LoginScreen(
             OutlinedTextField(
                 value = password,
                 onValueChange = viewModel::onPasswordChanged,
-                label = { Text("Password") },
+                label = { Text(stringResource(R.string.login_password_label)) },
                 visualTransformation = if (passwordVisible) {
                     VisualTransformation.None
                 } else {
@@ -92,9 +95,9 @@ fun LoginScreen(
                                 Icons.Default.Visibility
                             },
                             contentDescription = if (passwordVisible) {
-                                "Hide password"
+                                stringResource(R.string.login_hide_password)
                             } else {
-                                "Show password"
+                                stringResource(R.string.login_show_password)
                             }
                         )
                     }
@@ -114,14 +117,14 @@ fun LoginScreen(
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Text("Sign In")
+                    Text(stringResource(R.string.login_sign_in_button))
                 }
             }
 
             if (loginResult?.isFailure == true) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Login failed. Please check your credentials.",
+                    text = stringResource(R.string.login_error_invalid),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -133,7 +136,7 @@ fun LoginScreen(
                 onClick = viewModel::startDemoMode,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Try Demo Mode (Mock Data)")
+                Text(stringResource(R.string.login_try_demo))
             }
         }
     }

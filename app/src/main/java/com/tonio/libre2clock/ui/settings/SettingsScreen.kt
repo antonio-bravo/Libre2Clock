@@ -560,12 +560,12 @@ fun SettingsScreen(
                 ) {
                     Column(modifier = Modifier.padding(12.dp)) {
                         Text(
-                            text = "Rendimiento por seccion",
+                            text = stringResource(R.string.settings_perf_title),
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Estas metricas se obtienen de la telemetria local (cache hit/miss y tiempos).",
+                            text = stringResource(R.string.settings_perf_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                             modifier = Modifier.padding(top = 2.dp, bottom = 8.dp)
@@ -579,19 +579,19 @@ fun SettingsScreen(
                                 onClick = viewModel::refreshSectionPerfStats,
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text("Refrescar")
+                                Text(stringResource(R.string.settings_perf_refresh))
                             }
                             OutlinedButton(
                                 onClick = viewModel::resetSectionPerfStats,
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text("Reset")
+                                Text(stringResource(R.string.settings_perf_reset))
                             }
                         }
 
                         if (sectionPerfStats.isEmpty()) {
                             Text(
-                                text = "Aun no hay datos. Navega por Dashboard/Reports y vuelve a refrescar.",
+                                text = stringResource(R.string.settings_perf_no_data),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                                 modifier = Modifier.padding(top = 8.dp)
@@ -608,16 +608,26 @@ fun SettingsScreen(
                                     ) {
                                         Column(modifier = Modifier.padding(10.dp)) {
                                             Text(
-                                                text = stat.section,
+                                                text = getLocalizedSectionName(stat.section),
                                                 style = MaterialTheme.typography.labelMedium,
                                                 fontWeight = FontWeight.Bold
                                             )
                                             Text(
-                                                text = "Calls ${stat.calls} | Hit ${stat.hitRatePercent.roundToInt()}% (${stat.cacheHits}/${stat.calls})",
+                                                text = stringResource(
+                                                    R.string.settings_perf_hits_row,
+                                                    stat.calls,
+                                                    stat.hitRatePercent.roundToInt(),
+                                                    stat.cacheHits
+                                                ),
                                                 style = MaterialTheme.typography.bodySmall
                                             )
                                             Text(
-                                                text = "Avg ${"%.1f".format(stat.avgDurationMs)} ms | Max ${stat.maxDurationMs} ms | Miss ${stat.cacheMisses}",
+                                                text = stringResource(
+                                                    R.string.settings_perf_times_row,
+                                                    stat.avgDurationMs,
+                                                    stat.maxDurationMs,
+                                                    stat.cacheMisses
+                                                ),
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
                                             )
@@ -909,22 +919,26 @@ fun ScheduleItem(
                     style = MaterialTheme.typography.bodySmall
                 )
                 if (schedule.intervalMinutes != null || schedule.startMinute != null) {
-                    val intv = schedule.intervalMinutes ?: "Global"
-                    val start = schedule.startMinute ?: "Global"
-                    Text(text = "Interval: ${intv}m | Start: :${start}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
+                    val intv = schedule.intervalMinutes?.toString() ?: stringResource(R.string.settings_global_placeholder)
+                    val start = schedule.startMinute?.toString() ?: stringResource(R.string.settings_global_placeholder)
+                    Text(
+                        text = stringResource(R.string.settings_schedule_interval_row, intv, start),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
                 }
-                val days = schedule.daysOfWeek.sorted().joinToString(", ") { day ->
+                val days = schedule.daysOfWeek.sorted().map { day ->
                     when (day) {
-                        1 -> "Mon"
-                        2 -> "Tue"
-                        3 -> "Wed"
-                        4 -> "Thu"
-                        5 -> "Fri"
-                        6 -> "Sat"
-                        7 -> "Sun"
+                        1 -> stringResource(R.string.day_mon)
+                        2 -> stringResource(R.string.day_tue)
+                        3 -> stringResource(R.string.day_wed)
+                        4 -> stringResource(R.string.day_thu)
+                        5 -> stringResource(R.string.day_fri)
+                        6 -> stringResource(R.string.day_sat)
+                        7 -> stringResource(R.string.day_sun)
                         else -> ""
                     }
-                }
+                }.joinToString(", ")
                 Text(text = days, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -988,7 +1002,16 @@ fun ScheduleDialog(
                 Text(stringResource(R.string.settings_active_days), style = MaterialTheme.typography.labelMedium)
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     (1..7).forEach { day ->
-                        val label = when(day) { 1 -> "M"; 2 -> "T"; 3 -> "W"; 4 -> "T"; 5 -> "F"; 6 -> "S"; 7 -> "S"; else -> "" }
+                        val label = when(day) {
+                            1 -> stringResource(R.string.day_mon_short)
+                            2 -> stringResource(R.string.day_tue_short)
+                            3 -> stringResource(R.string.day_wed_short)
+                            4 -> stringResource(R.string.day_thu_short)
+                            5 -> stringResource(R.string.day_fri_short)
+                            6 -> stringResource(R.string.day_sat_short)
+                            7 -> stringResource(R.string.day_sun_short)
+                            else -> ""
+                        }
                         FilterChip(
                             selected = day in selectedDays,
                             onClick = {
@@ -1020,6 +1043,18 @@ fun ScheduleDialog(
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(android.R.string.cancel)) } }
     )
+}
+
+@Composable
+private fun getLocalizedSectionName(section: String): String {
+    return when (section) {
+        "dashboard_metrics_v1" -> stringResource(R.string.settings_perf_section_dashboard)
+        "report_metrics_v1" -> stringResource(R.string.settings_perf_section_report_metrics)
+        "report_agp_v1" -> stringResource(R.string.settings_perf_section_report_agp)
+        "report_daily_v1" -> stringResource(R.string.settings_perf_section_report_daily)
+        "settings_range_insights_v1" -> stringResource(R.string.settings_perf_section_range_insights)
+        else -> stringResource(R.string.settings_perf_section_unknown, section)
+    }
 }
 
 private fun formatBackupTimestamp(timestamp: Long): String {

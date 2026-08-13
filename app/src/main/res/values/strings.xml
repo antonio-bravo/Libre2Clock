@@ -167,6 +167,28 @@
     <string name="report_layout_full">Full Report</string>
     <string name="report_share">Share Summary</string>
     <string name="report_summary_header">Libre2Clock Report (%1$s)\nRange: %2$s to %3$s\n</string>
+    <string name="report_failed_generate">Failed to generate report</string>
+    <string name="report_using_calibrated">Using Calibrated (Offset)</string>
+    <string name="report_using_raw">Using Raw (Real)</string>
+    <string name="report_preview_title">Preview (Daily Trends)</string>
+    <string name="report_generating">Generating Report...</string>
+    <string name="report_generating_wait">Please wait, this may take a moment for long ranges.</string>
+    <string name="report_type_label">Report Type</string>
+    <string name="report_glucose_summary">Glucose Summary</string>
+    <string name="report_variability_cv">Variability (CV)</string>
+    <string name="report_time_in_range_label">Time In Range (70-180)</string>
+    <string name="report_low_percent">Low: %1$.0f%%</string>
+    <string name="report_high_percent">High: %1$.0f%%</string>
+    <string name="report_share_chooser">Share Report</string>
+
+    <string name="login_welcome">Sign in with your LibreLinkUp account</string>
+    <string name="login_email_label">Email</string>
+    <string name="login_password_label">Password</string>
+    <string name="login_hide_password">Hide password</string>
+    <string name="login_show_password">Show password</string>
+    <string name="login_sign_in_button">Sign In</string>
+    <string name="login_error_invalid">Login failed. Please check your credentials.</string>
+    <string name="login_try_demo">Try Demo Mode (Mock Data)</string>
 
     <!-- Settings Screen -->
     <string name="settings_title">Settings</string>
@@ -229,6 +251,36 @@
     <string name="settings_watch_sync_test">Watch Sync Test</string>
     <string name="settings_watch_sync_test_desc">Trigger a mock notification to verify that glucose data is correctly mirrored to your Amazfit Bip S.</string>
     <string name="settings_test_notification">Test Notification</string>
+
+    <string name="settings_perf_title">Section Performance</string>
+    <string name="settings_perf_desc">These metrics are obtained from local telemetry (cache hit/miss and timings).</string>
+    <string name="settings_perf_refresh">Refresh</string>
+    <string name="settings_perf_reset">Reset</string>
+    <string name="settings_perf_no_data">No data yet. Navigate through Dashboard/Reports and refresh again.</string>
+    <string name="settings_perf_hits_row">Calls: %1$d | Cache Hits: %2$d%% (%3$d/%1$d)</string>
+    <string name="settings_perf_times_row">Avg: %1$.1f ms | Max: %2$d ms | Cache Misses: %3$d</string>
+    <string name="settings_perf_section_dashboard">Dashboard Metrics</string>
+    <string name="settings_perf_section_report_metrics">Report Metrics</string>
+    <string name="settings_perf_section_report_agp">AGP Graph</string>
+    <string name="settings_perf_section_report_daily">Daily Summaries</string>
+    <string name="settings_perf_section_range_insights">Range Insights</string>
+    <string name="settings_perf_section_unknown">Unknown Section (%1$s)</string>
+
+    <string name="settings_schedule_interval_row">Interval: %1$s | Start: :%2$s</string>
+    <string name="day_mon">Mon</string>
+    <string name="day_tue">Tue</string>
+    <string name="day_wed">Wed</string>
+    <string name="day_thu">Thu</string>
+    <string name="day_fri">Fri</string>
+    <string name="day_sat">Sat</string>
+    <string name="day_sun">Sun</string>
+    <string name="day_mon_short">M</string>
+    <string name="day_tue_short">T</string>
+    <string name="day_wed_short">W</string>
+    <string name="day_thu_short">T</string>
+    <string name="day_fri_short">F</string>
+    <string name="day_sat_short">S</string>
+    <string name="day_sun_short">S</string>
     <string name="settings_api_diagnostic_title">API Diagnostic</string>
     <string name="settings_api_diagnostic_desc">Call LibreLinkUp directly and show raw response fields/error details to diagnose sync issues.</string>
     <string name="settings_api_diagnostic_run">Run API Diagnostic</string>

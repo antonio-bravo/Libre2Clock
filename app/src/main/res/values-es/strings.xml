@@ -167,6 +167,28 @@
     <string name="report_layout_full">Informe Completo</string>
     <string name="report_share">Compartir Resumen</string>
     <string name="report_summary_header">Informe Libre2Clock (%1$s)\nRango: %2$s al %3$s\n</string>
+    <string name="report_failed_generate">Error al generar el informe</string>
+    <string name="report_using_calibrated">Usando Calibrado (Offset)</string>
+    <string name="report_using_raw">Usando Bruto (Real)</string>
+    <string name="report_preview_title">Previsualización (Tendencias Diarias)</string>
+    <string name="report_generating">Generando informe...</string>
+    <string name="report_generating_wait">Por favor espera, esto puede tardar un momento para rangos largos.</string>
+    <string name="report_type_label">Tipo de Informe</string>
+    <string name="report_glucose_summary">Resumen de Glucosa</string>
+    <string name="report_variability_cv">Variabilidad (CV)</string>
+    <string name="report_time_in_range_label">Tiempo en Rango (70-180)</string>
+    <string name="report_low_percent">Bajo: %1$.0f%%</string>
+    <string name="report_high_percent">Alto: %1$.0f%%</string>
+    <string name="report_share_chooser">Compartir Informe</string>
+
+    <string name="login_welcome">Inicia sesión con tu cuenta de LibreLinkUp</string>
+    <string name="login_email_label">Correo electrónico</string>
+    <string name="login_password_label">Contraseña</string>
+    <string name="login_hide_password">Ocultar contraseña</string>
+    <string name="login_show_password">Mostrar contraseña</string>
+    <string name="login_sign_in_button">Iniciar Sesión</string>
+    <string name="login_error_invalid">Error de inicio de sesión. Por favor revisa tus credenciales.</string>
+    <string name="login_try_demo">Probar Modo Demo (Datos Ficticios)</string>
 
     <!-- Settings Screen -->
     <string name="settings_title">Configuración</string>
@@ -229,6 +251,36 @@
     <string name="settings_watch_sync_test">Prueba de Sincronización del Reloj</string>
     <string name="settings_watch_sync_test_desc">Lanza una notificación simulada para verificar que los datos se reflejan en tu Amazfit Bip S.</string>
     <string name="settings_test_notification">Probar Notificación</string>
+
+    <string name="settings_perf_title">Rendimiento por sección</string>
+    <string name="settings_perf_desc">Estas métricas se obtienen de la telemetría local (cache hit/miss y tiempos).</string>
+    <string name="settings_perf_refresh">Refrescar</string>
+    <string name="settings_perf_reset">Reiniciar</string>
+    <string name="settings_perf_no_data">Aún no hay datos. Navega por Dashboard/Reports y vuelve a refrescar.</string>
+    <string name="settings_perf_hits_row">Llamadas: %1$d | Aciertos Caché: %2$d%% (%3$d/%1$d)</string>
+    <string name="settings_perf_times_row">Media: %1$.1f ms | Máx: %2$d ms | Fallos Caché: %3$d</string>
+    <string name="settings_perf_section_dashboard">Métricas Dashboard</string>
+    <string name="settings_perf_section_report_metrics">Métricas de Informe</string>
+    <string name="settings_perf_section_report_agp">Gráfico AGP</string>
+    <string name="settings_perf_section_report_daily">Resúmenes Diarios</string>
+    <string name="settings_perf_section_range_insights">Análisis de Rangos</string>
+    <string name="settings_perf_section_unknown">Sección desconocida (%1$s)</string>
+
+    <string name="settings_schedule_interval_row">Intervalo: %1$s | Inicio: :%2$s</string>
+    <string name="day_mon">Lun</string>
+    <string name="day_tue">Mar</string>
+    <string name="day_wed">Mié</string>
+    <string name="day_thu">Jue</string>
+    <string name="day_fri">Vie</string>
+    <string name="day_sat">Sáb</string>
+    <string name="day_sun">Dom</string>
+    <string name="day_mon_short">L</string>
+    <string name="day_tue_short">M</string>
+    <string name="day_wed_short">X</string>
+    <string name="day_thu_short">J</string>
+    <string name="day_fri_short">V</string>
+    <string name="day_sat_short">S</string>
+    <string name="day_sun_short">D</string>
     <string name="settings_add_active_schedule">Añadir Horario Activo</string>
     <string name="settings_edit_schedule">Editar Horario</string>
     <string name="settings_schedule_name">Nombre</string>

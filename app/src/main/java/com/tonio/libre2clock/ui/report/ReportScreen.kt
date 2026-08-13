@@ -47,6 +47,9 @@ fun ReportScreen(
     
     var selectedLayout by remember { mutableStateOf(ReportLayout.FULL) }
 
+    val reportFailedMsg = stringResource(R.string.report_failed_generate)
+    val shareReportTitle = stringResource(R.string.report_share_chooser)
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -77,12 +80,12 @@ fun ReportScreen(
                                 }
                                 
                                 viewModel.setGenerating(false)
-                                if (file != null) sharePdf(context, file)
-                                else Toast.makeText(context, "Failed to generate report", Toast.LENGTH_SHORT).show()
+                                if (file != null) sharePdf(context, file, shareReportTitle)
+                                else Toast.makeText(context, reportFailedMsg, Toast.LENGTH_SHORT).show()
                             }
                         }
                     ) {
-                        Icon(Icons.Default.PictureAsPdf, contentDescription = "Export PDF")
+                        Icon(Icons.Default.PictureAsPdf, contentDescription = stringResource(R.string.settings_export))
                     }
                 }
             )
@@ -104,7 +107,7 @@ fun ReportScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(text = if (useOffset) "Using Calibrated (Offset)" else "Using Raw (Real)")
+                    Text(text = if (useOffset) stringResource(R.string.report_using_calibrated) else stringResource(R.string.report_using_raw))
                     Switch(checked = useOffset, onCheckedChange = { viewModel.setUseOffsetValues(it) })
                 }
 
@@ -115,7 +118,7 @@ fun ReportScreen(
                     InsulinStatsSection(m)
                 }
 
-                Text(text = "Preview (Daily Trends)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(text = stringResource(R.string.report_preview_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 val previewData = remember(dailySummaries) { dailySummaries.flatMap { it.glucose }.take(200) }
                 InteractiveTrendGraph(
                     measurements = previewData,
@@ -145,8 +148,8 @@ private fun GenerationLoadingDialog() {
             ) {
                 CircularProgressIndicator()
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("Generating Report...", style = MaterialTheme.typography.bodyMedium)
-                Text("Please wait, this may take a moment for long ranges.", 
+                Text(stringResource(R.string.report_generating), style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.report_generating_wait), 
                     style = MaterialTheme.typography.labelSmall, 
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     fontWeight = FontWeight.Normal
@@ -185,7 +188,7 @@ fun RangeSelector(selected: ReportRange, onSelect: (ReportRange) -> Unit) {
 @Composable
 fun LayoutSelector(selected: ReportLayout, onSelect: (ReportLayout) -> Unit) {
     Column {
-        Text(text = "Report Type", style = MaterialTheme.typography.labelMedium)
+        Text(text = stringResource(R.string.report_type_label), style = MaterialTheme.typography.labelMedium)
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             LayoutButton(ReportLayout.SNAPSHOT, stringResource(R.string.report_layout_snapshot), selected == ReportLayout.SNAPSHOT, onSelect, Modifier.weight(1f))
             LayoutButton(ReportLayout.DAILY_LOG, stringResource(R.string.report_layout_daily), selected == ReportLayout.DAILY_LOG, onSelect, Modifier.weight(1f))
@@ -208,11 +211,11 @@ fun LayoutButton(layout: ReportLayout, label: String, isSelected: Boolean, onSel
 fun GlucoseStatsSection(metrics: ReportMetrics) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = "Glucose Summary", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(text = stringResource(R.string.report_glucose_summary), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(8.dp))
             MetricRow(stringResource(R.string.report_avg_glucose), "%.0f mg/dL".format(metrics.avgGlucose))
             MetricRow(stringResource(R.string.report_gmi), "%.1f %%".format(metrics.gmi))
-            MetricRow("Variability (CV)", "%.1f %%".format(metrics.cv))
+            MetricRow(stringResource(R.string.report_variability_cv), "%.1f %%".format(metrics.cv))
             
             Spacer(modifier = Modifier.height(16.dp))
             TirBarAdvanced(metrics)
@@ -244,7 +247,7 @@ fun MetricRow(label: String, value: String) {
 fun TirBarAdvanced(m: ReportMetrics) {
     Column {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(text = "Time In Range (70-180)", style = MaterialTheme.typography.labelSmall)
+            Text(text = stringResource(R.string.report_time_in_range_label), style = MaterialTheme.typography.labelSmall)
             Text(text = "%.0f%%".format(m.tir), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
         }
         
@@ -257,18 +260,18 @@ fun TirBarAdvanced(m: ReportMetrics) {
         }
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(text = "Low: %.0f%%".format(m.tbrLow + m.tbrVLow), style = MaterialTheme.typography.labelSmall, color = Color.Red)
-            Text(text = "High: %.0f%%".format(m.tarHigh + m.tarVHigh), style = MaterialTheme.typography.labelSmall, color = Color(0xFFFFA500))
+            Text(text = stringResource(R.string.report_low_percent, m.tbrLow + m.tbrVLow), style = MaterialTheme.typography.labelSmall, color = Color.Red)
+            Text(text = stringResource(R.string.report_high_percent, m.tarHigh + m.tarVHigh), style = MaterialTheme.typography.labelSmall, color = Color(0xFFFFA500))
         }
     }
 }
 
-private fun sharePdf(context: android.content.Context, file: File) {
+private fun sharePdf(context: android.content.Context, file: File, chooserTitle: String) {
     val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
     val intent = Intent(Intent.ACTION_SEND).apply {
         type = "application/pdf"
         putExtra(Intent.EXTRA_STREAM, uri)
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
-    context.startActivity(Intent.createChooser(intent, "Share Report"))
+    context.startActivity(Intent.createChooser(intent, chooserTitle))
 }
