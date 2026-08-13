@@ -9,6 +9,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -22,11 +23,13 @@ import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tonio.libre2clock.R
+import com.tonio.libre2clock.data.model.CapillaryMeasurement
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.InsulinDose
 import com.tonio.libre2clock.data.model.InsulinType
@@ -67,6 +70,10 @@ fun DashboardScreen(
     val isDemoMode by viewModel.isDemoMode.collectAsStateWithLifecycle()
     val isHistoryRefreshing by viewModel.isHistoryRefreshing.collectAsStateWithLifecycle()
     val dashboardMetrics by viewModel.dashboardMetrics.collectAsStateWithLifecycle()
+
+    var showCapillaryDialog by remember { mutableStateOf(false) }
+    var capillaryValueText by remember { mutableStateOf("") }
+    var capillaryDateText by remember { mutableStateOf("") }
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -139,6 +146,17 @@ fun DashboardScreen(
                         }
                     },
                     actions = {
+                        IconButton(onClick = {
+                            capillaryValueText = ""
+                            capillaryDateText = currentDateTimeText()
+                            showCapillaryDialog = true
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.WaterDrop,
+                                contentDescription = stringResource(R.string.add_capillary_reading),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
                         IconButton(onClick = viewModel::refresh) {
                             Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.refresh))
                         }
@@ -186,6 +204,70 @@ fun DashboardScreen(
             }
         }
     }
+
+    if (showCapillaryDialog) {
+        AlertDialog(
+            onDismissRequest = { showCapillaryDialog = false },
+            title = { Text(stringResource(R.string.save_capillary_reading)) },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = capillaryValueText,
+                        onValueChange = { capillaryValueText = it },
+                        label = { Text(stringResource(R.string.capillary_value_label)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = capillaryDateText,
+                        onValueChange = { capillaryDateText = it },
+                        label = { Text(stringResource(R.string.capillary_timestamp_label)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    val sensorValue = currentGlucose?.value
+                    OutlinedTextField(
+                        value = sensorValue?.toString() ?: stringResource(R.string.no_sensor_data),
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text(stringResource(R.string.capillary_current_sensor)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val value = capillaryValueText.toIntOrNull() ?: return@TextButton
+                    val sensorValue = currentGlucose?.value
+                    val delta = sensorValue?.let { value - it }
+                    val timestamp = capillaryDateText.ifBlank { currentDateTimeText() }
+                    viewModel.addCapillaryReading(
+                        CapillaryMeasurement(
+                            value = value,
+                            timestamp = timestamp,
+                            sensorValue = sensorValue,
+                            delta = delta
+                        )
+                    )
+                    showCapillaryDialog = false
+                }) {
+                    Text(stringResource(android.R.string.ok))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCapillaryDialog = false }) {
+                    Text(stringResource(android.R.string.cancel))
+                }
+            }
+        )
+    }
+}
+
+private fun currentDateTimeText(): String {
+    return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+        .withZone(ZoneId.systemDefault())
+        .format(Instant.now())
 }
 
 @Composable

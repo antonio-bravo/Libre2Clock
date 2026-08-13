@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -184,6 +185,15 @@ class DashboardViewModel(
             current.add(dose)
             current.sortByDescending { it.timestamp }
             preferenceManager.saveInsulinDoses(current)
+        }
+    }
+
+    fun addCapillaryReading(reading: com.tonio.libre2clock.data.model.CapillaryMeasurement) {
+        viewModelScope.launch {
+            val currentReadings = preferenceManager.capillaryReadings.first().toMutableList()
+            currentReadings.add(reading)
+            currentReadings.sortByDescending { it.timestamp }
+            preferenceManager.saveCapillaryReadings(currentReadings)
         }
     }
 
