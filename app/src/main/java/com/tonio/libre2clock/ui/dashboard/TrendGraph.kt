@@ -47,9 +47,17 @@ fun InteractiveTrendGraph(
     modifier: Modifier = Modifier
 ) {
     val sanitizedSorted = remember(measurements) {
-        measurements.mapNotNull { m ->
+        val raw = measurements.mapNotNull { m ->
             measurementInstant(m)?.let { it to m }
         }.sortedBy { it.first }
+        
+        // Downsample for very long ranges to keep UI fluid
+        if (raw.size > 2000) {
+            val step = raw.size / 1500
+            raw.filterIndexed { index, _ -> index % step == 0 }
+        } else {
+            raw
+        }
     }
 
     var selectedMeasurement by remember { mutableStateOf<GlucoseMeasurement?>(null) }
@@ -171,20 +179,15 @@ fun InteractiveTrendGraph(
                         drawPath(path = rawPath, color = ORIGINAL_LINE_COLOR, style = Stroke(width = 2.dp.toPx()))
                         drawPath(path = calibratedPath, color = CALIBRATED_LINE_COLOR, style = Stroke(width = 4.dp.toPx()))
                         
-                        // Reference lines
+                        // Reference lines (Target Range)
                         listOf(70, 180).forEach { threshold ->
                             val y = plotHeight - ((threshold - minGlucose) / range * plotHeight)
-                            drawLine(color = Color.Gray.copy(alpha = 0.3f), start = Offset(0f, y), end = Offset(width, y), strokeWidth = 1.dp.toPx())
-                        }
-
-                        // Draw Raw Path (Original)
-                        drawPath(path = rawPath, color = ORIGINAL_LINE_COLOR, style = Stroke(width = 2.dp.toPx()))
-                        drawPath(path = calibratedPath, color = CALIBRATED_LINE_COLOR, style = Stroke(width = 4.dp.toPx()))
-                        
-                        // Reference lines
-                        listOf(70, 180).forEach { threshold ->
-                            val y = plotHeight - ((threshold - minGlucose) / range * plotHeight)
-                            drawLine(color = Color.Gray.copy(alpha = 0.3f), start = Offset(0f, y), end = Offset(width, y), strokeWidth = 1.dp.toPx())
+                            drawLine(
+                                color = if (threshold == 70) Color.Red.copy(alpha = 0.3f) else Color.Green.copy(alpha = 0.3f),
+                                start = Offset(0f, y),
+                                end = Offset(width, y),
+                                strokeWidth = 1.dp.toPx()
+                            )
                         }
 
                         // Ticks and Grid
@@ -232,7 +235,11 @@ fun InteractiveTrendGraph(
                             drawLine(color = Color.Gray.copy(alpha = 0.25f), start = Offset(x, 0f), end = Offset(x, plotHeight), strokeWidth = 0.5.dp.toPx())
 
                             val localDateTime = LocalDateTime.ofInstant(cursor, zone)
-                            drawContext.canvas.nativeCanvas.drawText(dateFormatter.format(localDateTime), x, plotHeight + 14.dp.toPx(), labelPaint)
+                            val showDate = cursor == firstInstant || localDateTime.hour == 0
+                            
+                            if (showDate) {
+                                drawContext.canvas.nativeCanvas.drawText(dateFormatter.format(localDateTime), x, plotHeight + 14.dp.toPx(), labelPaint)
+                            }
                             drawContext.canvas.nativeCanvas.drawText(hourFormatter.format(localDateTime), x, plotHeight + 28.dp.toPx(), labelPaint)
                             cursor = cursor.plusSeconds(intervalSeconds)
                         }

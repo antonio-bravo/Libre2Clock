@@ -71,6 +71,7 @@ fun DashboardScreen(
     val isDemoMode by viewModel.isDemoMode.collectAsStateWithLifecycle()
     val isHistoryRefreshing by viewModel.isHistoryRefreshing.collectAsStateWithLifecycle()
     val dashboardMetrics by viewModel.dashboardMetrics.collectAsStateWithLifecycle()
+    val graphWindowDays by viewModel.graphWindowDays.collectAsStateWithLifecycle()
 
     var showCapillaryDialog by remember { mutableStateOf(false) }
     var capillaryValueText by remember { mutableStateOf("") }
@@ -205,7 +206,51 @@ fun DashboardScreen(
                     isRefreshing = isHistoryRefreshing,
                     onRefresh = viewModel::refreshHistoryWindow
                 )
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "Trend Graph", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                    
+                    var showGraphMenu by remember { mutableStateOf(false) }
+                    Box {
+                        TextButton(
+                            onClick = { showGraphMenu = true },
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                            modifier = Modifier.height(32.dp)
+                        ) {
+                            Text(
+                                text = "${graphWindowDays}d",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = showGraphMenu,
+                            onDismissRequest = { showGraphMenu = false }
+                        ) {
+                            listOf(1, 2, 7, 14, 30).forEach { days ->
+                                DropdownMenuItem(
+                                    text = { Text("${days} days") },
+                                    onClick = {
+                                        viewModel.setGraphWindow(days)
+                                        showGraphMenu = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+
                 InteractiveTrendGraph(
                     measurements = graphData,
                     modifier = Modifier

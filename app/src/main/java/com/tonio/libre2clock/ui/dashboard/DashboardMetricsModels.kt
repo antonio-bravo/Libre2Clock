@@ -65,14 +65,18 @@ object DashboardMetricsCalculator {
 
         measurements.forEach { m ->
             // CRITICAL: Filter out invalid values and extreme outliers
-            if (m.value <= 39 || m.value > 500) return@forEach
+            // Note: Keep a broader range to allow clinical validation
+            if (m.value <= 0) return@forEach
 
             val instant = parseMeasurementInstant(m) ?: return@forEach
             
             // Only group measurements that have a clear date relative to Today
-            if (!instant.isBefore(startOfToday)) {
+            val beforeToday = instant.isBefore(startOfToday)
+            val notBeforeYesterday = !instant.isBefore(startOfYesterday)
+
+            if (!beforeToday) {
                 todayItems.add(m)
-            } else if (!instant.isBefore(startOfYesterday) && instant.isBefore(startOfToday)) {
+            } else if (notBeforeYesterday) {
                 yesterdayItems.add(m)
             }
             
@@ -101,7 +105,7 @@ object DashboardMetricsCalculator {
         val avgRawForA1c = if (a1cItems.isNotEmpty()) a1cItems.map { it.value }.average() else 0.0
         val avgCalibratedForA1c = if (a1cItems.isNotEmpty()) a1cItems.map { it.calibratedValue }.average() else 0.0
         
-        val estimatedA1c = if (avgCalibratedForA1c > 39.0 && a1cItems.size > 10) { 
+        val estimatedA1c = if (avgCalibratedForA1c > 10.0 && a1cItems.size > 2) { 
             val a1cRaw = (avgRawForA1c + 46.7) / 28.7
             val a1cCalibrated = (avgCalibratedForA1c + 46.7) / 28.7
             DisplayMetric(
