@@ -105,8 +105,8 @@ object DashboardMetricsCalculator {
             val a1cRaw = (avgRawForA1c + 46.7) / 28.7
             val a1cCalibrated = (avgCalibratedForA1c + 46.7) / 28.7
             DisplayMetric(
-                primary = String.format(Locale.US, "%.1f%%", a1cCalibrated),
-                secondary = String.format(Locale.US, "(raw: %.1f%%)", a1cRaw)
+                primary = String.format(Locale.US, "%.1f%%(%.1f%%)", a1cRaw, a1cCalibrated),
+                secondary = ""
             )
         } else {
             DisplayMetric("--", "")
