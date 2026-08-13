@@ -1,5 +1,30 @@
 # Changelog
 
+## 79a39e0 (Aug 13, 2026 18:14:44)
+add quick button for capilar — antonio-bravo
+[detail](#79a39e0-details)
+
+<details id='79a39e0-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+</details>
+
+
+---
+## ba92f6b (Aug 13, 2026 15:54:11)
+Update changelog — github-actions[bot]
+[detail](#ba92f6b-details)
+
+<details id='ba92f6b-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 2fede01 (Aug 13, 2026 17:53:57)
 fix language — antonio-bravo
 [detail](#2fede01-details)
@@ -722,33 +747,6 @@ change date format in graph — antonio-bravo
 <details id='6bf812c-details'>
 <summary>Changed files</summary>
 
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
-</details>
-
-
----
-## bca8252 (Jul 18, 2026 21:22:55)
-update action in workflow — antonio-bravo
-[detail](#bca8252-details)
-
-<details id='bca8252-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/build-release.yml [Modified]
-</details>
-
-
----
-## 8860543 (Jul 18, 2026 20:45:08)
-fix graph — antonio-bravo
-[detail](#8860543-details)
-
-<details id='8860543-details'>
-<summary>Changed files</summary>
-
-- .artifacts/a0a33dbc-2e5d-4c62-a073-96b724944422/implementation_plan.artifact.md [Modified]
-- .artifacts/a0a33dbc-2e5d-4c62-a073-96b724944422/task.artifact.md [Modified]
-- .artifacts/a0a33dbc-2e5d-4c62-a073-96b724944422/walkthrough.artifact.md [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
 </details>
 
