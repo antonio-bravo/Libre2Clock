@@ -1,5 +1,48 @@
 # Changelog
 
+## 9221371 (Aug 13, 2026 17:24:51)
+Optimized and add SQL Lite — antonio-bravo
+[detail](#9221371-details)
+
+<details id='9221371-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/MainActivity.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/local/GlucoseHistoryDatabaseHelper.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/data/local/SectionCacheDatabaseHelper.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepository.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/di/AppContainer.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsCacheRepository.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportCacheModels.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportSectionCacheRepository.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsSectionCacheRepository.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/SectionPerfTelemetry.kt [Deleted]
+</details>
+
+
+---
+## 289681b (Aug 09, 2026 20:50:53)
+Update changelog — github-actions[bot]
+[detail](#289681b-details)
+
+<details id='289681b-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 8320f74 (Aug 09, 2026 22:50:37)
 api test & fix parsing datetime — antonio-bravo
 [detail](#8320f74-details)
@@ -706,36 +749,6 @@ fix graph — antonio-bravo
 - .artifacts/a0a33dbc-2e5d-4c62-a073-96b724944422/walkthrough.artifact.md [Modified]
 - app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
-</details>
-
-
----
-## 45b7d31 (Jul 18, 2026 20:15:54)
-fix clipboard — antonio-bravo
-[detail](#45b7d31-details)
-
-<details id='45b7d31-details'>
-<summary>Changed files</summary>
-
-- .artifacts/a0a33dbc-2e5d-4c62-a073-96b724944422/walkthrough.artifact.md [Modified]
-- .github/workflows/build-release.yml [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-</details>
-
-
----
-## ee6206c (Jul 18, 2026 20:03:54)
-fix restore — antonio-bravo
-[detail](#ee6206c-details)
-
-<details id='ee6206c-details'>
-<summary>Changed files</summary>
-
-- .artifacts/a0a33dbc-2e5d-4c62-a073-96b724944422/implementation_plan.artifact.md [Modified]
-- .artifacts/a0a33dbc-2e5d-4c62-a073-96b724944422/task.artifact.md [Modified]
-- .artifacts/a0a33dbc-2e5d-4c62-a073-96b724944422/walkthrough.artifact.md [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
 </details>
 
 
