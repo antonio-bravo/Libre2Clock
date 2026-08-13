@@ -116,6 +116,9 @@ class SettingsViewModel(
     val insulinDoses: StateFlow<List<com.tonio.libre2clock.data.model.InsulinDose>> = preferenceManager.insulinDoses
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val sensorLogs: StateFlow<List<com.tonio.libre2clock.data.model.SensorLog>> = preferenceManager.sensorLogs
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     val watchNotificationSchedules: StateFlow<List<com.tonio.libre2clock.data.model.AlarmSchedule>> = preferenceManager.watchNotificationSchedules
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -130,6 +133,9 @@ class SettingsViewModel(
 
     val disableFastRefreshOnSlowCharge: StateFlow<Boolean> = preferenceManager.disableFastRefreshOnSlowCharge
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+
+    val sensorDurationDays: StateFlow<Int> = preferenceManager.sensorDurationDays
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 15)
 
     val currentGlucose: StateFlow<GlucoseMeasurement?> = combine(
         combine(
@@ -348,13 +354,15 @@ class SettingsViewModel(
     fun requestPartialHistoryBackup(
         includeHistoricalGlucose: Boolean,
         includeCapillaryReadings: Boolean,
-        includeInsulinDoses: Boolean = true
+        includeInsulinDoses: Boolean = true,
+        includeSensorLogs: Boolean = true
     ) {
         viewModelScope.launch {
             val requested = preferenceManager.requestPartialHistoryCloudBackup(
                 includeHistoricalGlucose = includeHistoricalGlucose,
                 includeCapillaryReadings = includeCapillaryReadings,
-                includeInsulinDoses = includeInsulinDoses
+                includeInsulinDoses = includeInsulinDoses,
+                includeSensorLogs = includeSensorLogs
             )
             _backupStatusMessage.value = if (requested) {
                 "Partial Google backup requested."
@@ -367,13 +375,15 @@ class SettingsViewModel(
     fun restorePartialHistoryFromBackup(
         includeHistoricalGlucose: Boolean,
         includeCapillaryReadings: Boolean,
-        includeInsulinDoses: Boolean = true
+        includeInsulinDoses: Boolean = true,
+        includeSensorLogs: Boolean = true
     ) {
         viewModelScope.launch {
             val restored = preferenceManager.restorePartialHistoryFromBackup(
                 includeHistoricalGlucose = includeHistoricalGlucose,
                 includeCapillaryReadings = includeCapillaryReadings,
-                includeInsulinDoses = includeInsulinDoses
+                includeInsulinDoses = includeInsulinDoses,
+                includeSensorLogs = includeSensorLogs
             )
             if (restored) {
                 repository.syncLocalArchiveFromPreferences()
@@ -635,6 +645,25 @@ class SettingsViewModel(
         }
     }
 
+    fun updateSensorLog(log: com.tonio.libre2clock.data.model.SensorLog) {
+        viewModelScope.launch {
+            val current = sensorLogs.value.toMutableList()
+            val index = current.indexOfFirst { it.serialNumber == log.serialNumber }
+            if (index != -1) {
+                current[index] = log
+                preferenceManager.saveSensorLogs(current)
+            }
+        }
+    }
+
+    fun removeSensorLog(log: com.tonio.libre2clock.data.model.SensorLog) {
+        viewModelScope.launch {
+            val current = sensorLogs.value.toMutableList()
+            current.removeIf { it.serialNumber == log.serialNumber }
+            preferenceManager.saveSensorLogs(current)
+        }
+    }
+
     fun updateInsulinDose(oldDose: com.tonio.libre2clock.data.model.InsulinDose, newDose: com.tonio.libre2clock.data.model.InsulinDose) {
         viewModelScope.launch {
             val current = insulinDoses.value.toMutableList()
@@ -711,5 +740,9 @@ class SettingsViewModel(
 
     fun updateDisableFastRefreshOnSlowCharge(disabled: Boolean) {
         viewModelScope.launch { preferenceManager.saveDisableFastRefreshOnSlowCharge(disabled) }
+    }
+
+    fun updateSensorDurationDays(days: Int) {
+        viewModelScope.launch { preferenceManager.saveSensorDurationDays(days) }
     }
 }

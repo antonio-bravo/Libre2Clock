@@ -21,7 +21,8 @@ object PdfReportGenerator {
         metrics: ReportMetrics,
         agpData: List<AgpPoint>,
         dailySummaries: List<DailySummary>,
-        range: ReportRange,
+        startDate: java.time.LocalDate,
+        endDate: java.time.LocalDate,
         useOffset: Boolean,
         layout: ReportLayout
     ): File? {
@@ -33,7 +34,7 @@ object PdfReportGenerator {
             val canvas = page.canvas
             var y = MARGIN
             
-            y = drawHeader(canvas, "Ambulatory Glucose Profile (AGP)", range, useOffset, y)
+            y = drawHeader(canvas, "Ambulatory Glucose Profile (AGP)", startDate, endDate, useOffset, y)
             y = drawExecutiveSummary(canvas, metrics, y)
             y += 20f
             drawAgpPatternGraph(canvas, agpData, y)
@@ -50,7 +51,7 @@ object PdfReportGenerator {
                 val canvas = page.canvas
                 var y = MARGIN
                 
-                y = drawHeader(canvas, "Daily Glucose Profiles (Page ${index + 1})", range, useOffset, y)
+                y = drawHeader(canvas, "Daily Glucose Profiles (Page ${index + 1})", startDate, endDate, useOffset, y)
                 drawDailyLogsGrid(canvas, chunk, useOffset, y)
                 
                 pdfDocument.finishPage(page)
@@ -70,14 +71,21 @@ object PdfReportGenerator {
         }
     }
 
-    private fun drawHeader(canvas: Canvas, title: String, range: ReportRange, useOffset: Boolean, startY: Float): Float {
+    private fun drawHeader(
+        canvas: Canvas,
+        title: String,
+        startDate: java.time.LocalDate,
+        endDate: java.time.LocalDate,
+        useOffset: Boolean,
+        startY: Float
+    ): Float {
         val titlePaint = Paint().apply { color = Color.BLACK; textSize = 18f; isFakeBoldText = true }
         val subPaint = Paint().apply { color = Color.GRAY; textSize = 10f }
         
         canvas.drawText(title, MARGIN, startY + 20f, titlePaint)
         
         val now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))
-        canvas.drawText("Generated: $now | Range: ${range.days} days | Mode: ${if (useOffset) "Calibrated" else "Raw"}", MARGIN, startY + 35f, subPaint)
+        canvas.drawText("Generated: $now | Range: $startDate to $endDate | Mode: ${if (useOffset) "Calibrated" else "Raw"}", MARGIN, startY + 35f, subPaint)
         
         canvas.drawLine(MARGIN, startY + 45f, PAGE_WIDTH - MARGIN, startY + 45f, Paint().apply { color = Color.LTGRAY; strokeWidth = 1f })
         

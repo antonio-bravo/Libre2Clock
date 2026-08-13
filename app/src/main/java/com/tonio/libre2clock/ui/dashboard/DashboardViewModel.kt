@@ -76,9 +76,10 @@ class DashboardViewModel(
     val sensorStatus: StateFlow<SensorStatus?> = combine(
         repository.activeSensorInfo,
         repository.isDemoMode,
+        preferenceManager.sensorDurationDays,
         ticker
-    ) { info: ActiveSensorInfo?, demoEnabled: Boolean, _: Unit ->
-        calculateSensorStatus(info, demoEnabled)
+    ) { info: ActiveSensorInfo?, demoEnabled: Boolean, duration: Int, _: Unit ->
+        calculateSensorStatus(info, demoEnabled, duration)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     val isDemoMode: StateFlow<Boolean> = repository.isDemoMode
@@ -197,19 +198,19 @@ class DashboardViewModel(
         }
     }
 
-    private fun calculateSensorStatus(info: ActiveSensorInfo?, demoEnabled: Boolean): SensorStatus? {
+    private fun calculateSensorStatus(info: ActiveSensorInfo?, demoEnabled: Boolean, sensorDurationDays: Int): SensorStatus? {
         if (demoEnabled) {
             return SensorStatus(
-                daysRemaining = androidContext.getString(R.string.sensor_remaining_days, 14, 0, 0),
+                daysRemaining = androidContext.getString(R.string.sensor_remaining_days, sensorDurationDays, 0, 0),
                 startDate = androidContext.getString(R.string.sensor_started_label, "Mon, Nov 03, 2025 10:30"),
-                expiryDate = androidContext.getString(R.string.sensor_expires_label, "Mon, Nov 17, 2025 10:30"),
+                expiryDate = androidContext.getString(R.string.sensor_expires_label, "Tue, Nov 18, 2025 10:30"),
                 serialNumber = "DEMO-12345"
             )
         }
         
         if (info == null) return null
         
-        val expiryTime = info.activationTimestamp + (14 * 24 * 60 * 60)
+        val expiryTime = info.activationTimestamp + (sensorDurationDays.toLong() * 24 * 60 * 60)
         val now = Instant.now().epochSecond
         val remainingSeconds = expiryTime - now
 

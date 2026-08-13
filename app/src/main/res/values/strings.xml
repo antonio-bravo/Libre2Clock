@@ -6,6 +6,7 @@
     <string name="menu_capillary">Capillary Readings</string>
     <string name="menu_insulin_hub">Insulin Management</string>
     <string name="menu_insulin_logs">Insulin Logs</string>
+    <string name="menu_sensor_logs">Sensor Logs</string>
     <string name="menu_reports">Reports &amp; Analytics</string>
     <string name="refresh">Refresh</string>
     <string name="sensor_health">Sensor Health</string>
@@ -29,6 +30,20 @@
     <string name="sensor_expired">Expired</string>
     <string name="sensor_started_label">Started: %1$s</string>
     <string name="sensor_expires_label">Expires: %1$s</string>
+
+    <string name="sensor_logs_title">Sensor Logs</string>
+    <string name="sensor_log_start">Started: %1$s</string>
+    <string name="sensor_log_expiry">Expiry: %1$s</string>
+    <string name="sensor_log_failed">FAILED</string>
+    <string name="sensor_log_end_date_label">End Date (yyyy-MM-dd HH:mm)</string>
+    <string name="sensor_log_actual_end">Ended: %1$s</string>
+    <string name="sensor_log_error_code_label">Error Code</string>
+    <string name="sensor_log_days_used_label">Days Used</string>
+    <string name="sensor_log_edit_title">Edit Sensor Log</string>
+    <string name="sensor_log_mark_failed">Mark as failed</string>
+    <string name="sensor_log_no_logs">No sensor logs recorded yet.</string>
+    <string name="sensor_log_copy_success">Sensor info copied to clipboard</string>
+    <string name="sensor_log_notes_label">Notes</string>
 
     <string name="insulin_hub_title">Insulin Management</string>
     <string name="insulin_active_total">Total Active Insulin (IOB)</string>
@@ -151,7 +166,7 @@
     <string name="report_title">Reports &amp; Analytics</string>
     <string name="report_range_1d">1 Day</string>
     <string name="report_range_7d">7 Days</string>
-    <string name="report_range_14d">14 Days</string>
+    <string name="report_range_15d">15 Days</string>
     <string name="report_range_30d">30 Days</string>
     <string name="report_range_90d">90 Days</string>
     <string name="report_tir">Time in Range (70–180)</string>
@@ -180,6 +195,9 @@
     <string name="report_low_percent">Low: %1$.0f%%</string>
     <string name="report_high_percent">High: %1$.0f%%</string>
     <string name="report_share_chooser">Share Report</string>
+    <string name="report_start_date">Start Date</string>
+    <string name="report_end_date">End Date</string>
+    <string name="report_presets_label">Quick Presets</string>
 
     <string name="login_welcome">Sign in with your LibreLinkUp account</string>
     <string name="login_email_label">Email</string>
@@ -226,6 +244,7 @@
     <string name="settings_battery_critical_desc">Polling is reduced to 15m below this level to prevent shutdown.</string>
     <string name="settings_slow_charge_protection">Slow Charge Protection</string>
     <string name="settings_slow_charge_desc">Enter battery saving mode when charging via USB.</string>
+    <string name="settings_sensor_duration_label">Sensor Life Duration (days)</string>
     <string name="settings_demo_mode_desc">Simulate glucose readings and sensor status for testing purposes.</string>
     <string name="settings_enable_demo_mode">Enable Demo Mode</string>
     <string name="settings_history_backup">History &amp; Backup</string>

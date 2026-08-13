@@ -18,6 +18,7 @@ import android.content.Intent
 import androidx.compose.ui.platform.LocalContext
 
 import com.tonio.libre2clock.ui.capillary.CapillaryScreen
+import com.tonio.libre2clock.ui.sensor.SensorLogsScreen
 import com.tonio.libre2clock.ui.insulin.InsulinHubScreen
 import com.tonio.libre2clock.ui.insulin.InsulinLogsScreen
 import com.tonio.libre2clock.ui.strategy.StrategyScreen
@@ -67,6 +68,9 @@ fun NavGraph(
                     onNavigateToCapillary = {
                         backStack.add(Destination.Capillary)
                     },
+                    onNavigateToSensorLogs = {
+                        backStack.add(Destination.SensorLogs)
+                    },
                     onNavigateToInsulinHub = {
                         backStack.add(Destination.InsulinHub)
                     },
@@ -97,6 +101,12 @@ fun NavGraph(
             }
             entry<Destination.Capillary> {
                 CapillaryScreen(
+                    viewModel = settingsViewModel,
+                    onBack = { backStack.removeAt(backStack.size - 1) }
+                )
+            }
+            entry<Destination.SensorLogs> {
+                SensorLogsScreen(
                     viewModel = settingsViewModel,
                     onBack = { backStack.removeAt(backStack.size - 1) }
                 )

@@ -60,6 +60,7 @@ fun SettingsScreen(
     val batteryLowThreshold by viewModel.batteryLowThreshold.collectAsStateWithLifecycle()
     val batteryCriticalThreshold by viewModel.batteryCriticalThreshold.collectAsStateWithLifecycle()
     val disableFastOnSlowCharge by viewModel.disableFastRefreshOnSlowCharge.collectAsStateWithLifecycle()
+    val sensorDurationDays by viewModel.sensorDurationDays.collectAsStateWithLifecycle()
     val isApiDebugLoading by viewModel.isApiDebugLoading.collectAsStateWithLifecycle()
     val apiDebugOutput by viewModel.apiDebugOutput.collectAsStateWithLifecycle()
     val sectionPerfStats by viewModel.sectionPerfStats.collectAsStateWithLifecycle()
@@ -380,6 +381,20 @@ fun SettingsScreen(
                     Switch(checked = disableFastOnSlowCharge, onCheckedChange = viewModel::updateDisableFastRefreshOnSlowCharge)
                 }
 
+                var sensorDurationText by remember(sensorDurationDays) { mutableStateOf(sensorDurationDays.toString()) }
+                OutlinedTextField(
+                    value = sensorDurationText,
+                    onValueChange = {
+                        sensorDurationText = it
+                        it.toIntOrNull()?.let { days ->
+                            viewModel.updateSensorDurationDays(days)
+                        }
+                    },
+                    label = { Text(stringResource(R.string.settings_sensor_duration_label)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+
                 Spacer(modifier = Modifier.height(24.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(24.dp))
@@ -506,21 +521,28 @@ fun SettingsScreen(
                             text = { Text(stringResource(R.string.settings_glucose_history)) },
                             onClick = { 
                                 showAdvancedDropdown = false
-                                viewModel.requestPartialHistoryBackup(includeHistoricalGlucose = true, includeCapillaryReadings = false, includeInsulinDoses = false)
+                                viewModel.requestPartialHistoryBackup(includeHistoricalGlucose = true, includeCapillaryReadings = false, includeInsulinDoses = false, includeSensorLogs = false)
                             }
                         )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.menu_capillary)) },
                             onClick = { 
                                 showAdvancedDropdown = false
-                                viewModel.requestPartialHistoryBackup(includeHistoricalGlucose = false, includeCapillaryReadings = true, includeInsulinDoses = false)
+                                viewModel.requestPartialHistoryBackup(includeHistoricalGlucose = false, includeCapillaryReadings = true, includeInsulinDoses = false, includeSensorLogs = false)
                             }
                         )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.menu_insulin_logs)) },
                             onClick = { 
                                 showAdvancedDropdown = false
-                                viewModel.requestPartialHistoryBackup(includeHistoricalGlucose = false, includeCapillaryReadings = false, includeInsulinDoses = true)
+                                viewModel.requestPartialHistoryBackup(includeHistoricalGlucose = false, includeCapillaryReadings = false, includeInsulinDoses = true, includeSensorLogs = false)
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.menu_sensor_logs)) },
+                            onClick = { 
+                                showAdvancedDropdown = false
+                                viewModel.requestPartialHistoryBackup(includeHistoricalGlucose = false, includeCapillaryReadings = false, includeInsulinDoses = false, includeSensorLogs = true)
                             }
                         )
                         HorizontalDivider()
@@ -529,21 +551,28 @@ fun SettingsScreen(
                             text = { Text(stringResource(R.string.settings_glucose_history)) },
                             onClick = { 
                                 showAdvancedDropdown = false
-                                viewModel.restorePartialHistoryFromBackup(includeHistoricalGlucose = true, includeCapillaryReadings = false, includeInsulinDoses = false)
+                                viewModel.restorePartialHistoryFromBackup(includeHistoricalGlucose = true, includeCapillaryReadings = false, includeInsulinDoses = false, includeSensorLogs = false)
                             }
                         )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.menu_capillary)) },
                             onClick = { 
                                 showAdvancedDropdown = false
-                                viewModel.restorePartialHistoryFromBackup(includeHistoricalGlucose = false, includeCapillaryReadings = true, includeInsulinDoses = false)
+                                viewModel.restorePartialHistoryFromBackup(includeHistoricalGlucose = false, includeCapillaryReadings = true, includeInsulinDoses = false, includeSensorLogs = false)
                             }
                         )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.menu_insulin_logs)) },
                             onClick = { 
                                 showAdvancedDropdown = false
-                                viewModel.restorePartialHistoryFromBackup(includeHistoricalGlucose = false, includeCapillaryReadings = false, includeInsulinDoses = true)
+                                viewModel.restorePartialHistoryFromBackup(includeHistoricalGlucose = false, includeCapillaryReadings = false, includeInsulinDoses = true, includeSensorLogs = false)
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.menu_sensor_logs)) },
+                            onClick = { 
+                                showAdvancedDropdown = false
+                                viewModel.restorePartialHistoryFromBackup(includeHistoricalGlucose = false, includeCapillaryReadings = false, includeInsulinDoses = false, includeSensorLogs = true)
                             }
                         )
                     }

@@ -65,10 +65,23 @@ data class InsulinDose(
 )
 
 @Serializable
+data class SensorLog(
+    val serialNumber: String,
+    val startDate: String,
+    val expiryDate: String,
+    val endDate: String? = null,
+    val actualDaysUsed: Double? = null,
+    val hasFailed: Boolean = false,
+    val errorCode: String? = null,
+    val notes: String? = null
+)
+
+@Serializable
 data class HistoryBackupPayload(
     val historicalGlucoseArchive: List<GlucoseMeasurement> = emptyList(),
     val capillaryReadings: List<CapillaryMeasurement> = emptyList(),
     val insulinDoses: List<InsulinDose> = emptyList(),
+    val sensorLogs: List<SensorLog> = emptyList(),
     // Glucose Config
     val glucoseOffset: Int? = null,
     val glucoseOffsetRanges: List<GlucoseOffsetRange>? = null,
@@ -99,5 +112,6 @@ data class HistoryBackupPayload(
     // Battery Optimization
     val batteryLowThreshold: Int? = null,
     val batteryCriticalThreshold: Int? = null,
-    val disableFastRefreshOnSlowCharge: Boolean? = null
+    val disableFastRefreshOnSlowCharge: Boolean? = null,
+    val sensorDurationDays: Int? = null
 )

@@ -3,6 +3,7 @@ package com.tonio.libre2clock.ui.report
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -28,6 +29,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.time.Instant
+import java.time.ZoneId
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,7 +41,8 @@ fun ReportScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     
-    val range by viewModel.selectedRange.collectAsStateWithLifecycle()
+    val startDate by viewModel.startDate.collectAsStateWithLifecycle()
+    val endDate by viewModel.endDate.collectAsStateWithLifecycle()
     val useOffset by viewModel.useOffsetValues.collectAsStateWithLifecycle()
     val metrics by viewModel.reportMetrics.collectAsStateWithLifecycle()
     val agpData by viewModel.agpData.collectAsStateWithLifecycle()
@@ -49,6 +53,9 @@ fun ReportScreen(
 
     val reportFailedMsg = stringResource(R.string.report_failed_generate)
     val shareReportTitle = stringResource(R.string.report_share_chooser)
+
+    var showStartDatePicker by remember { mutableStateOf(false) }
+    var showEndDatePicker by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -73,7 +80,8 @@ fun ReportScreen(
                                         metrics = m,
                                         agpData = agpData,
                                         dailySummaries = dailySummaries,
-                                        range = range,
+                                        startDate = startDate,
+                                        endDate = endDate,
                                         useOffset = useOffset,
                                         layout = selectedLayout
                                     )
@@ -100,7 +108,33 @@ fun ReportScreen(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                RangeSelector(selected = range, onSelect = viewModel::setRange)
+                // Presets Section
+                PresetsSelector(onSelect = viewModel::setRange)
+
+                // Custom Date Range Section
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        DateDisplay(
+                            label = stringResource(R.string.report_start_date),
+                            date = startDate,
+                            onClick = { showStartDatePicker = true },
+                            modifier = Modifier.weight(1f)
+                        )
+                        DateDisplay(
+                            label = stringResource(R.string.report_end_date),
+                            date = endDate,
+                            onClick = { showEndDatePicker = true },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -131,6 +165,52 @@ fun ReportScreen(
             if (isGenerating) {
                 GenerationLoadingDialog()
             }
+
+            if (showStartDatePicker) {
+                val datePickerState = rememberDatePickerState(
+                    initialSelectedDateMillis = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                )
+                DatePickerDialog(
+                    onDismissRequest = { showStartDatePicker = false },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            datePickerState.selectedDateMillis?.let {
+                                val selectedDate = Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
+                                viewModel.setCustomRange(selectedDate, endDate)
+                            }
+                            showStartDatePicker = false
+                        }) { Text(stringResource(android.R.string.ok)) }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showStartDatePicker = false }) { Text(stringResource(android.R.string.cancel)) }
+                    }
+                ) {
+                    DatePicker(state = datePickerState)
+                }
+            }
+
+            if (showEndDatePicker) {
+                val datePickerState = rememberDatePickerState(
+                    initialSelectedDateMillis = endDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                )
+                DatePickerDialog(
+                    onDismissRequest = { showEndDatePicker = false },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            datePickerState.selectedDateMillis?.let {
+                                val selectedDate = Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
+                                viewModel.setCustomRange(startDate, selectedDate)
+                            }
+                            showEndDatePicker = false
+                        }) { Text(stringResource(android.R.string.ok)) }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showEndDatePicker = false }) { Text(stringResource(android.R.string.cancel)) }
+                    }
+                ) {
+                    DatePicker(state = datePickerState)
+                }
+            }
         }
     }
 }
@@ -160,28 +240,43 @@ private fun GenerationLoadingDialog() {
 }
 
 @Composable
-fun RangeSelector(selected: ReportRange, onSelect: (ReportRange) -> Unit) {
-    val ranges = ReportRange.entries
-    ScrollableTabRow(
-        selectedTabIndex = ranges.indexOf(selected),
-        edgePadding = 0.dp,
-        containerColor = Color.Transparent,
-        divider = {}
-    ) {
-        ranges.forEach { range ->
-            val label = when (range) {
-                ReportRange.ONE_DAY -> stringResource(R.string.report_range_1d)
-                ReportRange.SEVEN_DAYS -> stringResource(R.string.report_range_7d)
-                ReportRange.FOURTEEN_DAYS -> stringResource(R.string.report_range_14d)
-                ReportRange.THIRTY_DAYS -> stringResource(R.string.report_range_30d)
-                ReportRange.NINETY_DAYS -> stringResource(R.string.report_range_90d)
+fun PresetsSelector(onSelect: (ReportRange) -> Unit) {
+    Column {
+        Text(text = stringResource(R.string.report_presets_label), style = MaterialTheme.typography.labelMedium)
+        val ranges = ReportRange.entries
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            ranges.forEach { range ->
+                val label = when (range) {
+                    ReportRange.ONE_DAY -> stringResource(R.string.report_range_1d)
+                    ReportRange.SEVEN_DAYS -> stringResource(R.string.report_range_7d)
+                    ReportRange.FIFTEEN_DAYS -> stringResource(R.string.report_range_15d)
+                    ReportRange.THIRTY_DAYS -> stringResource(R.string.report_range_30d)
+                    ReportRange.NINETY_DAYS -> stringResource(R.string.report_range_90d)
+                }
+                OutlinedButton(
+                    onClick = { onSelect(range) },
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(4.dp)
+                ) {
+                    Text(label, maxLines = 1, style = MaterialTheme.typography.labelSmall)
+                }
             }
-            Tab(
-                selected = selected == range,
-                onClick = { onSelect(range) },
-                text = { Text(label) }
-            )
         }
+    }
+}
+
+@Composable
+fun DateDisplay(label: String, date: java.time.LocalDate, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier = modifier.clickable { onClick() }) {
+        Text(text = label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+        Text(
+            text = date.toString(),
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
 

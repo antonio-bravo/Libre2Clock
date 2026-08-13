@@ -55,6 +55,7 @@ fun DashboardScreen(
     onNavigateToSettings: () -> Unit,
     onNavigateToStrategy: () -> Unit,
     onNavigateToCapillary: () -> Unit,
+    onNavigateToSensorLogs: () -> Unit,
     onNavigateToInsulinHub: () -> Unit,
     onNavigateToReports: () -> Unit,
     onAddDose: (InsulinDose) -> Unit
@@ -111,6 +112,16 @@ fun DashboardScreen(
                         onNavigateToCapillary()
                     },
                     icon = { Icon(Icons.Default.WaterDrop, contentDescription = null) },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+                NavigationDrawerItem(
+                    label = { Text(stringResource(R.string.menu_sensor_logs)) },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        onNavigateToSensorLogs()
+                    },
+                    icon = { Icon(Icons.Default.Sensors, contentDescription = null) },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
                 NavigationDrawerItem(

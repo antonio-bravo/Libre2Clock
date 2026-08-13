@@ -6,6 +6,7 @@ import com.tonio.libre2clock.data.local.GlucoseHistoryDatabaseHelper
 import com.tonio.libre2clock.data.model.ActiveSensorInfo
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.LoginRequest
+import com.tonio.libre2clock.data.model.SensorLog
 import com.tonio.libre2clock.util.TimestampParser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -173,6 +174,7 @@ class GlucoseRepositoryImpl(
                     sensor.activationTimestamp
                     
                 preferenceManager.saveActiveSensorInfo(sensor.serialNumber, activationTime)
+                autoLogSensor(sensor.serialNumber, activationTime)
             }
 
             val historicalMeasurements = response.data?.graphData ?: emptyList()
@@ -219,6 +221,13 @@ class GlucoseRepositoryImpl(
         if (token != null && userId != null) {
             LibreService.setAuth(token, userId)
         }
+
+        // Ensure current active sensor from preferences is in the logs
+        val sn = preferenceManager.activeSensorSerialNumber.first()
+        val start = preferenceManager.activeSensorStartTime.first()
+        if (sn != null && start != null) {
+            autoLogSensor(sn, start)
+        }
     }
 
     private suspend fun initializeLocalHistoryIfNeeded() {
@@ -237,6 +246,26 @@ class GlucoseRepositoryImpl(
         }
 
         historicalState.value = emptyList()
+    }
+
+    private suspend fun autoLogSensor(sn: String, activationEpochSeconds: Long) {
+        val currentLogs = preferenceManager.sensorLogs.first().toMutableList()
+        if (currentLogs.any { it.serialNumber == sn }) return
+
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm", Locale.US)
+            .withZone(ZoneId.systemDefault())
+        val start = formatter.format(Instant.ofEpochSecond(activationEpochSeconds))
+        val sensorDuration = preferenceManager.sensorDurationDays.first()
+        val expiry = formatter.format(Instant.ofEpochSecond(activationEpochSeconds + (sensorDuration.toLong() * 24 * 60 * 60)))
+
+        val newLog = SensorLog(
+            serialNumber = sn,
+            startDate = start,
+            expiryDate = expiry
+        )
+        currentLogs.add(newLog)
+        currentLogs.sortByDescending { it.startDate }
+        preferenceManager.saveSensorLogs(currentLogs)
     }
 
     private suspend fun mergeAndPruneHistory(
