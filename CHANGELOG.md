@@ -1,5 +1,33 @@
 # Changelog
 
+## 2fede01 (Aug 13, 2026 17:53:57)
+fix language — antonio-bravo
+[detail](#2fede01-details)
+
+<details id='2fede01-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/login/LoginScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 728bd6d (Aug 13, 2026 15:25:06)
+Update changelog — github-actions[bot]
+[detail](#728bd6d-details)
+
+<details id='728bd6d-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 9221371 (Aug 13, 2026 17:24:51)
 Optimized and add SQL Lite — antonio-bravo
 [detail](#9221371-details)
@@ -721,33 +749,6 @@ fix graph — antonio-bravo
 - .artifacts/a0a33dbc-2e5d-4c62-a073-96b724944422/implementation_plan.artifact.md [Modified]
 - .artifacts/a0a33dbc-2e5d-4c62-a073-96b724944422/task.artifact.md [Modified]
 - .artifacts/a0a33dbc-2e5d-4c62-a073-96b724944422/walkthrough.artifact.md [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
-</details>
-
-
----
-## 5c625a6 (Jul 18, 2026 20:38:14)
-update checkout from v4 to v7 — antonio-bravo
-[detail](#5c625a6-details)
-
-<details id='5c625a6-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/build-release.yml [Modified]
-</details>
-
-
----
-## 2ca36b5 (Jul 18, 2026 20:30:25)
-fix graph — antonio-bravo
-[detail](#2ca36b5-details)
-
-<details id='2ca36b5-details'>
-<summary>Changed files</summary>
-
-- .artifacts/a0a33dbc-2e5d-4c62-a073-96b724944422/task.artifact.md [Modified]
-- .artifacts/a0a33dbc-2e5d-4c62-a073-96b724944422/walkthrough.artifact.md [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
 </details>
 
