@@ -1,5 +1,32 @@
 # Changelog
 
+## 6557fb1 (Aug 13, 2026 20:40:54)
+fix — antonio-bravo
+[detail](#6557fb1-details)
+
+<details id='6557fb1-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
+</details>
+
+
+---
+## 2db1147 (Aug 13, 2026 18:13:55)
+Update changelog — github-actions[bot]
+[detail](#2db1147-details)
+
+<details id='2db1147-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 31edbc2 (Aug 13, 2026 20:13:34)
 Extracted code errors from original app
 Added Sensor Logs to track when sensor failed
@@ -738,35 +765,6 @@ update android-actions/setup-android@v4 — antonio-bravo
 <summary>Changed files</summary>
 
 - .github/workflows/build-release.yml [Modified]
-</details>
-
-
----
-## 1fbe1fe (Jul 18, 2026 22:12:50)
-renovate+merge+changelog — antonio-bravo
-[detail](#1fbe1fe-details)
-
-<details id='1fbe1fe-details'>
-<summary>Changed files</summary>
-
-- .github/dependanbot.yml [Deleted]
-- .github/renovate.json [Deleted]
-- .github/workflows/bot.yml [Deleted]
-- .github/workflows/changelog.yml [Deleted]
-- generate_changelog.py [Deleted]
-</details>
-
-
----
-## 472c0ba (Jul 18, 2026 21:57:57)
-adjust datetime on last sync — antonio-bravo
-[detail](#472c0ba-details)
-
-<details id='472c0ba-details'>
-<summary>Changed files</summary>
-
-- .idea/planningMode.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
 </details>
 
 
