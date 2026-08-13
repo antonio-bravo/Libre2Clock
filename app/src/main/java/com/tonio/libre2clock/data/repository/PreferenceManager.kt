@@ -455,6 +455,12 @@ class PreferenceManager(private val context: Context) {
         updateBackupPayload()
     }
 
+    suspend fun saveHistoricalGlucoseArchiveSnapshot(measurements: List<GlucoseMeasurement>) {
+        context.dataStore.edit { preferences ->
+            preferences[HISTORICAL_GLUCOSE_KEY] = json.encodeToString(measurements)
+        }
+    }
+
     suspend fun saveHistoryRetentionDays(days: Int) {
         context.dataStore.edit { preferences ->
             preferences[HISTORY_RETENTION_DAYS_KEY] = days.coerceIn(

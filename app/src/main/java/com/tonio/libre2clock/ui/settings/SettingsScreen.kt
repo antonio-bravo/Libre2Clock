@@ -31,6 +31,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlin.math.abs
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,6 +62,7 @@ fun SettingsScreen(
     val disableFastOnSlowCharge by viewModel.disableFastRefreshOnSlowCharge.collectAsStateWithLifecycle()
     val isApiDebugLoading by viewModel.isApiDebugLoading.collectAsStateWithLifecycle()
     val apiDebugOutput by viewModel.apiDebugOutput.collectAsStateWithLifecycle()
+    val sectionPerfStats by viewModel.sectionPerfStats.collectAsStateWithLifecycle()
 
     var showAddRangeDialog by remember { mutableStateOf(false) }
     var editingRange by remember { mutableStateOf<GlucoseOffsetRange?>(null) }
@@ -546,6 +548,87 @@ fun SettingsScreen(
                         )
                     }
                 }
+
+                Spacer(modifier = Modifier.height(12.dp))
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    )
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text(
+                            text = "Rendimiento por seccion",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Estas metricas se obtienen de la telemetria local (cache hit/miss y tiempos).",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                            modifier = Modifier.padding(top = 2.dp, bottom = 8.dp)
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            OutlinedButton(
+                                onClick = viewModel::refreshSectionPerfStats,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("Refrescar")
+                            }
+                            OutlinedButton(
+                                onClick = viewModel::resetSectionPerfStats,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("Reset")
+                            }
+                        }
+
+                        if (sectionPerfStats.isEmpty()) {
+                            Text(
+                                text = "Aun no hay datos. Navega por Dashboard/Reports y vuelve a refrescar.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        } else {
+                            Column(modifier = Modifier.padding(top = 8.dp)) {
+                                sectionPerfStats.forEach { stat ->
+                                    Surface(
+                                        shape = MaterialTheme.shapes.small,
+                                        color = MaterialTheme.colorScheme.surface,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 4.dp)
+                                    ) {
+                                        Column(modifier = Modifier.padding(10.dp)) {
+                                            Text(
+                                                text = stat.section,
+                                                style = MaterialTheme.typography.labelMedium,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Text(
+                                                text = "Calls ${stat.calls} | Hit ${stat.hitRatePercent.roundToInt()}% (${stat.cacheHits}/${stat.calls})",
+                                                style = MaterialTheme.typography.bodySmall
+                                            )
+                                            Text(
+                                                text = "Avg ${"%.1f".format(stat.avgDurationMs)} ms | Max ${stat.maxDurationMs} ms | Miss ${stat.cacheMisses}",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(24.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(24.dp))

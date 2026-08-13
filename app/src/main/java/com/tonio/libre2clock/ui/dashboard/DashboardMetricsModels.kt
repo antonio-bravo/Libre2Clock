@@ -2,6 +2,7 @@ package com.tonio.libre2clock.ui.dashboard
 
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.util.TimestampParser
+import kotlinx.serialization.Serializable
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -9,16 +10,19 @@ import java.time.ZoneId
 import java.util.Locale
 import kotlin.math.roundToInt
 
+@Serializable
 data class DisplayMetric(
     val primary: String,
     val secondary: String
 )
 
+@Serializable
 data class CountMetric(
     val count: Int,
     val offset: Int
 )
 
+@Serializable
 data class DashboardMetrics(
     val estimatedA1c: DisplayMetric,
     val todayAvg: DisplayMetric,

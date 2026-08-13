@@ -1,29 +1,38 @@
 package com.tonio.libre2clock.data.repository
 
+import android.content.Context
 import com.tonio.libre2clock.data.api.LibreService
+import com.tonio.libre2clock.data.local.GlucoseHistoryDatabaseHelper
 import com.tonio.libre2clock.data.model.ActiveSensorInfo
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.LoginRequest
-import com.tonio.libre2clock.data.model.SensorStatus
 import com.tonio.libre2clock.util.TimestampParser
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
 
 class GlucoseRepositoryImpl(
+    context: Context,
     private val preferenceManager: PreferenceManager
 ) : GlucoseRepository {
 
-    override val currentGlucose: Flow<GlucoseMeasurement?> = preferenceManager.historicalGlucoseArchive
+    private val historyDb = GlucoseHistoryDatabaseHelper(context.applicationContext)
+    private val historicalState = MutableStateFlow<List<GlucoseMeasurement>>(emptyList())
+
+    override val currentGlucose: Flow<GlucoseMeasurement?> = historicalState
         .map { it.firstOrNull() }
 
-    override val historicalGlucose: Flow<List<GlucoseMeasurement>> = preferenceManager.historicalGlucoseArchive
+    override val historicalGlucose: StateFlow<List<GlucoseMeasurement>> = historicalState.asStateFlow()
 
     override val activeSensorInfo: Flow<ActiveSensorInfo?> = combine(
         preferenceManager.activeSensorSerialNumber,
@@ -35,6 +44,7 @@ class GlucoseRepositoryImpl(
     override val isDemoMode: Flow<Boolean> = preferenceManager.isDemoMode
 
     private var patientId: String? = null
+    private var lastSnapshotMirrorEpochMs: Long = 0L
 
     override suspend fun enableDemoMode() {
         preferenceManager.saveDemoMode(true)
@@ -73,10 +83,6 @@ class GlucoseRepositoryImpl(
     }
 
     override suspend fun fetchLatestGlucose(): Result<GlucoseMeasurement> {
-        // Manual refresh should try real data unless user explicitly wants demo mode via switch?
-        // Actually, if we have a switch in settings, maybe manual refresh shouldn't force-disable demo mode anymore.
-        // The user said: "perhaps have a switch in the settings window to activate or deactivate demo mode"
-        // So I will remove the auto-disable on refresh to respect the switch.
         return fetchLatestGlucoseInternal(persistArchive = true)
     }
 
@@ -84,14 +90,29 @@ class GlucoseRepositoryImpl(
         return fetchLatestGlucoseInternal(persistArchive = true)
     }
 
+    override suspend fun syncLocalArchiveFromPreferences() {
+        val snapshot = preferenceManager.historicalGlucoseArchive.first()
+        if (snapshot.isEmpty()) {
+            historicalState.value = withContext(Dispatchers.IO) { historyDb.readAllNewestFirst() }
+            return
+        }
+
+        withContext(Dispatchers.IO) {
+            val merged = mergeAndPruneHistory(
+                existing = historyDb.readAllNewestFirst(),
+                incoming = snapshot
+            )
+            historyDb.replaceAll(merged)
+            historicalState.value = merged
+        }
+    }
+
     private suspend fun fetchLatestGlucoseInternal(persistArchive: Boolean): Result<GlucoseMeasurement> {
         val demoEnabled = preferenceManager.isDemoMode.first()
         if (demoEnabled) {
             val now = Instant.now()
             val formatter = DateTimeFormatter.ofPattern("HH:mm", Locale.US)
-            
-            // For Demo mode, we still need to merge into PreferenceManager
-            val currentHistory = preferenceManager.historicalGlucoseArchive.first()
+            val currentHistory = withContext(Dispatchers.IO) { historyDb.readAllNewestFirst() }
             
             val demoValue = (100..180).random()
             val measurement = GlucoseMeasurement(
@@ -110,7 +131,11 @@ class GlucoseRepositoryImpl(
             )
             
             if (persistArchive) {
-                preferenceManager.saveHistoricalGlucoseArchive(mergedHistory)
+                withContext(Dispatchers.IO) {
+                    historyDb.replaceAll(mergedHistory)
+                }
+                historicalState.value = mergedHistory
+                mirrorSnapshotIfNeeded(mergedHistory)
             }
             
             return Result.success(measurement)
@@ -157,17 +182,21 @@ class GlucoseRepositoryImpl(
                 historicalMeasurements
             }
 
-            val currentHistory = preferenceManager.historicalGlucoseArchive.first()
+            val currentHistory = withContext(Dispatchers.IO) { historyDb.readAllNewestFirst() }
             val mergedHistory = mergeAndPruneHistory(
                 existing = currentHistory,
                 incoming = incomingList
             )
             
             if (persistArchive) {
-                preferenceManager.saveHistoricalGlucoseArchive(mergedHistory)
+                withContext(Dispatchers.IO) {
+                    historyDb.replaceAll(mergedHistory)
+                }
+                historicalState.value = mergedHistory
+                mirrorSnapshotIfNeeded(mergedHistory)
             }
 
-            val resultMeasurement = measurement ?: historicalMeasurements.lastOrNull()
+            val resultMeasurement = measurement ?: mergedHistory.firstOrNull()
             if (resultMeasurement != null) {
                 Result.success(resultMeasurement)
             } else {
@@ -180,15 +209,34 @@ class GlucoseRepositoryImpl(
     }
 
     suspend fun initialize() {
+        initializeLocalHistoryIfNeeded()
+
         val token = preferenceManager.authToken.first()
         val userId = preferenceManager.userId.first()
-        
-        // Initial sync of backup if needed (logic already in PreferenceManager)
+
         preferenceManager.requestHistoryCloudBackupIfDue()
 
         if (token != null && userId != null) {
             LibreService.setAuth(token, userId)
         }
+    }
+
+    private suspend fun initializeLocalHistoryIfNeeded() {
+        val dbHistory = withContext(Dispatchers.IO) { historyDb.readAllNewestFirst() }
+        if (dbHistory.isNotEmpty()) {
+            historicalState.value = dbHistory
+            return
+        }
+
+        val snapshot = preferenceManager.historicalGlucoseArchive.first()
+        if (snapshot.isNotEmpty()) {
+            val merged = mergeAndPruneHistory(emptyList(), snapshot)
+            withContext(Dispatchers.IO) { historyDb.replaceAll(merged) }
+            historicalState.value = merged
+            return
+        }
+
+        historicalState.value = emptyList()
     }
 
     private suspend fun mergeAndPruneHistory(
@@ -218,6 +266,16 @@ class GlucoseRepositoryImpl(
             .map { it.second }
     }
 
+    private suspend fun mirrorSnapshotIfNeeded(history: List<GlucoseMeasurement>) {
+        val now = System.currentTimeMillis()
+        val shouldMirror =
+            now - lastSnapshotMirrorEpochMs >= SNAPSHOT_MIRROR_INTERVAL_MS || history.size <= 24
+        if (!shouldMirror) return
+
+        preferenceManager.saveHistoricalGlucoseArchiveSnapshot(history)
+        lastSnapshotMirrorEpochMs = now
+    }
+
     private fun parseMeasurementInstant(measurement: GlucoseMeasurement): Instant? {
         return parseFlexibleInstant(measurement.factoryTimestamp)
             ?: parseFlexibleInstant(measurement.timestamp)
@@ -225,5 +283,9 @@ class GlucoseRepositoryImpl(
 
     private fun parseFlexibleInstant(timestamp: String): Instant? {
         return TimestampParser.parseFlexibleInstant(timestamp)
+    }
+
+    companion object {
+        private const val SNAPSHOT_MIRROR_INTERVAL_MS = 15L * 60L * 1000L
     }
 }

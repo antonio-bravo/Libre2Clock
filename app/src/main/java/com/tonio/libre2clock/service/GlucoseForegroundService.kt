@@ -17,6 +17,7 @@ import com.tonio.libre2clock.R
 import com.tonio.libre2clock.data.model.AutoRangeOffsetMode
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.WatchNotificationMode
+import com.tonio.libre2clock.di.AppContainer
 import com.tonio.libre2clock.data.repository.GlucoseRepository
 import com.tonio.libre2clock.data.repository.GlucoseRepositoryImpl
 import com.tonio.libre2clock.data.repository.PreferenceManager
@@ -32,6 +33,7 @@ class GlucoseForegroundService : Service() {
 
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private lateinit var repository: GlucoseRepository
+    private lateinit var repositoryImpl: GlucoseRepositoryImpl
     private lateinit var preferenceManager: PreferenceManager
     private var syncJob: Job? = null
     private var lastWatchAlertEpochMinute: Long = -1L
@@ -72,8 +74,9 @@ class GlucoseForegroundService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        preferenceManager = PreferenceManager(applicationContext)
-        repository = GlucoseRepositoryImpl(preferenceManager)
+        preferenceManager = AppContainer.providePreferenceManager(applicationContext)
+        repositoryImpl = AppContainer.provideGlucoseRepository(applicationContext)
+        repository = repositoryImpl
         createNotificationChannel()
     }
 
@@ -88,7 +91,7 @@ class GlucoseForegroundService : Service() {
         syncJob?.cancel()
         syncJob = serviceScope.launch {
             // Re-initialize repository with stored credentials
-            (repository as? GlucoseRepositoryImpl)?.initialize()
+            repositoryImpl.initialize()
             
             launch {
                 repository.currentGlucose.collectLatest { measurement ->
@@ -331,11 +334,11 @@ class GlucoseForegroundService : Service() {
 
     private fun triggerTestNotification() {
         serviceScope.launch {
-            (repository as? GlucoseRepositoryImpl)?.initialize()
+            repositoryImpl.initialize()
             val fetchResult = repository.fetchLatestGlucose()
             val measurement = fetchResult.getOrNull()
                 ?: repository.currentGlucose.first()
-                ?: preferenceManager.historicalGlucoseArchive.first().firstOrNull()
+                ?: repository.historicalGlucose.first().firstOrNull()
             val fetchErrorMessage = fetchResult.exceptionOrNull()?.message
                 ?.trim()
                 ?.takeIf { it.isNotEmpty() }

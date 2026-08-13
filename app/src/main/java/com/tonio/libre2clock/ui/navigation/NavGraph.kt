@@ -34,7 +34,7 @@ fun NavGraph(
     )
     
     // Shared ViewModel for settings across screens
-    val settingsViewModel: SettingsViewModel = viewModel { SettingsViewModel(preferenceManager, repository) }
+    val settingsViewModel: SettingsViewModel = viewModel { SettingsViewModel(preferenceManager, repository, context.applicationContext) }
 
     NavDisplay(
         backStack = backStack,
@@ -116,7 +116,7 @@ fun NavGraph(
             }
             entry<Destination.Reports> {
                 val reportViewModel: com.tonio.libre2clock.ui.report.ReportViewModel = viewModel { 
-                    com.tonio.libre2clock.ui.report.ReportViewModel(repository, preferenceManager) 
+                    com.tonio.libre2clock.ui.report.ReportViewModel(repository, preferenceManager, context.applicationContext) 
                 }
                 com.tonio.libre2clock.ui.report.ReportScreen(
                     viewModel = reportViewModel,

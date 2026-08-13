@@ -13,8 +13,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.tonio.libre2clock.data.repository.GlucoseRepositoryImpl
-import com.tonio.libre2clock.data.repository.PreferenceManager
 import com.tonio.libre2clock.ui.navigation.NavGraph
 import com.tonio.libre2clock.ui.theme.Libre2ClockTheme
 import kotlinx.coroutines.flow.first
@@ -24,6 +22,7 @@ import android.content.Intent
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import com.tonio.libre2clock.di.AppContainer
 import com.tonio.libre2clock.service.GlucoseForegroundService
 
 class MainActivity : ComponentActivity() {
@@ -31,8 +30,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         
-        val preferenceManager = PreferenceManager(applicationContext)
-        val repository = GlucoseRepositoryImpl(preferenceManager)
+        val preferenceManager = AppContainer.providePreferenceManager(applicationContext)
+        val repository = AppContainer.provideGlucoseRepository(applicationContext)
         
         setContent {
             Libre2ClockTheme {

@@ -35,6 +35,8 @@ class DashboardViewModel(
     private val androidContext: android.content.Context
 ) : ViewModel() {
 
+    private val dashboardMetricsCache = DashboardMetricsCacheRepository(androidContext)
+
     private val _isHistoryRefreshing = MutableStateFlow(false)
     val isHistoryRefreshing: StateFlow<Boolean> = _isHistoryRefreshing.asStateFlow()
 
@@ -116,8 +118,19 @@ class DashboardViewModel(
         }.flowOn(Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val dashboardMetrics: StateFlow<DashboardMetrics> = historicalData
-        .map { DashboardMetricsCalculator.calculate(it) }
+    val dashboardMetrics: StateFlow<DashboardMetrics> = combine(
+        historicalData,
+        preferenceManager.historyRetentionDays
+    ) { measurements, retentionDays ->
+            val signature = DashboardMetricsCacheRepository.buildSignature(measurements)
+            dashboardMetricsCache.getOrCompute(
+                sectionKey = DashboardMetricsCacheRepository.DASHBOARD_SECTION_KEY,
+                signature = signature,
+                retentionDays = retentionDays
+            ) {
+                DashboardMetricsCalculator.calculate(measurements)
+            }
+        }
         .flowOn(Dispatchers.Default)
         .stateIn(
             viewModelScope, 

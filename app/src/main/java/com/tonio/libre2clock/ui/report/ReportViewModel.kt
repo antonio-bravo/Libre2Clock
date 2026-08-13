@@ -9,6 +9,7 @@ import com.tonio.libre2clock.data.repository.GlucoseRepository
 import com.tonio.libre2clock.util.TimestampParser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
+import kotlinx.serialization.Serializable
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -29,6 +30,7 @@ enum class ReportLayout {
     FULL // Everything
 }
 
+@Serializable
 data class ReportMetrics(
     val avgGlucose: Double,
     val gmi: Double,
@@ -44,6 +46,7 @@ data class ReportMetrics(
     val readingsCount: Int
 )
 
+@Serializable
 data class AgpPoint(
     val hour: Int,
     val median: Double,
@@ -64,8 +67,11 @@ data class DailySummary(
 
 class ReportViewModel(
     private val repository: GlucoseRepository,
-    private val preferenceManager: PreferenceManager
+    private val preferenceManager: PreferenceManager,
+    androidContext: android.content.Context
 ) : ViewModel() {
+
+    private val reportCache = ReportSectionCacheRepository(androidContext)
 
     private val _selectedRange = MutableStateFlow(ReportRange.SEVEN_DAYS)
     val selectedRange: StateFlow<ReportRange> = _selectedRange.asStateFlow()
@@ -88,64 +94,162 @@ class ReportViewModel(
         filteredG to filteredD
     }.flowOn(Dispatchers.Default).shareIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 1)
 
-    // 2. Metrics calculated from optimized window
     val reportMetrics: StateFlow<ReportMetrics?> = combine(
-        windowedData,
-        preferenceManager.glucoseOffset,
-        preferenceManager.glucoseOffsetRanges,
-        preferenceManager.autoAdjustEnabled,
-        preferenceManager.capillaryReadings,
+        combine(
+            windowedData,
+            preferenceManager.glucoseOffset,
+            preferenceManager.glucoseOffsetRanges,
+            preferenceManager.autoAdjustEnabled,
+            preferenceManager.capillaryReadings
+        ) { data, offset, ranges, auto, caps ->
+            ReportMetricsBaseInput(data.first, data.second, offset, ranges, auto, caps)
+        },
+        preferenceManager.autoRangeOffsetMode,
+        preferenceManager.historyRetentionDays,
         _selectedRange,
         _useOffsetValues
-    ) { args ->
-        @Suppress("UNCHECKED_CAST")
-        val data = args[0] as Pair<List<GlucoseMeasurement>, List<InsulinDose>>
-        val offset = args[1] as Int
-        val ranges = args[2] as List<GlucoseOffsetRange>
-        val auto = args[3] as Boolean
-        val caps = args[4] as List<CapillaryMeasurement>
-        val range = args[5] as ReportRange
-        val useOffset = args[6] as Boolean
-        
-        calculateMetrics(data.first, data.second, offset, ranges, auto, caps, range, useOffset)
+    ) { base, autoRangeMode, retentionDays, range, useOffset ->
+        ReportMetricsInput(
+            glucose = base.glucose,
+            doses = base.doses,
+            offset = base.offset,
+            ranges = base.ranges,
+            autoAdjust = base.autoAdjust,
+            capillaries = base.capillaries,
+            autoRangeMode = autoRangeMode,
+            retentionDays = retentionDays,
+            range = range,
+            useOffset = useOffset
+        )
+    }.map { input ->
+        val signature = ReportSectionCacheRepository.buildSignature(
+            glucose = input.glucose,
+            doses = input.doses,
+            offset = input.offset,
+            ranges = input.ranges,
+            autoAdjustEnabled = input.autoAdjust,
+            capillaries = input.capillaries,
+            autoRangeMode = input.autoRangeMode.name,
+            extraTag = "metrics:${input.range.name}:${input.useOffset}"
+        )
+        reportCache.getOrComputeReportMetrics(
+            signature = signature,
+            retentionDays = input.retentionDays
+        ) {
+            calculateMetrics(
+                windowedGlucose = input.glucose,
+                windowedDoses = input.doses,
+                offset = input.offset,
+                ranges = input.ranges,
+                auto = input.autoAdjust,
+                caps = input.capillaries,
+                autoRangeMode = input.autoRangeMode,
+                range = input.range,
+                useOffset = input.useOffset
+            )
+        }
     }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
-    // 3. AGP Data calculated from optimized window
     val agpData: StateFlow<List<AgpPoint>> = combine(
-        windowedData,
-        preferenceManager.glucoseOffset,
-        preferenceManager.glucoseOffsetRanges,
-        preferenceManager.autoAdjustEnabled,
-        preferenceManager.capillaryReadings,
+        combine(
+            windowedData,
+            preferenceManager.glucoseOffset,
+            preferenceManager.glucoseOffsetRanges,
+            preferenceManager.autoAdjustEnabled,
+            preferenceManager.capillaryReadings
+        ) { data, offset, ranges, auto, caps ->
+            ReportMetricsBaseInput(data.first, data.second, offset, ranges, auto, caps)
+        },
+        preferenceManager.autoRangeOffsetMode,
+        preferenceManager.historyRetentionDays,
         _useOffsetValues
-    ) { args ->
-        @Suppress("UNCHECKED_CAST")
-        val data = args[0] as Pair<List<GlucoseMeasurement>, List<InsulinDose>>
-        val offset = args[1] as Int
-        val ranges = args[2] as List<GlucoseOffsetRange>
-        val auto = args[3] as Boolean
-        val caps = args[4] as List<CapillaryMeasurement>
-        val useOffset = args[5] as Boolean
-        
-        calculateAgpData(data.first, offset, ranges, auto, caps, useOffset)
+    ) { base, autoRangeMode, retentionDays, useOffset ->
+        ReportAgpInput(
+            glucose = base.glucose,
+            doses = base.doses,
+            offset = base.offset,
+            ranges = base.ranges,
+            autoAdjust = base.autoAdjust,
+            capillaries = base.capillaries,
+            autoRangeMode = autoRangeMode,
+            retentionDays = retentionDays,
+            useOffset = useOffset
+        )
+    }.map { input ->
+        val signature = ReportSectionCacheRepository.buildSignature(
+            glucose = input.glucose,
+            doses = input.doses,
+            offset = input.offset,
+            ranges = input.ranges,
+            autoAdjustEnabled = input.autoAdjust,
+            capillaries = input.capillaries,
+            autoRangeMode = input.autoRangeMode.name,
+            extraTag = "agp:${input.useOffset}"
+        )
+        reportCache.getOrComputeAgp(
+            signature = signature,
+            retentionDays = input.retentionDays
+        ) {
+            calculateAgpData(
+                windowedGlucose = input.glucose,
+                offset = input.offset,
+                ranges = input.ranges,
+                auto = input.autoAdjust,
+                caps = input.capillaries,
+                autoRangeMode = input.autoRangeMode,
+                useOffset = input.useOffset
+            )
+        }
     }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    // 4. Daily Summaries calculated from optimized window
     val dailySummaries: StateFlow<List<DailySummary>> = combine(
-        windowedData,
-        preferenceManager.glucoseOffset,
-        preferenceManager.glucoseOffsetRanges,
-        preferenceManager.autoAdjustEnabled,
-        preferenceManager.capillaryReadings
-    ) { args ->
-        @Suppress("UNCHECKED_CAST")
-        val data = args[0] as Pair<List<GlucoseMeasurement>, List<InsulinDose>>
-        val offset = args[1] as Int
-        val ranges = args[2] as List<GlucoseOffsetRange>
-        val auto = args[3] as Boolean
-        val caps = args[4] as List<CapillaryMeasurement>
-        
-        calculateDailySummaries(data.first, data.second, offset, ranges, auto, caps)
+        combine(
+            windowedData,
+            preferenceManager.glucoseOffset,
+            preferenceManager.glucoseOffsetRanges,
+            preferenceManager.autoAdjustEnabled,
+            preferenceManager.capillaryReadings
+        ) { data, offset, ranges, auto, caps ->
+            ReportMetricsBaseInput(data.first, data.second, offset, ranges, auto, caps)
+        },
+        preferenceManager.autoRangeOffsetMode,
+        preferenceManager.historyRetentionDays
+    ) { base, autoRangeMode, retentionDays ->
+        ReportDailyInput(
+            glucose = base.glucose,
+            doses = base.doses,
+            offset = base.offset,
+            ranges = base.ranges,
+            autoAdjust = base.autoAdjust,
+            capillaries = base.capillaries,
+            autoRangeMode = autoRangeMode,
+            retentionDays = retentionDays
+        )
+    }.map { input ->
+        val signature = ReportSectionCacheRepository.buildSignature(
+            glucose = input.glucose,
+            doses = input.doses,
+            offset = input.offset,
+            ranges = input.ranges,
+            autoAdjustEnabled = input.autoAdjust,
+            capillaries = input.capillaries,
+            autoRangeMode = input.autoRangeMode.name,
+            extraTag = "daily"
+        )
+        reportCache.getOrComputeDailySummaries(
+            signature = signature,
+            retentionDays = input.retentionDays
+        ) {
+            calculateDailySummaries(
+                windowedGlucose = input.glucose,
+                windowedDoses = input.doses,
+                offset = input.offset,
+                ranges = input.ranges,
+                auto = input.autoAdjust,
+                caps = input.capillaries,
+                autoRangeMode = input.autoRangeMode
+            )
+        }
     }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun setRange(range: ReportRange) {
@@ -167,6 +271,7 @@ class ReportViewModel(
         ranges: List<GlucoseOffsetRange>,
         auto: Boolean,
         caps: List<CapillaryMeasurement>,
+        autoRangeMode: AutoRangeOffsetMode,
         range: ReportRange,
         useOffset: Boolean
     ): ReportMetrics {
@@ -178,6 +283,7 @@ class ReportViewModel(
                 manualOffset = offset,
                 userRanges = ranges,
                 autoAdjustEnabled = auto,
+                autoRangeOffsetMode = autoRangeMode,
                 capillaryReadings = caps
             )
         }
@@ -213,6 +319,7 @@ class ReportViewModel(
     private fun calculateAgpData(
         windowedGlucose: List<GlucoseMeasurement>,
         offset: Int, ranges: List<GlucoseOffsetRange>, auto: Boolean, caps: List<CapillaryMeasurement>,
+        autoRangeMode: AutoRangeOffsetMode,
         useOffset: Boolean
     ): List<AgpPoint> {
         val zone = ZoneId.systemDefault()
@@ -225,6 +332,7 @@ class ReportViewModel(
                     manualOffset = offset,
                     userRanges = ranges,
                     autoAdjustEnabled = auto,
+                    autoRangeOffsetMode = autoRangeMode,
                     capillaryReadings = caps
                 )
                 val value = if (useOffset) processed.calibratedValue else processed.value
@@ -249,7 +357,11 @@ class ReportViewModel(
 
     private fun calculateDailySummaries(
         windowedGlucose: List<GlucoseMeasurement>, windowedDoses: List<InsulinDose>,
-        offset: Int, ranges: List<GlucoseOffsetRange>, auto: Boolean, caps: List<CapillaryMeasurement>
+        offset: Int,
+        ranges: List<GlucoseOffsetRange>,
+        auto: Boolean,
+        caps: List<CapillaryMeasurement>,
+        autoRangeMode: AutoRangeOffsetMode
     ): List<DailySummary> {
         val zone = ZoneId.systemDefault()
         
@@ -260,6 +372,7 @@ class ReportViewModel(
                     manualOffset = offset,
                     userRanges = ranges,
                     autoAdjustEnabled = auto,
+                    autoRangeOffsetMode = autoRangeMode,
                     capillaryReadings = caps
                 )
             }
@@ -301,4 +414,49 @@ class ReportViewModel(
         val weight = index - lower
         return sortedValues[lower] * (1 - weight) + sortedValues[upper] * weight
     }
+
+    private data class ReportMetricsInput(
+        val glucose: List<GlucoseMeasurement>,
+        val doses: List<InsulinDose>,
+        val offset: Int,
+        val ranges: List<GlucoseOffsetRange>,
+        val autoAdjust: Boolean,
+        val capillaries: List<CapillaryMeasurement>,
+        val autoRangeMode: AutoRangeOffsetMode,
+        val retentionDays: Int,
+        val range: ReportRange,
+        val useOffset: Boolean
+    )
+
+    private data class ReportMetricsBaseInput(
+        val glucose: List<GlucoseMeasurement>,
+        val doses: List<InsulinDose>,
+        val offset: Int,
+        val ranges: List<GlucoseOffsetRange>,
+        val autoAdjust: Boolean,
+        val capillaries: List<CapillaryMeasurement>
+    )
+
+    private data class ReportAgpInput(
+        val glucose: List<GlucoseMeasurement>,
+        val doses: List<InsulinDose>,
+        val offset: Int,
+        val ranges: List<GlucoseOffsetRange>,
+        val autoAdjust: Boolean,
+        val capillaries: List<CapillaryMeasurement>,
+        val autoRangeMode: AutoRangeOffsetMode,
+        val retentionDays: Int,
+        val useOffset: Boolean
+    )
+
+    private data class ReportDailyInput(
+        val glucose: List<GlucoseMeasurement>,
+        val doses: List<InsulinDose>,
+        val offset: Int,
+        val ranges: List<GlucoseOffsetRange>,
+        val autoAdjust: Boolean,
+        val capillaries: List<CapillaryMeasurement>,
+        val autoRangeMode: AutoRangeOffsetMode,
+        val retentionDays: Int
+    )
 }

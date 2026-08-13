@@ -13,12 +13,14 @@ import com.tonio.libre2clock.data.model.WatchNotificationMode
 import com.tonio.libre2clock.data.repository.GlucoseRepository
 import com.tonio.libre2clock.data.repository.PreferenceManager
 import com.tonio.libre2clock.data.repository.GlucoseProcessor
+import com.tonio.libre2clock.util.SectionPerfTelemetry
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -27,8 +29,11 @@ import kotlin.math.roundToInt
 
 class SettingsViewModel(
     private val preferenceManager: PreferenceManager,
-    private val repository: GlucoseRepository
+    private val repository: GlucoseRepository,
+    androidContext: android.content.Context
 ) : ViewModel() {
+
+    private val settingsCache = SettingsSectionCacheRepository(androidContext)
 
     private val _backupStatusMessage = MutableStateFlow<String?>(null)
     val backupStatusMessage = _backupStatusMessage.asStateFlow()
@@ -38,6 +43,9 @@ class SettingsViewModel(
 
     private val _isApiDebugLoading = MutableStateFlow(false)
     val isApiDebugLoading: StateFlow<Boolean> = _isApiDebugLoading.asStateFlow()
+
+    private val _sectionPerfStats = MutableStateFlow<List<SectionPerfTelemetry.Snapshot>>(emptyList())
+    val sectionPerfStats: StateFlow<List<SectionPerfTelemetry.Snapshot>> = _sectionPerfStats.asStateFlow()
 
     val glucoseOffset: StateFlow<Int> = preferenceManager.glucoseOffset
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
@@ -149,66 +157,72 @@ class SettingsViewModel(
 
     val rangeOffsetInsights: StateFlow<List<RangeOffsetInsight>> = combine(
         preferenceManager.glucoseOffsetRanges,
-        preferenceManager.capillaryReadings
-    ) { ranges, capillaries ->
-        ranges.mapNotNull { range ->
-            val estimate = GlucoseProcessor.estimateOffsetsForRange(range, capillaries) ?: return@mapNotNull null
-            val points = capillaries.mapNotNull { reading ->
-                val sensor = reading.sensorValue ?: return@mapNotNull null
-                if (sensor == 0) return@mapNotNull null
-                if (sensor < range.min) return@mapNotNull null
-                if (range.max != null && sensor >= range.max) return@mapNotNull null
-                sensor to reading.value
-            }
-            if (points.isEmpty()) return@mapNotNull null
+        preferenceManager.capillaryReadings,
+        preferenceManager.historyRetentionDays
+    ) { ranges, capillaries, retentionDays ->
+        Triple(ranges, capillaries, retentionDays)
+    }.map { (ranges, capillaries, retentionDays) ->
+        val signature = SettingsSectionCacheRepository.buildRangeInsightsSignature(ranges, capillaries)
+        settingsCache.getOrComputeRangeInsights(
+            signature = signature,
+            retentionDays = retentionDays
+        ) {
+            ranges.mapNotNull { range ->
+                val estimate = GlucoseProcessor.estimateOffsetsForRange(range, capillaries) ?: return@mapNotNull null
+                val points = capillaries.mapNotNull { reading ->
+                    val sensor = reading.sensorValue ?: return@mapNotNull null
+                    if (sensor == 0) return@mapNotNull null
+                    if (sensor < range.min) return@mapNotNull null
+                    if (range.max != null && sensor >= range.max) return@mapNotNull null
+                    sensor to reading.value
+                }
+                if (points.isEmpty()) return@mapNotNull null
 
-            val avgSensor = points.map { it.first.toDouble() }.average()
-            val avgCapillary = points.map { it.second.toDouble() }.average()
+                val avgSensor = points.map { it.first.toDouble() }.average()
+                val avgCapillary = points.map { it.second.toDouble() }.average()
 
-            val currentMae = points.map { (sensor, capillary) ->
-                abs(sensor - capillary).toDouble()
-            }.average()
+                val currentMae = points.map { (sensor, capillary) ->
+                    abs(sensor - capillary).toDouble()
+                }.average()
 
-            // Raw sensor deviation (absolute baseline)
-            val currentDeviationPct = points.map { (sensor, capillary) ->
-                if (capillary <= 0) 0.0 else (abs(sensor - capillary).toDouble() / capillary) * 100.0
-            }.average()
+                val currentDeviationPct = points.map { (sensor, capillary) ->
+                    if (capillary <= 0) 0.0 else (abs(sensor - capillary).toDouble() / capillary) * 100.0
+                }.average()
 
-            // Signed error (BIAS) of the RAW sensor
-            val signedRawBias = points.map { (sensor, capillary) ->
-                if (capillary <= 0) 0.0 else ((sensor - capillary).toDouble() / capillary) * 100.0
-            }.average()
+                val signedRawBias = points.map { (sensor, capillary) ->
+                    if (capillary <= 0) 0.0 else ((sensor - capillary).toDouble() / capillary) * 100.0
+                }.average()
 
-            // Signed error with CURRENT user offsets applied
-            val signedCalibratedError = points.map { (sensor, capillary) ->
-                val calibrated = sensor + range.offset + (sensor * (range.percentage / 100.0))
-                if (capillary <= 0) 0.0 else ((calibrated - capillary) / capillary) * 100.0
-            }.average()
+                val signedCalibratedError = points.map { (sensor, capillary) ->
+                    val calibrated = sensor + range.offset + (sensor * (range.percentage / 100.0))
+                    if (capillary <= 0) 0.0 else ((calibrated - capillary) / capillary) * 100.0
+                }.average()
 
-            val suggestedMae = points.map { (sensor, capillary) ->
-                val predicted = sensor + estimate.offset + (sensor * (estimate.percentage / 100.0))
-                abs(predicted - capillary)
-            }.average()
-            val suggestedDeviationPct = points.map { (sensor, capillary) ->
-                if (capillary <= 0) 0.0 else (abs((sensor + estimate.offset + (sensor * (estimate.percentage / 100.0))) - capillary) / capillary) * 100.0
-            }.average()
+                val suggestedMae = points.map { (sensor, capillary) ->
+                    val predicted = sensor + estimate.offset + (sensor * (estimate.percentage / 100.0))
+                    abs(predicted - capillary)
+                }.average()
+                val suggestedDeviationPct = points.map { (sensor, capillary) ->
+                    if (capillary <= 0) 0.0 else (abs((sensor + estimate.offset + (sensor * (estimate.percentage / 100.0))) - capillary) / capillary) * 100.0
+                }.average()
 
-            RangeOffsetInsight(
-                min = range.min,
-                max = range.max,
-                sampleCount = estimate.sampleCount,
-                suggestedOffset = estimate.offset,
-                suggestedPercentage = estimate.percentage,
-                currentMae = currentMae,
-                suggestedMae = suggestedMae,
-                currentDeviationPct = currentDeviationPct,
-                suggestedDeviationPct = suggestedDeviationPct,
-                avgSensorValue = avgSensor,
-                avgCapillaryValue = avgCapillary,
-                signedCalibratedDeviationPct = signedCalibratedError,
-                signedRawDeviationPct = signedRawBias
-            )
-        }.sortedBy { it.min }
+                RangeOffsetInsight(
+                    min = range.min,
+                    max = range.max,
+                    sampleCount = estimate.sampleCount,
+                    suggestedOffset = estimate.offset,
+                    suggestedPercentage = estimate.percentage,
+                    currentMae = currentMae,
+                    suggestedMae = suggestedMae,
+                    currentDeviationPct = currentDeviationPct,
+                    suggestedDeviationPct = suggestedDeviationPct,
+                    avgSensorValue = avgSensor,
+                    avgCapillaryValue = avgCapillary,
+                    signedCalibratedDeviationPct = signedCalibratedError,
+                    signedRawDeviationPct = signedRawBias
+                )
+            }.sortedBy { it.min }
+        }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun updateOffset(offset: Int) {
@@ -308,7 +322,17 @@ class SettingsViewModel(
     fun updateHistoryRetentionDays(days: Int) {
         viewModelScope.launch {
             preferenceManager.saveHistoryRetentionDays(days)
+            refreshSectionPerfStats()
         }
+    }
+
+    fun refreshSectionPerfStats() {
+        _sectionPerfStats.value = SectionPerfTelemetry.snapshot()
+    }
+
+    fun resetSectionPerfStats() {
+        SectionPerfTelemetry.reset()
+        _sectionPerfStats.value = emptyList()
     }
 
     fun updateDemoMode(enabled: Boolean) {
@@ -351,6 +375,9 @@ class SettingsViewModel(
                 includeCapillaryReadings = includeCapillaryReadings,
                 includeInsulinDoses = includeInsulinDoses
             )
+            if (restored) {
+                repository.syncLocalArchiveFromPreferences()
+            }
             _backupStatusMessage.value = if (restored) {
                 "Partial restore completed."
             } else {
@@ -372,6 +399,9 @@ class SettingsViewModel(
     fun restoreLocalBackupFromUri(uri: Uri) {
         viewModelScope.launch {
             val result = preferenceManager.restoreHistoryBackupFromUri(uri)
+            if (result.isSuccess) {
+                repository.syncLocalArchiveFromPreferences()
+            }
             _backupStatusMessage.value = result.fold(
                 onSuccess = { "Local backup restored and merged." },
                 onFailure = { error -> error.message ?: "Local backup restore failed." }
@@ -381,6 +411,10 @@ class SettingsViewModel(
 
     fun clearBackupStatusMessage() {
         _backupStatusMessage.value = null
+    }
+
+    init {
+        refreshSectionPerfStats()
     }
 
     fun clearApiDebugOutput() {

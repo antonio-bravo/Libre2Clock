@@ -25,6 +25,7 @@ enum class AutoRangeOffsetMode {
     BY_RANGE
 }
 
+@Serializable
 data class RangeOffsetInsight(
     val min: Int,
     val max: Int?,
