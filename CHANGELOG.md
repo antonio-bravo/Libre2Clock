@@ -1,5 +1,32 @@
 # Changelog
 
+## 1679081 (Aug 13, 2026 21:03:52)
+fix graph — antonio-bravo
+[detail](#1679081-details)
+
+<details id='1679081-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
+</details>
+
+
+---
+## 8a1293b (Aug 13, 2026 18:51:32)
+Update changelog — github-actions[bot]
+[detail](#8a1293b-details)
+
+<details id='8a1293b-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## bda0629 (Aug 13, 2026 20:51:16)
 fix how see HbA1c — antonio-bravo
 [detail](#bda0629-details)
@@ -738,30 +765,6 @@ Demo mode — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/ui/login/LoginViewModel.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-</details>
-
-
----
-## dfb7bb8 (Jul 19, 2026 11:09:41)
-Update changelog — github-actions[bot]
-[detail](#dfb7bb8-details)
-
-<details id='dfb7bb8-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Deleted]
-</details>
-
-
----
-## 1983539 (Jul 19, 2026 13:09:23)
-fix permissions to write — antonio-bravo
-[detail](#1983539-details)
-
-<details id='1983539-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/changelog.yml [Modified]
 </details>
 
 
