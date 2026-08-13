@@ -1,5 +1,29 @@
 # Changelog
 
+## bda0629 (Aug 13, 2026 20:51:16)
+fix how see HbA1c — antonio-bravo
+[detail](#bda0629-details)
+
+<details id='bda0629-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
+</details>
+
+
+---
+## 219d1aa (Aug 13, 2026 18:41:05)
+Update changelog — github-actions[bot]
+[detail](#219d1aa-details)
+
+<details id='219d1aa-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 6557fb1 (Aug 13, 2026 20:40:54)
 fix — antonio-bravo
 [detail](#6557fb1-details)
@@ -738,33 +762,6 @@ fix permissions to write — antonio-bravo
 <summary>Changed files</summary>
 
 - .github/workflows/changelog.yml [Modified]
-</details>
-
-
----
-## 109f56c (Jul 19, 2026 13:06:16)
-fix days remaining — antonio-bravo
-[detail](#109f56c-details)
-
-<details id='109f56c-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/model/LibreModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepository.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-</details>
-
-
----
-## 184c45d (Jul 18, 2026 22:25:11)
-update android-actions/setup-android@v4 — antonio-bravo
-[detail](#184c45d-details)
-
-<details id='184c45d-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/build-release.yml [Modified]
 </details>
 
 
