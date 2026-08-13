@@ -1,5 +1,48 @@
 # Changelog
 
+## 31edbc2 (Aug 13, 2026 20:13:34)
+Extracted code errors from original app
+Added Sensor Logs to track when sensor failed
+Edit days duration by parameter
+Reports added daterange — antonio-bravo
+[detail](#31edbc2-details)
+
+<details id='31edbc2-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/navigation/Destinations.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/sensor/SensorLogsScreen.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/PdfReportGenerator.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+- docs/CODIGOS_ERROR_SENSOR.md [Deleted]
+- docs/MANUAL_DECOMPILACION.md [Deleted]
+</details>
+
+
+---
+## 477e267 (Aug 13, 2026 16:14:57)
+Update changelog — github-actions[bot]
+[detail](#477e267-details)
+
+<details id='477e267-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 79a39e0 (Aug 13, 2026 18:14:44)
 add quick button for capilar — antonio-bravo
 [detail](#79a39e0-details)
@@ -724,30 +767,6 @@ adjust datetime on last sync — antonio-bravo
 
 - .idea/planningMode.xml [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-</details>
-
-
----
-## 87af5f6 (Jul 18, 2026 21:41:20)
-setup-java@v5 — antonio-bravo
-[detail](#87af5f6-details)
-
-<details id='87af5f6-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/build-release.yml [Modified]
-</details>
-
-
----
-## 6bf812c (Jul 18, 2026 21:25:03)
-change date format in graph — antonio-bravo
-[detail](#6bf812c-details)
-
-<details id='6bf812c-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
 </details>
 
 
