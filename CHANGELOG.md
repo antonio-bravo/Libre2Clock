@@ -1,5 +1,42 @@
 # Changelog
 
+## 4f3377a (Aug 15, 2026 18:26:31)
+App opmization — antonio-bravo
+[detail](#4f3377a-details)
+
+<details id='4f3377a-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/local/GlucoseHistoryDatabaseHelper.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/local/SectionCacheDatabaseHelper.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepository.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportSectionCacheRepository.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/sensor/SensorLogsScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/SensorErrorSummary.kt [Deleted]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+- app/src/test/java/com/tonio/libre2clock/ExampleUnitTest.kt [Modified]
+</details>
+
+
+---
+## 4cb75d4 (Aug 15, 2026 16:02:41)
+Update changelog — github-actions[bot]
+[detail](#4cb75d4-details)
+
+<details id='4cb75d4-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## fe652a2 (Aug 15, 2026 18:02:30)
 Update README.md — antonio-bravo
 [detail](#fe652a2-details)
@@ -748,31 +785,6 @@ Capilarity Screen — antonio-bravo
 - app/src/main/res/values-es/strings.xml [Modified]
 - app/src/main/res/values/strings.xml [Modified]
 - gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## eac8dc3 (Jul 19, 2026 12:38:03)
-Update changelog — github-actions[bot]
-[detail](#eac8dc3-details)
-
-<details id='eac8dc3-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## f094fd8 (Jul 19, 2026 14:37:52)
-fix gradle for local and github — antonio-bravo
-[detail](#f094fd8-details)
-
-<details id='f094fd8-details'>
-<summary>Changed files</summary>
-
-- gradle.properties [Modified]
-- gradlew [Modified]
 </details>
 
 
