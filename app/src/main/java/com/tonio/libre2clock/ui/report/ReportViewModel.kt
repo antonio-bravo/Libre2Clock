@@ -381,7 +381,8 @@ class ReportViewModel(
         
         val glucoseByDate = windowedGlucose
             .map {
-                GlucoseProcessor.process(
+                val instant = parseInstant(it)!!
+                val processed = GlucoseProcessor.process(
                     measurement = it,
                     manualOffset = offset,
                     userRanges = ranges,
@@ -390,24 +391,39 @@ class ReportViewModel(
                     capillaryReadings = caps,
                     context = context
                 )
+                instant to processed
             }
-            .groupBy { parseInstant(it)!!.atZone(zone).toLocalDate() }
+            .groupBy { it.first.atZone(zone).toLocalDate() }
             
         val dosesByDate = windowedDoses
             .groupBy { TimestampParser.parseFlexibleInstant(it.timestamp)!!.atZone(zone).toLocalDate() }
 
-        val dates = glucoseByDate.keys.union(dosesByDate.keys).sortedDescending()
+        val dates = (glucoseByDate.keys + dosesByDate.keys).distinct().sortedDescending()
         
         return dates.map { date ->
-            val g = glucoseByDate[date] ?: emptyList()
-            val d = dosesByDate[date] ?: emptyList()
+            val gPairs = glucoseByDate[date] ?: emptyList()
+            val dList = dosesByDate[date] ?: emptyList()
+            
+            var totalInsulin = 0.0
+            var totalCarbs = 0.0
+            var basal = 0.0
+            var bolus = 0.0
+            
+            dList.forEach { d ->
+                totalInsulin += d.units
+                totalCarbs += d.carbs ?: 0.0
+                if (d.type == InsulinType.SLOW) basal += d.units
+                else bolus += d.units
+            }
+
             DailySummary(
                 date = date,
-                glucose = g.sortedBy { parseInstant(it) },
-                insulin = d.sumOf { it.units },
-                carbs = d.sumOf { it.carbs ?: 0.0 },
-                basal = d.filter { it.type == InsulinType.SLOW }.sumOf { it.units },
-                bolus = d.filter { it.type == InsulinType.RAPID }.sumOf { it.units }
+                // Glucose measurements are already processed, just need to sort them oldest first for the day
+                glucose = gPairs.sortedBy { it.first }.map { it.second },
+                insulin = totalInsulin,
+                carbs = totalCarbs,
+                basal = basal,
+                bolus = bolus
             )
         }
     }

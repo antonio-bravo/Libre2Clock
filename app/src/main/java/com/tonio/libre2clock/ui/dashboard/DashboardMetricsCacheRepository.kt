@@ -64,7 +64,7 @@ class DashboardMetricsCacheRepository(
     }
 
     companion object {
-        const val DASHBOARD_SECTION_KEY = "dashboard_metrics_v1"
+        const val DASHBOARD_SECTION_KEY = "dashboard_metrics_v2"
         private const val PURGE_INTERVAL_MS = 12L * 60L * 60L * 1000L
         private const val DAY_MS = 24L * 60L * 60L * 1000L
         private const val MIN_RETENTION_DAYS = 30

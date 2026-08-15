@@ -1083,10 +1083,10 @@ fun ScheduleDialog(
 @Composable
 private fun getLocalizedSectionName(section: String): String {
     return when (section) {
-        "dashboard_metrics_v1" -> stringResource(R.string.settings_perf_section_dashboard)
-        "report_metrics_v1" -> stringResource(R.string.settings_perf_section_report_metrics)
-        "report_agp_v1" -> stringResource(R.string.settings_perf_section_report_agp)
-        "report_daily_v1" -> stringResource(R.string.settings_perf_section_report_daily)
+        "dashboard_metrics_v1", "dashboard_metrics_v2" -> stringResource(R.string.settings_perf_section_dashboard)
+        "report_metrics_v1", "report_metrics_v2" -> stringResource(R.string.settings_perf_section_report_metrics)
+        "report_agp_v1", "report_agp_v2" -> stringResource(R.string.settings_perf_section_report_agp)
+        "report_daily_v1", "report_daily_v2" -> stringResource(R.string.settings_perf_section_report_daily)
         "settings_range_insights_v1" -> stringResource(R.string.settings_perf_section_range_insights)
         else -> stringResource(R.string.settings_perf_section_unknown, section)
     }
