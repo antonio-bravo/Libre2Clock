@@ -29,11 +29,16 @@ class GlucoseHistoryDatabaseHelper(context: Context) :
             """.trimIndent()
         )
         db.execSQL("CREATE INDEX idx_glucose_history_sort_epoch ON glucose_history(sort_epoch_ms DESC)")
+        db.execSQL("CREATE INDEX idx_glucose_history_window ON glucose_history(sort_epoch_ms DESC, raw_value)")
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         if (oldVersion < 1) {
             onCreate(db)
+            return
+        }
+        if (oldVersion < 2) {
+            db.execSQL("CREATE INDEX IF NOT EXISTS idx_glucose_history_window ON glucose_history(sort_epoch_ms DESC, raw_value)")
         }
     }
 
@@ -119,6 +124,54 @@ class GlucoseHistoryDatabaseHelper(context: Context) :
         }
     }
 
+    fun readWindowNewestFirst(
+        startEpochMs: Long,
+        endEpochMs: Long,
+        maxItems: Int = 5000
+    ): List<GlucoseMeasurement> {
+        val db = readableDatabase
+        val cursor = db.query(
+            "glucose_history",
+            arrayOf(
+                "factory_timestamp",
+                "timestamp",
+                "measurement_type",
+                "value_mg_dl",
+                "trend_arrow",
+                "measurement_color",
+                "raw_value",
+                "calibrated_value",
+                "sort_epoch_ms"
+            ),
+            "sort_epoch_ms >= ? AND sort_epoch_ms <= ?",
+            arrayOf(startEpochMs.toString(), endEpochMs.toString()),
+            null,
+            null,
+            "sort_epoch_ms DESC",
+            maxItems.coerceAtLeast(1).toString()
+        )
+
+        cursor.use {
+            val items = ArrayList<GlucoseMeasurement>(it.count.coerceAtLeast(0))
+            while (it.moveToNext()) {
+                items.add(
+                    GlucoseMeasurement(
+                        factoryTimestamp = it.getString(0),
+                        timestamp = it.getString(1),
+                        type = it.getInt(2),
+                        valueInMgPerDl = it.getInt(3),
+                        trendArrow = it.takeIf { row -> !row.isNull(4) }?.getInt(4),
+                        measurementColor = it.takeIf { row -> !row.isNull(5) }?.getInt(5),
+                        value = it.getInt(6),
+                        calibratedValue = it.getInt(7),
+                        epochSeconds = it.getLong(8) / 1000L
+                    )
+                )
+            }
+            return items
+        }
+    }
+
     fun replaceAll(measurements: List<GlucoseMeasurement>) {
         val db = writableDatabase
         db.beginTransaction()
@@ -193,6 +246,6 @@ class GlucoseHistoryDatabaseHelper(context: Context) :
 
     companion object {
         private const val DATABASE_NAME = "glucose_history.db"
-        private const val DATABASE_VERSION = 1
+        private const val DATABASE_VERSION = 2
     }
 }

@@ -12,10 +12,11 @@ class SectionCacheDatabaseHelper(context: Context) :
         db.execSQL(
             """
             CREATE TABLE section_cache (
-                section_key TEXT PRIMARY KEY,
+                section_key TEXT NOT NULL,
                 signature TEXT NOT NULL,
                 payload_json TEXT NOT NULL,
-                updated_at_epoch_ms INTEGER NOT NULL
+                updated_at_epoch_ms INTEGER NOT NULL,
+                PRIMARY KEY (section_key, signature)
             )
             """.trimIndent()
         )
@@ -23,13 +24,10 @@ class SectionCacheDatabaseHelper(context: Context) :
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        if (oldVersion < 2) {
+        if (oldVersion < 5) {
             db.execSQL("DROP TABLE IF EXISTS section_cache")
             onCreate(db)
             return
-        }
-        if (oldVersion < 3) {
-            db.execSQL("CREATE INDEX IF NOT EXISTS idx_section_cache_updated_at ON section_cache(updated_at_epoch_ms)")
         }
     }
 
@@ -77,6 +75,6 @@ class SectionCacheDatabaseHelper(context: Context) :
 
     companion object {
         private const val DATABASE_NAME = "section_cache.db"
-        private const val DATABASE_VERSION = 3
+        private const val DATABASE_VERSION = 5
     }
 }

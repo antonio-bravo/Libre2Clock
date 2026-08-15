@@ -29,6 +29,11 @@ class GlucoseRepositoryImpl(
 
     private val historyDb = GlucoseHistoryDatabaseHelper(context.applicationContext)
     private val historicalState = MutableStateFlow<List<GlucoseMeasurement>>(emptyList())
+    private val historicalWindowCache = object : LinkedHashMap<String, List<GlucoseMeasurement>>(16, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, List<GlucoseMeasurement>>): Boolean {
+            return size > MAX_WINDOW_CACHE_ENTRIES
+        }
+    }
 
     override val currentGlucose: Flow<GlucoseMeasurement?> = historicalState
         .map { it.firstOrNull() }
@@ -89,6 +94,18 @@ class GlucoseRepositoryImpl(
 
     override suspend fun refreshHistoricalGlucoseWindow(): Result<GlucoseMeasurement> {
         return fetchLatestGlucoseInternal(persistArchive = true)
+    }
+
+    override suspend fun getHistoricalGlucoseWindow(startEpochMs: Long, endEpochMs: Long, maxItems: Int): List<GlucoseMeasurement> {
+        val key = "$startEpochMs:$endEpochMs:$maxItems"
+        historicalWindowCache[key]?.let { return it.toList() }
+
+        val window = withContext(Dispatchers.IO) {
+            historyDb.readWindowNewestFirst(startEpochMs, endEpochMs, maxItems)
+        }
+
+        historicalWindowCache[key] = window.toList()
+        return window
     }
 
     override suspend fun syncLocalArchiveFromPreferences() {
@@ -319,5 +336,6 @@ class GlucoseRepositoryImpl(
 
     companion object {
         private const val SNAPSHOT_MIRROR_INTERVAL_MS = 15L * 60L * 1000L
+        private const val MAX_WINDOW_CACHE_ENTRIES = 8
     }
 }

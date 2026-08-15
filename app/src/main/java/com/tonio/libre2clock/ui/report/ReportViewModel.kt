@@ -85,27 +85,30 @@ class ReportViewModel(
     private val _isGenerating = MutableStateFlow(false)
     val isGenerating: StateFlow<Boolean> = _isGenerating.asStateFlow()
 
-    // 1. Optimized Base Window: Only filter the archive once when range changes
+    // 1. Optimized Base Window: only read the needed date slice from SQLite instead of the whole archive
     private val windowedData: Flow<Pair<List<GlucoseMeasurement>, List<InsulinDose>>> = combine(
-        repository.historicalGlucose,
-        preferenceManager.insulinDoses,
         _startDate,
-        _endDate
-    ) { glucose, doses, start, end ->
+        _endDate,
+        preferenceManager.insulinDoses,
+        repository.historicalGlucose // Still observe for updates
+    ) { start, end, doses, _ ->
         val zone = ZoneId.systemDefault()
         val startInstant = start.atStartOfDay(zone).toInstant()
         val endInstant = end.plusDays(1).atStartOfDay(zone).toInstant()
-        
-        val filteredG = glucose.filter { 
-            val instant = parseInstant(it)
-            instant != null && !instant.isBefore(startInstant) && !instant.isAfter(endInstant)
-        }
-        val filteredD = doses.filter { 
+
+        val filteredG = repository.getHistoricalGlucoseWindow(
+            startEpochMs = startInstant.toEpochMilli(),
+            endEpochMs = endInstant.toEpochMilli(),
+            maxItems = 10000
+        )
+        val filteredD = doses.filter {
             val instant = TimestampParser.parseFlexibleInstant(it.timestamp)
             instant != null && !instant.isBefore(startInstant) && !instant.isAfter(endInstant)
         }
         filteredG to filteredD
-    }.flowOn(Dispatchers.Default).shareIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 1)
+    }
+        .flowOn(Dispatchers.Default)
+        .shareIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 1)
 
     val reportMetrics: StateFlow<ReportMetrics?> = combine(
         combine(

@@ -47,7 +47,8 @@ data class CapillaryMeasurement(
     val value: Int,
     val timestamp: String,
     val sensorValue: Int? = null,
-    val delta: Int? = null
+    val delta: Int? = null,
+    val sensorSerialNumber: String? = null
 )
 
 @Serializable

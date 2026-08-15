@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -72,8 +73,10 @@ class DashboardViewModel(
                 context = calcContext
             )
         }
-    }.flowOn(Dispatchers.Default)
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+    }
+        .distinctUntilChanged()
+        .flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     private val ticker = flow {
         while (true) {
@@ -96,7 +99,6 @@ class DashboardViewModel(
 
     // OPTIMIZED: Graph data processes its own window independently of the full history
     val graphData: StateFlow<List<GlucoseMeasurement>> = combine(
-        repository.historicalGlucose,
         combine(
             preferenceManager.glucoseOffset,
             preferenceManager.glucoseOffsetRanges,
@@ -106,26 +108,38 @@ class DashboardViewModel(
             HistoricalInputs(emptyList(), manualOffset, ranges, autoAdjust, autoRangeMode)
         },
         preferenceManager.capillaryReadings,
-        _graphWindowDays
-    ) { historical, config, capillaries, days ->
+        _graphWindowDays,
+        repository.historicalGlucose // Still observe this to refresh when new data arrives
+    ) { config, capillaries, days, _ ->
         val cutoff = Instant.now().minus(java.time.Duration.ofDays(days.toLong()))
-        historical
-            .filter { m ->
-                val instant = TimestampParser.parseFlexibleInstant(m.factoryTimestamp) ?: TimestampParser.parseFlexibleInstant(m.timestamp)
-                instant?.isAfter(cutoff) == true
-            }
-            .map {
-                GlucoseProcessor.process(
-                    measurement = it,
-                    manualOffset = config.manualOffset,
-                    userRanges = config.ranges,
-                    autoAdjustEnabled = config.autoAdjust,
-                    autoRangeOffsetMode = config.autoRangeMode,
-                    capillaryReadings = capillaries
-                )
-            }
-    }.flowOn(Dispatchers.Default)
-    .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+        val startEpochMs = cutoff.toEpochMilli()
+        val endEpochMs = Instant.now().toEpochMilli()
+        
+        // PAGING: Only fetch the necessary window from DB
+        val window = repository.getHistoricalGlucoseWindow(startEpochMs, endEpochMs, maxItems = 5000)
+        
+        // DOWNSAMPLING: If the window is huge (e.g. 30 days), reduce points for the graph
+        val sampled = if (window.size > 1500) {
+            val step = window.size / 1000
+            window.filterIndexed { index, _ -> index % step == 0 }
+        } else {
+            window
+        }
+
+        sampled.map {
+            GlucoseProcessor.process(
+                measurement = it,
+                manualOffset = config.manualOffset,
+                userRanges = config.ranges,
+                autoAdjustEnabled = config.autoAdjust,
+                autoRangeOffsetMode = config.autoRangeMode,
+                capillaryReadings = capillaries
+            )
+        }
+    }
+        .distinctUntilChanged()
+        .flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     fun setGraphWindow(days: Int) {
         _graphWindowDays.value = days
@@ -134,33 +148,26 @@ class DashboardViewModel(
     // Processed history for metrics (only if someone is listening)
     val historicalData: StateFlow<List<GlucoseMeasurement>> = combine(
         combine(
-            repository.historicalGlucose,
             preferenceManager.glucoseOffset,
             preferenceManager.glucoseOffsetRanges,
             preferenceManager.autoAdjustEnabled,
             preferenceManager.autoRangeOffsetMode
-        ) { historical, manualOffset, ranges, autoAdjust, autoRangeMode ->
-            HistoricalInputs(historical, manualOffset, ranges, autoAdjust, autoRangeMode)
+        ) { manualOffset, ranges, autoAdjust, autoRangeMode ->
+            HistoricalInputs(emptyList(), manualOffset, ranges, autoAdjust, autoRangeMode)
         },
         preferenceManager.capillaryReadings
     ) { inputs, capillaries ->
-        // OPTIMIZATION 1: Only process items within 90 days for the Dashboard Metrics
         val cutoff = Instant.now().minus(java.time.Duration.ofDays(90))
-        
-        // OPTIMIZATION 2: Pre-build calculation context to avoid redundant O(M) work inside the O(N) loop
+        val startEpochMs = cutoff.toEpochMilli()
+        val endEpochMs = Instant.now().toEpochMilli()
+
         val calcContext = GlucoseProcessor.buildContext(
             autoRangeOffsetMode = inputs.autoRangeMode,
             userRanges = inputs.ranges,
             capillaryReadings = capillaries
         )
 
-        inputs.historical
-            .filter { m ->
-                val instant = m.epochSeconds?.let { Instant.ofEpochSecond(it) }
-                    ?: TimestampParser.parseFlexibleInstant(m.factoryTimestamp)
-                    ?: TimestampParser.parseFlexibleInstant(m.timestamp)
-                instant?.isAfter(cutoff) == true
-            }
+        repository.getHistoricalGlucoseWindow(startEpochMs, endEpochMs, maxItems = 5000)
             .map {
                 GlucoseProcessor.process(
                     measurement = it,
@@ -172,8 +179,10 @@ class DashboardViewModel(
                     context = calcContext
                 )
             }
-    }.flowOn(Dispatchers.Default)
-    .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    }
+        .distinctUntilChanged()
+        .flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     val dashboardMetrics: StateFlow<DashboardMetrics> = combine(
         historicalData,
@@ -188,6 +197,7 @@ class DashboardViewModel(
                 DashboardMetricsCalculator.calculate(measurements)
             }
         }
+        .distinctUntilChanged()
         .flowOn(Dispatchers.Default)
         .stateIn(
             viewModelScope, 
@@ -247,7 +257,10 @@ class DashboardViewModel(
     fun addCapillaryReading(reading: com.tonio.libre2clock.data.model.CapillaryMeasurement) {
         viewModelScope.launch {
             val currentReadings = preferenceManager.capillaryReadings.first().toMutableList()
-            currentReadings.add(reading)
+            val withSensor = reading.copy(
+                sensorSerialNumber = reading.sensorSerialNumber ?: preferenceManager.activeSensorSerialNumber.first()
+            )
+            currentReadings.add(withSensor)
             currentReadings.sortByDescending { it.timestamp }
             preferenceManager.saveCapillaryReadings(currentReadings)
         }

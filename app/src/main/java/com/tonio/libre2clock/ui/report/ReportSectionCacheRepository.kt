@@ -127,10 +127,10 @@ class ReportSectionCacheRepository(
     }
 
     companion object {
-        private const val REPORT_METRICS_SECTION_KEY = "report_metrics_v1"
-        private const val REPORT_AGP_SECTION_KEY = "report_agp_v1"
-        private const val REPORT_DAILY_SECTION_KEY = "report_daily_v1"
-        private const val PURGE_INTERVAL_MS = 12L * 60L * 60L * 1000L
+        private const val REPORT_METRICS_SECTION_KEY = "report_metrics_v2"
+        private const val REPORT_AGP_SECTION_KEY = "report_agp_v2"
+        private const val REPORT_DAILY_SECTION_KEY = "report_daily_v2"
+        private const val PURGE_INTERVAL_MS = 6L * 60L * 60L * 1000L // Purge every 6 hours
         private const val DAY_MS = 24L * 60L * 60L * 1000L
         private const val MIN_RETENTION_DAYS = 30
         private const val MAX_RETENTION_DAYS = 365

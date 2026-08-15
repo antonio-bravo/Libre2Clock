@@ -13,6 +13,7 @@ interface GlucoseRepository {
     suspend fun login(email: String, password: String): Result<Unit>
     suspend fun fetchLatestGlucose(): Result<GlucoseMeasurement>
     suspend fun refreshHistoricalGlucoseWindow(): Result<GlucoseMeasurement>
+    suspend fun getHistoricalGlucoseWindow(startEpochMs: Long, endEpochMs: Long, maxItems: Int = 5000): List<GlucoseMeasurement>
     suspend fun syncLocalArchiveFromPreferences()
     suspend fun enableDemoMode()
     suspend fun disableDemoMode()

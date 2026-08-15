@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -118,6 +119,9 @@ class SettingsViewModel(
 
     val sensorLogs: StateFlow<List<com.tonio.libre2clock.data.model.SensorLog>> = preferenceManager.sensorLogs
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val activeSensorSerialNumber: StateFlow<String?> = preferenceManager.activeSensorSerialNumber
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     val watchNotificationSchedules: StateFlow<List<com.tonio.libre2clock.data.model.AlarmSchedule>> = preferenceManager.watchNotificationSchedules
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -229,7 +233,9 @@ class SettingsViewModel(
                 )
             }.sortedBy { it.min }
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    }
+        .distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun updateOffset(offset: Int) {
         viewModelScope.launch {
@@ -252,7 +258,10 @@ class SettingsViewModel(
     fun addCapillaryReading(reading: CapillaryMeasurement) {
         viewModelScope.launch {
             val currentReadings = capillaryReadings.value.toMutableList()
-            currentReadings.add(reading)
+            val withSensor = reading.copy(
+                sensorSerialNumber = reading.sensorSerialNumber ?: preferenceManager.activeSensorSerialNumber.first()
+            )
+            currentReadings.add(withSensor)
             currentReadings.sortByDescending { it.timestamp }
             preferenceManager.saveCapillaryReadings(currentReadings)
         }

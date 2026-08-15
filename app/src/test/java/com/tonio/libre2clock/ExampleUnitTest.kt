@@ -4,6 +4,7 @@ import com.tonio.libre2clock.data.model.CapillaryMeasurement
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.GlucoseOffsetRange
 import com.tonio.libre2clock.data.repository.GlucoseProcessor
+import com.tonio.libre2clock.util.buildSensorErrorSummary
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -66,5 +67,22 @@ class ExampleUnitTest {
         )
 
         assertEquals(80, calibrated)
+    }
+
+    @Test
+    fun sensorErrorSummaryAveragesPerSensor() {
+        val capillaryReadings = listOf(
+            CapillaryMeasurement(value = 120, timestamp = "2024-01-01T10:00", sensorValue = 100, sensorSerialNumber = "SN-001"),
+            CapillaryMeasurement(value = 130, timestamp = "2024-01-01T11:00", sensorValue = 100, sensorSerialNumber = "SN-001"),
+            CapillaryMeasurement(value = 150, timestamp = "2024-01-01T12:00", sensorValue = 120, sensorSerialNumber = "SN-002")
+        )
+
+        val summary = buildSensorErrorSummary(emptyList(), capillaryReadings)
+
+        assertEquals(2, summary.size)
+        val first = summary.first { it.serialNumber == "SN-001" }
+        assertEquals(2, first.samples)
+        assertEquals(25.0, first.avgAbsoluteDeviationPct, 0.1)
+        assertEquals(25.0, first.avgSignedDeviationPct, 0.1)
     }
 }

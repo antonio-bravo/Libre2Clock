@@ -44,6 +44,8 @@
     <string name="sensor_log_no_logs">No sensor logs recorded yet.</string>
     <string name="sensor_log_copy_success">Sensor info copied to clipboard</string>
     <string name="sensor_log_notes_label">Notes</string>
+    <string name="sensor_error_summary_title">Average sensor error vs capillary readings</string>
+    <string name="sensor_error_summary_row">%1$d samples | abs mean: %2$.1f%% | signed mean: %3$.1f%%</string>
 
     <string name="insulin_hub_title">Insulin Management</string>
     <string name="insulin_active_total">Total Active Insulin (IOB)</string>

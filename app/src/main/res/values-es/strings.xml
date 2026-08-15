@@ -44,6 +44,8 @@
     <string name="sensor_log_no_logs">No hay registros de sensores aún.</string>
     <string name="sensor_log_copy_success">Info. del sensor copiada al portapapeles</string>
     <string name="sensor_log_notes_label">Notas</string>
+    <string name="sensor_error_summary_title">Error medio por sensor frente a medidas capilares</string>
+    <string name="sensor_error_summary_row">%1$d muestras | media abs: %2$.1f%% | media firmada: %3$.1f%%</string>
 
     <string name="insulin_hub_title">Gestión de Insulina</string>
     <string name="insulin_active_total">Total Insulina Activa (IOB)</string>

@@ -25,6 +25,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tonio.libre2clock.R
 import com.tonio.libre2clock.data.model.SensorLog
 import com.tonio.libre2clock.ui.settings.SettingsViewModel
+import com.tonio.libre2clock.util.buildSensorErrorSummary
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneId
@@ -37,6 +38,10 @@ fun SensorLogsScreen(
     onBack: () -> Unit
 ) {
     val sensorLogs by viewModel.sensorLogs.collectAsStateWithLifecycle()
+    val capillaryReadings by viewModel.capillaryReadings.collectAsStateWithLifecycle()
+    val sensorErrorSummary = remember(sensorLogs, capillaryReadings) {
+        buildSensorErrorSummary(sensorLogs, capillaryReadings)
+    }
     var editingLog by remember { mutableStateOf<SensorLog?>(null) }
 
     Scaffold(
@@ -73,6 +78,12 @@ fun SensorLogsScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = PaddingValues(vertical = 16.dp)
             ) {
+                if (sensorErrorSummary.isNotEmpty()) {
+                    item {
+                        SensorErrorSummaryCard(sensorErrorSummary = sensorErrorSummary)
+                    }
+                }
+
                 items(sensorLogs) { log ->
                     SensorLogItem(
                         log = log,
@@ -93,6 +104,50 @@ fun SensorLogsScreen(
                 editingLog = null
             }
         )
+    }
+}
+
+@Composable
+private fun SensorErrorSummaryCard(
+    sensorErrorSummary: List<com.tonio.libre2clock.util.SensorErrorSummary>
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = stringResource(R.string.sensor_error_summary_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            sensorErrorSummary.forEach { summary ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "SN: ${summary.serialNumber}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = stringResource(
+                            R.string.sensor_error_summary_row,
+                            summary.samples,
+                            summary.avgAbsoluteDeviationPct,
+                            summary.avgSignedDeviationPct
+                        ),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+            }
+        }
     }
 }
 
