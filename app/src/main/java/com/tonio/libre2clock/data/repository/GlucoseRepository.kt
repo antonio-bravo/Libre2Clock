@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.Flow
 interface GlucoseRepository {
     val currentGlucose: Flow<GlucoseMeasurement?>
     val historicalGlucose: Flow<List<GlucoseMeasurement>>
+    val dataVersion: Flow<Long> // Increments every time historical data changes
     val activeSensorInfo: Flow<ActiveSensorInfo?>
     val isDemoMode: Flow<Boolean>
     suspend fun login(email: String, password: String): Result<Unit>

@@ -76,7 +76,7 @@ class DashboardViewModel(
     }
         .distinctUntilChanged()
         .flowOn(Dispatchers.Default)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+        .stateIn(viewModelScope, SharingStarted.Lazily, null)
 
     private val ticker = flow {
         while (true) {
@@ -92,10 +92,10 @@ class DashboardViewModel(
         ticker
     ) { info: ActiveSensorInfo?, demoEnabled: Boolean, duration: Int, _: Unit ->
         calculateSensorStatus(info, demoEnabled, duration)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+    }.stateIn(viewModelScope, SharingStarted.Lazily, null)
 
     val isDemoMode: StateFlow<Boolean> = repository.isDemoMode
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+        .stateIn(viewModelScope, SharingStarted.Lazily, false)
 
     // OPTIMIZED: Graph data processes its own window independently of the full history
     val graphData: StateFlow<List<GlucoseMeasurement>> = combine(
@@ -109,7 +109,7 @@ class DashboardViewModel(
         },
         preferenceManager.capillaryReadings,
         _graphWindowDays,
-        repository.historicalGlucose // Still observe this to refresh when new data arrives
+        repository.dataVersion // Use lightweight version trigger
     ) { config, capillaries, days, _ ->
         val cutoff = Instant.now().minus(java.time.Duration.ofDays(days.toLong()))
         val startEpochMs = cutoff.toEpochMilli()
@@ -141,10 +141,6 @@ class DashboardViewModel(
         .flowOn(Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    fun setGraphWindow(days: Int) {
-        _graphWindowDays.value = days
-    }
-
     // Processed history for metrics (only if someone is listening)
     val historicalData: StateFlow<List<GlucoseMeasurement>> = combine(
         combine(
@@ -156,15 +152,15 @@ class DashboardViewModel(
             HistoricalInputs(emptyList(), manualOffset, ranges, autoAdjust, autoRangeMode)
         },
         preferenceManager.capillaryReadings,
-        repository.historicalGlucose
-    ) { inputs, capillaries, _ ->
+        repository.dataVersion
+    ) { config, capillaries, _ ->
         val cutoff = Instant.now().minus(java.time.Duration.ofDays(90))
         val startEpochMs = cutoff.toEpochMilli()
         val endEpochMs = Instant.now().toEpochMilli()
 
         val calcContext = GlucoseProcessor.buildContext(
-            autoRangeOffsetMode = inputs.autoRangeMode,
-            userRanges = inputs.ranges,
+            autoRangeOffsetMode = config.autoRangeMode,
+            userRanges = config.ranges,
             capillaryReadings = capillaries
         )
 
@@ -172,10 +168,10 @@ class DashboardViewModel(
             .map {
                 GlucoseProcessor.process(
                     measurement = it,
-                    manualOffset = inputs.manualOffset,
-                    userRanges = inputs.ranges,
-                    autoAdjustEnabled = inputs.autoAdjust,
-                    autoRangeOffsetMode = inputs.autoRangeMode,
+                    manualOffset = config.manualOffset,
+                    userRanges = config.ranges,
+                    autoAdjustEnabled = config.autoAdjust,
+                    autoRangeOffsetMode = config.autoRangeMode,
                     capillaryReadings = capillaries,
                     context = calcContext
                 )
@@ -202,7 +198,7 @@ class DashboardViewModel(
         .flowOn(Dispatchers.Default)
         .stateIn(
             viewModelScope, 
-            SharingStarted.WhileSubscribed(5000), 
+            SharingStarted.Lazily, 
             DashboardMetricsCalculator.calculate(emptyList())
         )
 
@@ -233,6 +229,10 @@ class DashboardViewModel(
         viewModelScope.launch {
             repository.fetchLatestGlucose()
         }
+    }
+
+    fun setGraphWindow(days: Int) {
+        _graphWindowDays.value = days
     }
 
     fun refreshHistoryWindow() {

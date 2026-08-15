@@ -29,6 +29,9 @@ class GlucoseRepositoryImpl(
 
     private val historyDb = GlucoseHistoryDatabaseHelper(context.applicationContext)
     private val historicalState = MutableStateFlow<List<GlucoseMeasurement>>(emptyList())
+    private val _dataVersion = MutableStateFlow(0L)
+    override val dataVersion: Flow<Long> = _dataVersion.asStateFlow()
+
     private val historicalWindowCache = object : LinkedHashMap<String, List<GlucoseMeasurement>>(16, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, List<GlucoseMeasurement>>): Boolean {
             return size > MAX_WINDOW_CACHE_ENTRIES
@@ -123,6 +126,7 @@ class GlucoseRepositoryImpl(
             historyDb.replaceAll(merged)
             historicalWindowCache.clear()
             historicalState.value = merged
+            _dataVersion.value++
         }
     }
 
@@ -155,6 +159,7 @@ class GlucoseRepositoryImpl(
                 }
                 historicalWindowCache.clear()
                 historicalState.value = mergedHistory
+                _dataVersion.value++
                 mirrorSnapshotIfNeeded(mergedHistory)
             }
             
@@ -215,6 +220,7 @@ class GlucoseRepositoryImpl(
                 }
                 historicalWindowCache.clear()
                 historicalState.value = mergedHistory
+                _dataVersion.value++
                 mirrorSnapshotIfNeeded(mergedHistory)
             }
 
