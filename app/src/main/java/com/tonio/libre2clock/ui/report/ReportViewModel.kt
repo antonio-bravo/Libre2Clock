@@ -141,6 +141,11 @@ class ReportViewModel(
             signature = signature,
             retentionDays = params.retentionDays
         ) {
+            val calcContext = GlucoseProcessor.buildContext(
+                autoRangeOffsetMode = params.autoRangeMode,
+                userRanges = base.ranges,
+                capillaryReadings = base.capillaries
+            )
             calculateMetrics(
                 windowedGlucose = base.glucose,
                 windowedDoses = base.doses,
@@ -150,7 +155,8 @@ class ReportViewModel(
                 caps = base.capillaries,
                 autoRangeMode = params.autoRangeMode,
                 daysCount = (ChronoUnit.DAYS.between(params.start, params.end) + 1).toInt(),
-                useOffset = params.useOffset
+                useOffset = params.useOffset,
+                context = calcContext
             )
         }
     }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
@@ -183,6 +189,11 @@ class ReportViewModel(
             signature = signature,
             retentionDays = retentionDays
         ) {
+            val calcContext = GlucoseProcessor.buildContext(
+                autoRangeOffsetMode = autoRangeMode,
+                userRanges = base.ranges,
+                capillaryReadings = base.capillaries
+            )
             calculateAgpData(
                 windowedGlucose = base.glucose,
                 offset = base.offset,
@@ -190,7 +201,8 @@ class ReportViewModel(
                 auto = base.autoAdjust,
                 caps = base.capillaries,
                 autoRangeMode = autoRangeMode,
-                useOffset = useOffset
+                useOffset = useOffset,
+                context = calcContext
             )
         }
     }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -222,6 +234,11 @@ class ReportViewModel(
             signature = signature,
             retentionDays = retentionDays
         ) {
+            val calcContext = GlucoseProcessor.buildContext(
+                autoRangeOffsetMode = autoRangeMode,
+                userRanges = base.ranges,
+                capillaryReadings = base.capillaries
+            )
             calculateDailySummaries(
                 windowedGlucose = base.glucose,
                 windowedDoses = base.doses,
@@ -229,7 +246,8 @@ class ReportViewModel(
                 ranges = base.ranges,
                 auto = base.autoAdjust,
                 caps = base.capillaries,
-                autoRangeMode = autoRangeMode
+                autoRangeMode = autoRangeMode,
+                context = calcContext
             )
         }
     }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -261,7 +279,8 @@ class ReportViewModel(
         caps: List<CapillaryMeasurement>,
         autoRangeMode: AutoRangeOffsetMode,
         daysCount: Int,
-        useOffset: Boolean
+        useOffset: Boolean,
+        context: GlucoseProcessor.CalculationContext? = null
     ): ReportMetrics {
         if (windowedGlucose.isEmpty()) return ReportMetrics(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0)
 
@@ -272,7 +291,8 @@ class ReportViewModel(
                 userRanges = ranges,
                 autoAdjustEnabled = auto,
                 autoRangeOffsetMode = autoRangeMode,
-                capillaryReadings = caps
+                capillaryReadings = caps,
+                context = context
             )
         }
         val values = if (useOffset) processed.map { it.calibratedValue.toDouble() } else processed.map { it.value.toDouble() }
@@ -308,7 +328,8 @@ class ReportViewModel(
         windowedGlucose: List<GlucoseMeasurement>,
         offset: Int, ranges: List<GlucoseOffsetRange>, auto: Boolean, caps: List<CapillaryMeasurement>,
         autoRangeMode: AutoRangeOffsetMode,
-        useOffset: Boolean
+        useOffset: Boolean,
+        context: GlucoseProcessor.CalculationContext? = null
     ): List<AgpPoint> {
         val zone = ZoneId.systemDefault()
         
@@ -321,7 +342,8 @@ class ReportViewModel(
                     userRanges = ranges,
                     autoAdjustEnabled = auto,
                     autoRangeOffsetMode = autoRangeMode,
-                    capillaryReadings = caps
+                    capillaryReadings = caps,
+                    context = context
                 )
                 val value = if (useOffset) processed.calibratedValue else processed.value
                 instant.atZone(zone).hour to value.toDouble()
@@ -349,7 +371,8 @@ class ReportViewModel(
         ranges: List<GlucoseOffsetRange>,
         auto: Boolean,
         caps: List<CapillaryMeasurement>,
-        autoRangeMode: AutoRangeOffsetMode
+        autoRangeMode: AutoRangeOffsetMode,
+        context: GlucoseProcessor.CalculationContext? = null
     ): List<DailySummary> {
         val zone = ZoneId.systemDefault()
         
@@ -361,7 +384,8 @@ class ReportViewModel(
                     userRanges = ranges,
                     autoAdjustEnabled = auto,
                     autoRangeOffsetMode = autoRangeMode,
-                    capillaryReadings = caps
+                    capillaryReadings = caps,
+                    context = context
                 )
             }
             .groupBy { parseInstant(it)!!.atZone(zone).toLocalDate() }

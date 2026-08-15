@@ -57,13 +57,19 @@ class DashboardViewModel(
         preferenceManager.capillaryReadings
     ) { inputs, capillaries ->
         inputs.current?.let {
+            val calcContext = GlucoseProcessor.buildContext(
+                autoRangeOffsetMode = inputs.autoRangeMode,
+                userRanges = inputs.ranges,
+                capillaryReadings = capillaries
+            )
             GlucoseProcessor.process(
                 measurement = it,
                 manualOffset = inputs.manualOffset,
                 userRanges = inputs.ranges,
                 autoAdjustEnabled = inputs.autoAdjust,
                 autoRangeOffsetMode = inputs.autoRangeMode,
-                capillaryReadings = capillaries
+                capillaryReadings = capillaries,
+                context = calcContext
             )
         }
     }.flowOn(Dispatchers.Default)
@@ -138,16 +144,34 @@ class DashboardViewModel(
         },
         preferenceManager.capillaryReadings
     ) { inputs, capillaries ->
-        inputs.historical.map {
-            GlucoseProcessor.process(
-                measurement = it,
-                manualOffset = inputs.manualOffset,
-                userRanges = inputs.ranges,
-                autoAdjustEnabled = inputs.autoAdjust,
-                autoRangeOffsetMode = inputs.autoRangeMode,
-                capillaryReadings = capillaries
-            )
-        }
+        // OPTIMIZATION 1: Only process items within 90 days for the Dashboard Metrics
+        val cutoff = Instant.now().minus(java.time.Duration.ofDays(90))
+        
+        // OPTIMIZATION 2: Pre-build calculation context to avoid redundant O(M) work inside the O(N) loop
+        val calcContext = GlucoseProcessor.buildContext(
+            autoRangeOffsetMode = inputs.autoRangeMode,
+            userRanges = inputs.ranges,
+            capillaryReadings = capillaries
+        )
+
+        inputs.historical
+            .filter { m ->
+                val instant = m.epochSeconds?.let { Instant.ofEpochSecond(it) }
+                    ?: TimestampParser.parseFlexibleInstant(m.factoryTimestamp)
+                    ?: TimestampParser.parseFlexibleInstant(m.timestamp)
+                instant?.isAfter(cutoff) == true
+            }
+            .map {
+                GlucoseProcessor.process(
+                    measurement = it,
+                    manualOffset = inputs.manualOffset,
+                    userRanges = inputs.ranges,
+                    autoAdjustEnabled = inputs.autoAdjust,
+                    autoRangeOffsetMode = inputs.autoRangeMode,
+                    capillaryReadings = capillaries,
+                    context = calcContext
+                )
+            }
     }.flowOn(Dispatchers.Default)
     .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 

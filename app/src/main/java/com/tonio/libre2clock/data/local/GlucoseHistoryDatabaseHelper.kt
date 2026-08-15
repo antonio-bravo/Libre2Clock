@@ -49,7 +49,8 @@ class GlucoseHistoryDatabaseHelper(context: Context) :
                 "trend_arrow",
                 "measurement_color",
                 "raw_value",
-                "calibrated_value"
+                "calibrated_value",
+                "sort_epoch_ms"
             ),
             null,
             null,
@@ -70,7 +71,8 @@ class GlucoseHistoryDatabaseHelper(context: Context) :
                         trendArrow = it.takeIf { row -> !row.isNull(4) }?.getInt(4),
                         measurementColor = it.takeIf { row -> !row.isNull(5) }?.getInt(5),
                         value = it.getInt(6),
-                        calibratedValue = it.getInt(7)
+                        calibratedValue = it.getInt(7),
+                        epochSeconds = it.getLong(8) / 1000L
                     )
                 )
             }
@@ -90,7 +92,8 @@ class GlucoseHistoryDatabaseHelper(context: Context) :
                 "trend_arrow",
                 "measurement_color",
                 "raw_value",
-                "calibrated_value"
+                "calibrated_value",
+                "sort_epoch_ms"
             ),
             null,
             null,
@@ -110,7 +113,8 @@ class GlucoseHistoryDatabaseHelper(context: Context) :
                 trendArrow = it.takeIf { row -> !row.isNull(4) }?.getInt(4),
                 measurementColor = it.takeIf { row -> !row.isNull(5) }?.getInt(5),
                 value = it.getInt(6),
-                calibratedValue = it.getInt(7)
+                calibratedValue = it.getInt(7),
+                epochSeconds = it.getLong(8) / 1000L
             )
         }
     }

@@ -288,7 +288,10 @@ class GlucoseRepositoryImpl(
         
         return mergedMap.values
             .mapNotNull { m ->
-                parseMeasurementInstant(m)?.let { instant -> instant to m }
+                parseMeasurementInstant(m)?.let { instant -> 
+                    // Populate epochSeconds to avoid redundant parsing in UI/Statistics
+                    instant to m.copy(epochSeconds = instant.epochSecond)
+                }
             }
             .filter { (instant, _) -> !instant.isBefore(cutoff) }
             .sortedByDescending { it.first } // Newest first

@@ -28,7 +28,8 @@ object GlucoseProcessor {
         userRanges: List<GlucoseOffsetRange> = emptyList(),
         autoAdjustEnabled: Boolean = false,
         autoRangeOffsetMode: AutoRangeOffsetMode = AutoRangeOffsetMode.OFF,
-        capillaryReadings: List<CapillaryMeasurement> = emptyList()
+        capillaryReadings: List<CapillaryMeasurement> = emptyList(),
+        context: CalculationContext? = null
     ): GlucoseMeasurement {
         val rawValue = measurement.value
 
@@ -39,12 +40,44 @@ object GlucoseProcessor {
             autoAdjustEnabled = autoAdjustEnabled,
             autoRangeOffsetMode = autoRangeOffsetMode,
             capillaryReadings = capillaryReadings,
-            measurementTimestamp = measurement.timestamp
+            measurementTimestamp = measurement.timestamp,
+            context = context
         )
 
         return measurement.copy(
             calibratedValue = calibratedValue
         )
+    }
+
+    /**
+     * Holds pre-calculated data to avoid redundant loops over large lists.
+     */
+    data class CalculationContext(
+        val globalEstimate: RangeOffsetEstimate?,
+        val rangeEstimates: Map<GlucoseOffsetRange, RangeOffsetEstimate>,
+        val capillariesByTimestamp: List<Pair<Instant, CapillaryMeasurement>>
+    )
+
+    fun buildContext(
+        autoRangeOffsetMode: AutoRangeOffsetMode,
+        userRanges: List<GlucoseOffsetRange>,
+        capillaryReadings: List<CapillaryMeasurement>
+    ): CalculationContext {
+        val globalEstimate = if (autoRangeOffsetMode == AutoRangeOffsetMode.GLOBAL) {
+            estimateGlobalOffsets(capillaryReadings)
+        } else null
+
+        val rangeEstimates = if (autoRangeOffsetMode == AutoRangeOffsetMode.BY_RANGE) {
+            userRanges.associateWith { range ->
+                estimateOffsetsForRange(range, capillaryReadings)
+            }.filterValues { it != null } as Map<GlucoseOffsetRange, RangeOffsetEstimate>
+        } else emptyMap()
+
+        val capsByTime = capillaryReadings.mapNotNull { r ->
+            parseTimestampToInstant(r.timestamp)?.let { it to r }
+        }.sortedByDescending { it.first }
+
+        return CalculationContext(globalEstimate, rangeEstimates, capsByTime)
     }
 
     /**
@@ -57,7 +90,8 @@ object GlucoseProcessor {
         autoAdjustEnabled: Boolean = false,
         autoRangeOffsetMode: AutoRangeOffsetMode = AutoRangeOffsetMode.OFF,
         capillaryReadings: List<CapillaryMeasurement> = emptyList(),
-        measurementTimestamp: String? = null
+        measurementTimestamp: String? = null,
+        context: CalculationContext? = null
     ): Int {
         val matchingRange = userRanges.find { range ->
             rawValue >= range.min && (range.max == null || rawValue < range.max)
@@ -65,8 +99,14 @@ object GlucoseProcessor {
 
         val selectedEstimate = when (autoRangeOffsetMode) {
             AutoRangeOffsetMode.OFF -> null
-            AutoRangeOffsetMode.GLOBAL -> estimateGlobalOffsets(capillaryReadings)
-            AutoRangeOffsetMode.BY_RANGE -> matchingRange?.let { estimateOffsetsForRange(it, capillaryReadings) }
+            AutoRangeOffsetMode.GLOBAL -> context?.globalEstimate ?: estimateGlobalOffsets(capillaryReadings)
+            AutoRangeOffsetMode.BY_RANGE -> {
+                if (context != null && matchingRange != null) {
+                    context.rangeEstimates[matchingRange]
+                } else {
+                    matchingRange?.let { estimateOffsetsForRange(it, capillaryReadings) }
+                }
+            }
         }
 
         val rangeFixedOffset = if (selectedEstimate != null) {
@@ -82,7 +122,7 @@ object GlucoseProcessor {
             } ?: 0
         }
         val autoAdjustment = if (autoAdjustEnabled) {
-            getAutoAdjustment(rawValue, measurementTimestamp, capillaryReadings)
+            getAutoAdjustment(rawValue, measurementTimestamp, capillaryReadings, context = context)
         } else {
             0
         }
@@ -94,31 +134,41 @@ object GlucoseProcessor {
         rawValue: Int,
         measurementTimestamp: String?,
         capillaryReadings: List<CapillaryMeasurement>,
-        maxHoursDifference: Long = 6
+        maxHoursDifference: Long = 6,
+        context: CalculationContext? = null
     ): Int {
-        if (capillaryReadings.isEmpty()) return 0
+        val capsToUse = context?.capillariesByTimestamp ?: emptyList()
+        if (capsToUse.isEmpty() && capillaryReadings.isEmpty()) return 0
 
         val measurementInstant = measurementTimestamp?.let(::parseTimestampToInstant) ?: return 0
         
-        // Optimization: Capillary readings are usually sorted by timestamp descending.
-        // We find the one with the smallest time difference.
         var bestAdjustment = 0
         var minDiffMinutes = Long.MAX_VALUE
 
-        for (reading in capillaryReadings) {
-            val readingInstant = parseTimestampToInstant(reading.timestamp) ?: continue
-            val diffMinutes = abs(Duration.between(measurementInstant, readingInstant).toMinutes())
-            
-            if (diffMinutes < minDiffMinutes) {
-                minDiffMinutes = diffMinutes
-                bestAdjustment = reading.delta
-                    ?: reading.sensorValue?.let { reading.value - it }
-                    ?: (reading.value - rawValue)
+        if (context != null) {
+            // Optimized path using pre-parsed timestamps
+            for ((readingInstant, reading) in context.capillariesByTimestamp) {
+                val diffMinutes = abs(Duration.between(measurementInstant, readingInstant).toMinutes())
+                if (diffMinutes < minDiffMinutes) {
+                    minDiffMinutes = diffMinutes
+                    bestAdjustment = reading.delta
+                        ?: reading.sensorValue?.let { reading.value - it }
+                        ?: (reading.value - rawValue)
+                }
+                // Stop early if we start moving away in time (assuming sorted list)
+                if (diffMinutes > minDiffMinutes + 60) break 
             }
-            
-            // If we found a very close match or we are moving further away in time, we could break,
-            // but for simplicity and safety with small lists, a single pass is fine.
-            // With large lists, we'd use a binary search or a TreeMap.
+        } else {
+            for (reading in capillaryReadings) {
+                val readingInstant = parseTimestampToInstant(reading.timestamp) ?: continue
+                val diffMinutes = abs(Duration.between(measurementInstant, readingInstant).toMinutes())
+                if (diffMinutes < minDiffMinutes) {
+                    minDiffMinutes = diffMinutes
+                    bestAdjustment = reading.delta
+                        ?: reading.sensorValue?.let { reading.value - it }
+                        ?: (reading.value - rawValue)
+                }
+            }
         }
 
         return if (minDiffMinutes <= maxHoursDifference * 60) bestAdjustment else 0

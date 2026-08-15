@@ -101,5 +101,6 @@ data class GlucoseMeasurement(
     @param:Json(name = "TrendArrow") val trendArrow: Int?,
     @param:Json(name = "MeasurementColor") val measurementColor: Int?,
     @param:Json(name = "Value") val value: Int,
-    val calibratedValue: Int = value
+    val calibratedValue: Int = value,
+    val epochSeconds: Long? = null
 )
