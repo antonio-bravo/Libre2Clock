@@ -1,5 +1,31 @@
 # Changelog
 
+## b1f212b (Aug 15, 2026 19:36:27)
+fix back button — antonio-bravo
+[detail](#b1f212b-details)
+
+<details id='b1f212b-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepository.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+</details>
+
+
+---
+## 5cb19fc (Aug 15, 2026 17:25:56)
+Update changelog — github-actions[bot]
+[detail](#5cb19fc-details)
+
+<details id='5cb19fc-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## f4f9553 (Aug 15, 2026 19:25:43)
 update labels for performance metrics — antonio-bravo
 [detail](#f4f9553-details)
@@ -748,44 +774,6 @@ Insulin Management — antonio-bravo
 - app/src/main/res/values-es/strings.xml [Modified]
 - app/src/main/res/values/strings.xml [Modified]
 - fix_emulator.sh [Deleted]
-</details>
-
-
----
-## c30f79d (Jul 24, 2026 23:06:12)
-Update changelog — github-actions[bot]
-[detail](#c30f79d-details)
-
-<details id='c30f79d-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 52a67a1 (Jul 25, 2026 01:05:57)
-Insulin log — antonio-bravo
-[detail](#52a67a1-details)
-
-<details id='52a67a1-details'>
-<summary>Changed files</summary>
-
-- .idea/deploymentTargetSelector.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/InsulinProcessor.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinLogsScreen.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/ui/navigation/Destinations.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
 </details>
 
 
