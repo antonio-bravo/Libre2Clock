@@ -70,34 +70,67 @@ class DashboardMetricsCacheRepository(
         private const val MIN_RETENTION_DAYS = 30
         private const val MAX_RETENTION_DAYS = 365
 
-        fun buildSignature(measurements: List<GlucoseMeasurement>): String {
-            if (measurements.isEmpty()) return "empty"
+        fun buildSignatureFast(
+            measurements: List<GlucoseMeasurement>,
+            dataVersion: Long,
+            capillaries: List<com.tonio.libre2clock.data.model.CapillaryMeasurement>
+        ): String {
+            if (measurements.isEmpty()) return "empty-$dataVersion"
 
             val first = measurements.first()
             val last = measurements.last()
-            val sample = measurements.take(16)
-            val sampleRawSum = sample.sumOf { it.value }
-            val sampleCalibratedSum = sample.sumOf { it.calibratedValue }
+            
+            // Fast signature using version metadata and boundary items.
+            // dataVersion captures any DB change.
+            // capillary count/last timestamp captures calibration changes.
+            val capSig = if (capillaries.isNotEmpty()) {
+                "${capillaries.size}-${capillaries.first().timestamp}"
+            } else "no-cap"
 
             return buildString {
-                append("count=")
+                append("v=")
+                append(dataVersion)
+                append(";c=")
                 append(measurements.size)
+                append(";cp=")
+                append(capSig)
                 append(";f=")
                 append(first.epochSeconds ?: first.factoryTimestamp)
                 append(':')
                 append(first.value)
-                append(':')
-                append(first.calibratedValue)
                 append(";l=")
                 append(last.epochSeconds ?: last.factoryTimestamp)
                 append(':')
                 append(last.value)
-                append(':')
-                append(last.calibratedValue)
-                append(";sR=")
-                append(sampleRawSum)
-                append(";sC=")
-                append(sampleCalibratedSum)
+            }
+        }
+
+        fun buildSignature(measurements: List<GlucoseMeasurement>): String {
+            if (measurements.isEmpty()) return "empty"
+
+            // Use total sums to ensure any change in any measurement invalidates the cache.
+            // This is critical when old historical values are recalculated after a new capillary reading.
+            var rawSum = 0L
+            var calibratedSum = 0L
+            measurements.forEach {
+                rawSum += it.value
+                calibratedSum += it.calibratedValue
+            }
+
+            val first = measurements.first()
+            val last = measurements.last()
+
+            return buildString {
+                append("c=")
+                append(measurements.size)
+                append(";rS=")
+                append(rawSum)
+                append(";cS=")
+                append(calibratedSum)
+                append(";f=")
+                append(first.epochSeconds ?: first.factoryTimestamp)
+                append(";l=")
+                append(last.epochSeconds ?: last.factoryTimestamp)
             }
         }
     }

@@ -203,6 +203,20 @@ class GlucoseHistoryDatabaseHelper(context: Context) :
         )
     }
 
+    fun removeDuplicates() {
+        val db = writableDatabase
+        db.execSQL(
+            """
+            DELETE FROM glucose_history 
+            WHERE rowid NOT IN (
+                SELECT MIN(rowid) 
+                FROM glucose_history 
+                GROUP BY sort_epoch_ms, raw_value
+            )
+            """.trimIndent()
+        )
+    }
+
     fun isEmpty(): Boolean {
         val cursor = readableDatabase.rawQuery("SELECT COUNT(1) FROM glucose_history", null)
         cursor.use {
@@ -216,10 +230,12 @@ class GlucoseHistoryDatabaseHelper(context: Context) :
             ?: TimestampParser.parseFlexibleInstant(measurement.timestamp)
         val sortEpoch = instant?.toEpochMilli() ?: 0L
 
+        // CRITICAL: The ID must be unique to the measurement event, NOT its current calibration state.
+        // Including calibratedValue in the ID causes duplicates when offsets are adjusted.
         val measurementId = if (instant != null) {
-            "${instant.toEpochMilli()}-${measurement.value}-${measurement.calibratedValue}"
+            "${instant.toEpochMilli()}-${measurement.value}"
         } else {
-            "${measurement.factoryTimestamp}-${measurement.timestamp}-${measurement.value}-${measurement.calibratedValue}"
+            "${measurement.factoryTimestamp}-${measurement.timestamp}-${measurement.value}"
         }
 
         val values = ContentValues().apply {

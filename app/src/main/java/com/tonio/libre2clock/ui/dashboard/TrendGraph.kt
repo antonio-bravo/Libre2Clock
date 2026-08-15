@@ -38,6 +38,7 @@ private fun parseTimestamp(timestamp: String): Instant? {
 }
 
 private fun measurementInstant(measurement: GlucoseMeasurement): Instant? {
+    measurement.epochSeconds?.let { return Instant.ofEpochSecond(it) }
     return parseTimestamp(measurement.factoryTimestamp) ?: parseTimestamp(measurement.timestamp)
 }
 

@@ -29,6 +29,7 @@ data class DashboardMetrics(
     val yesterdayAvg: DisplayMetric,
     val weekAvg: DisplayMetric,
     val monthAvg: DisplayMetric,
+    val quarterAvg: DisplayMetric,
     val breakfastMonthAvg: DisplayMetric,
     val lunchMonthAvg: DisplayMetric,
     val dinnerMonthAvg: DisplayMetric,
@@ -99,17 +100,17 @@ object DashboardMetricsCalculator {
             }
         }
 
-        // HbA1c (GMI) Calculation
+        // HbA1c / GMI Calculation
         // Standard clinical recommendation is to use at least 14 days of data for a reliable GMI.
-        // We use the 90-day window. If it's empty, we don't show the estimate.
+        // GMI formula (Standard for CGMs): GMI (%) = 3.31 + 0.02392 * [mean glucose in mg/dL]
         val avgRawForA1c = if (a1cItems.isNotEmpty()) a1cItems.map { it.value }.average() else 0.0
         val avgCalibratedForA1c = if (a1cItems.isNotEmpty()) a1cItems.map { it.calibratedValue }.average() else 0.0
         
         val estimatedA1c = if (avgCalibratedForA1c > 10.0 && a1cItems.size > 2) { 
-            val a1cRaw = (avgRawForA1c + 46.7) / 28.7
-            val a1cCalibrated = (avgCalibratedForA1c + 46.7) / 28.7
+            val gmiRaw = 3.31 + (0.02392 * avgRawForA1c)
+            val gmiCalibrated = 3.31 + (0.02392 * avgCalibratedForA1c)
             DisplayMetric(
-                primary = String.format(Locale.US, "%.1f%%(%.1f%%)", a1cRaw, a1cCalibrated),
+                primary = String.format(Locale.US, "%.1f%%(%.1f%%)", gmiRaw, gmiCalibrated),
                 secondary = ""
             )
         } else {
@@ -122,6 +123,7 @@ object DashboardMetricsCalculator {
             yesterdayAvg = buildDisplayMetric(yesterdayItems),
             weekAvg = buildDisplayMetric(weekItems),
             monthAvg = buildDisplayMetric(monthItems),
+            quarterAvg = buildDisplayMetric(a1cItems),
             breakfastMonthAvg = buildDisplayMetric(breakfastMonth),
             lunchMonthAvg = buildDisplayMetric(lunchMonth),
             dinnerMonthAvg = buildDisplayMetric(dinnerMonth),
@@ -137,6 +139,7 @@ object DashboardMetricsCalculator {
         yesterdayAvg = DisplayMetric("--", ""),
         weekAvg = DisplayMetric("--", ""),
         monthAvg = DisplayMetric("--", ""),
+        quarterAvg = DisplayMetric("--", ""),
         breakfastMonthAvg = DisplayMetric("--", ""),
         lunchMonthAvg = DisplayMetric("--", ""),
         dinnerMonthAvg = DisplayMetric("--", ""),

@@ -62,7 +62,6 @@ fun DashboardScreen(
 ) {
     val currentGlucose by viewModel.currentGlucose.collectAsStateWithLifecycle()
     val sensorStatus by viewModel.sensorStatus.collectAsStateWithLifecycle()
-    val historicalData by viewModel.historicalData.collectAsStateWithLifecycle()
     val graphData by viewModel.graphData.collectAsStateWithLifecycle()
     val insulinDoses by viewModel.insulinDoses.collectAsStateWithLifecycle()
     val manualTdi by viewModel.manualTdi.collectAsStateWithLifecycle()
@@ -237,7 +236,7 @@ fun DashboardScreen(
                             expanded = showGraphMenu,
                             onDismissRequest = { showGraphMenu = false }
                         ) {
-                            listOf(1, 2, 7, 14, 30).forEach { days ->
+                            listOf(1, 2, 7, 14, 30, 90).forEach { days ->
                                 DropdownMenuItem(
                                     text = { Text("${days} days") },
                                     onClick = {

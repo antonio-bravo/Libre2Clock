@@ -115,12 +115,12 @@ class DashboardViewModel(
         val startEpochMs = cutoff.toEpochMilli()
         val endEpochMs = Instant.now().toEpochMilli()
         
-        // PAGING: Only fetch the necessary window from DB
-        val window = repository.getHistoricalGlucoseWindow(startEpochMs, endEpochMs, maxItems = 5000)
+        // PAGING: Only fetch the necessary window from DB. 90 days ~26k points.
+        val window = repository.getHistoricalGlucoseWindow(startEpochMs, endEpochMs, maxItems = 40000)
         
-        // DOWNSAMPLING: If the window is huge (e.g. 30 days), reduce points for the graph
-        val sampled = if (window.size > 1500) {
-            val step = window.size / 1000
+        // DOWNSAMPLING: If the window is huge (e.g. 90 days), reduce points for the graph
+        val sampled = if (window.size > 2000) {
+            val step = window.size / 1500
             window.filterIndexed { index, _ -> index % step == 0 }
         } else {
             window
@@ -141,8 +141,8 @@ class DashboardViewModel(
         .flowOn(Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    // Processed history for metrics (only if someone is listening)
-    val historicalData: StateFlow<List<GlucoseMeasurement>> = combine(
+    // Processed history for metrics (internal to avoid large list StateFlow overhead)
+    private val processedHistoricalData: Flow<List<GlucoseMeasurement>> = combine(
         combine(
             preferenceManager.glucoseOffset,
             preferenceManager.glucoseOffsetRanges,
@@ -164,7 +164,7 @@ class DashboardViewModel(
             capillaryReadings = capillaries
         )
 
-        repository.getHistoricalGlucoseWindow(startEpochMs, endEpochMs, maxItems = 5000)
+        repository.getHistoricalGlucoseWindow(startEpochMs, endEpochMs, maxItems = 50000)
             .map {
                 GlucoseProcessor.process(
                     measurement = it,
@@ -176,16 +176,19 @@ class DashboardViewModel(
                     context = calcContext
                 )
             }
-    }
-        .distinctUntilChanged()
-        .flowOn(Dispatchers.Default)
-        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    }.flowOn(Dispatchers.Default)
 
     val dashboardMetrics: StateFlow<DashboardMetrics> = combine(
-        historicalData,
-        preferenceManager.historyRetentionDays
-    ) { measurements, retentionDays ->
-            val signature = DashboardMetricsCacheRepository.buildSignature(measurements)
+        processedHistoricalData,
+        preferenceManager.historyRetentionDays,
+        repository.dataVersion, // Use version to avoid looping for signature if possible
+        preferenceManager.capillaryReadings // Also for signature
+    ) { measurements, retentionDays, version, capillaries ->
+            val signature = DashboardMetricsCacheRepository.buildSignatureFast(
+                measurements = measurements,
+                dataVersion = version,
+                capillaries = capillaries
+            )
             dashboardMetricsCache.getOrCompute(
                 sectionKey = DashboardMetricsCacheRepository.DASHBOARD_SECTION_KEY,
                 signature = signature,

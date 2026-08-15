@@ -114,7 +114,10 @@ class GlucoseRepositoryImpl(
     override suspend fun syncLocalArchiveFromPreferences() {
         val snapshot = preferenceManager.historicalGlucoseArchive.first()
         if (snapshot.isEmpty()) {
-            historicalState.value = withContext(Dispatchers.IO) { historyDb.readAllNewestFirst() }
+            historicalState.value = withContext(Dispatchers.IO) { 
+                historyDb.removeDuplicates()
+                historyDb.readAllNewestFirst() 
+            }
             return
         }
 
@@ -124,6 +127,7 @@ class GlucoseRepositoryImpl(
                 incoming = snapshot
             )
             historyDb.replaceAll(merged)
+            historyDb.removeDuplicates()
             historicalWindowCache.clear()
             historicalState.value = merged
             _dataVersion.value++
@@ -257,7 +261,10 @@ class GlucoseRepositoryImpl(
     }
 
     private suspend fun initializeLocalHistoryIfNeeded() {
-        val dbHistory = withContext(Dispatchers.IO) { historyDb.readAllNewestFirst() }
+        val dbHistory = withContext(Dispatchers.IO) { 
+            historyDb.removeDuplicates()
+            historyDb.readAllNewestFirst() 
+        }
         if (dbHistory.isNotEmpty()) {
             historicalState.value = dbHistory
             return
@@ -266,7 +273,10 @@ class GlucoseRepositoryImpl(
         val snapshot = preferenceManager.historicalGlucoseArchive.first()
         if (snapshot.isNotEmpty()) {
             val merged = mergeAndPruneHistory(emptyList(), snapshot)
-            withContext(Dispatchers.IO) { historyDb.replaceAll(merged) }
+            withContext(Dispatchers.IO) { 
+                historyDb.replaceAll(merged) 
+                historyDb.removeDuplicates()
+            }
             historicalState.value = merged
             return
         }

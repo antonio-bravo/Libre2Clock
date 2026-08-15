@@ -32,6 +32,9 @@ object GlucoseProcessor {
         context: CalculationContext? = null
     ): GlucoseMeasurement {
         val rawValue = measurement.value
+        val measurementInstant = measurement.epochSeconds?.let { Instant.ofEpochSecond(it) }
+            ?: parseTimestampToInstant(measurement.factoryTimestamp)
+            ?: parseTimestampToInstant(measurement.timestamp)
 
         val calibratedValue = getCalibratedValue(
             rawValue = rawValue,
@@ -40,7 +43,7 @@ object GlucoseProcessor {
             autoAdjustEnabled = autoAdjustEnabled,
             autoRangeOffsetMode = autoRangeOffsetMode,
             capillaryReadings = capillaryReadings,
-            measurementTimestamp = measurement.timestamp,
+            measurementInstant = measurementInstant,
             context = context
         )
 
@@ -90,7 +93,7 @@ object GlucoseProcessor {
         autoAdjustEnabled: Boolean = false,
         autoRangeOffsetMode: AutoRangeOffsetMode = AutoRangeOffsetMode.OFF,
         capillaryReadings: List<CapillaryMeasurement> = emptyList(),
-        measurementTimestamp: String? = null,
+        measurementInstant: Instant? = null,
         context: CalculationContext? = null
     ): Int {
         val matchingRange = userRanges.find { range ->
@@ -122,7 +125,7 @@ object GlucoseProcessor {
             } ?: 0
         }
         val autoAdjustment = if (autoAdjustEnabled) {
-            getAutoAdjustment(rawValue, measurementTimestamp, capillaryReadings, context = context)
+            getAutoAdjustment(rawValue, measurementInstant, capillaryReadings, context = context)
         } else {
             0
         }
@@ -132,7 +135,7 @@ object GlucoseProcessor {
 
     fun getAutoAdjustment(
         rawValue: Int,
-        measurementTimestamp: String?,
+        measurementInstant: Instant?,
         capillaryReadings: List<CapillaryMeasurement>,
         maxHoursDifference: Long = 6,
         context: CalculationContext? = null
@@ -140,7 +143,7 @@ object GlucoseProcessor {
         val capsToUse = context?.capillariesByTimestamp ?: emptyList()
         if (capsToUse.isEmpty() && capillaryReadings.isEmpty()) return 0
 
-        val measurementInstant = measurementTimestamp?.let(::parseTimestampToInstant) ?: return 0
+        if (measurementInstant == null) return 0
         
         var bestAdjustment = 0
         var minDiffMinutes = Long.MAX_VALUE
