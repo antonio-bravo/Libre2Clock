@@ -611,6 +611,12 @@ fun SettingsScreen(
                                 Text(stringResource(R.string.settings_perf_refresh))
                             }
                             OutlinedButton(
+                                onClick = viewModel::recomputeAllCache,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(stringResource(R.string.settings_perf_recompute))
+                            }
+                            OutlinedButton(
                                 onClick = viewModel::resetSectionPerfStats,
                                 modifier = Modifier.weight(1f)
                             ) {

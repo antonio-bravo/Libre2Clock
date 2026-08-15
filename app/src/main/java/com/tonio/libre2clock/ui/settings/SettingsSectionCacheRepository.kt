@@ -63,6 +63,10 @@ class SettingsSectionCacheRepository(
         lastPurgeAtMs = now
     }
 
+    suspend fun clearAllCache() = withContext(Dispatchers.IO) {
+        db.clearAll()
+    }
+
     companion object {
         private const val RANGE_INSIGHTS_SECTION_KEY = "settings_range_insights_v1"
         private const val PURGE_INTERVAL_MS = 12L * 60L * 60L * 1000L

@@ -155,8 +155,9 @@ class DashboardViewModel(
         ) { manualOffset, ranges, autoAdjust, autoRangeMode ->
             HistoricalInputs(emptyList(), manualOffset, ranges, autoAdjust, autoRangeMode)
         },
-        preferenceManager.capillaryReadings
-    ) { inputs, capillaries ->
+        preferenceManager.capillaryReadings,
+        repository.historicalGlucose
+    ) { inputs, capillaries, _ ->
         val cutoff = Instant.now().minus(java.time.Duration.ofDays(90))
         val startEpochMs = cutoff.toEpochMilli()
         val endEpochMs = Instant.now().toEpochMilli()

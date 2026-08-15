@@ -121,6 +121,7 @@ class GlucoseRepositoryImpl(
                 incoming = snapshot
             )
             historyDb.replaceAll(merged)
+            historicalWindowCache.clear()
             historicalState.value = merged
         }
     }
@@ -152,6 +153,7 @@ class GlucoseRepositoryImpl(
                 withContext(Dispatchers.IO) {
                     historyDb.replaceAll(mergedHistory)
                 }
+                historicalWindowCache.clear()
                 historicalState.value = mergedHistory
                 mirrorSnapshotIfNeeded(mergedHistory)
             }
@@ -211,6 +213,7 @@ class GlucoseRepositoryImpl(
                 withContext(Dispatchers.IO) {
                     historyDb.replaceAll(mergedHistory)
                 }
+                historicalWindowCache.clear()
                 historicalState.value = mergedHistory
                 mirrorSnapshotIfNeeded(mergedHistory)
             }

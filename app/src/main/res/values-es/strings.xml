@@ -276,7 +276,8 @@
     <string name="settings_perf_title">Rendimiento por sección</string>
     <string name="settings_perf_desc">Estas métricas se obtienen de la telemetría local (cache hit/miss y tiempos).</string>
     <string name="settings_perf_refresh">Refrescar</string>
-    <string name="settings_perf_reset">Reiniciar</string>
+    <string name="settings_perf_reset">Reiniciar Telemetría</string>
+    <string name="settings_perf_recompute">Recalcular Cache</string>
     <string name="settings_perf_no_data">Aún no hay datos. Navega por Dashboard/Reports y vuelve a refrescar.</string>
     <string name="settings_perf_hits_row">Llamadas: %1$d | Aciertos Caché: %2$d%% (%3$d/%1$d)</string>
     <string name="settings_perf_times_row">Media: %1$.1f ms | Máx: %2$d ms | Fallos Caché: %3$d</string>

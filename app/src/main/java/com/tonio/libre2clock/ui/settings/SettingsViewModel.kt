@@ -345,6 +345,14 @@ class SettingsViewModel(
         _sectionPerfStats.value = SectionPerfTelemetry.snapshot()
     }
 
+    fun recomputeAllCache() {
+        viewModelScope.launch {
+            settingsCache.clearAllCache()
+            refreshSectionPerfStats()
+            _backupStatusMessage.value = "Cache cleared. Metrics will be recomputed."
+        }
+    }
+
     fun resetSectionPerfStats() {
         SectionPerfTelemetry.reset()
         _sectionPerfStats.value = emptyList()
@@ -395,6 +403,7 @@ class SettingsViewModel(
                 includeSensorLogs = includeSensorLogs
             )
             if (restored) {
+                settingsCache.clearAllCache()
                 repository.syncLocalArchiveFromPreferences()
             }
             _backupStatusMessage.value = if (restored) {
@@ -419,6 +428,7 @@ class SettingsViewModel(
         viewModelScope.launch {
             val result = preferenceManager.restoreHistoryBackupFromUri(uri)
             if (result.isSuccess) {
+                settingsCache.clearAllCache()
                 repository.syncLocalArchiveFromPreferences()
             }
             _backupStatusMessage.value = result.fold(

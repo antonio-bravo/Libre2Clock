@@ -73,6 +73,10 @@ class SectionCacheDatabaseHelper(context: Context) :
         )
     }
 
+    fun clearAll(): Int {
+        return writableDatabase.delete("section_cache", null, null)
+    }
+
     companion object {
         private const val DATABASE_NAME = "section_cache.db"
         private const val DATABASE_VERSION = 5
