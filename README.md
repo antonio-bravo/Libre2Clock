@@ -1,3 +1,4 @@
+
 # Libre2Clock
 
 Libre2Clock is an advanced Android application that bridges LibreLinkUp glucose data with your smartwatch and provides comprehensive diabetes management tools. It focuses on precision, clarity, and user control, offering dual-value glucose displays, sophisticated insulin tracking, and customizable notification systems.
@@ -8,7 +9,9 @@ The app is fully localized in **English** and **Spanish**, respecting your devic
 
 | Dashboard | Insulin Management | Settings & Calibration |
 |:---:|:---:|:---:|
-| ![Dashboard Placeholder](https://via.placeholder.com/300x600?text=Dashboard+English) | ![Insulin Placeholder](https://via.placeholder.com/300x600?text=Insulin+Hub+English) | ![Settings Placeholder](https://via.placeholder.com/300x600?text=Settings+Audit+English) |
+| <img width="380" height="875" alt="Screenshot 2026-08-15 at 17 44 49" src="https://github.com/user-attachments/assets/d67c55ca-a00b-47f5-bf94-996c229af84b" /> | <img width="382" height="874" alt="Screenshot 2026-08-15 at 17 46 06" src="https://github.com/user-attachments/assets/6e09c842-a53e-43e9-b46b-500142a59082" /> | <img width="380" height="875" alt="Screenshot 2026-08-15 at 18 01 54" src="https://github.com/user-attachments/assets/cdf71cc1-4058-4ae0-a879-7a85626f94f4" />
+
+ |
 
 ---
 
