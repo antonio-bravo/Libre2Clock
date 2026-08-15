@@ -1,5 +1,37 @@
 # Changelog
 
+## 6294013 (Aug 15, 2026 20:48:28)
+fix HbA1c using cache and back button — antonio-bravo
+[detail](#6294013-details)
+
+<details id='6294013-details'>
+<summary>Changed files</summary>
+
+- .idea/misc.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/local/GlucoseHistoryDatabaseHelper.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseProcessor.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsCacheRepository.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
+</details>
+
+
+---
+## 7d582f6 (Aug 15, 2026 17:36:40)
+Update changelog — github-actions[bot]
+[detail](#7d582f6-details)
+
+<details id='7d582f6-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## b1f212b (Aug 15, 2026 19:36:27)
 fix back button — antonio-bravo
 [detail](#b1f212b-details)
@@ -735,45 +767,6 @@ Add documentation and adjust insulin processor — antonio-bravo
 - INSULIN_IOB_ALGORITHM.md [Deleted]
 - README.md [Modified]
 - app/src/main/java/com/tonio/libre2clock/data/repository/InsulinProcessor.kt [Modified]
-</details>
-
-
----
-## 86c2df4 (Jul 25, 2026 12:54:28)
-Update changelog — github-actions[bot]
-[detail](#86c2df4-details)
-
-<details id='86c2df4-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 7f45599 (Jul 25, 2026 14:54:08)
-Insulin Management — antonio-bravo
-[detail](#7f45599-details)
-
-<details id='7f45599-details'>
-<summary>Changed files</summary>
-
-- .idea/deviceManager.xml [Deleted]
-- EMULATOR_FIX.md [Deleted]
-- app/src/main/java/com/tonio/libre2clock/MainActivity.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/model/LibreModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepository.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/InsulinProcessor.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-- fix_emulator.sh [Deleted]
 </details>
 
 
