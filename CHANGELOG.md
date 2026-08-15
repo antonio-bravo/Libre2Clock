@@ -1,5 +1,33 @@
 # Changelog
 
+## f4f9553 (Aug 15, 2026 19:25:43)
+update labels for performance metrics — antonio-bravo
+[detail](#f4f9553-details)
+
+<details id='f4f9553-details'>
+<summary>Changed files</summary>
+
+- .idea/misc.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsCacheRepository.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportSectionCacheRepository.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
+</details>
+
+
+---
+## ca277de (Aug 15, 2026 17:15:01)
+Update changelog — github-actions[bot]
+[detail](#ca277de-details)
+
+<details id='ca277de-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## dc45378 (Aug 15, 2026 19:14:46)
 add recalculated button for cache — antonio-bravo
 [detail](#dc45378-details)
@@ -758,31 +786,6 @@ Insulin log — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
 - app/src/main/res/values-es/strings.xml [Modified]
 - app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## e6ab40d (Jul 24, 2026 21:05:58)
-Update changelog — github-actions[bot]
-[detail](#e6ab40d-details)
-
-<details id='e6ab40d-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## f3becff (Jul 24, 2026 23:05:45)
-fix remaining time — antonio-bravo
-[detail](#f3becff-details)
-
-<details id='f3becff-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
 </details>
 
 
