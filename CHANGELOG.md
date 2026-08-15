@@ -1,5 +1,29 @@
 # Changelog
 
+## fe652a2 (Aug 15, 2026 18:02:30)
+Update README.md — antonio-bravo
+[detail](#fe652a2-details)
+
+<details id='fe652a2-details'>
+<summary>Changed files</summary>
+
+- README.md [Modified]
+</details>
+
+
+---
+## 9c437ce (Aug 15, 2026 15:42:44)
+Update changelog — github-actions[bot]
+[detail](#9c437ce-details)
+
+<details id='9c437ce-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## c7f4650 (Aug 15, 2026 17:42:31)
 He realizado una optimización profunda en el motor de procesamiento de datos para solucionar los picos de carga (esos 500ms que veías) y mejorar drásticamente la fluidez:
 1. Reingeniería del Procesamiento (O(N+M))
@@ -747,38 +771,6 @@ fix gradle for local and github — antonio-bravo
 <details id='f094fd8-details'>
 <summary>Changed files</summary>
 
-- gradle.properties [Modified]
-- gradlew [Modified]
-</details>
-
-
----
-## d39ad11 (Jul 19, 2026 12:27:37)
-Update changelog — github-actions[bot]
-[detail](#d39ad11-details)
-
-<details id='d39ad11-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 832b549 (Jul 19, 2026 14:27:20)
-burger menu and how manage trends — antonio-bravo
-[detail](#832b549-details)
-
-<details id='832b549-details'>
-<summary>Changed files</summary>
-
-- .idea/planningMode.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/navigation/Destinations.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/strategy/StrategyScreen.kt [Deleted]
-- app/src/main/res/values-es/strings.xml [Deleted]
-- app/src/main/res/values/strings.xml [Modified]
 - gradle.properties [Modified]
 - gradlew [Modified]
 </details>
