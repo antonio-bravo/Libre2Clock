@@ -1,5 +1,37 @@
 # Changelog
 
+## dc45378 (Aug 15, 2026 19:14:46)
+add recalculated button for cache — antonio-bravo
+[detail](#dc45378-details)
+
+<details id='dc45378-details'>
+<summary>Changed files</summary>
+
+- .idea/misc.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/local/SectionCacheDatabaseHelper.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsSectionCacheRepository.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 5e66d2c (Aug 15, 2026 16:26:43)
+Update changelog — github-actions[bot]
+[detail](#5e66d2c-details)
+
+<details id='5e66d2c-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 4f3377a (Aug 15, 2026 18:26:31)
 App opmization — antonio-bravo
 [detail](#4f3377a-details)
@@ -751,40 +783,6 @@ fix remaining time — antonio-bravo
 
 - app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-</details>
-
-
----
-## 25c74f0 (Jul 23, 2026 18:16:25)
-Update changelog — github-actions[bot]
-[detail](#25c74f0-details)
-
-<details id='25c74f0-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 6d780f3 (Jul 23, 2026 20:16:09)
-Capilarity Screen — antonio-bravo
-[detail](#6d780f3-details)
-
-<details id='6d780f3-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/MainActivity.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/capillary/CapillaryScreen.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/navigation/Destinations.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-- gradle/libs.versions.toml [Modified]
 </details>
 
 
