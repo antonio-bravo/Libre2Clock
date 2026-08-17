@@ -1,5 +1,29 @@
 # Changelog
 
+## 1c62fb0 (Aug 17, 2026 20:36:56)
+remove  repository.dataVersion.map { it / 10 }.distinctUntilChanged() // Throttled: only every 10 new readings — antonio-bravo
+[detail](#1c62fb0-details)
+
+<details id='1c62fb0-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+</details>
+
+
+---
+## b95c1a2 (Aug 17, 2026 18:21:57)
+Update changelog — github-actions[bot]
+[detail](#b95c1a2-details)
+
+<details id='b95c1a2-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 46c151d (Aug 17, 2026 20:21:41)
 the api is in UTC the phone conver to local time zone — antonio-bravo
 [detail](#46c151d-details)
@@ -730,33 +754,6 @@ fix reports and matrix to generate apk — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/ui/report/ReportScreen.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/util/PdfReportGenerator.kt [Modified]
-</details>
-
-
----
-## e6014fa (Jul 27, 2026 20:33:58)
-Update changelog — github-actions[bot]
-[detail](#e6014fa-details)
-
-<details id='e6014fa-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 3cd6024 (Jul 27, 2026 22:33:45)
-fix versioning & add default datetime when enter insulin — antonio-bravo
-[detail](#3cd6024-details)
-
-<details id='3cd6024-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/build-release.yml [Modified]
-- app/build.gradle.kts [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
 </details>
 
 
