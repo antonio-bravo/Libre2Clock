@@ -203,7 +203,7 @@ class DashboardViewModel(
             HistoricalInputs(emptyList(), manualOffset, ranges, autoAdjust, autoRangeMode)
         },
         preferenceManager.capillaryReadings,
-        repository.dataVersion.map { it / 10 }.distinctUntilChanged() // Throttled: only every 10 new readings
+        repository.dataVersion // IMMEDIATE: Update on any data change (like restore)
     ) { config, capillaries, _ ->
         val cutoff = Instant.now().minus(java.time.Duration.ofDays(90))
         val startEpochMs = cutoff.toEpochMilli()
@@ -240,7 +240,7 @@ class DashboardViewModel(
         
         val signature = DashboardMetricsCacheRepository.buildSignatureFast(
             measurements = historical,
-            dataVersion = version / 10, // Throttled signature
+            dataVersion = version, // No more throttle here either
             capillaries = capillaries
         )
         
