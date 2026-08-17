@@ -1,5 +1,32 @@
 # Changelog
 
+## 5f31a2f (Aug 17, 2026 19:16:54)
+time in UTC — antonio-bravo
+[detail](#5f31a2f-details)
+
+<details id='5f31a2f-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
+</details>
+
+
+---
+## 3d21a8c (Aug 17, 2026 15:56:35)
+Update changelog — github-actions[bot]
+[detail](#3d21a8c-details)
+
+<details id='3d21a8c-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 8d0ba1d (Aug 17, 2026 17:56:19)
 optmize — antonio-bravo
 [detail](#8d0ba1d-details)
@@ -742,34 +769,6 @@ fix auto values — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseProcessor.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
-</details>
-
-
----
-## 7cd23c8 (Jul 27, 2026 13:36:32)
-Update changelog — github-actions[bot]
-[detail](#7cd23c8-details)
-
-<details id='7cd23c8-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 8e4d12a (Jul 27, 2026 15:36:19)
-Optimize app and reduce battery consumption — antonio-bravo
-[detail](#8e4d12a-details)
-
-<details id='8e4d12a-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
 </details>
 
 
