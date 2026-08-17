@@ -36,8 +36,8 @@ private val CALIBRATED_LINE_COLOR = Color(0xFF00BCD4)
 
 private fun measurementInstant(measurement: GlucoseMeasurement): Instant? {
     measurement.epochSeconds?.let { return Instant.ofEpochSecond(it) }
-    // Consistent with GlucoseRepository: timestamp is UTC
-    return TimestampParser.parseFlexibleInstant(measurement.timestamp, ZoneId.of("UTC"))
+    // Consistent with GlucoseRepository: let it detect timezone automatically
+    return TimestampParser.parseFlexibleInstant(measurement.timestamp)
         ?: TimestampParser.parseFlexibleInstant(measurement.factoryTimestamp)
 }
 

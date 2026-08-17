@@ -635,7 +635,7 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
     val now = Instant.now()
     val measurementInstant = measurement?.let { m ->
         m.epochSeconds?.let { Instant.ofEpochSecond(it) }
-            ?: TimestampParser.parseFlexibleInstant(m.timestamp, ZoneId.of("UTC"))
+            ?: TimestampParser.parseFlexibleInstant(m.timestamp)
             ?: TimestampParser.parseFlexibleInstant(m.factoryTimestamp)
     }
     
