@@ -345,12 +345,14 @@ class GlucoseRepositoryImpl(
     }
 
     private fun parseMeasurementInstant(measurement: GlucoseMeasurement): Instant? {
-        return parseFlexibleInstant(measurement.factoryTimestamp)
-            ?: parseFlexibleInstant(measurement.timestamp)
+        // LibreLinkUp "Timestamp" is UTC. "FactoryTimestamp" is local time.
+        // We prioritize UTC for accurate "stale" detection and synchronization.
+        return parseFlexibleInstant(measurement.timestamp, ZoneId.of("UTC"))
+            ?: parseFlexibleInstant(measurement.factoryTimestamp)
     }
 
-    private fun parseFlexibleInstant(timestamp: String): Instant? {
-        return TimestampParser.parseFlexibleInstant(timestamp)
+    private fun parseFlexibleInstant(timestamp: String, zoneId: ZoneId = ZoneId.systemDefault()): Instant? {
+        return TimestampParser.parseFlexibleInstant(timestamp, zoneId)
     }
 
     companion object {

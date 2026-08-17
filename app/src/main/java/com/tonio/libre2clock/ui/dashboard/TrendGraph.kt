@@ -33,13 +33,11 @@ import java.time.format.DateTimeFormatter
 private val ORIGINAL_LINE_COLOR = Color.Gray.copy(alpha = 0.5f)
 private val CALIBRATED_LINE_COLOR = Color(0xFF00BCD4)
 
-private fun parseTimestamp(timestamp: String): Instant? {
-    return TimestampParser.parseFlexibleInstant(timestamp)
-}
-
 private fun measurementInstant(measurement: GlucoseMeasurement): Instant? {
     measurement.epochSeconds?.let { return Instant.ofEpochSecond(it) }
-    return parseTimestamp(measurement.factoryTimestamp) ?: parseTimestamp(measurement.timestamp)
+    // Consistent with GlucoseRepository: timestamp is UTC
+    return TimestampParser.parseFlexibleInstant(measurement.timestamp, ZoneId.of("UTC"))
+        ?: TimestampParser.parseFlexibleInstant(measurement.factoryTimestamp)
 }
 
 @Composable

@@ -635,12 +635,12 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
     val now = Instant.now()
     val measurementInstant = measurement?.let { m ->
         m.epochSeconds?.let { Instant.ofEpochSecond(it) }
+            ?: TimestampParser.parseFlexibleInstant(m.timestamp, ZoneId.of("UTC"))
             ?: TimestampParser.parseFlexibleInstant(m.factoryTimestamp)
-            ?: TimestampParser.parseFlexibleInstant(m.timestamp)
     }
     
     val isStale = measurementInstant?.let { 
-        java.time.Duration.between(it, now).toMinutes() > 15 
+        java.time.Duration.between(it, now).toMinutes() > 20 
     } ?: false
 
     // Format timestamp to yyyy-MM-dd HH:mm:ss using TimestampParser for flexibility

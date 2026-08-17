@@ -312,6 +312,7 @@ object DashboardMetricsCalculator {
 
     private fun parseMeasurementInstant(measurement: GlucoseMeasurement): Instant? {
         measurement.epochSeconds?.let { return Instant.ofEpochSecond(it) }
-        return TimestampParser.parseFlexibleInstant(measurement.factoryTimestamp) ?: TimestampParser.parseFlexibleInstant(measurement.timestamp)
+        return TimestampParser.parseFlexibleInstant(measurement.timestamp, ZoneId.of("UTC"))
+            ?: TimestampParser.parseFlexibleInstant(measurement.factoryTimestamp)
     }
 }
