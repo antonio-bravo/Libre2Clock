@@ -26,6 +26,7 @@ import com.tonio.libre2clock.R
 import com.tonio.libre2clock.data.model.SensorLog
 import com.tonio.libre2clock.ui.settings.SettingsViewModel
 import com.tonio.libre2clock.util.buildSensorErrorSummary
+import com.tonio.libre2clock.util.SensorErrorSummary
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneId
@@ -78,15 +79,11 @@ fun SensorLogsScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = PaddingValues(vertical = 16.dp)
             ) {
-                if (sensorErrorSummary.isNotEmpty()) {
-                    item {
-                        SensorErrorSummaryCard(sensorErrorSummary = sensorErrorSummary)
-                    }
-                }
-
                 items(sensorLogs) { log ->
+                    val summary = sensorErrorSummary.find { it.serialNumber == log.serialNumber }
                     SensorLogItem(
                         log = log,
+                        errorSummary = summary,
                         onEdit = { editingLog = log },
                         onDelete = { viewModel.removeSensorLog(log) }
                     )
@@ -108,52 +105,9 @@ fun SensorLogsScreen(
 }
 
 @Composable
-private fun SensorErrorSummaryCard(
-    sensorErrorSummary: List<com.tonio.libre2clock.util.SensorErrorSummary>
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-        )
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = stringResource(R.string.sensor_error_summary_title),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            sensorErrorSummary.forEach { summary ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "SN: ${summary.serialNumber}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Text(
-                        text = stringResource(
-                            R.string.sensor_error_summary_row,
-                            summary.samples,
-                            summary.avgAbsoluteDeviationPct,
-                            summary.avgSignedDeviationPct
-                        ),
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-                Spacer(modifier = Modifier.height(4.dp))
-            }
-        }
-    }
-}
-
-@Composable
 fun SensorLogItem(
     log: SensorLog,
+    errorSummary: SensorErrorSummary?,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -175,24 +129,40 @@ fun SensorLogItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Text(
                         text = "SN: ${log.serialNumber}",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     if (log.hasFailed) {
-                        Spacer(modifier = Modifier.width(8.dp))
                         Surface(
-                            color = MaterialTheme.colorScheme.error,
-                            shape = MaterialTheme.shapes.extraSmall
+                            color = MaterialTheme.colorScheme.error.copy(alpha = 0.1f),
+                            shape = MaterialTheme.shapes.extraSmall,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error)
                         ) {
-                            Text(
-                                text = stringResource(R.string.sensor_log_failed),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onError,
-                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
-                            )
+                            Row(
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Warning,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(12.dp),
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = stringResource(R.string.sensor_log_failed),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.error,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
                 }
@@ -244,6 +214,21 @@ fun SensorLogItem(
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                         )
                     }
+                }
+
+                if (errorSummary != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(
+                            R.string.sensor_error_summary_row,
+                            errorSummary.samples,
+                            errorSummary.avgAbsoluteDeviationPct,
+                            errorSummary.avgSignedDeviationPct
+                        ),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
             }
             

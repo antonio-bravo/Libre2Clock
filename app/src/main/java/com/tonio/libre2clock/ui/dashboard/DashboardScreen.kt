@@ -35,6 +35,7 @@ import com.tonio.libre2clock.data.model.InsulinDose
 import com.tonio.libre2clock.data.model.InsulinType
 import com.tonio.libre2clock.data.model.SensorStatus
 import com.tonio.libre2clock.data.repository.GlucoseProcessor
+import com.tonio.libre2clock.util.SensorErrorSummary
 import com.tonio.libre2clock.data.repository.InsulinProcessor
 import com.tonio.libre2clock.ui.insulin.InsulinDoseDialog
 import com.tonio.libre2clock.util.TimestampParser
@@ -71,6 +72,8 @@ fun DashboardScreen(
     val isHistoryRefreshing by viewModel.isHistoryRefreshing.collectAsStateWithLifecycle()
     val dashboardMetrics by viewModel.dashboardMetrics.collectAsStateWithLifecycle()
     val graphWindowDays by viewModel.graphWindowDays.collectAsStateWithLifecycle()
+    val currentSensorError by viewModel.currentSensorError.collectAsStateWithLifecycle()
+    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
 
     var showCapillaryDialog by remember { mutableStateOf(false) }
     var capillaryValueText by remember { mutableStateOf("") }
@@ -187,6 +190,8 @@ fun DashboardScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 SensorHealthCard(
                     status = sensorStatus,
+                    errorSummary = currentSensorError,
+                    isRefreshing = isRefreshing,
                     isDemoMode = isDemoMode,
                     onRefresh = viewModel::refresh
                 )
@@ -468,6 +473,8 @@ fun InsulinHealthCard(
 @Composable
 fun SensorHealthCard(
     status: SensorStatus?,
+    errorSummary: SensorErrorSummary?,
+    isRefreshing: Boolean,
     isDemoMode: Boolean,
     onRefresh: () -> Unit
 ) {
@@ -514,14 +521,23 @@ fun SensorHealthCard(
                 Row {
                     IconButton(
                         onClick = onRefresh,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(24.dp),
+                        enabled = !isRefreshing
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = stringResource(R.string.refresh),
-                            modifier = Modifier.size(18.dp),
-                            tint = if (isDemoMode) MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
-                        )
+                        if (isRefreshing) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp,
+                                color = if (isDemoMode) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = stringResource(R.string.refresh),
+                                modifier = Modifier.size(18.dp),
+                                tint = if (isDemoMode) MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                            )
+                        }
                     }
                     if (status != null) {
                         Spacer(modifier = Modifier.width(8.dp))
@@ -583,6 +599,25 @@ fun SensorHealthCard(
                         style = MaterialTheme.typography.bodyMedium,
                         color = if (isDemoMode) MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                     )
+
+                    if (errorSummary != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            color = (if (isDemoMode) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSecondaryContainer).copy(alpha = 0.2f)
+                        )
+                        Text(
+                            text = stringResource(
+                                R.string.sensor_error_summary_row,
+                                errorSummary.samples,
+                                errorSummary.avgAbsoluteDeviationPct,
+                                errorSummary.avgSignedDeviationPct
+                            ),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (isDemoMode) MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.9f) else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.9f),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             } else {
                 Text(
@@ -597,13 +632,22 @@ fun SensorHealthCard(
 
 @Composable
 private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetrics) {
+    val now = Instant.now()
+    val measurementInstant = measurement?.let { m ->
+        m.epochSeconds?.let { Instant.ofEpochSecond(it) }
+            ?: TimestampParser.parseFlexibleInstant(m.factoryTimestamp)
+            ?: TimestampParser.parseFlexibleInstant(m.timestamp)
+    }
+    
+    val isStale = measurementInstant?.let { 
+        java.time.Duration.between(it, now).toMinutes() > 15 
+    } ?: false
+
     // Format timestamp to yyyy-MM-dd HH:mm:ss using TimestampParser for flexibility
-    val lastSyncText = measurement?.timestamp?.let { timestamp ->
-        TimestampParser.parseFlexibleInstant(timestamp)?.let { instant ->
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-                .withZone(ZoneId.systemDefault())
-                .format(instant)
-        } ?: timestamp
+    val lastSyncText = measurementInstant?.let { instant ->
+        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+            .withZone(ZoneId.systemDefault())
+            .format(instant)
     } ?: "------ --:--:--"
 
     Card(
@@ -611,7 +655,10 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
             .fillMaxWidth()
             .height(220.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
+            containerColor = if (isStale) 
+                MaterialTheme.colorScheme.surfaceVariant 
+            else 
+                MaterialTheme.colorScheme.primaryContainer
         )
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -626,6 +673,7 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
                     title = "Estimated HbA1c (90d)",
                     primary = metrics.estimatedA1c.primary,
                     secondary = metrics.estimatedA1c.secondary,
+                    isStale = isStale,
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -634,6 +682,7 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
                     primary = metrics.todayAvg.primary,
                     secondary = metrics.todayAvg.secondary,
                     alignEnd = true,
+                    isStale = isStale,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -644,6 +693,21 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
                 verticalArrangement = Arrangement.Center
             ) {
                 if (measurement != null) {
+                    if (isStale) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.error,
+                            shape = RoundedCornerShape(4.dp),
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        ) {
+                            Text(
+                                text = "SIGNAL LOST / STALE",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onError,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                    
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         val displayValue = GlucoseProcessor.formatDualValue(measurement.value, measurement.calibratedValue)
                         Text(
@@ -652,22 +716,31 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
                                 fontSize = if (displayValue.length > 6) 48.sp else 64.sp,
                                 fontWeight = FontWeight.Bold
                             ),
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            color = if (isStale) 
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                            else 
+                                MaterialTheme.colorScheme.onPrimaryContainer
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Text(
                                 text = "mg/dL",
                                 style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                color = if (isStale) 
+                                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                else 
+                                    MaterialTheme.colorScheme.onPrimaryContainer
                             )
-                            TrendIcon(measurement.trendArrow)
+                            if (!isStale) TrendIcon(measurement.trendArrow)
                         }
                     }
                     Text(
                         text = stringResource(R.string.last_sync, lastSyncText),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                        color = (if (isStale) 
+                            MaterialTheme.colorScheme.onSurfaceVariant 
+                        else 
+                            MaterialTheme.colorScheme.onPrimaryContainer).copy(alpha = 0.7f)
                     )
                 } else {
                     CircularProgressIndicator()
@@ -684,8 +757,14 @@ private fun CornerMetric(
     primary: String,
     secondary: String,
     modifier: Modifier = Modifier,
-    alignEnd: Boolean = false
+    alignEnd: Boolean = false,
+    isStale: Boolean = false
 ) {
+    val contentColor = if (isStale)
+        MaterialTheme.colorScheme.onSurfaceVariant
+    else
+        MaterialTheme.colorScheme.onPrimaryContainer
+
     Column(
         modifier = modifier,
         horizontalAlignment = if (alignEnd) Alignment.End else Alignment.Start
@@ -693,14 +772,14 @@ private fun CornerMetric(
         Text(
             text = title,
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
+            color = contentColor.copy(alpha = 0.7f),
             maxLines = 1
         )
         Text(
             text = primary,
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onPrimaryContainer,
+            color = contentColor,
             maxLines = 1
         )
         if (secondary.isNotEmpty()) {
@@ -708,7 +787,7 @@ private fun CornerMetric(
                 text = secondary,
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.85f),
+                color = contentColor.copy(alpha = 0.85f),
                 maxLines = 1
             )
         }

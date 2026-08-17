@@ -4,9 +4,11 @@ import com.tonio.libre2clock.data.model.CapillaryMeasurement
 import com.tonio.libre2clock.data.model.AutoRangeOffsetMode
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.GlucoseOffsetRange
+import com.tonio.libre2clock.data.model.SensorLog
 import com.tonio.libre2clock.util.TimestampParser
-import java.time.Duration
 import java.time.Instant
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -58,13 +60,15 @@ object GlucoseProcessor {
     data class CalculationContext(
         val globalEstimate: RangeOffsetEstimate?,
         val rangeEstimates: Map<GlucoseOffsetRange, RangeOffsetEstimate>,
-        val capillariesByTimestamp: List<Pair<Instant, CapillaryMeasurement>>
+        val capillariesByTimestamp: List<Pair<Instant, CapillaryMeasurement>>,
+        val sensorLogs: List<SensorLog> = emptyList()
     )
 
     fun buildContext(
         autoRangeOffsetMode: AutoRangeOffsetMode,
         userRanges: List<GlucoseOffsetRange>,
-        capillaryReadings: List<CapillaryMeasurement>
+        capillaryReadings: List<CapillaryMeasurement>,
+        sensorLogs: List<SensorLog> = emptyList()
     ): CalculationContext {
         val globalEstimate = if (autoRangeOffsetMode == AutoRangeOffsetMode.GLOBAL) {
             estimateGlobalOffsets(capillaryReadings)
@@ -80,7 +84,7 @@ object GlucoseProcessor {
             parseTimestampToInstant(r.timestamp)?.let { it to r }
         }.sortedByDescending { it.first }
 
-        return CalculationContext(globalEstimate, rangeEstimates, capsByTime)
+        return CalculationContext(globalEstimate, rangeEstimates, capsByTime, sensorLogs)
     }
 
     /**
@@ -142,31 +146,50 @@ object GlucoseProcessor {
     ): Int {
         val capsToUse = context?.capillariesByTimestamp ?: emptyList()
         if (capsToUse.isEmpty() && capillaryReadings.isEmpty()) return 0
-
         if (measurementInstant == null) return 0
-        
+
+        val targetMs = measurementInstant.toEpochMilli()
+        val targetSensorSn = context?.let { findSensorSnForTimestamp(measurementInstant, it.sensorLogs) }
+
         var bestAdjustment = 0
-        var minDiffMinutes = Long.MAX_VALUE
+        var minDiffMs = Long.MAX_VALUE
 
         if (context != null) {
-            // Optimized path using pre-parsed timestamps
-            for ((readingInstant, reading) in context.capillariesByTimestamp) {
-                val diffMinutes = abs(Duration.between(measurementInstant, readingInstant).toMinutes())
-                if (diffMinutes < minDiffMinutes) {
-                    minDiffMinutes = diffMinutes
+            // BINARY SEARCH: Find candidates
+            val list = context.capillariesByTimestamp
+            var low = 0
+            var high = list.size - 1
+            
+            while (low <= high) {
+                val mid = (low + high) / 2
+                val currentMs = list[mid].first.toEpochMilli()
+                val diffMs = abs(targetMs - currentMs)
+                
+                // FILTER: Only use readings that share the same sensor serial number
+                val reading = list[mid].second
+                val isSameSensor = targetSensorSn == null || reading.sensorSerialNumber == targetSensorSn
+
+                if (isSameSensor && diffMs < minDiffMs) {
+                    minDiffMs = diffMs
                     bestAdjustment = reading.delta
                         ?: reading.sensorValue?.let { reading.value - it }
                         ?: (reading.value - rawValue)
                 }
-                // Stop early if we start moving away in time (assuming sorted list)
-                if (diffMinutes > minDiffMinutes + 60) break 
+
+                if (currentMs < targetMs) {
+                    high = mid - 1
+                } else {
+                    low = mid + 1
+                }
             }
         } else {
+            // Fallback
             for (reading in capillaryReadings) {
                 val readingInstant = parseTimestampToInstant(reading.timestamp) ?: continue
-                val diffMinutes = abs(Duration.between(measurementInstant, readingInstant).toMinutes())
-                if (diffMinutes < minDiffMinutes) {
-                    minDiffMinutes = diffMinutes
+                val diffMs = abs(targetMs - readingInstant.toEpochMilli())
+                
+                if (diffMs < minDiffMs) {
+                    minDiffMs = diffMs
                     bestAdjustment = reading.delta
                         ?: reading.sensorValue?.let { reading.value - it }
                         ?: (reading.value - rawValue)
@@ -174,7 +197,20 @@ object GlucoseProcessor {
             }
         }
 
-        return if (minDiffMinutes <= maxHoursDifference * 60) bestAdjustment else 0
+        return if (minDiffMs <= maxHoursDifference * 3600 * 1000) bestAdjustment else 0
+    }
+
+    private fun findSensorSnForTimestamp(timestamp: Instant, logs: List<SensorLog>): String? {
+        if (logs.isEmpty()) return null
+        
+        return logs.find { log ->
+            val start = parseTimestampToInstant(log.startDate) ?: return@find false
+            val end = log.endDate?.let { parseTimestampToInstant(it) } 
+                ?: log.expiryDate.let { parseTimestampToInstant(it) }
+                ?: Instant.MAX
+            
+            !timestamp.isBefore(start) && timestamp.isBefore(end)
+        }?.serialNumber
     }
 
     data class RangeOffsetEstimate(

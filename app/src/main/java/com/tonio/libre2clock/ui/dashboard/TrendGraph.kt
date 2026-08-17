@@ -158,6 +158,7 @@ fun InteractiveTrendGraph(
                         val rawPath = Path()
                         val calibratedPath = Path()
                         var isFirstPoint = true
+                        var lastProcessedInstant: Instant? = null
 
                         sanitizedSorted.forEach { (instant, measurement) ->
                             val secondsOffset = instant.epochSecond - firstInstant.epochSecond
@@ -166,7 +167,10 @@ fun InteractiveTrendGraph(
                             val rawY = plotHeight - ((measurement.value - minGlucose) / range * plotHeight)
                             val calY = plotHeight - ((measurement.calibratedValue - minGlucose) / range * plotHeight)
 
-                            if (isFirstPoint) {
+                            // GAP DETECTION: If the jump between points is > 20 minutes, break the line
+                            val isGap = !isFirstPoint && Duration.between(lastProcessedInstant!!, instant).toMinutes() > 20
+
+                            if (isFirstPoint || isGap) {
                                 rawPath.moveTo(x, rawY)
                                 calibratedPath.moveTo(x, calY)
                                 isFirstPoint = false
@@ -174,6 +178,7 @@ fun InteractiveTrendGraph(
                                 rawPath.lineTo(x, rawY)
                                 calibratedPath.lineTo(x, calY)
                             }
+                            lastProcessedInstant = instant
                         }
 
                         // Draw Paths

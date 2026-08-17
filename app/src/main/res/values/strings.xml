@@ -44,8 +44,8 @@
     <string name="sensor_log_no_logs">No sensor logs recorded yet.</string>
     <string name="sensor_log_copy_success">Sensor info copied to clipboard</string>
     <string name="sensor_log_notes_label">Notes</string>
-    <string name="sensor_error_summary_title">Average sensor error vs capillary readings</string>
-    <string name="sensor_error_summary_row">%1$d samples | abs mean: %2$.1f%% | signed mean: %3$.1f%%</string>
+    <string name="sensor_error_summary_title">Accuracy vs capillary readings</string>
+    <string name="sensor_error_summary_row">[%1$d] Total %2$.1f%% Trend %3$+.1f%%</string>
 
     <string name="insulin_hub_title">Insulin Management</string>
     <string name="insulin_active_total">Total Active Insulin (IOB)</string>
@@ -276,8 +276,8 @@
     <string name="settings_perf_title">Section Performance</string>
     <string name="settings_perf_desc">These metrics are obtained from local telemetry (cache hit/miss and timings).</string>
     <string name="settings_perf_refresh">Refresh</string>
-    <string name="settings_perf_reset">Reset Telemetry</string>
-    <string name="settings_perf_recompute">Recompute Cache</string>
+    <string name="settings_perf_reset">Reset</string>
+    <string name="settings_perf_recompute">Recalc</string>
     <string name="settings_perf_no_data">No data yet. Navigate through Dashboard/Reports and refresh again.</string>
     <string name="settings_perf_hits_row">Calls: %1$d | Cache Hits: %2$d%% (%3$d/%1$d)</string>
     <string name="settings_perf_times_row">Avg: %1$.1f ms | Max: %2$d ms | Cache Misses: %3$d</string>

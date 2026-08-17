@@ -42,6 +42,112 @@ enum class MealSlot { BREAKFAST, LUNCH, DINNER }
 
 object DashboardMetricsCalculator {
 
+    fun calculateLive(measurements: List<GlucoseMeasurement>): DashboardMetrics {
+        if (measurements.isEmpty()) return emptyDashboardMetrics()
+
+        val zone = ZoneId.systemDefault()
+        val today = LocalDate.now(zone)
+        val startOfToday = today.atStartOfDay(zone).toInstant()
+        val startOfYesterday = today.minusDays(1).atStartOfDay(zone).toInstant()
+
+        val todayItems = mutableListOf<GlucoseMeasurement>()
+        val yesterdayItems = mutableListOf<GlucoseMeasurement>()
+
+        measurements.forEach { m ->
+            // Filter out failure values (<= 40 mg/dL)
+            if (m.value <= 40) return@forEach
+            val instant = parseMeasurementInstant(m) ?: return@forEach
+            
+            val beforeToday = instant.isBefore(startOfToday)
+            val notBeforeYesterday = !instant.isBefore(startOfYesterday)
+
+            if (!beforeToday) {
+                todayItems.add(m)
+            } else if (notBeforeYesterday) {
+                yesterdayItems.add(m)
+            }
+        }
+
+        return emptyDashboardMetrics().copy(
+            todayAvg = buildDisplayMetric(todayItems),
+            yesterdayAvg = buildDisplayMetric(yesterdayItems)
+        )
+    }
+
+    fun calculateHistorical(measurements: List<GlucoseMeasurement>): DashboardMetrics {
+        if (measurements.isEmpty()) return emptyDashboardMetrics()
+
+        val now = Instant.now()
+        val zone = ZoneId.systemDefault()
+        val startOfWeekWindow = now.minusSeconds(7L * 24L * 60L * 60L)
+        val startOfMonthWindow = now.minusSeconds(30L * 24L * 60L * 60L)
+        val startOfA1cWindow = now.minusSeconds(90L * 24L * 60L * 60L)
+
+        val weekItems = mutableListOf<GlucoseMeasurement>()
+        val monthItems = mutableListOf<GlucoseMeasurement>()
+        val a1cItems = mutableListOf<GlucoseMeasurement>()
+        
+        val breakfastMonth = mutableListOf<GlucoseMeasurement>()
+        val lunchMonth = mutableListOf<GlucoseMeasurement>()
+        val dinnerMonth = mutableListOf<GlucoseMeasurement>()
+
+        var minA1cInstant = now
+        var maxA1cInstant = Instant.EPOCH
+
+        measurements.forEach { m ->
+            // Filter out common sensor failure values (e.g. exactly 40 or 0)
+            if (m.value <= 40) return@forEach
+            val instant = parseMeasurementInstant(m) ?: return@forEach
+            
+            if (!instant.isBefore(startOfWeekWindow)) {
+                weekItems.add(m)
+            }
+            if (!instant.isBefore(startOfMonthWindow)) {
+                monthItems.add(m)
+                when (mealSlotOf(instant, zone)) {
+                    MealSlot.BREAKFAST -> breakfastMonth.add(m)
+                    MealSlot.LUNCH -> lunchMonth.add(m)
+                    MealSlot.DINNER -> dinnerMonth.add(m)
+                    null -> {}
+                }
+            }
+            if (!instant.isBefore(startOfA1cWindow)) {
+                a1cItems.add(m)
+                if (instant.isBefore(minA1cInstant)) minA1cInstant = instant
+                if (instant.isAfter(maxA1cInstant)) maxA1cInstant = instant
+            }
+        }
+
+        val avgRawForA1c = if (a1cItems.isNotEmpty()) a1cItems.map { it.value }.average() else 0.0
+        val avgCalibratedForA1c = if (a1cItems.isNotEmpty()) a1cItems.map { it.calibratedValue }.average() else 0.0
+        
+        val estimatedA1c = if (avgCalibratedForA1c > 10.0 && a1cItems.size > 2) { 
+            val gmiRaw = 3.31 + (0.02392 * avgRawForA1c)
+            val gmiCalibrated = 3.31 + (0.02392 * avgCalibratedForA1c)
+            DisplayMetric(
+                primary = String.format(Locale.US, "%.1f%%(%.1f%%)", gmiRaw, gmiCalibrated),
+                secondary = ""
+            )
+        } else {
+            DisplayMetric("--", "")
+        }
+
+        return DashboardMetrics(
+            estimatedA1c = estimatedA1c,
+            todayAvg = DisplayMetric("--", ""),
+            yesterdayAvg = DisplayMetric("--", ""),
+            weekAvg = buildDisplayMetric(weekItems),
+            monthAvg = buildDisplayMetric(monthItems),
+            quarterAvg = buildDisplayMetric(a1cItems),
+            breakfastMonthAvg = buildDisplayMetric(breakfastMonth),
+            lunchMonthAvg = buildDisplayMetric(lunchMonth),
+            dinnerMonthAvg = buildDisplayMetric(dinnerMonth),
+            breakfastHypos = buildHypoCountMetric(breakfastMonth),
+            lunchHypos = buildHypoCountMetric(lunchMonth),
+            dinnerHypos = buildHypoCountMetric(dinnerMonth)
+        )
+    }
+
     fun calculate(measurements: List<GlucoseMeasurement>): DashboardMetrics {
         if (measurements.isEmpty()) return emptyDashboardMetrics()
 
@@ -65,9 +171,8 @@ object DashboardMetricsCalculator {
         val dinnerMonth = mutableListOf<GlucoseMeasurement>()
 
         measurements.forEach { m ->
-            // CRITICAL: Filter out invalid values and extreme outliers
-            // Note: Keep a broader range to allow clinical validation
-            if (m.value <= 0) return@forEach
+            // CRITICAL: Filter out invalid values (Libre sensors usually report 40 as the minimum floor or failure)
+            if (m.value <= 40) return@forEach
 
             val instant = parseMeasurementInstant(m) ?: return@forEach
             
@@ -153,19 +258,30 @@ object DashboardMetricsCalculator {
             return DisplayMetric(primary = "--", secondary = "")
         }
 
-        val rawValues = measurements.map { it.value }
-        val calibratedValues = measurements.map { it.calibratedValue }
-        
-        val avgRaw = rawValues.average().roundToInt()
-        val avgCalibrated = calibratedValues.average().roundToInt()
-        
-        val maxRaw = rawValues.maxOrNull() ?: avgRaw
-        val minRaw = rawValues.minOrNull() ?: avgRaw
-        val oscRaw = maxOf(maxRaw - avgRaw, avgRaw - minRaw).coerceAtLeast(0)
+        var sumRaw = 0.0
+        var sumCal = 0.0
+        var maxRaw = Double.MIN_VALUE
+        var minRaw = Double.MAX_VALUE
+        var maxCal = Double.MIN_VALUE
+        var minCal = Double.MAX_VALUE
 
-        val maxCal = calibratedValues.maxOrNull() ?: avgCalibrated
-        val minCal = calibratedValues.minOrNull() ?: avgCalibrated
-        val oscCal = maxOf(maxCal - avgCalibrated, avgCalibrated - minCal).coerceAtLeast(0)
+        measurements.forEach { m ->
+            val rv = m.value.toDouble()
+            val cv = m.calibratedValue.toDouble()
+            sumRaw += rv
+            sumCal += cv
+            if (rv > maxRaw) maxRaw = rv
+            if (rv < minRaw) minRaw = rv
+            if (cv > maxCal) maxCal = cv
+            if (cv < minCal) minCal = cv
+        }
+
+        val count = measurements.size
+        val avgRaw = (sumRaw / count).roundToInt()
+        val avgCalibrated = (sumCal / count).roundToInt()
+        
+        val oscRaw = maxOf(maxRaw.roundToInt() - avgRaw, avgRaw - minRaw.roundToInt()).coerceAtLeast(0)
+        val oscCal = maxOf(maxCal.roundToInt() - avgCalibrated, avgCalibrated - minCal.roundToInt()).coerceAtLeast(0)
 
         return DisplayMetric(
             primary = "Avg $avgRaw ± $oscRaw",
