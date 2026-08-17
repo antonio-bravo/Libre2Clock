@@ -1,5 +1,38 @@
 # Changelog
 
+## 8d0ba1d (Aug 17, 2026 17:56:19)
+optmize — antonio-bravo
+[detail](#8d0ba1d-details)
+
+<details id='8d0ba1d-details'>
+<summary>Changed files</summary>
+
+- .idea/misc.xml [Modified]
+- .idea/planningMode.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseProcessor.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/sensor/SensorLogsScreen.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 380ef3f (Aug 15, 2026 18:48:42)
+Update changelog — github-actions[bot]
+[detail](#380ef3f-details)
+
+<details id='380ef3f-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 6294013 (Aug 15, 2026 20:48:28)
 fix HbA1c using cache and back button — antonio-bravo
 [detail](#6294013-details)
@@ -737,36 +770,6 @@ Optimize app and reduce battery consumption — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
-</details>
-
-
----
-## 60b03bc (Jul 25, 2026 16:14:51)
-Update changelog — github-actions[bot]
-[detail](#60b03bc-details)
-
-<details id='60b03bc-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 3d30e3c (Jul 25, 2026 18:14:27)
-Add documentation and adjust insulin processor — antonio-bravo
-[detail](#3d30e3c-details)
-
-<details id='3d30e3c-details'>
-<summary>Changed files</summary>
-
-- ARCHITECTURE.md [Deleted]
-- BACKUP_AND_RESTORE.md [Deleted]
-- CALIBRATION_SYSTEM.md [Deleted]
-- DIABETES_CALCULATOR.md [Deleted]
-- INSULIN_IOB_ALGORITHM.md [Deleted]
-- README.md [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/InsulinProcessor.kt [Modified]
 </details>
 
 
