@@ -372,10 +372,14 @@ class DashboardViewModel(
             else -> androidContext.getString(R.string.sensor_remaining_minutes, minutes)
         }
 
-        val formatter = DateTimeFormatter.ofPattern("EEE, MMM dd, yyyy HH:mm", Locale.US)
-            .withZone(ZoneId.systemDefault())
-        val startDateStr = formatter.format(Instant.ofEpochSecond(info.activationTimestamp))
-        val expiryDateStr = formatter.format(Instant.ofEpochSecond(expiryTime))
+        val dateFormat = android.text.format.DateFormat.getMediumDateFormat(androidContext)
+        val timeFormat = android.text.format.DateFormat.getTimeFormat(androidContext)
+        
+        val startDate = java.util.Date.from(Instant.ofEpochSecond(info.activationTimestamp))
+        val expiryDate = java.util.Date.from(Instant.ofEpochSecond(expiryTime))
+        
+        val startDateStr = "${dateFormat.format(startDate)} ${timeFormat.format(startDate)}"
+        val expiryDateStr = "${dateFormat.format(expiryDate)} ${timeFormat.format(expiryDate)}"
 
         return SensorStatus(
             daysRemaining = remainingStr,

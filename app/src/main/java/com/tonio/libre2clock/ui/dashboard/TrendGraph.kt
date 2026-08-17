@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,6 +46,9 @@ fun InteractiveTrendGraph(
     measurements: List<GlucoseMeasurement>,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val is24Hour = android.text.format.DateFormat.is24HourFormat(context)
+    
     val sanitizedSorted = remember(measurements) {
         val raw = measurements.mapNotNull { m ->
             measurementInstant(m)?.let { it to m }
@@ -165,8 +169,8 @@ fun InteractiveTrendGraph(
                             val rawY = plotHeight - ((measurement.value - minGlucose) / range * plotHeight)
                             val calY = plotHeight - ((measurement.calibratedValue - minGlucose) / range * plotHeight)
 
-                            // GAP DETECTION: If the jump between points is > 20 minutes, break the line
-                            val isGap = !isFirstPoint && Duration.between(lastProcessedInstant!!, instant).toMinutes() > 20
+                            // GAP DETECTION: If the jump between points is > 15 minutes, break the line
+                            val isGap = !isFirstPoint && Duration.between(lastProcessedInstant!!, instant).toMinutes() > 15
 
                             if (isFirstPoint || isGap) {
                                 rawPath.moveTo(x, rawY)
@@ -224,8 +228,11 @@ fun InteractiveTrendGraph(
                             textAlign = Paint.Align.CENTER
                             isAntiAlias = true
                         }
-                        val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                        val hourFormatter = DateTimeFormatter.ofPattern("HH:mm")
+                        val hourFormatter = if (is24Hour) {
+                            DateTimeFormatter.ofPattern("HH:mm")
+                        } else {
+                            DateTimeFormatter.ofPattern("h a")
+                        }
                         val zone = ZoneId.systemDefault()
                         val intervalSeconds = 3L * 60L * 60L // 3 hours
                         
@@ -242,7 +249,8 @@ fun InteractiveTrendGraph(
                             val showDate = cursor == firstInstant || localDateTime.hour == 0
                             
                             if (showDate) {
-                                drawContext.canvas.nativeCanvas.drawText(dateFormatter.format(localDateTime), x, plotHeight + 14.dp.toPx(), labelPaint)
+                                val dateStr = android.text.format.DateFormat.getDateFormat(context).format(java.util.Date.from(cursor))
+                                drawContext.canvas.nativeCanvas.drawText(dateStr, x, plotHeight + 14.dp.toPx(), labelPaint)
                             }
                             drawContext.canvas.nativeCanvas.drawText(hourFormatter.format(localDateTime), x, plotHeight + 28.dp.toPx(), labelPaint)
                             cursor = cursor.plusSeconds(intervalSeconds)
