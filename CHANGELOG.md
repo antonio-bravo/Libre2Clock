@@ -1,5 +1,32 @@
 # Changelog
 
+## 46c151d (Aug 17, 2026 20:21:41)
+the api is in UTC the phone conver to local time zone — antonio-bravo
+[detail](#46c151d-details)
+
+<details id='46c151d-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
+</details>
+
+
+---
+## 7083615 (Aug 17, 2026 17:23:20)
+Update changelog — github-actions[bot]
+[detail](#7083615-details)
+
+<details id='7083615-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 96645ec (Aug 17, 2026 19:23:07)
 time in local — antonio-bravo
 [detail](#96645ec-details)
@@ -730,45 +757,6 @@ fix versioning & add default datetime when enter insulin — antonio-bravo
 - app/build.gradle.kts [Modified]
 - app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
-</details>
-
-
----
-## cf84a9f (Jul 27, 2026 19:48:17)
-Update changelog — github-actions[bot]
-[detail](#cf84a9f-details)
-
-<details id='cf84a9f-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 45e467e (Jul 27, 2026 21:48:02)
-add reports — antonio-bravo
-[detail](#45e467e-details)
-
-<details id='45e467e-details'>
-<summary>Changed files</summary>
-
-- .idea/planningMode.xml [Modified]
-- app/src/main/AndroidManifest.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/navigation/Destinations.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/report/ReportScreen.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/PdfReportGenerator.kt [Deleted]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-- app/src/main/res/xml/file_paths.xml [Deleted]
 </details>
 
 
