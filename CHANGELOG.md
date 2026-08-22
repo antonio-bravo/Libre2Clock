@@ -1,5 +1,33 @@
 # Changelog
 
+## ee30cd3 (Aug 22, 2026 16:32:07)
+fix copy and summary sensor errors — antonio-bravo
+[detail](#ee30cd3-details)
+
+<details id='ee30cd3-details'>
+<summary>Changed files</summary>
+
+- .idea/deploymentTargetSelector.xml [Modified]
+- .idea/planningMode.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/sensor/SensorLogsScreen.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 3236b7e (Aug 17, 2026 18:37:10)
+Update changelog — github-actions[bot]
+[detail](#3236b7e-details)
+
+<details id='3236b7e-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 1c62fb0 (Aug 17, 2026 20:36:56)
 remove  repository.dataVersion.map { it / 10 }.distinctUntilChanged() // Throttled: only every 10 new readings — antonio-bravo
 [detail](#1c62fb0-details)
@@ -727,33 +755,6 @@ fix workflow — antonio-bravo
 <summary>Changed files</summary>
 
 - .github/workflows/build-release.yml [Modified]
-</details>
-
-
----
-## 609ca47 (Jul 27, 2026 20:48:21)
-Update changelog — github-actions[bot]
-[detail](#609ca47-details)
-
-<details id='609ca47-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 3d63f14 (Jul 27, 2026 22:48:00)
-fix reports and matrix to generate apk — antonio-bravo
-[detail](#3d63f14-details)
-
-<details id='3d63f14-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/build-release.yml [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/report/ReportScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/PdfReportGenerator.kt [Modified]
 </details>
 
 
