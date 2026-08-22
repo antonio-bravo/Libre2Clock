@@ -44,6 +44,21 @@ fun SensorLogsScreen(
         buildSensorErrorSummary(sensorLogs, capillaryReadings)
     }
     var editingLog by remember { mutableStateOf<SensorLog?>(null) }
+    var showOnlyFailed by remember { mutableStateOf(false) }
+
+    val filteredLogs = remember(sensorLogs, showOnlyFailed) {
+        if (showOnlyFailed) sensorLogs.filter { it.hasFailed } else sensorLogs
+    }
+
+    val failedStats = remember(sensorLogs) {
+        val failed = sensorLogs.filter { it.hasFailed }
+        if (failed.isEmpty()) null
+        else {
+            val dates = failed.map { it.startDate }.filter { it.isNotBlank() }.sorted()
+            if (dates.isEmpty()) Triple(failed.size, "-", "-")
+            else Triple(failed.size, dates.first(), dates.last())
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -57,36 +72,99 @@ fun SensorLogsScreen(
             )
         }
     ) { innerPadding ->
-        if (sensorLogs.isEmpty()) {
-            Box(
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            // Stats & Filter Header
+            Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    text = stringResource(R.string.sensor_log_no_logs),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(vertical = 16.dp)
-            ) {
-                items(sensorLogs) { log ->
-                    val summary = sensorErrorSummary.find { it.serialNumber == log.serialNumber }
-                    SensorLogItem(
-                        log = log,
-                        errorSummary = summary,
-                        onEdit = { editingLog = log },
-                        onDelete = { viewModel.removeSensorLog(log) }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    FilterChip(
+                        selected = showOnlyFailed,
+                        onClick = { showOnlyFailed = !showOnlyFailed },
+                        label = { Text(stringResource(R.string.sensor_log_filter_failed)) },
+                        leadingIcon = if (showOnlyFailed) {
+                            { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
+                        } else null
                     )
+                }
+
+                failedStats?.let { (count, minDate, maxDate) ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.error,
+                            shape = MaterialTheme.shapes.extraSmall
+                        ) {
+                            Text(
+                                text = count.toString(),
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onError,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        
+                        Text(
+                            text = stringResource(R.string.sensor_log_stats_date_range, minDate, maxDate),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
+            if (filteredLogs.isEmpty()) {
+                Box(
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.sensor_log_no_logs),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(bottom = 16.dp)
+                ) {
+                    items(filteredLogs) { log ->
+                        val summary = sensorErrorSummary.find { it.serialNumber == log.serialNumber }
+                        SensorLogItem(
+                            log = log,
+                            errorSummary = summary,
+                            onEdit = { editingLog = log },
+                            onDelete = { viewModel.removeSensorLog(log) }
+                        )
+                    }
                 }
             }
         }
@@ -152,15 +230,8 @@ fun SensorLogItem(
                                 Icon(
                                     imageVector = Icons.Default.Warning,
                                     contentDescription = null,
-                                    modifier = Modifier.size(12.dp),
+                                    modifier = Modifier.size(14.dp),
                                     tint = MaterialTheme.colorScheme.error
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = stringResource(R.string.sensor_log_failed),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.error,
-                                    fontWeight = FontWeight.Bold
                                 )
                             }
                         }
@@ -172,12 +243,22 @@ fun SensorLogItem(
                     style = MaterialTheme.typography.bodySmall
                 )
                 if (log.endDate != null) {
-                    Text(
-                        text = stringResource(R.string.sensor_log_actual_end, log.endDate),
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Bold,
-                        color = if (log.hasFailed) MaterialTheme.colorScheme.error else Color.Unspecified
-                    )
+                    Column {
+                        Text(
+                            text = stringResource(R.string.sensor_log_actual_end, log.endDate),
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = if (log.hasFailed) MaterialTheme.colorScheme.error else Color.Unspecified
+                        )
+                        if (log.hasFailed && log.actualDaysUsed != null) {
+                            Text(
+                                text = stringResource(R.string.sensor_log_days_used_label) + ": ${log.actualDaysUsed}",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
                 } else {
                     Text(
                         text = stringResource(R.string.sensor_log_expiry, log.expiryDate),
@@ -185,15 +266,17 @@ fun SensorLogItem(
                     )
                 }
                 
-                if (log.actualDaysUsed != null || log.errorCode != null) {
+                if ((!log.hasFailed && log.actualDaysUsed != null) || log.errorCode != null) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        log.actualDaysUsed?.let {
-                            Text(
-                                text = stringResource(R.string.sensor_log_days_used_label) + ": $it",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold
-                            )
+                        if (!log.hasFailed) {
+                            log.actualDaysUsed?.let {
+                                Text(
+                                    text = stringResource(R.string.sensor_log_days_used_label) + ": $it",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                         log.errorCode?.let {
                             Text(
@@ -237,7 +320,8 @@ fun SensorLogItem(
                     val text = "Sensor Log\nSN: ${log.serialNumber}\nStart: ${log.startDate}\n" +
                             (if (log.endDate != null) "End: ${log.endDate}" else "Expected Expiry: ${log.expiryDate}") +
                             (if (log.hasFailed) "\nFAILED (Code: ${log.errorCode ?: "-"})" else "") +
-                            (if (log.actualDaysUsed != null) "\nDays used: ${log.actualDaysUsed}" else "")
+                            (if (log.actualDaysUsed != null) "\nDays used: ${log.actualDaysUsed}" else "") +
+                            (if (!log.notes.isNullOrBlank()) "\nNotes: ${log.notes}" else "")
                     scope.launch {
                         clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("Sensor Log", text)))
                     }

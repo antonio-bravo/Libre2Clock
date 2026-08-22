@@ -44,6 +44,9 @@
     <string name="sensor_log_no_logs">No sensor logs recorded yet.</string>
     <string name="sensor_log_copy_success">Sensor info copied to clipboard</string>
     <string name="sensor_log_notes_label">Notes</string>
+    <string name="sensor_log_filter_failed">Only Failed</string>
+    <string name="sensor_log_stats_failed_count">Failed Sensors: %1$d</string>
+    <string name="sensor_log_stats_date_range">from %1$s to %2$s</string>
     <string name="sensor_error_summary_title">Accuracy vs capillary readings</string>
     <string name="sensor_error_summary_row">[%1$d] Total %2$.1f%% Trend %3$+.1f%%</string>
 

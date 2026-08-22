@@ -44,6 +44,9 @@
     <string name="sensor_log_no_logs">No hay registros de sensores aún.</string>
     <string name="sensor_log_copy_success">Info. del sensor copiada al portapapeles</string>
     <string name="sensor_log_notes_label">Notas</string>
+    <string name="sensor_log_filter_failed">Solo Fallidos</string>
+    <string name="sensor_log_stats_failed_count">Sensores Fallidos: %1$d</string>
+    <string name="sensor_log_stats_date_range">desde %1$s hasta %2$s</string>
     <string name="sensor_error_summary_title">Precisión vs mediciones capilares</string>
     <string name="sensor_error_summary_row">[%1$d] Total %2$.1f%% Trend %3$+.1f%%</string>
 
