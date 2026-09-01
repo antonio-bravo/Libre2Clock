@@ -1,5 +1,33 @@
 # Changelog
 
+## 2da5626 (Sep 01, 2026 21:42:47)
+add performance metrix — antonio-bravo
+[detail](#2da5626-details)
+
+<details id='2da5626-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/capillary/CapillaryScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 66d5c9e (Sep 01, 2026 19:24:10)
+Update changelog — github-actions[bot]
+[detail](#66d5c9e-details)
+
+<details id='66d5c9e-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 134a0bc (Sep 01, 2026 21:23:42)
 fix error — antonio-bravo
 [detail](#134a0bc-details)
@@ -744,30 +772,6 @@ fix automatic IFS, TDI + battery optmizer and large name in acronym — antonio-
 - app/src/main/res/values-es/strings.xml [Modified]
 - app/src/main/res/values/strings.xml [Modified]
 - gradle/gradle-daemon-jvm.properties [Modified]
-</details>
-
-
----
-## f981855 (Jul 28, 2026 11:30:11)
-Update changelog — github-actions[bot]
-[detail](#f981855-details)
-
-<details id='f981855-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 4834209 (Jul 28, 2026 13:29:58)
-update actions in workflow — antonio-bravo
-[detail](#4834209-details)
-
-<details id='4834209-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/build-release.yml [Modified]
 </details>
 
 
