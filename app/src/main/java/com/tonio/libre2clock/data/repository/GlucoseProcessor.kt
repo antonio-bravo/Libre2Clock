@@ -75,9 +75,9 @@ object GlucoseProcessor {
         } else null
 
         val rangeEstimates = if (autoRangeOffsetMode == AutoRangeOffsetMode.BY_RANGE) {
-            userRanges.associateWith { range ->
-                estimateOffsetsForRange(range, capillaryReadings)
-            }.filterValues { it != null } as Map<GlucoseOffsetRange, RangeOffsetEstimate>
+            userRanges.mapNotNull { range ->
+                estimateOffsetsForRange(range, capillaryReadings)?.let { range to it }
+            }.toMap()
         } else emptyMap()
 
         val capsByTime = capillaryReadings.mapNotNull { r ->
