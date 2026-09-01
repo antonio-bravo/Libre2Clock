@@ -1,5 +1,30 @@
 # Changelog
 
+## 134a0bc (Sep 01, 2026 21:23:42)
+fix error — antonio-bravo
+[detail](#134a0bc-details)
+
+<details id='134a0bc-details'>
+<summary>Changed files</summary>
+
+- app/proguard-rules.pro [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseProcessor.kt [Modified]
+</details>
+
+
+---
+## 75dcc8a (Sep 01, 2026 19:13:05)
+Update changelog — github-actions[bot]
+[detail](#75dcc8a-details)
+
+<details id='75dcc8a-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## c963800 (Sep 01, 2026 21:12:44)
 Loggin and improve performance — antonio-bravo
 [detail](#c963800-details)
@@ -743,35 +768,6 @@ update actions in workflow — antonio-bravo
 <summary>Changed files</summary>
 
 - .github/workflows/build-release.yml [Modified]
-</details>
-
-
----
-## 21c676f (Jul 28, 2026 08:46:11)
-Update changelog — github-actions[bot]
-[detail](#21c676f-details)
-
-<details id='21c676f-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 33c2ca9 (Jul 28, 2026 10:45:54)
-Added Alarm Schedule and clean backup buttons — antonio-bravo
-[detail](#33c2ca9-details)
-
-<details id='33c2ca9-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/model/AlarmSchedule.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
 </details>
 
 
