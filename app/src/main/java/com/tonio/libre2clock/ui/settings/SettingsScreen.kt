@@ -74,6 +74,8 @@ fun SettingsScreen(
     var showAddAlarmScheduleDialog by remember { mutableStateOf(false) }
     var editingAlarmSchedule by remember { mutableStateOf<com.tonio.libre2clock.data.model.AlarmSchedule?>(null) }
 
+    var showLogoutConfirmDialog by remember { mutableStateOf(false) }
+
     val localBackupRestoreLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
@@ -859,12 +861,52 @@ fun SettingsScreen(
                     onClick = onTestNotification,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 80.dp) // Space for FAB
                 ) {
                     Text(stringResource(R.string.settings_test_notification))
                 }
+
+                Spacer(modifier = Modifier.height(24.dp))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Text(
+                    text = stringResource(R.string.settings_account_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                OutlinedButton(
+                    onClick = { showLogoutConfirmDialog = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp, bottom = 80.dp), // Space for FAB
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text(stringResource(R.string.settings_logout))
+                }
             }
         }
+    }
+
+    if (showLogoutConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutConfirmDialog = false },
+            title = { Text(stringResource(R.string.settings_logout)) },
+            text = { Text(stringResource(R.string.settings_logout_confirm)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showLogoutConfirmDialog = false
+                    viewModel.logout()
+                }) {
+                    Text(stringResource(R.string.settings_logout))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutConfirmDialog = false }) {
+                    Text(stringResource(android.R.string.cancel))
+                }
+            }
+        )
     }
 
     if (showAddRangeDialog) {

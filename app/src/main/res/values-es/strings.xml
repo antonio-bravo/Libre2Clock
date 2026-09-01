@@ -71,6 +71,10 @@
     <string name="edit_insulin_dose">Editar dosis de insulina</string>
     <string name="update">Actualizar</string>
     <string name="insulin_units_label">Unidades (U)</string>
+    <string name="insulin_use_suggested">Usar</string>
+    <string name="settings_account_title">Cuenta</string>
+    <string name="settings_logout">Cerrar sesión</string>
+    <string name="settings_logout_confirm">Se cerrará tu sesión de LibreLinkUp. Tu historial y ajustes locales se quedan en este dispositivo.</string>
     <string name="insulin_type_label">Tipo de Insulina</string>
     <string name="insulin_no_doses">No hay dosis registradas aún.</string>
 
@@ -90,6 +94,7 @@
     <string name="calc_suggested_offset">Bolo Sugerido (Offset)</string>
     <string name="calc_breakdown_label">(HC: %1$.2f + Corr: %2$.2f)</string>
     <string name="calc_basal_expiring_warning">¡La basal está terminando! Se aplica ajuste del +20%.</string>
+    <string name="calc_basal_expiring_warning_short">Basal terminando: +20% aplicado</string>
     <string name="calc_considerations_title">Consideraciones</string>
     <string name="calc_considerations_text">Los cálculos se basan en tu TDI y reglas configuradas. Confirma siempre con tu médico. Si la basal está a menos de 2h de terminar, el bolo se incrementa un 20% para evitar derivas.</string>
 

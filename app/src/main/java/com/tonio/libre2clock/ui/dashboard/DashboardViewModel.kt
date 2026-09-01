@@ -277,6 +277,12 @@ class DashboardViewModel(
     val isfRuleConstant: StateFlow<Int> = preferenceManager.isfRuleConstant
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 1800)
 
+    val icRuleConstant: StateFlow<Int> = preferenceManager.icRuleConstant
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 450)
+
+    val targetGlucose: StateFlow<Int> = preferenceManager.targetGlucose
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 80)
+
     val currentSensorError: StateFlow<SensorErrorSummary?> = combine(
         preferenceManager.activeSensorSerialNumber,
         preferenceManager.capillaryReadings

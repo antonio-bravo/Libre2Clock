@@ -1,6 +1,7 @@
 package com.tonio.libre2clock.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.entryProvider
@@ -40,6 +41,17 @@ fun NavGraph(
     val loginViewModel: LoginViewModel = viewModel { LoginViewModel(repository) }
     val reportViewModel: com.tonio.libre2clock.ui.report.ReportViewModel = viewModel { 
         com.tonio.libre2clock.ui.report.ReportViewModel(repository, preferenceManager, context.applicationContext) 
+    }
+
+    // Reacts to logout and to session-expiry (auth cleared after a 401 from LibreLinkUp).
+    LaunchedEffect(Unit) {
+        preferenceManager.authToken.collect { token ->
+            if (token == null && backStack.lastOrNull() != Destination.Login) {
+                context.stopService(Intent(context, GlucoseForegroundService::class.java))
+                backStack.clear()
+                backStack.add(Destination.Login)
+            }
+        }
     }
 
     NavDisplay(

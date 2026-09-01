@@ -66,10 +66,13 @@ object InsulinProcessor {
 
     fun calculateAverageDaily(doses: List<InsulinDose>, days: Int): Double {
         if (doses.isEmpty() || days <= 0) return 0.0
+        val zone = ZoneId.systemDefault()
         val now = LocalDate.now()
-        var total = 0.0
-        for (i in 0 until days) {
-            total += calculateDailyTotal(doses, now.minusDays(i.toLong()))
+        val cutoff = now.minusDays((days - 1).toLong())
+        // Parse each timestamp once instead of re-scanning/re-parsing the full list per day.
+        val total = doses.sumOf { dose ->
+            val doseDate = TimestampParser.parseFlexibleInstant(dose.timestamp)?.atZone(zone)?.toLocalDate()
+            if (doseDate != null && doseDate in cutoff..now) dose.units else 0.0
         }
         return total / days
     }
@@ -87,13 +90,19 @@ object InsulinProcessor {
 
     fun calculateAverageDailySplit(doses: List<InsulinDose>, days: Int): SplitTotal {
         if (doses.isEmpty() || days <= 0) return SplitTotal(0.0, 0.0)
+        val zone = ZoneId.systemDefault()
         val now = LocalDate.now()
+        val cutoff = now.minusDays((days - 1).toLong())
+        // Parse each timestamp once instead of re-scanning/re-parsing the full list per day/type.
         var rapidSum = 0.0
         var slowSum = 0.0
-        for (i in 0 until days) {
-            val split = calculateDailyTotalSplit(doses, now.minusDays(i.toLong()))
-            rapidSum += split.rapid
-            slowSum += split.slow
+        for (dose in doses) {
+            val doseDate = TimestampParser.parseFlexibleInstant(dose.timestamp)?.atZone(zone)?.toLocalDate() ?: continue
+            if (doseDate !in cutoff..now) continue
+            when (dose.type) {
+                InsulinType.RAPID -> rapidSum += dose.units
+                InsulinType.SLOW -> slowSum += dose.units
+            }
         }
         return SplitTotal(rapidSum / days, slowSum / days)
     }

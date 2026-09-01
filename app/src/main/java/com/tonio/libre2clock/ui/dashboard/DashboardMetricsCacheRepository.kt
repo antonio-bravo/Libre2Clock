@@ -69,6 +69,9 @@ class DashboardMetricsCacheRepository(
         private const val DAY_MS = 24L * 60L * 60L * 1000L
         private const val MIN_RETENTION_DAYS = 30
         private const val MAX_RETENTION_DAYS = 365
+        // Rolling week/month/quarter averages don't need sub-bucket freshness; throttling recompute
+        // to once per bucket avoids re-scanning up to 50k historical measurements on every new CGM reading.
+        private const val HISTORICAL_SIGNATURE_BUCKET_MS = 5L * 60L * 1000L
 
         fun buildSignatureFast(
             measurements: List<GlucoseMeasurement>,
@@ -78,30 +81,26 @@ class DashboardMetricsCacheRepository(
             if (measurements.isEmpty()) return "empty-$dataVersion"
 
             val first = measurements.first()
-            val last = measurements.last()
             
-            // Fast signature using version metadata and boundary items.
-            // dataVersion captures any DB change.
-            // capillary count/last timestamp captures calibration changes.
+            // capillary count/last timestamp captures calibration changes immediately.
             val capSig = if (capillaries.isNotEmpty()) {
                 "${capillaries.size}-${capillaries.first().timestamp}"
             } else "no-cap"
 
+            // Deliberately excludes the volatile "last" boundary item and live count: those change
+            // on every new CGM reading (every 1-5 min) and would defeat this cache entirely.
+            // The time bucket still guarantees the window is refreshed at least every 5 minutes.
+            val timeBucket = System.currentTimeMillis() / HISTORICAL_SIGNATURE_BUCKET_MS
+
             return buildString {
-                append("v=")
-                append(dataVersion)
-                append(";c=")
-                append(measurements.size)
+                append("tb=")
+                append(timeBucket)
                 append(";cp=")
                 append(capSig)
                 append(";f=")
                 append(first.epochSeconds ?: first.factoryTimestamp)
                 append(':')
                 append(first.value)
-                append(";l=")
-                append(last.epochSeconds ?: last.factoryTimestamp)
-                append(':')
-                append(last.value)
             }
         }
 

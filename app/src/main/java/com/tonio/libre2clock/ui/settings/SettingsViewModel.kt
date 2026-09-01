@@ -450,6 +450,12 @@ class SettingsViewModel(
         _apiDebugOutput.value = null
     }
 
+    fun logout() {
+        viewModelScope.launch {
+            repository.logout()
+        }
+    }
+
     fun runDirectApiDiagnostic() {
         viewModelScope.launch {
             _isApiDebugLoading.value = true

@@ -21,10 +21,15 @@ import com.tonio.libre2clock.data.model.InsulinDose
 import com.tonio.libre2clock.data.model.InsulinType
 import com.tonio.libre2clock.data.repository.InsulinProcessor
 import com.tonio.libre2clock.ui.settings.SettingsViewModel
+import com.tonio.libre2clock.util.SectionPerfTelemetry
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import kotlin.system.measureTimeMillis
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,16 +50,48 @@ fun InsulinHubScreen(
 
     var showAddDialog by remember { mutableStateOf(false) }
 
+    // IOB decays continuously with time, so it must refresh periodically, not just when doses change.
+    var nowTick by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(60_000)
+            nowTick = System.currentTimeMillis()
+        }
+    }
+
     val calculatedTdi = remember(doses) { InsulinProcessor.calculateAverageDaily(doses, 30) }
     val tdi = manualTdi ?: calculatedTdi
     val calculatedIsf = if (tdi > 0) isfRuleConstant.toDouble() / tdi else 0.0
     val isf = manualIsf ?: calculatedIsf
     val icRatio = if (tdi > 0) icRuleConstant.toDouble() / tdi else 0.0
 
-    val totalIOB = remember(doses) { InsulinProcessor.calculateTotalIOB(doses) }
-    val rapidIOB = remember(doses) { doses.filter { it.type == InsulinType.RAPID }.let { InsulinProcessor.calculateTotalIOB(it) } }
-    val slowIOB = remember(doses) { doses.filter { it.type == InsulinType.SLOW }.let { InsulinProcessor.calculateTotalIOB(it) } }
-    val activeThreads = remember(doses) { doses.count { InsulinProcessor.calculateIOB(it) > 0 } }
+    val totalIOB = remember(doses, nowTick) { InsulinProcessor.calculateTotalIOB(doses) }
+    val rapidIOB = remember(doses, nowTick) { doses.filter { it.type == InsulinType.RAPID }.let { InsulinProcessor.calculateTotalIOB(it) } }
+    val slowIOB = remember(doses, nowTick) { doses.filter { it.type == InsulinType.SLOW }.let { InsulinProcessor.calculateTotalIOB(it) } }
+    val activeThreads = remember(doses, nowTick) { doses.count { InsulinProcessor.calculateIOB(it) > 0 } }
+
+    // Parses every dose's timestamp (exception-heavy); keep it off the composition/main thread.
+    var isBasalExpiringSoon by remember { mutableStateOf(false) }
+    LaunchedEffect(doses) {
+        isBasalExpiringSoon = withContext(Dispatchers.Default) {
+            InsulinProcessor.isBasalExpiringSoon(doses)
+        }
+    }
+
+    val suggestedUnits = remember(currentGlucoseData, tdi, isf, targetGlucose, isBasalExpiringSoon) {
+        val glucoseValue = currentGlucoseData?.calibratedValue ?: currentGlucoseData?.value
+        glucoseValue?.let {
+            InsulinProcessor.getSuggestedBolusDetailed(
+                carbs = 0.0,
+                currentGlucose = it,
+                targetGlucose = targetGlucose,
+                tdi = tdi,
+                icConstant = icRuleConstant,
+                isf = isf,
+                isBasalExpiringSoon = isBasalExpiringSoon
+            ).total
+        }
+    }
 
     val today = LocalDate.now()
     val todayTotal = remember(doses, today) { InsulinProcessor.calculateDailyTotal(doses, today) }
@@ -173,6 +210,8 @@ fun InsulinHubScreen(
         InsulinDoseDialog(
             rapidDuration = rapidDurationMins,
             slowDuration = slowDurationMins,
+            suggestedUnits = suggestedUnits,
+            isBasalExpiringSoon = isBasalExpiringSoon,
             onDismiss = { showAddDialog = false },
             onConfirm = {
                 viewModel.addInsulinDose(it)
@@ -357,20 +396,36 @@ fun BolusCalculatorCard(
     }
     
     var glucoseText by remember(initialGlucoseText) { mutableStateOf(initialGlucoseText) }
-    val isBasalExpiringSoon = remember(doses) { InsulinProcessor.isBasalExpiringSoon(doses) }
+
+    // isBasalExpiringSoon parses every dose timestamp (exception-heavy); keep it off the composition/main thread.
+    var isBasalExpiringSoon by remember { mutableStateOf(false) }
+    LaunchedEffect(doses) {
+        var result = false
+        val duration = measureTimeMillis {
+            result = withContext(Dispatchers.Default) { InsulinProcessor.isBasalExpiringSoon(doses) }
+        }
+        SectionPerfTelemetry.record(section = "insulin_basal_expiry", durationMs = duration, cacheHit = true)
+        isBasalExpiringSoon = result
+    }
 
     val suggestedResults = remember(carbsText, glucoseText, tdi, isBasalExpiringSoon, isf, targetGlucose) {
-        val carbs = carbsText.toDoubleOrNull() ?: 0.0
-        
-        val cleanText = glucoseText.replace(" ", "")
-        val glucoseParts = cleanText.replace(")", "").split("(")
-        val realG = glucoseParts.getOrNull(0)?.toIntOrNull() ?: 0
-        val calG = glucoseParts.getOrNull(1)?.toIntOrNull() ?: realG
-        
-        val breakdownReal = InsulinProcessor.getSuggestedBolusDetailed(carbs, realG, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon)
-        val breakdownCal = InsulinProcessor.getSuggestedBolusDetailed(carbs, calG, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon)
-        
-        Triple(realG, calG, breakdownReal to breakdownCal)
+        var output: Triple<Int, Int, Pair<InsulinProcessor.BolusBreakdown, InsulinProcessor.BolusBreakdown>>
+        val duration = measureTimeMillis {
+            val carbs = carbsText.toDoubleOrNull() ?: 0.0
+
+            val cleanText = glucoseText.replace(" ", "")
+            val glucoseParts = cleanText.replace(")", "").split("(")
+            val realG = glucoseParts.getOrNull(0)?.toIntOrNull() ?: 0
+            val calG = glucoseParts.getOrNull(1)?.toIntOrNull() ?: realG
+
+            val breakdownReal = InsulinProcessor.getSuggestedBolusDetailed(carbs, realG, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon)
+            val breakdownCal = if (calG == realG) breakdownReal else
+                InsulinProcessor.getSuggestedBolusDetailed(carbs, calG, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon)
+
+            output = Triple(realG, calG, breakdownReal to breakdownCal)
+        }
+        SectionPerfTelemetry.record(section = "insulin_bolus_calc", durationMs = duration, cacheHit = true)
+        output
     }
 
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -692,6 +747,8 @@ fun InsulinDoseDialog(
     initialDose: InsulinDose? = null,
     rapidDuration: Int,
     slowDuration: Int,
+    suggestedUnits: Double? = null,
+    isBasalExpiringSoon: Boolean = false,
     onDismiss: () -> Unit,
     onConfirm: (InsulinDose) -> Unit
 ) {
@@ -717,6 +774,30 @@ fun InsulinDoseDialog(
         title = { Text(stringResource(if (initialDose == null) R.string.add_insulin_dose else R.string.edit_insulin_dose)) },
         text = {
             Column {
+                if (suggestedUnits != null) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.calc_suggested_bolus, suggestedUnits),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        TextButton(onClick = { unitsText = "%.2f".format(suggestedUnits) }) {
+                            Text(stringResource(R.string.insulin_use_suggested))
+                        }
+                    }
+                    if (isBasalExpiringSoon) {
+                        Text(
+                            text = stringResource(R.string.calc_basal_expiring_warning_short),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
                         value = unitsText,

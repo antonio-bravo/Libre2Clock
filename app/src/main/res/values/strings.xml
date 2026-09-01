@@ -71,6 +71,10 @@
     <string name="edit_insulin_dose">Edit insulin dose</string>
     <string name="update">Update</string>
     <string name="insulin_units_label">Units (U)</string>
+    <string name="insulin_use_suggested">Use</string>
+    <string name="settings_account_title">Account</string>
+    <string name="settings_logout">Log out</string>
+    <string name="settings_logout_confirm">This will sign you out of LibreLinkUp. Your local history and settings stay on this device.</string>
     <string name="insulin_type_label">Insulin Type</string>
     <string name="insulin_no_doses">No doses recorded yet.</string>
 
@@ -90,6 +94,7 @@
     <string name="calc_suggested_offset">Suggested Bolus (Offset)</string>
     <string name="calc_breakdown_label">(Carbs: %1$.2f + Corr: %2$.2f)</string>
     <string name="calc_basal_expiring_warning">Basal is expiring soon! Applied +20% adjustment.</string>
+    <string name="calc_basal_expiring_warning_short">Basal expiring: +20% applied</string>
     <string name="calc_considerations_title">Considerations</string>
     <string name="calc_considerations_text">Calculations are based on your configured TDI and rules. Always confirm with your physician. If basal is within 2 hours of expiration, bolus is increased by 20% to prevent drift.</string>
 

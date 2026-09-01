@@ -24,6 +24,11 @@ object LibreService {
         userId = id
     }
 
+    fun clearAuth() {
+        authToken = null
+        userId = null
+    }
+
     fun updateRegion(region: String) {
         val newBaseUrl = "https://api-$region.libreview.io/"
         if (baseUrl != newBaseUrl) {

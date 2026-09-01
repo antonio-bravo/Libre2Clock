@@ -40,6 +40,9 @@ import com.tonio.libre2clock.data.repository.InsulinProcessor
 import com.tonio.libre2clock.ui.insulin.InsulinDoseDialog
 import com.tonio.libre2clock.util.TimestampParser
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -74,6 +77,8 @@ fun DashboardScreen(
     val graphWindowDays by viewModel.graphWindowDays.collectAsStateWithLifecycle()
     val currentSensorError by viewModel.currentSensorError.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
+    val icRuleConstant by viewModel.icRuleConstant.collectAsStateWithLifecycle()
+    val targetGlucose by viewModel.targetGlucose.collectAsStateWithLifecycle()
 
     var showCapillaryDialog by remember { mutableStateOf(false) }
     var capillaryValueText by remember { mutableStateOf("") }
@@ -202,7 +207,10 @@ fun DashboardScreen(
                     onNavigateToHub = onNavigateToInsulinHub,
                     manualTdi = manualTdi,
                     manualIsf = manualIsf,
-                    isfRuleConstant = isfRuleConstant
+                    isfRuleConstant = isfRuleConstant,
+                    icRuleConstant = icRuleConstant,
+                    targetGlucose = targetGlucose,
+                    currentGlucose = currentGlucose
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 DashboardSlidesCard(
@@ -337,12 +345,24 @@ fun InsulinHealthCard(
     onNavigateToHub: () -> Unit,
     manualTdi: Double?,
     manualIsf: Double?,
-    isfRuleConstant: Int
+    isfRuleConstant: Int,
+    icRuleConstant: Int,
+    targetGlucose: Int,
+    currentGlucose: GlucoseMeasurement?
 ) {
     val pagerState = rememberPagerState(pageCount = { 2 })
     val today = LocalDate.now()
     val yesterday = today.minusDays(1)
-    
+
+    // IOB decays continuously with time, so it must refresh periodically, not just when doses change.
+    var nowTick by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(60_000)
+            nowTick = System.currentTimeMillis()
+        }
+    }
+
     val totalToday = remember(doses) { InsulinProcessor.calculateDailyTotal(doses, today) }
     val todayRapid = remember(doses) { InsulinProcessor.calculateDailyTotal(doses, today, InsulinType.RAPID) }
     val todaySlow = remember(doses) { InsulinProcessor.calculateDailyTotal(doses, today, InsulinType.SLOW) }
@@ -352,14 +372,37 @@ fun InsulinHealthCard(
     val currentIsf = InsulinProcessor.calculateISF(tdi, isfRuleConstant, manualIsf)
     
     val yesterdaySplit = remember(doses) { InsulinProcessor.calculateDailyTotalSplit(doses, yesterday) }
-    val totalIOB = remember(doses) { InsulinProcessor.calculateTotalIOB(doses) }
-    val rapidIOB = remember(doses) { doses.filter { it.type == InsulinType.RAPID }.let { InsulinProcessor.calculateTotalIOB(it) } }
-    val slowIOB = remember(doses) { doses.filter { it.type == InsulinType.SLOW }.let { InsulinProcessor.calculateTotalIOB(it) } }
+    val totalIOB = remember(doses, nowTick) { InsulinProcessor.calculateTotalIOB(doses) }
+    val rapidIOB = remember(doses, nowTick) { doses.filter { it.type == InsulinType.RAPID }.let { InsulinProcessor.calculateTotalIOB(it) } }
+    val slowIOB = remember(doses, nowTick) { doses.filter { it.type == InsulinType.SLOW }.let { InsulinProcessor.calculateTotalIOB(it) } }
     
-    val activeThreads = remember(doses) { doses.count { InsulinProcessor.calculateIOB(it) > 0 } }
+    val activeThreads = remember(doses, nowTick) { doses.count { InsulinProcessor.calculateIOB(it) > 0 } }
     
     val weekAvg = remember(doses) { InsulinProcessor.calculateAverageDailySplit(doses, 7) }
     val monthAvg = remember(doses) { InsulinProcessor.calculateAverageDailySplit(doses, 30) }
+
+    // Parses every dose's timestamp (exception-heavy); keep it off the composition/main thread.
+    var isBasalExpiringSoon by remember { mutableStateOf(false) }
+    LaunchedEffect(doses) {
+        isBasalExpiringSoon = withContext(Dispatchers.Default) {
+            InsulinProcessor.isBasalExpiringSoon(doses)
+        }
+    }
+
+    val suggestedUnits = remember(currentGlucose, tdi, currentIsf, targetGlucose, isBasalExpiringSoon) {
+        val glucoseValue = currentGlucose?.calibratedValue ?: currentGlucose?.value
+        glucoseValue?.let {
+            InsulinProcessor.getSuggestedBolusDetailed(
+                carbs = 0.0,
+                currentGlucose = it,
+                targetGlucose = targetGlucose,
+                tdi = tdi,
+                icConstant = icRuleConstant,
+                isf = currentIsf,
+                isBasalExpiringSoon = isBasalExpiringSoon
+            ).total
+        }
+    }
 
     var showAddDialog by remember { mutableStateOf(false) }
 
@@ -461,6 +504,8 @@ fun InsulinHealthCard(
         InsulinDoseDialog(
             rapidDuration = 240, // 4h default
             slowDuration = 1440, // 24h default
+            suggestedUnits = suggestedUnits,
+            isBasalExpiringSoon = isBasalExpiringSoon,
             onDismiss = { showAddDialog = false },
             onConfirm = {
                 onAddDose(it)

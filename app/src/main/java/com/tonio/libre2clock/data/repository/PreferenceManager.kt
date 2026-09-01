@@ -851,6 +851,7 @@ class PreferenceManager(private val context: Context) {
         context.dataStore.edit { preferences ->
             preferences.remove(TOKEN_KEY)
             preferences.remove(USER_ID_KEY)
+            preferences.remove(PATIENT_ID_KEY)
         }
     }
 

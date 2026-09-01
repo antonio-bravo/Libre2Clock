@@ -28,6 +28,7 @@ class GlucoseRepositoryImpl(
 ) : GlucoseRepository {
 
     private val historyDb = GlucoseHistoryDatabaseHelper(context.applicationContext)
+    private val credentialStore = SecureCredentialStore(context.applicationContext)
     private val historicalState = MutableStateFlow<List<GlucoseMeasurement>>(emptyList())
     private val _dataVersion = MutableStateFlow(0L)
     override val dataVersion: Flow<Long> = _dataVersion.asStateFlow()
@@ -82,6 +83,7 @@ class GlucoseRepositoryImpl(
                 preferenceManager.saveAuth(token, userId)
                 preferenceManager.saveDemoMode(false)
                 preferenceManager.clearActiveSensorInfo()
+                credentialStore.saveCredentials(email, password)
                 Result.success(Unit)
             } else {
                 Result.failure(Exception("Login failed with status ${response.status}"))
@@ -93,6 +95,13 @@ class GlucoseRepositoryImpl(
 
     override suspend fun fetchLatestGlucose(): Result<GlucoseMeasurement> {
         return fetchLatestGlucoseInternal(persistArchive = true)
+    }
+
+    override suspend fun logout() {
+        patientId = null
+        LibreService.clearAuth()
+        preferenceManager.clearAuth()
+        credentialStore.clearCredentials()
     }
 
     override suspend fun refreshHistoricalGlucoseWindow(): Result<GlucoseMeasurement> {
@@ -134,7 +143,7 @@ class GlucoseRepositoryImpl(
         }
     }
 
-    private suspend fun fetchLatestGlucoseInternal(persistArchive: Boolean): Result<GlucoseMeasurement> {
+    private suspend fun fetchLatestGlucoseInternal(persistArchive: Boolean, allowReauth: Boolean = true): Result<GlucoseMeasurement> {
         val demoEnabled = preferenceManager.isDemoMode.first()
         if (demoEnabled) {
             val now = Instant.now()
@@ -236,6 +245,14 @@ class GlucoseRepositoryImpl(
             }
         } catch (e: Exception) {
             e.printStackTrace()
+            if (e is retrofit2.HttpException && e.code() == 401) {
+                // Session expired: try a silent re-login with the stored credentials before giving up.
+                val credentials = if (allowReauth) credentialStore.getCredentials() else null
+                if (credentials != null && login(credentials.first, credentials.second).isSuccess) {
+                    return fetchLatestGlucoseInternal(persistArchive, allowReauth = false)
+                }
+                logout()
+            }
             Result.failure(e)
         }
     }
