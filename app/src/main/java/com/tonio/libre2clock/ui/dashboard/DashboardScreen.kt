@@ -80,6 +80,20 @@ fun DashboardScreen(
     val icRuleConstant by viewModel.icRuleConstant.collectAsStateWithLifecycle()
     val targetGlucose by viewModel.targetGlucose.collectAsStateWithLifecycle()
 
+    // Measures time from entering/returning to Dashboard until metrics/graph are ready to show.
+    val screenEnterAtMs = remember { System.currentTimeMillis() }
+    var enterTimingRecorded by remember { mutableStateOf(false) }
+    LaunchedEffect(graphData, dashboardMetrics) {
+        if (!enterTimingRecorded) {
+            enterTimingRecorded = true
+            com.tonio.libre2clock.util.SectionPerfTelemetry.record(
+                section = "dashboard_screen_enter",
+                durationMs = System.currentTimeMillis() - screenEnterAtMs,
+                cacheHit = true
+            )
+        }
+    }
+
     var showCapillaryDialog by remember { mutableStateOf(false) }
     var capillaryValueText by remember { mutableStateOf("") }
     var capillaryDateText by remember { mutableStateOf("") }

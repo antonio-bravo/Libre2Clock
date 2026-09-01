@@ -1130,6 +1130,11 @@ private fun getLocalizedSectionName(section: String): String {
         "report_agp_v1", "report_agp_v2" -> stringResource(R.string.settings_perf_section_report_agp)
         "report_daily_v1", "report_daily_v2" -> stringResource(R.string.settings_perf_section_report_daily)
         "settings_range_insights_v1" -> stringResource(R.string.settings_perf_section_range_insights)
+        "insulin_basal_expiry" -> stringResource(R.string.settings_perf_section_insulin_basal_expiry)
+        "insulin_bolus_calc" -> stringResource(R.string.settings_perf_section_insulin_bolus_calc)
+        "capillary_screen_enter" -> stringResource(R.string.settings_perf_section_capillary_enter)
+        "capillary_screen_stats" -> stringResource(R.string.settings_perf_section_capillary_stats)
+        "dashboard_screen_enter" -> stringResource(R.string.settings_perf_section_dashboard_enter)
         else -> stringResource(R.string.settings_perf_section_unknown, section)
     }
 }

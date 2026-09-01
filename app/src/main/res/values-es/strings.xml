@@ -294,6 +294,11 @@
     <string name="settings_perf_section_report_agp">Gráfico AGP</string>
     <string name="settings_perf_section_report_daily">Resúmenes Diarios</string>
     <string name="settings_perf_section_range_insights">Análisis de Rangos</string>
+    <string name="settings_perf_section_insulin_basal_expiry">Insulina: Chequeo Basal</string>
+    <string name="settings_perf_section_insulin_bolus_calc">Insulina: Cálculo de Bolo</string>
+    <string name="settings_perf_section_capillary_enter">Capilar: Tiempo de Entrada</string>
+    <string name="settings_perf_section_capillary_stats">Capilar: Cálculo de Stats</string>
+    <string name="settings_perf_section_dashboard_enter">Dashboard: Tiempo de Entrada</string>
     <string name="settings_perf_section_unknown">Sección desconocida (%1$s)</string>
 
     <string name="settings_schedule_interval_row">Intervalo: %1$s | Inicio: :%2$s</string>

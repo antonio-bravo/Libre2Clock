@@ -294,6 +294,11 @@
     <string name="settings_perf_section_report_agp">AGP Graph</string>
     <string name="settings_perf_section_report_daily">Daily Summaries</string>
     <string name="settings_perf_section_range_insights">Range Insights</string>
+    <string name="settings_perf_section_insulin_basal_expiry">Insulin: Basal Expiry Check</string>
+    <string name="settings_perf_section_insulin_bolus_calc">Insulin: Bolus Calculation</string>
+    <string name="settings_perf_section_capillary_enter">Capillary Screen: Enter Time</string>
+    <string name="settings_perf_section_capillary_stats">Capillary Screen: Stats Calc</string>
+    <string name="settings_perf_section_dashboard_enter">Dashboard: Enter Time</string>
     <string name="settings_perf_section_unknown">Unknown Section (%1$s)</string>
 
     <string name="settings_schedule_interval_row">Interval: %1$s | Start: :%2$s</string>

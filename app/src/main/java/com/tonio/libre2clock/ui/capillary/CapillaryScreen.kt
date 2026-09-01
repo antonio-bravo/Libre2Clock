@@ -20,10 +20,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tonio.libre2clock.R
 import com.tonio.libre2clock.data.model.CapillaryMeasurement
 import com.tonio.libre2clock.ui.settings.SettingsViewModel
+import com.tonio.libre2clock.util.SectionPerfTelemetry
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlin.math.abs
+import kotlin.system.measureTimeMillis
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,20 +33,44 @@ fun CapillaryScreen(
     viewModel: SettingsViewModel,
     onBack: () -> Unit
 ) {
+    // Measures how long it takes for the shared ViewModel's flows to deliver their first
+    // value after entering this screen (cold-start subscription lag is a common jank source).
+    val screenEnterAtMs = remember { System.currentTimeMillis() }
+    var enterTimingRecorded by remember { mutableStateOf(false) }
+
     val capillaryReadings by viewModel.capillaryReadings.collectAsStateWithLifecycle()
     val currentGlucose by viewModel.currentGlucose.collectAsStateWithLifecycle()
+
+    LaunchedEffect(capillaryReadings, currentGlucose) {
+        if (!enterTimingRecorded) {
+            enterTimingRecorded = true
+            SectionPerfTelemetry.record(
+                section = "capillary_screen_enter",
+                durationMs = System.currentTimeMillis() - screenEnterAtMs,
+                cacheHit = true
+            )
+        }
+    }
 
     var showCapillaryDialog by remember { mutableStateOf(false) }
     var capillaryValueText by remember { mutableStateOf("") }
     var capillaryDateText by remember { mutableStateOf("") }
 
-    val validReadings = capillaryReadings.filter { it.sensorValue != null && it.sensorValue != 0 }
-    val avgDeviation = if (validReadings.isNotEmpty()) {
-        validReadings.map { reading ->
-            val sensor = reading.sensorValue!!
-            abs(reading.value - sensor).toDouble() / sensor * 100.0
-        }.average()
-    } else null
+    val (validReadings, avgDeviation) = remember(capillaryReadings) {
+        var result: Pair<List<CapillaryMeasurement>, Double?>
+        val duration = measureTimeMillis {
+            val valid = capillaryReadings.filter { it.sensorValue != null && it.sensorValue != 0 }
+            val avg = if (valid.isNotEmpty()) {
+                valid.map { reading ->
+                    val sensor = reading.sensorValue!!
+                    abs(reading.value - sensor).toDouble() / sensor * 100.0
+                }.average()
+            } else null
+            result = valid to avg
+        }
+        SectionPerfTelemetry.record(section = "capillary_screen_stats", durationMs = duration, cacheHit = true)
+        result
+    }
 
     Scaffold(
         topBar = {
