@@ -1,5 +1,46 @@
 # Changelog
 
+## c963800 (Sep 01, 2026 21:12:44)
+Loggin and improve performance — antonio-bravo
+[detail](#c963800-details)
+
+<details id='c963800-details'>
+<summary>Changed files</summary>
+
+- .idea/misc.xml [Modified]
+- app/build.gradle.kts [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/api/LibreService.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepository.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/InsulinProcessor.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/SecureCredentialStore.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsCacheRepository.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## dcd788d (Aug 22, 2026 14:34:09)
+Update changelog — github-actions[bot]
+[detail](#dcd788d-details)
+
+<details id='dcd788d-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## ee30cd3 (Aug 22, 2026 16:32:07)
 fix copy and summary sensor errors — antonio-bravo
 [detail](#ee30cd3-details)
@@ -731,30 +772,6 @@ Added Alarm Schedule and clean backup buttons — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-</details>
-
-
----
-## 9971929 (Jul 27, 2026 20:54:01)
-Update changelog — github-actions[bot]
-[detail](#9971929-details)
-
-<details id='9971929-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## b2ee15f (Jul 27, 2026 22:53:40)
-fix workflow — antonio-bravo
-[detail](#b2ee15f-details)
-
-<details id='b2ee15f-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/build-release.yml [Modified]
 </details>
 
 
