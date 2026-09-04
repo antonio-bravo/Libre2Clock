@@ -1,5 +1,30 @@
 # Changelog
 
+## d3002d3 (Sep 04, 2026 09:57:06)
+fix HbA1c after optimization — antonio-bravo
+[detail](#d3002d3-details)
+
+<details id='d3002d3-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsCacheRepository.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+</details>
+
+
+---
+## cbef033 (Sep 04, 2026 07:25:42)
+Update changelog — github-actions[bot]
+[detail](#cbef033-details)
+
+<details id='cbef033-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## dfe2afa (Sep 04, 2026 09:25:28)
 improve performance — antonio-bravo
 [detail](#dfe2afa-details)
@@ -729,45 +754,6 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
-</details>
-
-
----
-## 8320f74 (Aug 09, 2026 22:50:37)
-api test & fix parsing datetime — antonio-bravo
-[detail](#8320f74-details)
-
-<details id='8320f74-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/TimestampParser.kt [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## d319c4d (Aug 06, 2026 23:18:22)
-audot calibrated per range — antonio-bravo
-[detail](#d319c4d-details)
-
-<details id='d319c4d-details'>
-<summary>Changed files</summary>
-
-- CALIBRATION_SYSTEM.md [Modified]
-- README.md [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseProcessor.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
 </details>
 
 
