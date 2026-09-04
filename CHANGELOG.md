@@ -1,5 +1,35 @@
 # Changelog
 
+## dfe2afa (Sep 04, 2026 09:25:28)
+improve performance — antonio-bravo
+[detail](#dfe2afa-details)
+
+<details id='dfe2afa-details'>
+<summary>Changed files</summary>
+
+- .idea/planningMode.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/capillary/CapillaryScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
+</details>
+
+
+---
+## 09e42cb (Sep 01, 2026 19:43:09)
+Update changelog — github-actions[bot]
+[detail](#09e42cb-details)
+
+<details id='09e42cb-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 2da5626 (Sep 01, 2026 21:42:47)
 add performance metrix — antonio-bravo
 [detail](#2da5626-details)
@@ -738,40 +768,6 @@ audot calibrated per range — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
 - app/src/main/res/values-es/strings.xml [Modified]
 - app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## f69f5b5 (Aug 03, 2026 11:42:21)
-Update changelog — github-actions[bot]
-[detail](#f69f5b5-details)
-
-<details id='f69f5b5-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 32e7182 (Aug 03, 2026 13:42:06)
-fix automatic IFS, TDI + battery optmizer and large name in acronym — antonio-bravo
-[detail](#32e7182-details)
-
-<details id='32e7182-details'>
-<summary>Changed files</summary>
-
-- .idea/misc.xml [Modified]
-- .idea/planningMode.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-- gradle/gradle-daemon-jvm.properties [Modified]
 </details>
 
 
