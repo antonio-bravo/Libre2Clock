@@ -87,14 +87,15 @@ class DashboardMetricsCacheRepository(
                 "${capillaries.size}-${capillaries.first().timestamp}"
             } else "no-cap"
 
-            // Deliberately excludes the volatile "last" boundary item and live count: those change
-            // on every new CGM reading (every 1-5 min) and would defeat this cache entirely.
-            // The time bucket still guarantees the window is refreshed at least every 5 minutes.
+            // dataVersion changes for every persisted history update, including restores, so a
+            // result computed from an earlier archive can never be reused after that update.
             val timeBucket = System.currentTimeMillis() / HISTORICAL_SIGNATURE_BUCKET_MS
 
             return buildString {
                 append("tb=")
                 append(timeBucket)
+                append(";v=")
+                append(dataVersion)
                 append(";cp=")
                 append(capSig)
                 append(";f=")

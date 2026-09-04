@@ -92,13 +92,6 @@ class DashboardViewModel(
         }
     }
 
-    private val historicalMetricsTicker = flow {
-        while (true) {
-            emit(Unit)
-            delay(5 * 60_000)
-        }
-    }
-
     val sensorStatus: StateFlow<SensorStatus?> = combine(
         repository.activeSensorInfo,
         repository.isDemoMode,
@@ -210,7 +203,7 @@ class DashboardViewModel(
             HistoricalInputs(emptyList(), manualOffset, ranges, autoAdjust, autoRangeMode)
         },
         preferenceManager.capillaryReadings,
-        historicalMetricsTicker
+        repository.dataVersion
     ) { config, capillaries, _ ->
         val cutoff = Instant.now().minus(java.time.Duration.ofDays(90))
         val startEpochMs = cutoff.toEpochMilli()
