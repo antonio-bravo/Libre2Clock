@@ -109,15 +109,14 @@ class GlucoseRepositoryImpl(
     }
 
     override suspend fun getHistoricalGlucoseWindow(startEpochMs: Long, endEpochMs: Long, maxItems: Int): List<GlucoseMeasurement> {
-        val key = "$startEpochMs:$endEpochMs:$maxItems"
-        historicalWindowCache[key]?.let { return it.toList() }
+        val key = "${startEpochMs / WINDOW_CACHE_BUCKET_MS}:${endEpochMs / WINDOW_CACHE_BUCKET_MS}:$maxItems"
+        historicalWindowCache[key]?.let { return it }
 
         val window = withContext(Dispatchers.IO) {
             historyDb.readWindowNewestFirst(startEpochMs, endEpochMs, maxItems)
         }
 
-        historicalWindowCache[key] = window.toList()
-        return window
+        return Collections.unmodifiableList(window.toList()).also { historicalWindowCache[key] = it }
     }
 
     override suspend fun syncLocalArchiveFromPreferences() {
@@ -374,6 +373,7 @@ class GlucoseRepositoryImpl(
 
     companion object {
         private const val SNAPSHOT_MIRROR_INTERVAL_MS = 15L * 60L * 1000L
+        private const val WINDOW_CACHE_BUCKET_MS = 60_000L
         private const val MAX_WINDOW_CACHE_ENTRIES = 8
     }
 }

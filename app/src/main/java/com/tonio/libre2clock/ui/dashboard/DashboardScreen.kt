@@ -4,11 +4,10 @@ import android.content.ClipData
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -197,92 +196,97 @@ fun DashboardScreen(
                 )
             }
         ) { innerPadding ->
-            Column(
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .padding(16.dp)
-                    .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                GlucoseCard(currentGlucose, dashboardMetrics)
-                Spacer(modifier = Modifier.height(16.dp))
-                SensorHealthCard(
-                    status = sensorStatus,
-                    errorSummary = currentSensorError,
-                    isRefreshing = isRefreshing,
-                    isDemoMode = isDemoMode,
-                    onRefresh = viewModel::refresh
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                InsulinHealthCard(
-                    doses = insulinDoses,
-                    onAddDose = onAddDose,
-                    onNavigateToHub = onNavigateToInsulinHub,
-                    manualTdi = manualTdi,
-                    manualIsf = manualIsf,
-                    isfRuleConstant = isfRuleConstant,
-                    icRuleConstant = icRuleConstant,
-                    targetGlucose = targetGlucose,
-                    currentGlucose = currentGlucose
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                DashboardSlidesCard(
-                    metrics = dashboardMetrics,
-                    isRefreshing = isHistoryRefreshing,
-                    onRefresh = viewModel::refreshHistoryWindow
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(text = "Trend Graph", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                    
-                    var showGraphMenu by remember { mutableStateOf(false) }
-                    Box {
-                        TextButton(
-                            onClick = { showGraphMenu = true },
-                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                            modifier = Modifier.height(32.dp)
-                        ) {
-                            Text(
-                                text = "${graphWindowDays}d",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Icon(
-                                imageVector = Icons.Default.ArrowDropDown,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        DropdownMenu(
-                            expanded = showGraphMenu,
-                            onDismissRequest = { showGraphMenu = false }
-                        ) {
-                            listOf(1, 2, 7, 14, 30, 90).forEach { days ->
-                                DropdownMenuItem(
-                                    text = { Text("${days} days") },
-                                    onClick = {
-                                        viewModel.setGraphWindow(days)
-                                        showGraphMenu = false
-                                    }
+                item {
+                    GlucoseCard(currentGlucose, dashboardMetrics)
+                }
+                item {
+                    SensorHealthCard(
+                        status = sensorStatus,
+                        errorSummary = currentSensorError,
+                        isRefreshing = isRefreshing,
+                        isDemoMode = isDemoMode,
+                        onRefresh = viewModel::refresh
+                    )
+                }
+                item {
+                    InsulinHealthCard(
+                        doses = insulinDoses,
+                        onAddDose = onAddDose,
+                        onNavigateToHub = onNavigateToInsulinHub,
+                        manualTdi = manualTdi,
+                        manualIsf = manualIsf,
+                        isfRuleConstant = isfRuleConstant,
+                        icRuleConstant = icRuleConstant,
+                        targetGlucose = targetGlucose,
+                        currentGlucose = currentGlucose
+                    )
+                }
+                item {
+                    DashboardSlidesCard(
+                        metrics = dashboardMetrics,
+                        isRefreshing = isHistoryRefreshing,
+                        onRefresh = viewModel::refreshHistoryWindow
+                    )
+                }
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(text = "Trend Graph", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+
+                        var showGraphMenu by remember { mutableStateOf(false) }
+                        Box {
+                            TextButton(
+                                onClick = { showGraphMenu = true },
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                                modifier = Modifier.height(32.dp)
+                            ) {
+                                Text(
+                                    text = "${graphWindowDays}d",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.primary
                                 )
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = showGraphMenu,
+                                onDismissRequest = { showGraphMenu = false }
+                            ) {
+                                listOf(1, 2, 7, 14, 30, 90).forEach { days ->
+                                    DropdownMenuItem(
+                                        text = { Text("${days} days") },
+                                        onClick = {
+                                            viewModel.setGraphWindow(days)
+                                            showGraphMenu = false
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
-
-                InteractiveTrendGraph(
-                    measurements = graphData,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(230.dp)
-                )
+                item {
+                    InteractiveTrendGraph(
+                        measurements = graphData,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(230.dp)
+                    )
+                }
             }
         }
     }

@@ -56,17 +56,19 @@ fun CapillaryScreen(
     var capillaryValueText by remember { mutableStateOf("") }
     var capillaryDateText by remember { mutableStateOf("") }
 
-    val (validReadings, avgDeviation) = remember(capillaryReadings) {
-        var result: Pair<List<CapillaryMeasurement>, Double?>
+    val avgDeviation = remember(capillaryReadings) {
+        var result: Double?
         val duration = measureTimeMillis {
-            val valid = capillaryReadings.filter { it.sensorValue != null && it.sensorValue != 0 }
-            val avg = if (valid.isNotEmpty()) {
-                valid.map { reading ->
-                    val sensor = reading.sensorValue!!
-                    abs(reading.value - sensor).toDouble() / sensor * 100.0
-                }.average()
-            } else null
-            result = valid to avg
+            var totalDeviation = 0.0
+            var validCount = 0
+            capillaryReadings.forEach { reading ->
+                val sensor = reading.sensorValue ?: return@forEach
+                if (sensor == 0) return@forEach
+
+                totalDeviation += abs(reading.value - sensor).toDouble() / sensor * 100.0
+                validCount++
+            }
+            result = if (validCount > 0) totalDeviation / validCount else null
         }
         SectionPerfTelemetry.record(section = "capillary_screen_stats", durationMs = duration, cacheHit = true)
         result

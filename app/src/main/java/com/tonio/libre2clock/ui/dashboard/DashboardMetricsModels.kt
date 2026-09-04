@@ -91,8 +91,8 @@ object DashboardMetricsCalculator {
         val lunchMonth = mutableListOf<GlucoseMeasurement>()
         val dinnerMonth = mutableListOf<GlucoseMeasurement>()
 
-        var minA1cInstant = now
-        var maxA1cInstant = Instant.EPOCH
+        var a1cRawSum = 0L
+        var a1cCalibratedSum = 0L
 
         measurements.forEach { m ->
             // Filter out common sensor failure values (e.g. exactly 40 or 0)
@@ -113,13 +113,13 @@ object DashboardMetricsCalculator {
             }
             if (!instant.isBefore(startOfA1cWindow)) {
                 a1cItems.add(m)
-                if (instant.isBefore(minA1cInstant)) minA1cInstant = instant
-                if (instant.isAfter(maxA1cInstant)) maxA1cInstant = instant
+                a1cRawSum += m.value
+                a1cCalibratedSum += m.calibratedValue
             }
         }
 
-        val avgRawForA1c = if (a1cItems.isNotEmpty()) a1cItems.map { it.value }.average() else 0.0
-        val avgCalibratedForA1c = if (a1cItems.isNotEmpty()) a1cItems.map { it.calibratedValue }.average() else 0.0
+        val avgRawForA1c = if (a1cItems.isNotEmpty()) a1cRawSum.toDouble() / a1cItems.size else 0.0
+        val avgCalibratedForA1c = if (a1cItems.isNotEmpty()) a1cCalibratedSum.toDouble() / a1cItems.size else 0.0
         
         val estimatedA1c = if (avgCalibratedForA1c > 10.0 && a1cItems.size > 2) { 
             val gmiRaw = 3.31 + (0.02392 * avgRawForA1c)
