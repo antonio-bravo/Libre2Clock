@@ -204,14 +204,18 @@ class DashboardViewModel(
         preferenceManager.autoRangeOffsetMode,
         preferenceManager.sensorLogs
     ) { args: Array<Any> ->
+        @Suppress("UNCHECKED_CAST")
         val live = args[0] as List<GlucoseMeasurement>
         val retentionDays = args[1] as Int
         val version = args[2] as Long
+        @Suppress("UNCHECKED_CAST")
         val capillaries = args[3] as List<com.tonio.libre2clock.data.model.CapillaryMeasurement>
         val manualOffset = args[4] as Int
+        @Suppress("UNCHECKED_CAST")
         val ranges = args[5] as List<com.tonio.libre2clock.data.model.GlucoseOffsetRange>
         val autoAdjust = args[6] as Boolean
         val autoRangeMode = args[7] as AutoRangeOffsetMode
+        @Suppress("UNCHECKED_CAST")
         val sensorLogs = args[8] as List<com.tonio.libre2clock.data.model.SensorLog>
 
         val liveMetrics = DashboardMetricsCalculator.calculateLive(live)

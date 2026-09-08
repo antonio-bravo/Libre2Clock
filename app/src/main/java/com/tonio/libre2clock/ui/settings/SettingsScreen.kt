@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -115,7 +116,7 @@ fun SettingsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Icon(Icons.Default.Logout, contentDescription = null)
+                    Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(stringResource(R.string.settings_logout))
                 }
