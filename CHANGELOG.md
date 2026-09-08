@@ -1,5 +1,38 @@
 # Changelog
 
+## 0ec5405 (Sep 08, 2026 12:12:38)
+Improvements — antonio-bravo
+[detail](#0ec5405-details)
+
+<details id='0ec5405-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/capillary/CapillaryScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/components/DateTimeEntryFields.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/components/HourMinuteInputFields.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsCacheRepository.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 96cc8c1 (Sep 04, 2026 07:57:22)
+Update changelog — github-actions[bot]
+[detail](#96cc8c1-details)
+
+<details id='96cc8c1-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## d3002d3 (Sep 04, 2026 09:57:06)
 fix HbA1c after optimization — antonio-bravo
 [detail](#d3002d3-details)
@@ -708,49 +741,6 @@ Update changelog — github-actions[bot]
 [detail](#728bd6d-details)
 
 <details id='728bd6d-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 9221371 (Aug 13, 2026 17:24:51)
-Optimized and add SQL Lite — antonio-bravo
-[detail](#9221371-details)
-
-<details id='9221371-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/MainActivity.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/local/GlucoseHistoryDatabaseHelper.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/data/local/SectionCacheDatabaseHelper.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepository.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/di/AppContainer.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsCacheRepository.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/report/ReportCacheModels.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/ui/report/ReportSectionCacheRepository.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsSectionCacheRepository.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/SectionPerfTelemetry.kt [Deleted]
-</details>
-
-
----
-## 289681b (Aug 09, 2026 20:50:53)
-Update changelog — github-actions[bot]
-[detail](#289681b-details)
-
-<details id='289681b-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
