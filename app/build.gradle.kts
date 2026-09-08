@@ -36,10 +36,11 @@ android {
 
     signingConfigs {
         create("release") {
+            val pass = System.getenv("KEYSTORE_PASSWORD")
             storeFile = file(System.getenv("KEYSTORE_PATH") ?: "release.keystore")
-            storePassword = System.getenv("KEYSTORE_PASSWORD")
+            storePassword = pass
             keyAlias = System.getenv("KEY_ALIAS")
-            keyPassword = System.getenv("KEY_PASSWORD")
+            keyPassword = System.getenv("KEY_PASSWORD") ?: pass
         }
     }
 
