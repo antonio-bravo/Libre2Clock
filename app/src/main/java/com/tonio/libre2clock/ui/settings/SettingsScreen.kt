@@ -30,6 +30,7 @@ fun SettingsScreen(
 ) {
     var showLogoutConfirmDialog by remember { mutableStateOf(false) }
     val sectionPerfStats by viewModel.sectionPerfStats.collectAsStateWithLifecycle()
+    val libreLinkUpEmail by viewModel.libreLinkUpEmail.collectAsStateWithLifecycle()
     val dashboardEnterStats = sectionPerfStats.find { it.section == "dashboard_screen_enter" }
     val historicalStats = sectionPerfStats.find { it.section == "historical_metrics_v2" }
     val calibrationStats = sectionPerfStats.find { it.section == "settings_range_insights_v1" }
@@ -54,7 +55,29 @@ fun SettingsScreen(
         ) {
             item {
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
+                SettingsSection(title = "Cuenta LibreLinkUp") {
+                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.Person,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                libreLinkUpEmail ?: "Sesión iniciada",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(
+                                "Esta es tu fuente de datos de glucosa.",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+
                 SettingsCategoryItem(
                     title = stringResource(R.string.settings_watch_notifications),
                     description = stringResource(R.string.settings_watch_notifications_desc),
@@ -94,7 +117,7 @@ fun SettingsScreen(
 
                 SettingsCategoryItem(
                     title = "Sincronización en la Nube",
-                    description = "Configura tu cuenta de Google para sincronizar entre dispositivos.",
+                    description = "Sincroniza tus datos entre dispositivos usando tu cuenta de Google.",
                     icon = Icons.Default.CloudSync,
                     onClick = onNavigateToCloud
                 )

@@ -81,6 +81,7 @@ class GlucoseRepositoryImpl(
                 val userId = data.user.id
                 LibreService.setAuth(token, userId)
                 preferenceManager.saveAuth(token, userId)
+                preferenceManager.saveLibreLinkUpEmail(email)
                 preferenceManager.saveDemoMode(false)
                 preferenceManager.clearActiveSensorInfo()
                 credentialStore.saveCredentials(email, password)

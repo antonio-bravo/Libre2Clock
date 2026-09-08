@@ -52,6 +52,9 @@ class SettingsViewModel(
     val firebaseUser = authManager.user
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    val libreLinkUpEmail: StateFlow<String?> = preferenceManager.libreLinkUpEmail
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
     val isCloudSyncEnabled: StateFlow<Boolean> = preferenceManager.isCloudSyncEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 

@@ -29,50 +29,43 @@ class CloudSyncManager(
         scope.launch {
             combine(
                 authManager.user,
-                preferenceManager.isCloudSyncEnabled
-            ) { user, isEnabled ->
-                user to isEnabled
-            }.distinctUntilChanged().collect { (user, isEnabled) ->
-                if (user != null && isEnabled) {
-                    startSync(user.uid)
+                preferenceManager.isCloudSyncEnabled,
+                preferenceManager.patientId
+            ) { user, isEnabled, patientId ->
+                Triple(user, isEnabled, patientId)
+            }.distinctUntilChanged().collect { (user, isEnabled, patientId) ->
+                if (user != null && isEnabled && patientId != null) {
+                    startSync(user.uid, patientId)
                 }
             }
         }
     }
 
-    private fun startSync(userId: String) {
-        // Sync Settings
+    private fun startSync(googleUid: String, patientId: String) {
         scope.launch {
-            // Push local settings to cloud when they change
-            // For simplicity, we just push the whole payload occasionally or on specific events
-            // In a real app, we'd watch individual flows. 
-            // Here we'll just push whenever the backup payload would have been updated.
-            // But for now, let's just do an initial push and listen for remote changes.
-            syncSettingsToCloud(userId)
-            
-            // Listen for remote settings changes
-            listenToRemoteSettings(userId)
-            
-            // Sync History
-            syncHistory(userId)
+            syncSettingsToCloud(googleUid, patientId)
+            listenToRemoteSettings(googleUid, patientId)
+            syncHistory(googleUid, patientId)
         }
     }
 
-    private suspend fun syncSettingsToCloud(userId: String) {
+    private suspend fun syncSettingsToCloud(googleUid: String, patientId: String) {
         try {
             val payload = preferenceManager.getCurrentBackupPayload()
-            firestore.collection("users").document(userId)
+            firestore.collection("users").document(googleUid)
+                .collection("patients").document(patientId)
                 .collection("config").document("settings")
                 .set(payload, SetOptions.merge())
                 .await()
-            Log.d("CloudSync", "Settings pushed to cloud")
+            Log.d("CloudSync", "Settings pushed for patient: $patientId")
         } catch (e: Exception) {
             Log.e("CloudSync", "Error pushing settings", e)
         }
     }
 
-    private fun listenToRemoteSettings(userId: String) {
-        firestore.collection("users").document(userId)
+    private fun listenToRemoteSettings(googleUid: String, patientId: String) {
+        firestore.collection("users").document(googleUid)
+            .collection("patients").document(patientId)
             .collection("config").document("settings")
             .addSnapshotListener { snapshot, e ->
                 if (e != null) return@addSnapshotListener
@@ -91,20 +84,21 @@ class CloudSyncManager(
             }
     }
 
-    private suspend fun syncHistory(userId: String) {
-        // Push local history to cloud
+    private suspend fun syncHistory(googleUid: String, patientId: String) {
         val localMeasurements = dbHelper.readAllNewestFirst()
         val batch = firestore.batch()
-        val historyColl = firestore.collection("users").document(userId).collection("glucose_history")
+        val historyColl = firestore.collection("users").document(googleUid)
+            .collection("patients").document(patientId)
+            .collection("glucose_history")
         
-        localMeasurements.take(500).forEach { m -> // Limit initial sync
+        localMeasurements.take(500).forEach { m -> 
             val docId = "${m.epochSeconds}-${m.value}"
             batch.set(historyColl.document(docId), m, SetOptions.merge())
         }
         
         try {
             batch.commit().await()
-            Log.d("CloudSync", "History pushed to cloud")
+            Log.d("CloudSync", "History pushed for patient: $patientId")
             preferenceManager.saveCloudSyncLastSuccessAt(System.currentTimeMillis())
         } catch (e: Exception) {
             Log.e("CloudSync", "Error pushing history", e)
