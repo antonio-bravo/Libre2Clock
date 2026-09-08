@@ -20,6 +20,7 @@ import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.InsulinDose
 import com.tonio.libre2clock.data.model.InsulinType
 import com.tonio.libre2clock.data.repository.InsulinProcessor
+import com.tonio.libre2clock.ui.components.DateHourMinuteInput
 import com.tonio.libre2clock.ui.settings.SettingsViewModel
 import com.tonio.libre2clock.util.SectionPerfTelemetry
 import kotlinx.coroutines.Dispatchers
@@ -756,17 +757,25 @@ fun InsulinDoseDialog(
     var carbsText by remember { mutableStateOf(initialDose?.carbs?.toString() ?: "") }
     var type by remember { mutableStateOf(initialDose?.type ?: InsulinType.RAPID) }
     
-    val now = Instant.now().atZone(ZoneId.systemDefault())
-    val currentFormattedDate = DateTimeFormatter.ofPattern("yyyy-MM-dd").format(now)
-    val currentFormattedTime = DateTimeFormatter.ofPattern("HH:mm").format(now)
+    val zone = ZoneId.systemDefault()
+    val now = Instant.now().atZone(zone)
 
-    var dateText by remember { 
-        val initialDate = initialDose?.timestamp?.substringBefore(" ") ?: ""
-        mutableStateOf(if (initialDate.isBlank()) currentFormattedDate else initialDate) 
+    var doseDate by remember {
+        val initialDateStr = initialDose?.timestamp?.substringBefore(" ")
+        val parsed = initialDateStr?.let {
+            runCatching { LocalDate.parse(it, DateTimeFormatter.ISO_LOCAL_DATE) }.getOrNull()
+        }
+        mutableStateOf(parsed ?: now.toLocalDate())
     }
-    var timeText by remember { 
-        val initialTime = initialDose?.timestamp?.substringAfter(" ") ?: ""
-        mutableStateOf(if (initialTime.isBlank()) currentFormattedTime else initialTime) 
+    var doseHour by remember {
+        val initialTimeStr = initialDose?.timestamp?.substringAfter(" ")
+        val h = initialTimeStr?.substringBefore(":") ?: now.hour.toString().padStart(2, '0')
+        mutableStateOf(h)
+    }
+    var doseMinute by remember {
+        val initialTimeStr = initialDose?.timestamp?.substringAfter(" ")
+        val m = if (initialTimeStr?.contains(":") == true) initialTimeStr.substringAfter(":") else now.minute.toString().padStart(2, '0')
+        mutableStateOf(m)
     }
 
     AlertDialog(
@@ -815,20 +824,15 @@ fun InsulinDoseDialog(
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = dateText,
-                        onValueChange = { dateText = it },
-                        label = { Text(stringResource(R.string.insulin_date_format_label)) },
-                        modifier = Modifier.weight(1f)
-                    )
-                    OutlinedTextField(
-                        value = timeText,
-                        onValueChange = { timeText = it },
-                        label = { Text(stringResource(R.string.insulin_time_format_label)) },
-                        modifier = Modifier.weight(0.7f)
-                    )
-                }
+                DateHourMinuteInput(
+                    date = doseDate,
+                    onDateChange = { doseDate = it },
+                    hour = doseHour,
+                    onHourChange = { doseHour = it },
+                    minute = doseMinute,
+                    onMinuteChange = { doseMinute = it },
+                    modifier = Modifier.fillMaxWidth()
+                )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(text = stringResource(R.string.insulin_type_label), style = MaterialTheme.typography.labelMedium)
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -844,7 +848,11 @@ fun InsulinDoseDialog(
             TextButton(onClick = {
                 val units = unitsText.toDoubleOrNull() ?: return@TextButton
                 val carbs = carbsText.toDoubleOrNull()
-                val timestamp = "$dateText $timeText"
+                
+                val h = doseHour.padStart(2, '0').ifBlank { "00" }
+                val m = doseMinute.padStart(2, '0').ifBlank { "00" }
+                val timestamp = "${doseDate.format(DateTimeFormatter.ISO_LOCAL_DATE)} $h:$m"
+                
                 onConfirm(
                     InsulinDose(
                         units = units,

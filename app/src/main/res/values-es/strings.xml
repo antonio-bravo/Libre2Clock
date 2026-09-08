@@ -86,7 +86,7 @@
     <string name="calc_manual_label">Valor Manual</string>
     <string name="dash_fs_label">FS: %1$.1f</string>
     <string name="calc_bolus_helper">Asistente de Bolo</string>
-    <string name="calc_carbs_label">Carbohidratos (g)</string>
+    <string name="calc_carbs_label">HC (g)</string>
     <string name="calc_glucose_label">Glucosa Actual (mg/dL)</string>
     <string name="calc_suggested_bolus">Unidades Sugeridas: %1$.2f</string>
     <string name="calc_suggested_bolus_dual">Unidades Sugeridas: %1$s</string>

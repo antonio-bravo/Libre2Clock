@@ -37,6 +37,7 @@ import com.tonio.libre2clock.data.repository.GlucoseProcessor
 import com.tonio.libre2clock.util.SensorErrorSummary
 import com.tonio.libre2clock.data.repository.InsulinProcessor
 import com.tonio.libre2clock.ui.insulin.InsulinDoseDialog
+import com.tonio.libre2clock.ui.components.DateHourMinuteInput
 import com.tonio.libre2clock.util.TimestampParser
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
@@ -95,7 +96,9 @@ fun DashboardScreen(
 
     var showCapillaryDialog by remember { mutableStateOf(false) }
     var capillaryValueText by remember { mutableStateOf("") }
-    var capillaryDateText by remember { mutableStateOf("") }
+    var capillaryDate by remember { mutableStateOf(LocalDate.now()) }
+    var capillaryHour by remember { mutableStateOf("") }
+    var capillaryMinute by remember { mutableStateOf("") }
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -180,7 +183,10 @@ fun DashboardScreen(
                     actions = {
                         IconButton(onClick = {
                             capillaryValueText = ""
-                            capillaryDateText = currentDateTimeText()
+                            val now = LocalTime.now()
+                            capillaryDate = LocalDate.now()
+                            capillaryHour = "%02d".format(now.hour)
+                            capillaryMinute = "%02d".format(now.minute)
                             showCapillaryDialog = true
                         }) {
                             Icon(
@@ -305,10 +311,13 @@ fun DashboardScreen(
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = capillaryDateText,
-                        onValueChange = { capillaryDateText = it },
-                        label = { Text(stringResource(R.string.capillary_timestamp_label)) },
+                    DateHourMinuteInput(
+                        date = capillaryDate,
+                        onDateChange = { capillaryDate = it },
+                        hour = capillaryHour,
+                        onHourChange = { capillaryHour = it },
+                        minute = capillaryMinute,
+                        onMinuteChange = { capillaryMinute = it },
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -327,7 +336,13 @@ fun DashboardScreen(
                     val value = capillaryValueText.toIntOrNull() ?: return@TextButton
                     val sensorValue = currentGlucose?.value
                     val delta = sensorValue?.let { value - it }
-                    val timestamp = capillaryDateText.ifBlank { currentDateTimeText() }
+                    val hour = capillaryHour.toIntOrNull() ?: 0
+                    val minute = capillaryMinute.toIntOrNull() ?: 0
+                    val timestamp = "%s %02d:%02d".format(
+                        capillaryDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
+                        hour,
+                        minute
+                    )
                     viewModel.addCapillaryReading(
                         CapillaryMeasurement(
                             value = value,
@@ -348,12 +363,6 @@ fun DashboardScreen(
             }
         )
     }
-}
-
-private fun currentDateTimeText(): String {
-    return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
-        .withZone(ZoneId.systemDefault())
-        .format(Instant.now())
 }
 
 @Composable

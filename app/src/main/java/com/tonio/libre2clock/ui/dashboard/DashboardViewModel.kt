@@ -192,56 +192,41 @@ class DashboardViewModel(
             }
     }.flowOn(Dispatchers.Default)
 
-    // Processed history for historical metrics (Slow: 90 days)
-    private val processedHistoricalData: Flow<List<GlucoseMeasurement>> = combine(
-        combine(
-            preferenceManager.glucoseOffset,
-            preferenceManager.glucoseOffsetRanges,
-            preferenceManager.autoAdjustEnabled,
-            preferenceManager.autoRangeOffsetMode
-        ) { manualOffset, ranges, autoAdjust, autoRangeMode ->
-            HistoricalInputs(emptyList(), manualOffset, ranges, autoAdjust, autoRangeMode)
-        },
+    val dashboardMetrics: StateFlow<DashboardMetrics> = combine(
+        processedLiveHistory,
+        preferenceManager.historyRetentionDays,
+        repository.dataVersion,
         preferenceManager.capillaryReadings,
-        repository.dataVersion
-    ) { config, capillaries, _ ->
+        preferenceManager.glucoseOffset,
+        preferenceManager.glucoseOffsetRanges,
+        preferenceManager.autoAdjustEnabled,
+        preferenceManager.autoRangeOffsetMode,
+        preferenceManager.sensorLogs
+    ) { args: Array<Any> ->
+        val live = args[0] as List<GlucoseMeasurement>
+        val retentionDays = args[1] as Int
+        val version = args[2] as Long
+        val capillaries = args[3] as List<com.tonio.libre2clock.data.model.CapillaryMeasurement>
+        val manualOffset = args[4] as Int
+        val ranges = args[5] as List<com.tonio.libre2clock.data.model.GlucoseOffsetRange>
+        val autoAdjust = args[6] as Boolean
+        val autoRangeMode = args[7] as AutoRangeOffsetMode
+        val sensorLogs = args[8] as List<com.tonio.libre2clock.data.model.SensorLog>
+
+        val liveMetrics = DashboardMetricsCalculator.calculateLive(live)
+        
         val cutoff = Instant.now().minus(java.time.Duration.ofDays(90))
         val startEpochMs = cutoff.toEpochMilli()
         val endEpochMs = Instant.now().toEpochMilli()
+        val rawHistorical = repository.getHistoricalGlucoseWindow(startEpochMs, endEpochMs, maxItems = 50000)
 
-        val calcContext = GlucoseProcessor.buildContext(
-            autoRangeOffsetMode = config.autoRangeMode,
-            userRanges = config.ranges,
-            capillaryReadings = capillaries
-        )
-
-        repository.getHistoricalGlucoseWindow(startEpochMs, endEpochMs, maxItems = 50000)
-            .map {
-                GlucoseProcessor.process(
-                    measurement = it,
-                    manualOffset = config.manualOffset,
-                    userRanges = config.ranges,
-                    autoAdjustEnabled = config.autoAdjust,
-                    autoRangeOffsetMode = config.autoRangeMode,
-                    capillaryReadings = capillaries,
-                    context = calcContext
-                )
-            }
-    }.flowOn(Dispatchers.Default)
-
-    val dashboardMetrics: StateFlow<DashboardMetrics> = combine(
-        processedLiveHistory,
-        processedHistoricalData,
-        preferenceManager.historyRetentionDays,
-        repository.dataVersion,
-        preferenceManager.capillaryReadings
-    ) { live, historical, retentionDays, version, capillaries ->
-        val liveMetrics = DashboardMetricsCalculator.calculateLive(live)
-        
         val signature = DashboardMetricsCacheRepository.buildSignatureFast(
-            measurements = historical,
-            dataVersion = version, // No more throttle here either
-            capillaries = capillaries
+            measurements = rawHistorical,
+            dataVersion = version,
+            capillaries = capillaries,
+            manualOffset = manualOffset,
+            autoAdjust = autoAdjust,
+            autoRangeMode = autoRangeMode.name
         )
         
         val historicalMetrics = dashboardMetricsCache.getOrCompute(
@@ -249,7 +234,24 @@ class DashboardViewModel(
             signature = signature,
             retentionDays = retentionDays
         ) {
-            DashboardMetricsCalculator.calculateHistorical(historical)
+            val calcContext = GlucoseProcessor.buildContext(
+                autoRangeOffsetMode = autoRangeMode,
+                userRanges = ranges,
+                capillaryReadings = capillaries,
+                sensorLogs = sensorLogs
+            )
+            val processed = rawHistorical.map {
+                GlucoseProcessor.process(
+                    measurement = it,
+                    manualOffset = manualOffset,
+                    userRanges = ranges,
+                    autoAdjustEnabled = autoAdjust,
+                    autoRangeOffsetMode = autoRangeMode,
+                    capillaryReadings = capillaries,
+                    context = calcContext
+                )
+            }
+            DashboardMetricsCalculator.calculateHistorical(processed)
         }
         
         historicalMetrics.copy(

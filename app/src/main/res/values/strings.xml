@@ -86,7 +86,7 @@
     <string name="calc_manual_label">Manual Override</string>
     <string name="dash_fs_label">FS: %1$.1f</string>
     <string name="calc_bolus_helper">Bolus Helper</string>
-    <string name="calc_carbs_label">Carbohydrates (g)</string>
+    <string name="calc_carbs_label">Carbs (g)</string>
     <string name="calc_glucose_label">Current Glucose (mg/dL)</string>
     <string name="calc_suggested_bolus">Suggested Units: %1$.2f</string>
     <string name="calc_suggested_bolus_dual">Suggested Units: %1$s</string>

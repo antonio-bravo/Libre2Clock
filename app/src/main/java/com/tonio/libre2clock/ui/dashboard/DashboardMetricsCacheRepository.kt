@@ -76,7 +76,10 @@ class DashboardMetricsCacheRepository(
         fun buildSignatureFast(
             measurements: List<GlucoseMeasurement>,
             dataVersion: Long,
-            capillaries: List<com.tonio.libre2clock.data.model.CapillaryMeasurement>
+            capillaries: List<com.tonio.libre2clock.data.model.CapillaryMeasurement>,
+            manualOffset: Int = 0,
+            autoAdjust: Boolean = false,
+            autoRangeMode: String = "OFF"
         ): String {
             if (measurements.isEmpty()) return "empty-$dataVersion"
 
@@ -98,6 +101,12 @@ class DashboardMetricsCacheRepository(
                 append(dataVersion)
                 append(";cp=")
                 append(capSig)
+                append(";mo=")
+                append(manualOffset)
+                append(";aa=")
+                append(autoAdjust)
+                append(";am=")
+                append(autoRangeMode)
                 append(";f=")
                 append(first.epochSeconds ?: first.factoryTimestamp)
                 append(':')

@@ -25,7 +25,6 @@ import androidx.compose.ui.unit.sp
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.repository.GlucoseProcessor
 import com.tonio.libre2clock.util.TimestampParser
-import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -54,9 +53,10 @@ fun InteractiveTrendGraph(
             measurementInstant(m)?.let { it to m }
         }.sortedBy { it.first }
         
-        // Downsample for very long ranges to keep UI fluid
-        if (raw.size > 2000) {
-            val step = raw.size / 1500
+        // Downsample for very long ranges to keep UI fluid. 
+        // Targeting ~1000 points for a smoother experience on mobile.
+        if (raw.size > 1500) {
+            val step = raw.size / 1000
             raw.filterIndexed { index, _ -> index % step == 0 }
         } else {
             raw
@@ -68,8 +68,8 @@ fun InteractiveTrendGraph(
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
 
-    // Viewport: 12 hours = Screen Width
-    val pixelsPerHour = screenWidth / 12f
+    // Viewport: 8 hours = Screen Width for better readability
+    val pixelsPerHour = screenWidth / 8f
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -120,7 +120,8 @@ fun InteractiveTrendGraph(
 
                 val firstInstant = sanitizedSorted.first().first
                 val lastInstant = sanitizedSorted.last().first
-                val totalDurationHours = Duration.between(firstInstant, lastInstant).toMinutes() / 60.0
+                val totalDurationSeconds = (lastInstant.epochSecond - firstInstant.epochSecond).coerceAtLeast(1L)
+                val totalDurationHours = totalDurationSeconds / 3600.0
                 val graphWidth = (totalDurationHours * pixelsPerHour.value).dp.coerceAtLeast(screenWidth)
 
                 // Auto-scroll to end on first load or data change
@@ -160,17 +161,19 @@ fun InteractiveTrendGraph(
                         val rawPath = Path()
                         val calibratedPath = Path()
                         var isFirstPoint = true
-                        var lastProcessedInstant: Instant? = null
+                        var lastProcessedEpoch = 0L
 
                         sanitizedSorted.forEach { (instant, measurement) ->
-                            val secondsOffset = instant.epochSecond - firstInstant.epochSecond
+                            val currentEpoch = instant.epochSecond
+                            val secondsOffset = currentEpoch - firstInstant.epochSecond
                             val x = (secondsOffset.toFloat() / totalSeconds.toFloat()) * width
                             
                             val rawY = plotHeight - ((measurement.value - minGlucose) / range * plotHeight)
                             val calY = plotHeight - ((measurement.calibratedValue - minGlucose) / range * plotHeight)
 
-                            // GAP DETECTION: If the jump between points is > 15 minutes, break the line
-                            val isGap = !isFirstPoint && Duration.between(lastProcessedInstant!!, instant).toMinutes() > 15
+                            // GAP DETECTION: If the jump between points is > 15 minutes (900s), break the line.
+                            // Optimized to use Long subtraction instead of Duration objects.
+                            val isGap = !isFirstPoint && (currentEpoch - lastProcessedEpoch) > 900
 
                             if (isFirstPoint || isGap) {
                                 rawPath.moveTo(x, rawY)
@@ -180,7 +183,7 @@ fun InteractiveTrendGraph(
                                 rawPath.lineTo(x, rawY)
                                 calibratedPath.lineTo(x, calY)
                             }
-                            lastProcessedInstant = instant
+                            lastProcessedEpoch = currentEpoch
                         }
 
                         // Draw Paths

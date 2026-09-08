@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tonio.libre2clock.R
 import com.tonio.libre2clock.data.model.CapillaryMeasurement
+import com.tonio.libre2clock.ui.components.DateHourMinuteInput
 import com.tonio.libre2clock.ui.settings.SettingsViewModel
 import com.tonio.libre2clock.util.SectionPerfTelemetry
 import java.time.Instant
@@ -54,7 +55,9 @@ fun CapillaryScreen(
 
     var showCapillaryDialog by remember { mutableStateOf(false) }
     var capillaryValueText by remember { mutableStateOf("") }
-    var capillaryDateText by remember { mutableStateOf("") }
+    var capillaryDate by remember { mutableStateOf(java.time.LocalDate.now()) }
+    var capillaryHour by remember { mutableStateOf("") }
+    var capillaryMinute by remember { mutableStateOf("") }
 
     val avgDeviation = remember(capillaryReadings) {
         var result: Double?
@@ -87,7 +90,10 @@ fun CapillaryScreen(
         },
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                capillaryDateText = currentDateTimeText()
+                val now = java.time.LocalTime.now()
+                capillaryDate = java.time.LocalDate.now()
+                capillaryHour = "%02d".format(now.hour)
+                capillaryMinute = "%02d".format(now.minute)
                 showCapillaryDialog = true
             }) {
                 Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_capillary_reading))
@@ -160,10 +166,13 @@ fun CapillaryScreen(
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = capillaryDateText,
-                        onValueChange = { capillaryDateText = it },
-                        label = { Text(stringResource(R.string.capillary_timestamp_label)) },
+                    DateHourMinuteInput(
+                        date = capillaryDate,
+                        onDateChange = { capillaryDate = it },
+                        hour = capillaryHour,
+                        onHourChange = { capillaryHour = it },
+                        minute = capillaryMinute,
+                        onMinuteChange = { capillaryMinute = it },
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -182,7 +191,13 @@ fun CapillaryScreen(
                     val value = capillaryValueText.toIntOrNull() ?: return@TextButton
                     val sensorValue = currentGlucose?.value
                     val delta = sensorValue?.let { value - it }
-                    val timestamp = capillaryDateText.ifBlank { currentDateTimeText() }
+                    val hour = capillaryHour.toIntOrNull() ?: 0
+                    val minute = capillaryMinute.toIntOrNull() ?: 0
+                    val timestamp = "%s %02d:%02d".format(
+                        capillaryDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
+                        hour,
+                        minute
+                    )
                     viewModel.addCapillaryReading(
                         CapillaryMeasurement(
                             value = value,
@@ -192,7 +207,10 @@ fun CapillaryScreen(
                         )
                     )
                     capillaryValueText = ""
-                    capillaryDateText = currentDateTimeText()
+                    val resetNow = java.time.LocalTime.now()
+                    capillaryDate = java.time.LocalDate.now()
+                    capillaryHour = "%02d".format(resetNow.hour)
+                    capillaryMinute = "%02d".format(resetNow.minute)
                     showCapillaryDialog = false
                 }) {
                     Text(stringResource(android.R.string.ok))
@@ -258,10 +276,4 @@ private fun CapillaryItem(
             }
         }
     }
-}
-
-private fun currentDateTimeText(): String {
-    return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
-        .withZone(ZoneId.systemDefault())
-        .format(Instant.now())
 }
