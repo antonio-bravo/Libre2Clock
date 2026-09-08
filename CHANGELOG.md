@@ -1,5 +1,30 @@
 # Changelog
 
+## 06191e1 (Sep 09, 2026 00:10:45)
+fix secrets — antonio-bravo
+[detail](#06191e1-details)
+
+<details id='06191e1-details'>
+<summary>Changed files</summary>
+
+- .github/workflows/build-release.yml [Modified]
+- app/build.gradle.kts [Modified]
+</details>
+
+
+---
+## 7b7175f (Sep 08, 2026 21:59:10)
+Update changelog — github-actions[bot]
+[detail](#7b7175f-details)
+
+<details id='7b7175f-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 4cee6a4 (Sep 08, 2026 23:58:58)
 Fix workflow and some commands deprecated — antonio-bravo
 [detail](#4cee6a4-details)
@@ -728,49 +753,6 @@ Update changelog — github-actions[bot]
 [detail](#2db1147-details)
 
 <details id='2db1147-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 31edbc2 (Aug 13, 2026 20:13:34)
-Extracted code errors from original app
-Added Sensor Logs to track when sensor failed
-Edit days duration by parameter
-Reports added daterange — antonio-bravo
-[detail](#31edbc2-details)
-
-<details id='31edbc2-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/navigation/Destinations.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/report/ReportScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/sensor/SensorLogsScreen.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/PdfReportGenerator.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-- docs/CODIGOS_ERROR_SENSOR.md [Deleted]
-- docs/MANUAL_DECOMPILACION.md [Deleted]
-</details>
-
-
----
-## 477e267 (Aug 13, 2026 16:14:57)
-Update changelog — github-actions[bot]
-[detail](#477e267-details)
-
-<details id='477e267-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
