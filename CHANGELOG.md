@@ -1,5 +1,33 @@
 # Changelog
 
+## 1f4f37d (Sep 09, 2026 00:47:33)
+Authentication Manager — antonio-bravo
+[detail](#1f4f37d-details)
+
+<details id='1f4f37d-details'>
+<summary>Changed files</summary>
+
+- app/proguard-rules.pro [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/sync/AuthManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsDataScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+</details>
+
+
+---
+## 2f1c84c (Sep 08, 2026 22:31:01)
+Update changelog — github-actions[bot]
+[detail](#2f1c84c-details)
+
+<details id='2f1c84c-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 55316b3 (Sep 09, 2026 00:30:45)
 fix language — antonio-bravo
 [detail](#55316b3-details)
@@ -737,30 +765,6 @@ fix graph — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
-</details>
-
-
----
-## 8a1293b (Aug 13, 2026 18:51:32)
-Update changelog — github-actions[bot]
-[detail](#8a1293b-details)
-
-<details id='8a1293b-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## bda0629 (Aug 13, 2026 20:51:16)
-fix how see HbA1c — antonio-bravo
-[detail](#bda0629-details)
-
-<details id='bda0629-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
 </details>
 
 
