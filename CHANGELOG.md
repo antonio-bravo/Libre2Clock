@@ -1,5 +1,49 @@
 # Changelog
 
+## 55316b3 (Sep 09, 2026 00:30:45)
+fix language — antonio-bravo
+[detail](#55316b3-details)
+
+<details id='55316b3-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsDataScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## bb0081e (Sep 09, 2026 00:28:29)
+2 separate accounts for DB and for Data source — antonio-bravo
+[detail](#bb0081e-details)
+
+<details id='bb0081e-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+</details>
+
+
+---
+## a8a3da7 (Sep 08, 2026 22:11:02)
+Update changelog — github-actions[bot]
+[detail](#a8a3da7-details)
+
+<details id='a8a3da7-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 06191e1 (Sep 09, 2026 00:10:45)
 fix secrets — antonio-bravo
 [detail](#06191e1-details)
@@ -717,45 +761,6 @@ fix how see HbA1c — antonio-bravo
 <summary>Changed files</summary>
 
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
-</details>
-
-
----
-## 219d1aa (Aug 13, 2026 18:41:05)
-Update changelog — github-actions[bot]
-[detail](#219d1aa-details)
-
-<details id='219d1aa-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 6557fb1 (Aug 13, 2026 20:40:54)
-fix — antonio-bravo
-[detail](#6557fb1-details)
-
-<details id='6557fb1-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
-</details>
-
-
----
-## 2db1147 (Aug 13, 2026 18:13:55)
-Update changelog — github-actions[bot]
-[detail](#2db1147-details)
-
-<details id='2db1147-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
 </details>
 
 
