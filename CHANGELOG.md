@@ -1,5 +1,62 @@
 # Changelog
 
+## c9143c1 (Sep 08, 2026 23:43:58)
+Change Layout + Add Firebase + signatures — antonio-bravo
+[detail](#c9143c1-details)
+
+<details id='c9143c1-details'>
+<summary>Changed files</summary>
+
+- .github/workflows/build-release.yml [Modified]
+- .gitignore [Modified]
+- .idea/misc.xml [Modified]
+- .idea/planningMode.xml [Modified]
+- app/build.gradle.kts [Modified]
+- app/src/main/java/com/tonio/libre2clock/MainActivity.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/InsulinProcessor.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/sync/AuthManager.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/di/AppContainer.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsCacheRepository.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/navigation/Destinations.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsAdvancedScreen.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsAlertsScreen.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsBatteryScreen.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCalibrationScreen.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsComponents.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsDataScreen.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsDeviceScreen.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+- build.gradle.kts [Modified]
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 86e2529 (Sep 08, 2026 10:12:53)
+Update changelog — github-actions[bot]
+[detail](#86e2529-details)
+
+<details id='86e2529-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 0ec5405 (Sep 08, 2026 12:12:38)
 Improvements — antonio-bravo
 [detail](#0ec5405-details)
@@ -713,34 +770,6 @@ Update changelog — github-actions[bot]
 [detail](#ba92f6b-details)
 
 <details id='ba92f6b-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 2fede01 (Aug 13, 2026 17:53:57)
-fix language — antonio-bravo
-[detail](#2fede01-details)
-
-<details id='2fede01-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/login/LoginScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/report/ReportScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 728bd6d (Aug 13, 2026 15:25:06)
-Update changelog — github-actions[bot]
-[detail](#728bd6d-details)
-
-<details id='728bd6d-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
