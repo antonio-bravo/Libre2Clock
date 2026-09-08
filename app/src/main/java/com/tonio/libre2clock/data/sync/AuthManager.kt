@@ -25,7 +25,8 @@ class AuthManager(private val context: Context) {
         }
     }
 
-    suspend fun signInWithGoogle(webClientId: String): Result<Unit> {
+    suspend fun signInWithGoogle(context: Context, webClientId: String): Result<Unit> {
+        android.util.Log.d("AuthManager", "Starting Google Sign In with client ID: $webClientId")
         return try {
             val googleIdOption = GetGoogleIdOption.Builder()
                 .setFilterByAuthorizedAccounts(false)
@@ -37,10 +38,13 @@ class AuthManager(private val context: Context) {
                 .addCredentialOption(googleIdOption)
                 .build()
 
+            android.util.Log.d("AuthManager", "Requesting credentials...")
             val result = credentialManager.getCredential(context, request)
+            android.util.Log.d("AuthManager", "Credential received, handling sign in...")
             handleSignIn(result)
             Result.success(Unit)
         } catch (e: Exception) {
+            android.util.Log.e("AuthManager", "Error during Google Sign In", e)
             Result.failure(e)
         }
     }

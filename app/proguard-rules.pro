@@ -33,3 +33,31 @@
 
 # Missing transitive annotations from Tink/Google libraries
 -dontwarn com.google.errorprone.annotations.**
+
+# Keep LibreLinkUp API models
+-keep class com.tonio.libre2clock.data.model.** { *; }
+-keepclassmembers class com.tonio.libre2clock.data.model.** { *; }
+
+# Also keep sync models
+-keep class com.tonio.libre2clock.data.sync.** { *; }
+
+# Keep Moshi / Retrofit
+-keep class com.squareup.moshi.** { *; }
+-keep class retrofit2.** { *; }
+
+# Keep Kotlin Serialization
+-keepattributes *Annotation*, InnerClasses
+-keep class kotlinx.serialization.** { *; }
+-keepclassmembers class com.tonio.libre2clock.data.model.** {
+    *** Companion;
+    *** $serializer;
+}
+
+# Keep Google Credential Manager / Firebase
+-keep class androidx.credentials.** { *; }
+-keep class com.google.android.libraries.identity.googleid.** { *; }
+-keep class com.google.firebase.** { *; }
+
+# Keep generated resources for Google Services
+-keep class com.google.android.gms.common.api.internal.** { *; }
+-keep class com.tonio.libre2clock.R$string { <fields>; }

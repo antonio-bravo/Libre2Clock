@@ -25,6 +25,7 @@ fun SettingsCloudScreen(
     val firebaseUser by viewModel.firebaseUser.collectAsStateWithLifecycle()
     val isEnabled by viewModel.isCloudSyncEnabled.collectAsStateWithLifecycle()
     val lastSuccess by viewModel.cloudSyncLastSuccessAt.collectAsStateWithLifecycle()
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     Scaffold(
         topBar = {
@@ -72,7 +73,7 @@ fun SettingsCloudScreen(
                         
                         if (firebaseUser == null) {
                             Button(
-                                onClick = viewModel::signInWithGoogle,
+                                onClick = { viewModel.signInWithGoogle(context) },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Icon(Icons.AutoMirrored.Filled.Login, contentDescription = null)

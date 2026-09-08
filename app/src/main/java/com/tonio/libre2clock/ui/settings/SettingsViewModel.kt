@@ -461,7 +461,7 @@ class SettingsViewModel(
         }
     }
 
-    fun signInWithGoogle() {
+    fun signInWithGoogle(context: android.content.Context) {
         viewModelScope.launch {
             try {
                 val resId = androidContext.resources.getIdentifier("default_web_client_id", "string", androidContext.packageName)
@@ -470,7 +470,7 @@ class SettingsViewModel(
                     return@launch
                 }
                 val webClientId = androidContext.getString(resId)
-                val result = authManager.signInWithGoogle(webClientId)
+                val result = authManager.signInWithGoogle(context, webClientId)
                 _backupStatusMessage.value = result.fold(
                     onSuccess = { "Signed in with Google." },
                     onFailure = { it.message ?: "Sign in failed." }
