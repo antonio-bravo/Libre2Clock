@@ -1,5 +1,31 @@
 # Changelog
 
+## 4cee6a4 (Sep 08, 2026 23:58:58)
+Fix workflow and some commands deprecated — antonio-bravo
+[detail](#4cee6a4-details)
+
+<details id='4cee6a4-details'>
+<summary>Changed files</summary>
+
+- .github/workflows/build-release.yml [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
+</details>
+
+
+---
+## 98507fa (Sep 08, 2026 21:44:17)
+Update changelog — github-actions[bot]
+[detail](#98507fa-details)
+
+<details id='98507fa-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## c9143c1 (Sep 08, 2026 23:43:58)
 Change Layout + Add Firebase + signatures — antonio-bravo
 [detail](#c9143c1-details)
@@ -745,31 +771,6 @@ Update changelog — github-actions[bot]
 [detail](#477e267-details)
 
 <details id='477e267-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 79a39e0 (Aug 13, 2026 18:14:44)
-add quick button for capilar — antonio-bravo
-[detail](#79a39e0-details)
-
-<details id='79a39e0-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-</details>
-
-
----
-## ba92f6b (Aug 13, 2026 15:54:11)
-Update changelog — github-actions[bot]
-[detail](#ba92f6b-details)
-
-<details id='ba92f6b-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
