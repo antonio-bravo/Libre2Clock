@@ -247,6 +247,8 @@
     <string name="settings_alarm_active_schedules">Horarios Activos de Alarmas</string>
     <string name="settings_add_alarm_schedule">Añadir Horario de Alarma</string>
     <string name="settings_battery_optimization">Optimización de Batería</string>
+    <string name="settings_device_title">Sensor y Simulación</string>
+    <string name="settings_device_desc">Duración del sensor y modo simulación.</string>
     <string name="settings_battery_optimization_desc">Controla cómo la app ahorra energía durante estados de batería baja.</string>
     <string name="settings_battery_low_threshold">Umbral de Batería Baja: %1$d%%</string>
     <string name="settings_battery_low_desc">El refresco rápido (60s) se desactiva por debajo de este nivel.</string>
@@ -300,6 +302,14 @@
     <string name="settings_perf_section_capillary_stats">Capilar: Cálculo de Stats</string>
     <string name="settings_perf_section_dashboard_enter">Dashboard: Tiempo de Entrada</string>
     <string name="settings_perf_section_unknown">Sección desconocida (%1$s)</string>
+
+    <string name="settings_perf_system_health">Salud del Sistema</string>
+    <string name="settings_perf_loading_time">Carga de Historial</string>
+    <string name="settings_perf_algorithm_latency">Latencia de Algoritmo</string>
+    <string name="settings_perf_ms_short">ms</string>
+    <string name="settings_perf_health_good">Excelente</string>
+    <string name="settings_perf_health_fair">Buena</string>
+    <string name="settings_perf_health_slow">Lento</string>
 
     <string name="settings_schedule_interval_row">Intervalo: %1$s | Inicio: :%2$s</string>
     <string name="day_mon">Lun</string>

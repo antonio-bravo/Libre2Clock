@@ -26,7 +26,7 @@ class DashboardMetricsCacheRepository(
         sectionKey: String,
         signature: String,
         retentionDays: Int,
-        calculator: () -> DashboardMetrics
+        calculator: suspend () -> DashboardMetrics
     ): DashboardMetrics = withContext(Dispatchers.IO) {
         purgeIfNeeded(retentionDays)
         var result: DashboardMetrics? = null
@@ -73,18 +73,17 @@ class DashboardMetricsCacheRepository(
         // to once per bucket avoids re-scanning up to 50k historical measurements on every new CGM reading.
         private const val HISTORICAL_SIGNATURE_BUCKET_MS = 5L * 60L * 1000L
 
+        /**
+         * Builds a signature without requiring the full measurements list to avoid expensive DB fetches
+         * when checking for cache hits.
+         */
         fun buildSignatureFast(
-            measurements: List<GlucoseMeasurement>,
             dataVersion: Long,
             capillaries: List<com.tonio.libre2clock.data.model.CapillaryMeasurement>,
             manualOffset: Int = 0,
             autoAdjust: Boolean = false,
             autoRangeMode: String = "OFF"
         ): String {
-            if (measurements.isEmpty()) return "empty-$dataVersion"
-
-            val first = measurements.first()
-            
             // capillary count/last timestamp captures calibration changes immediately.
             val capSig = if (capillaries.isNotEmpty()) {
                 "${capillaries.size}-${capillaries.first().timestamp}"
@@ -92,6 +91,8 @@ class DashboardMetricsCacheRepository(
 
             // dataVersion changes for every persisted history update, including restores, so a
             // result computed from an earlier archive can never be reused after that update.
+            // timeBucket ensures that even if no new data arrived, we eventually re-calculate 
+            // as the 90-day window slides forward.
             val timeBucket = System.currentTimeMillis() / HISTORICAL_SIGNATURE_BUCKET_MS
 
             return buildString {
@@ -107,10 +108,6 @@ class DashboardMetricsCacheRepository(
                 append(autoAdjust)
                 append(";am=")
                 append(autoRangeMode)
-                append(";f=")
-                append(first.epochSeconds ?: first.factoryTimestamp)
-                append(':')
-                append(first.value)
             }
         }
 

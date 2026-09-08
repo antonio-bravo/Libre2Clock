@@ -119,11 +119,12 @@ class DashboardViewModel(
         _graphWindowDays,
         repository.dataVersion
     ) { config, capillaries, logs, days, _ ->
-        val cutoff = Instant.now().minus(java.time.Duration.ofDays(days.toLong()))
-        val startEpochMs = cutoff.toEpochMilli()
-        val endEpochMs = Instant.now().toEpochMilli()
+        // BUCKETING: Round start/end times to 30s to hit repository cache
+        val nowMs = System.currentTimeMillis()
+        val roundedEndMs = (nowMs / 30000) * 30000
+        val roundedStartMs = roundedEndMs - java.time.Duration.ofDays(days.toLong()).toMillis()
         
-        val window = repository.getHistoricalGlucoseWindow(startEpochMs, endEpochMs, maxItems = 40000)
+        val window = repository.getHistoricalGlucoseWindow(roundedStartMs, roundedEndMs, maxItems = 40000)
         
         val calcContext = GlucoseProcessor.buildContext(
             autoRangeOffsetMode = config.autoRangeMode,
@@ -215,13 +216,7 @@ class DashboardViewModel(
 
         val liveMetrics = DashboardMetricsCalculator.calculateLive(live)
         
-        val cutoff = Instant.now().minus(java.time.Duration.ofDays(90))
-        val startEpochMs = cutoff.toEpochMilli()
-        val endEpochMs = Instant.now().toEpochMilli()
-        val rawHistorical = repository.getHistoricalGlucoseWindow(startEpochMs, endEpochMs, maxItems = 50000)
-
         val signature = DashboardMetricsCacheRepository.buildSignatureFast(
-            measurements = rawHistorical,
             dataVersion = version,
             capillaries = capillaries,
             manualOffset = manualOffset,
@@ -234,6 +229,11 @@ class DashboardViewModel(
             signature = signature,
             retentionDays = retentionDays
         ) {
+            val cutoff = Instant.now().minus(java.time.Duration.ofDays(90))
+            val startEpochMs = cutoff.toEpochMilli()
+            val endEpochMs = Instant.now().toEpochMilli()
+            val rawHistorical = repository.getHistoricalGlucoseWindow(startEpochMs, endEpochMs, maxItems = 50000)
+
             val calcContext = GlucoseProcessor.buildContext(
                 autoRangeOffsetMode = autoRangeMode,
                 userRanges = ranges,
@@ -294,6 +294,20 @@ class DashboardViewModel(
         buildSensorErrorSummary(emptyList(), capillaries)
             .find { it.serialNumber == serial }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val predictedGlucose: StateFlow<List<Pair<Instant, Int>>> = combine(
+        currentGlucose,
+        insulinDoses,
+        manualTdi,
+        manualIsf,
+        isfRuleConstant
+    ) { current, doses, tdi, mIsf, isfRule ->
+        val g = current?.calibratedValue ?: return@combine emptyList()
+        val calculatedTdi = if (tdi != null) tdi else com.tonio.libre2clock.data.repository.InsulinProcessor.calculateAverageDaily(doses, 30)
+        val isf = com.tonio.libre2clock.data.repository.InsulinProcessor.calculateISF(calculatedTdi, isfRule, mIsf)
+        
+        com.tonio.libre2clock.data.repository.InsulinProcessor.predictGlucosePath(g, doses, isf)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     init {
         // Foreground fallback sync while dashboard is open.

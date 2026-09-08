@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
@@ -43,6 +44,7 @@ private fun measurementInstant(measurement: GlucoseMeasurement): Instant? {
 @Composable
 fun InteractiveTrendGraph(
     measurements: List<GlucoseMeasurement>,
+    predictedPoints: List<Pair<Instant, Int>> = emptyList(),
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -119,7 +121,11 @@ fun InteractiveTrendGraph(
                 val range = (maxGlucose - minGlucose).toFloat().coerceAtLeast(1f)
 
                 val firstInstant = sanitizedSorted.first().first
-                val lastInstant = sanitizedSorted.last().first
+                val lastDataInstant = sanitizedSorted.last().first
+                val lastInstant = if (predictedPoints.isNotEmpty()) {
+                    predictedPoints.last().first
+                } else lastDataInstant
+
                 val totalDurationSeconds = (lastInstant.epochSecond - firstInstant.epochSecond).coerceAtLeast(1L)
                 val totalDurationHours = totalDurationSeconds / 3600.0
                 val graphWidth = (totalDurationHours * pixelsPerHour.value).dp.coerceAtLeast(screenWidth)
@@ -186,9 +192,32 @@ fun InteractiveTrendGraph(
                             lastProcessedEpoch = currentEpoch
                         }
 
-                        // Draw Paths
                         drawPath(path = rawPath, color = ORIGINAL_LINE_COLOR, style = Stroke(width = 2.dp.toPx()))
                         drawPath(path = calibratedPath, color = CALIBRATED_LINE_COLOR, style = Stroke(width = 4.dp.toPx()))
+                        
+                        // DRAW PREDICTION (Dashed Line)
+                        if (predictedPoints.isNotEmpty()) {
+                            val predictionPath = Path()
+                            val startPoint = sanitizedSorted.last()
+                            val startX = ((startPoint.first.epochSecond - firstInstant.epochSecond).toFloat() / totalSeconds.toFloat()) * width
+                            val startY = plotHeight - ((startPoint.second.calibratedValue - minGlucose) / range * plotHeight)
+                            predictionPath.moveTo(startX, startY)
+
+                            predictedPoints.forEach { (instant, value) ->
+                                val x = ((instant.epochSecond - firstInstant.epochSecond).toFloat() / totalSeconds.toFloat()) * width
+                                val y = plotHeight - ((value - minGlucose) / range * plotHeight)
+                                predictionPath.lineTo(x, y)
+                            }
+
+                            drawPath(
+                                path = predictionPath,
+                                color = CALIBRATED_LINE_COLOR.copy(alpha = 0.6f),
+                                style = Stroke(
+                                    width = 3.dp.toPx(),
+                                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
+                                )
+                            )
+                        }
                         
                         // Reference lines (Target Range)
                         listOf(70, 180).forEach { threshold ->

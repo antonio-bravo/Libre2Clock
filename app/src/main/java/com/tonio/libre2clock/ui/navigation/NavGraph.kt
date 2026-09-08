@@ -36,7 +36,14 @@ fun NavGraph(
     )
     
     // Shared ViewModels for persistent state and better performance
-    val settingsViewModel: SettingsViewModel = viewModel { SettingsViewModel(preferenceManager, repository, context.applicationContext) }
+    val settingsViewModel: SettingsViewModel = viewModel {
+        SettingsViewModel(
+            preferenceManager,
+            repository,
+            com.tonio.libre2clock.di.AppContainer.provideAuthManager(context),
+            context.applicationContext
+        )
+    }
     val dashboardViewModel: DashboardViewModel = viewModel { DashboardViewModel(repository, preferenceManager, context.applicationContext) }
     val loginViewModel: LoginViewModel = viewModel { LoginViewModel(repository) }
     val reportViewModel: com.tonio.libre2clock.ui.report.ReportViewModel = viewModel { 
@@ -101,12 +108,62 @@ fun NavGraph(
                 SettingsScreen(
                     viewModel = settingsViewModel,
                     onBack = { backStack.removeAt(backStack.size - 1) },
+                    onNavigateToAlerts = { backStack.add(Destination.SettingsAlerts) },
+                    onNavigateToCalibration = { backStack.add(Destination.SettingsCalibration) },
+                    onNavigateToBattery = { backStack.add(Destination.SettingsBattery) },
+                    onNavigateToDevice = { backStack.add(Destination.SettingsDevice) },
+                    onNavigateToData = { backStack.add(Destination.SettingsData) },
+                    onNavigateToCloud = { backStack.add(Destination.SettingsCloud) },
+                    onNavigateToAdvanced = { backStack.add(Destination.SettingsAdvanced) }
+                )
+            }
+            entry<Destination.SettingsBattery> {
+                com.tonio.libre2clock.ui.settings.SettingsBatteryScreen(
+                    viewModel = settingsViewModel,
+                    onBack = { backStack.removeAt(backStack.size - 1) }
+                )
+            }
+            entry<Destination.SettingsAlerts> {
+                com.tonio.libre2clock.ui.settings.SettingsAlertsScreen(
+                    viewModel = settingsViewModel,
+                    onBack = { backStack.removeAt(backStack.size - 1) },
                     onTestNotification = {
                         val intent = Intent(context, GlucoseForegroundService::class.java).apply {
                             action = "TEST_NOTIFICATION"
                         }
                         context.startService(intent)
                     }
+                )
+            }
+            entry<Destination.SettingsCalibration> {
+                com.tonio.libre2clock.ui.settings.SettingsCalibrationScreen(
+                    viewModel = settingsViewModel,
+                    onBack = { backStack.removeAt(backStack.size - 1) }
+                )
+            }
+            entry<Destination.SettingsDevice> {
+                com.tonio.libre2clock.ui.settings.SettingsDeviceScreen(
+                    viewModel = settingsViewModel,
+                    onBack = { backStack.removeAt(backStack.size - 1) }
+                )
+            }
+            entry<Destination.SettingsData> {
+                com.tonio.libre2clock.ui.settings.SettingsDataScreen(
+                    viewModel = settingsViewModel,
+                    onBack = { backStack.removeAt(backStack.size - 1) },
+                    onNavigateToCloud = { backStack.add(Destination.SettingsCloud) }
+                )
+            }
+            entry<Destination.SettingsCloud> {
+                com.tonio.libre2clock.ui.settings.SettingsCloudScreen(
+                    viewModel = settingsViewModel,
+                    onBack = { backStack.removeAt(backStack.size - 1) }
+                )
+            }
+            entry<Destination.SettingsAdvanced> {
+                com.tonio.libre2clock.ui.settings.SettingsAdvancedScreen(
+                    viewModel = settingsViewModel,
+                    onBack = { backStack.removeAt(backStack.size - 1) }
                 )
             }
             entry<Destination.Strategy> {

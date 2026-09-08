@@ -1,5 +1,6 @@
 package com.tonio.libre2clock.ui.insulin
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
@@ -383,7 +384,14 @@ fun BolusCalculatorCard(
     viewModel: SettingsViewModel
 ) {
     var carbsText by remember { mutableStateOf("") }
+    var carbsSliderValue by remember { mutableFloatStateOf(0f) }
     
+    // Sync text and slider
+    LaunchedEffect(carbsText) {
+        val c = carbsText.toFloatOrNull() ?: 0f
+        if (c != carbsSliderValue) carbsSliderValue = c.coerceIn(0f, 150f)
+    }
+
     val initialGlucoseText = remember(currentGlucose) {
         val real = currentGlucose?.value ?: 0
         val cal = currentGlucose?.calibratedValue ?: 0
@@ -437,7 +445,9 @@ fun BolusCalculatorCard(
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = carbsText,
-                    onValueChange = { carbsText = it },
+                    onValueChange = { 
+                        carbsText = it 
+                    },
                     label = { Text(stringResource(R.string.calc_carbs_label)) },
                     modifier = Modifier.weight(1f),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
@@ -450,6 +460,18 @@ fun BolusCalculatorCard(
                     placeholder = { Text(stringResource(R.string.insulin_placeholder_real_offset)) }
                 )
             }
+
+            Spacer(modifier = Modifier.height(4.dp))
+            Slider(
+                value = carbsSliderValue,
+                onValueChange = { 
+                    carbsSliderValue = it
+                    carbsText = if (it == 0f) "" else "%.0f".format(it)
+                },
+                valueRange = 0f..150f,
+                steps = 149,
+                modifier = Modifier.fillMaxWidth()
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
             
@@ -494,13 +516,21 @@ fun BolusCalculatorCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = stringResource(R.string.calc_suggested_bolus_dual, suggestedText),
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
+                    AnimatedContent(
+                        targetState = suggestedText,
+                        transitionSpec = {
+                            fadeIn() togetherWith fadeOut()
+                        },
+                        label = "suggested_units_anim",
                         modifier = Modifier.weight(1f)
-                    )
+                    ) { targetUnits ->
+                        Text(
+                            text = stringResource(R.string.calc_suggested_bolus_dual, targetUnits),
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                     IconButton(onClick = { showLogDialog = true }) {
                         Icon(Icons.Default.AddCircle, contentDescription = "Log Suggested Dose")
                     }

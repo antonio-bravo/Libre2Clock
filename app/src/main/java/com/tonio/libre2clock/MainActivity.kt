@@ -48,6 +48,7 @@ class MainActivity : ComponentActivity() {
                         launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
                     }
                     
+                    AppContainer.provideCloudSyncManager(this@MainActivity)
                     repository.initialize()
                     val token = preferenceManager.authToken.first()
                     if (token != null) {

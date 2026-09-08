@@ -247,6 +247,8 @@
     <string name="settings_alarm_active_schedules">Alarm Active Schedules</string>
     <string name="settings_add_alarm_schedule">Add Alarm Schedule</string>
     <string name="settings_battery_optimization">Battery Optimization</string>
+    <string name="settings_device_title">Sensor &amp; Simulation</string>
+    <string name="settings_device_desc">Sensor duration and simulation mode.</string>
     <string name="settings_battery_optimization_desc">Control how the app saves energy during low battery states.</string>
     <string name="settings_battery_low_threshold">Low Battery Threshold: %1$d%%</string>
     <string name="settings_battery_low_desc">Fast refresh (60s) is disabled below this level.</string>
@@ -300,6 +302,14 @@
     <string name="settings_perf_section_capillary_stats">Capillary Screen: Stats Calc</string>
     <string name="settings_perf_section_dashboard_enter">Dashboard: Enter Time</string>
     <string name="settings_perf_section_unknown">Unknown Section (%1$s)</string>
+
+    <string name="settings_perf_system_health">System Health</string>
+    <string name="settings_perf_loading_time">History Loading</string>
+    <string name="settings_perf_algorithm_latency">Algorithm Latency</string>
+    <string name="settings_perf_ms_short">ms</string>
+    <string name="settings_perf_health_good">Excellent</string>
+    <string name="settings_perf_health_fair">Good</string>
+    <string name="settings_perf_health_slow">Slow</string>
 
     <string name="settings_schedule_interval_row">Interval: %1$s | Start: :%2$s</string>
     <string name="day_mon">Mon</string>

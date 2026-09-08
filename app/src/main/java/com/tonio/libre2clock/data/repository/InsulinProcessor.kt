@@ -173,4 +173,42 @@ object InsulinProcessor {
         val minutesRemaining = Duration.between(now, expiryInstant).toMinutes()
         return minutesRemaining in 0..warningWindowMinutes.toLong()
     }
+
+    /**
+     * Predicts glucose path for the next few hours based on current IOB and ISF.
+     * Returns a list of (Instant, PredictedValue)
+     */
+    fun predictGlucosePath(
+        currentGlucose: Int,
+        doses: List<InsulinDose>,
+        isf: Double,
+        steps: Int = 12,
+        intervalMinutes: Long = 15
+    ): List<Pair<Instant, Int>> {
+        if (doses.isEmpty() || isf <= 0.0) return emptyList()
+        
+        val result = mutableListOf<Pair<Instant, Int>>()
+        val now = Instant.now()
+        val currentIOB = calculateTotalIOB(doses, now)
+        
+        // We calculate how much insulin is absorbed in each interval
+        var lastIOB = currentIOB
+        var predictedG = currentGlucose.toDouble()
+
+        for (i in 1..steps) {
+            val futureTime = now.plus(Duration.ofMinutes(i * intervalMinutes))
+            val futureIOB = calculateTotalIOB(doses, futureTime)
+            
+            val absorbedInInterval = lastIOB - futureIOB
+            val drop = absorbedInInterval * isf
+            
+            predictedG -= drop
+            result.add(futureTime to predictedG.roundToInt().coerceAtLeast(40))
+            
+            lastIOB = futureIOB
+            if (futureIOB <= 0.0) break
+        }
+        
+        return result
+    }
 }

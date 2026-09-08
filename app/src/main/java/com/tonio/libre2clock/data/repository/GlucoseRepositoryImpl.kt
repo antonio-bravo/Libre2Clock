@@ -323,7 +323,7 @@ class GlucoseRepositoryImpl(
     private suspend fun mergeAndPruneHistory(
         existing: List<GlucoseMeasurement>,
         incoming: List<GlucoseMeasurement>
-    ): List<GlucoseMeasurement> {
+    ): List<GlucoseMeasurement> = withContext(Dispatchers.Default) {
         val mergedMap = LinkedHashMap<String, GlucoseMeasurement>()
         (existing + incoming).forEach { m ->
             val instant = parseMeasurementInstant(m)
@@ -338,7 +338,7 @@ class GlucoseRepositoryImpl(
         val retentionDays = preferenceManager.historyRetentionDays.first().toLong()
         val cutoff = Instant.now().minusSeconds(retentionDays * 24L * 60L * 60L)
         
-        return mergedMap.values
+        mergedMap.values
             .mapNotNull { m ->
                 parseMeasurementInstant(m)?.let { instant -> 
                     // Populate epochSeconds to avoid redundant parsing in UI/Statistics

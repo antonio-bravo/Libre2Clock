@@ -2,6 +2,8 @@ package com.tonio.libre2clock.ui.dashboard
 
 import android.content.ClipData
 import android.widget.Toast
+import androidx.compose.animation.*
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -79,12 +81,14 @@ fun DashboardScreen(
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val icRuleConstant by viewModel.icRuleConstant.collectAsStateWithLifecycle()
     val targetGlucose by viewModel.targetGlucose.collectAsStateWithLifecycle()
+    val predictedPoints by viewModel.predictedGlucose.collectAsStateWithLifecycle()
 
     // Measures time from entering/returning to Dashboard until metrics/graph are ready to show.
     val screenEnterAtMs = remember { System.currentTimeMillis() }
     var enterTimingRecorded by remember { mutableStateOf(false) }
     LaunchedEffect(graphData, dashboardMetrics) {
-        if (!enterTimingRecorded) {
+        // Only record when data is actually ready (not empty defaults)
+        if (!enterTimingRecorded && graphData.isNotEmpty()) {
             enterTimingRecorded = true
             com.tonio.libre2clock.util.SectionPerfTelemetry.record(
                 section = "dashboard_screen_enter",
@@ -288,6 +292,7 @@ fun DashboardScreen(
                 item {
                     InteractiveTrendGraph(
                         measurements = graphData,
+                        predictedPoints = predictedPoints,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(230.dp)
@@ -785,17 +790,32 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
                     
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         val displayValue = GlucoseProcessor.formatDualValue(measurement.value, measurement.calibratedValue)
-                        Text(
-                            text = displayValue,
-                            style = MaterialTheme.typography.displayLarge.copy(
-                                fontSize = if (displayValue.length > 6) 48.sp else 64.sp,
-                                fontWeight = FontWeight.Bold
-                            ),
-                            color = if (isStale) 
-                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                            else 
-                                MaterialTheme.colorScheme.onPrimaryContainer
-                        )
+                        
+                        AnimatedContent(
+                            targetState = displayValue,
+                            transitionSpec = {
+                                if (targetState.substringBefore("(") > initialState.substringBefore("(")) {
+                                    (slideInVertically { height -> height } + fadeIn()).togetherWith(slideOutVertically { height -> -height } + fadeOut())
+                                } else {
+                                    (slideInVertically { height -> -height } + fadeIn()).togetherWith(slideOutVertically { height -> height } + fadeOut())
+                                }.using(
+                                    SizeTransform(clip = false)
+                                )
+                            }, label = "glucose_animation"
+                        ) { targetText ->
+                            Text(
+                                text = targetText,
+                                style = MaterialTheme.typography.displayLarge.copy(
+                                    fontSize = if (targetText.length > 6) 48.sp else 64.sp,
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = if (isStale) 
+                                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                else 
+                                    MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                        
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Text(
@@ -850,21 +870,35 @@ private fun CornerMetric(
             color = contentColor.copy(alpha = 0.7f),
             maxLines = 1
         )
-        Text(
-            text = primary,
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold,
-            color = contentColor,
-            maxLines = 1
-        )
-        if (secondary.isNotEmpty()) {
+        AnimatedContent(
+            targetState = primary,
+            transitionSpec = {
+                fadeIn() togetherWith fadeOut()
+            }, label = "corner_primary_anim"
+        ) { text ->
             Text(
-                text = secondary,
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Medium,
-                color = contentColor.copy(alpha = 0.85f),
+                text = text,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = contentColor,
                 maxLines = 1
             )
+        }
+        if (secondary.isNotEmpty()) {
+            AnimatedContent(
+                targetState = secondary,
+                transitionSpec = {
+                    fadeIn() togetherWith fadeOut()
+                }, label = "corner_secondary_anim"
+            ) { text ->
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Medium,
+                    color = contentColor.copy(alpha = 0.85f),
+                    maxLines = 1
+                )
+            }
         }
     }
 }
@@ -1010,19 +1044,33 @@ private fun MetricCell(metric: DisplayMetric, label: String, modifier: Modifier 
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = metric.primary,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
-        )
-        if (metric.secondary.isNotEmpty()) {
+        AnimatedContent(
+            targetState = metric.primary,
+            transitionSpec = {
+                fadeIn() togetherWith fadeOut()
+            }, label = "metric_primary_anim"
+        ) { text ->
             Text(
-                text = metric.secondary,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                text = text,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
+        }
+        if (metric.secondary.isNotEmpty()) {
+            AnimatedContent(
+                targetState = metric.secondary,
+                transitionSpec = {
+                    fadeIn() togetherWith fadeOut()
+                }, label = "metric_secondary_anim"
+            ) { text ->
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    textAlign = TextAlign.Center
+                )
+            }
         }
         Spacer(modifier = Modifier.height(4.dp))
         Text(
@@ -1036,16 +1084,24 @@ private fun MetricCell(metric: DisplayMetric, label: String, modifier: Modifier 
 @Composable
 private fun HypoCell(metric: CountMetric, label: String, modifier: Modifier = Modifier) {
     val rawCount = metric.count - metric.offset
+    val displayValue = "$rawCount(${metric.count})"
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "$rawCount(${metric.count})",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
-        )
+        AnimatedContent(
+            targetState = displayValue,
+            transitionSpec = {
+                fadeIn() togetherWith fadeOut()
+            }, label = "hypo_anim"
+        ) { text ->
+            Text(
+                text = text,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+        }
         Spacer(modifier = Modifier.height(20.dp))
         Text(
             text = label,

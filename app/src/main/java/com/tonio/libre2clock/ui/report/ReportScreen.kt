@@ -2,6 +2,8 @@ package com.tonio.libre2clock.ui.report
 
 import android.content.Intent
 import android.widget.Toast
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -340,18 +342,24 @@ fun MetricRow(label: String, value: String) {
 
 @Composable
 fun TirBarAdvanced(m: ReportMetrics) {
+    val tirAnim by animateFloatAsState(targetValue = m.tir.toFloat(), animationSpec = tween(1000), label = "tir")
+    val tbrLowAnim by animateFloatAsState(targetValue = m.tbrLow.toFloat(), animationSpec = tween(1000), label = "tbr_low")
+    val tbrVLowAnim by animateFloatAsState(targetValue = m.tbrVLow.toFloat(), animationSpec = tween(1000), label = "tbr_vlow")
+    val tarHighAnim by animateFloatAsState(targetValue = m.tarHigh.toFloat(), animationSpec = tween(1000), label = "tar_high")
+    val tarVHighAnim by animateFloatAsState(targetValue = m.tarVHigh.toFloat(), animationSpec = tween(1000), label = "tar_vhigh")
+
     Column {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(text = stringResource(R.string.report_time_in_range_label), style = MaterialTheme.typography.labelSmall)
             Text(text = "%.0f%%".format(m.tir), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
         }
         
-        Row(modifier = Modifier.fillMaxWidth().height(12.dp)) {
-            if (m.tbrVLow > 0) Box(Modifier.weight(m.tbrVLow.toFloat()).fillMaxHeight().background(Color(0xFF8B0000)))
-            if (m.tbrLow > 0) Box(Modifier.weight(m.tbrLow.toFloat()).fillMaxHeight().background(Color.Red))
-            if (m.tir > 0) Box(Modifier.weight(m.tir.toFloat()).fillMaxHeight().background(Color(0xFF008000)))
-            if (m.tarHigh > 0) Box(Modifier.weight(m.tarHigh.toFloat()).fillMaxHeight().background(Color(0xFFFFA500)))
-            if (m.tarVHigh > 0) Box(Modifier.weight(m.tarVHigh.toFloat()).fillMaxHeight().background(Color(0xFFFF4500)))
+        Row(modifier = Modifier.fillMaxWidth().height(12.dp).background(Color.LightGray.copy(alpha = 0.2f))) {
+            if (tbrVLowAnim > 0.1f) Box(Modifier.weight(tbrVLowAnim).fillMaxHeight().background(Color(0xFF8B0000)))
+            if (tbrLowAnim > 0.1f) Box(Modifier.weight(tbrLowAnim).fillMaxHeight().background(Color.Red))
+            if (tirAnim > 0.1f) Box(Modifier.weight(tirAnim).fillMaxHeight().background(Color(0xFF4CAF50)))
+            if (tarHighAnim > 0.1f) Box(Modifier.weight(tarHighAnim).fillMaxHeight().background(Color(0xFFFFA500)))
+            if (tarVHighAnim > 0.1f) Box(Modifier.weight(tarVHighAnim).fillMaxHeight().background(Color(0xFFFF4500)))
         }
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {

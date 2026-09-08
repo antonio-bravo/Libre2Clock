@@ -31,7 +31,8 @@ import kotlin.math.roundToInt
 class SettingsViewModel(
     private val preferenceManager: PreferenceManager,
     private val repository: GlucoseRepository,
-    androidContext: android.content.Context
+    private val authManager: com.tonio.libre2clock.data.sync.AuthManager,
+    private val androidContext: android.content.Context
 ) : ViewModel() {
 
     private val settingsCache = SettingsSectionCacheRepository(androidContext)
@@ -47,6 +48,15 @@ class SettingsViewModel(
 
     private val _sectionPerfStats = MutableStateFlow<List<SectionPerfTelemetry.Snapshot>>(emptyList())
     val sectionPerfStats: StateFlow<List<SectionPerfTelemetry.Snapshot>> = _sectionPerfStats.asStateFlow()
+
+    val firebaseUser = authManager.user
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val isCloudSyncEnabled: StateFlow<Boolean> = preferenceManager.isCloudSyncEnabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val cloudSyncLastSuccessAt: StateFlow<Long?> = preferenceManager.cloudSyncLastSuccessAt
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     val glucoseOffset: StateFlow<Int> = preferenceManager.glucoseOffset
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
@@ -440,6 +450,53 @@ class SettingsViewModel(
 
     fun clearBackupStatusMessage() {
         _backupStatusMessage.value = null
+    }
+
+    fun updateCloudSyncEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            preferenceManager.saveCloudSyncEnabled(enabled)
+        }
+    }
+
+    fun signInWithGoogle() {
+        viewModelScope.launch {
+            try {
+                val resId = androidContext.resources.getIdentifier("default_web_client_id", "string", androidContext.packageName)
+                if (resId == 0) {
+                    _backupStatusMessage.value = "Error: google-services.json not configured."
+                    return@launch
+                }
+                val webClientId = androidContext.getString(resId)
+                val result = authManager.signInWithGoogle(webClientId)
+                _backupStatusMessage.value = result.fold(
+                    onSuccess = { "Signed in with Google." },
+                    onFailure = { it.message ?: "Sign in failed." }
+                )
+            } catch (e: Exception) {
+                _backupStatusMessage.value = "Error: ${e.message}"
+            }
+        }
+    }
+
+    fun signOutFromGoogle() {
+        viewModelScope.launch {
+            authManager.signOut()
+            _backupStatusMessage.value = "Signed out."
+        }
+    }
+
+    fun restoreLocalBackup(uri: android.net.Uri, isHardReset: Boolean) {
+        viewModelScope.launch {
+            val result = preferenceManager.restoreHistoryBackupFromUri(uri, isHardReset)
+            if (result.isSuccess) {
+                settingsCache.clearAllCache()
+                repository.syncLocalArchiveFromPreferences()
+            }
+            _backupStatusMessage.value = result.fold(
+                onSuccess = { if (isHardReset) "Backup restored (Hard Reset)." else "Backup restored and merged." },
+                onFailure = { it.message ?: "Restore failed." }
+            )
+        }
     }
 
     init {

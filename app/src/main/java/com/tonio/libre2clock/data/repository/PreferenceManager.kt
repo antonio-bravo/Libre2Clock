@@ -88,6 +88,8 @@ class PreferenceManager(private val context: Context) {
     private val BATTERY_CRITICAL_THRESHOLD_KEY = androidx.datastore.preferences.core.intPreferencesKey("battery_critical_threshold")
     private val DISABLE_FAST_REFRESH_ON_SLOW_CHARGE_KEY = booleanPreferencesKey("disable_fast_refresh_on_slow_charge")
     private val SENSOR_DURATION_DAYS_KEY = androidx.datastore.preferences.core.intPreferencesKey("sensor_duration_days")
+    private val IS_CLOUD_SYNC_ENABLED_KEY = booleanPreferencesKey("is_cloud_sync_enabled")
+    private val CLOUD_SYNC_LAST_SUCCESS_AT_KEY = longPreferencesKey("cloud_sync_last_success_at")
 
     val authToken: Flow<String?> = context.dataStore.data.map { preferences ->
         preferences[TOKEN_KEY]
@@ -331,6 +333,14 @@ class PreferenceManager(private val context: Context) {
 
     val sensorDurationDays: Flow<Int> = context.dataStore.data.map { preferences ->
         preferences[SENSOR_DURATION_DAYS_KEY] ?: 15
+    }
+
+    val isCloudSyncEnabled: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[IS_CLOUD_SYNC_ENABLED_KEY] ?: false
+    }
+
+    val cloudSyncLastSuccessAt: Flow<Long?> = context.dataStore.data.map { preferences ->
+        preferences[CLOUD_SYNC_LAST_SUCCESS_AT_KEY]
     }
 
     private fun getDefaultRanges() = listOf(
@@ -617,6 +627,18 @@ class PreferenceManager(private val context: Context) {
         updateBackupPayload()
     }
 
+    suspend fun saveCloudSyncEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[IS_CLOUD_SYNC_ENABLED_KEY] = enabled
+        }
+    }
+
+    suspend fun saveCloudSyncLastSuccessAt(timestamp: Long) {
+        context.dataStore.edit { preferences ->
+            preferences[CLOUD_SYNC_LAST_SUCCESS_AT_KEY] = timestamp
+        }
+    }
+
     private suspend fun updateBackupPayload() {
         val payload = buildCurrentHistoryBackupPayload()
         saveHistoryBackupPayload(payload)
@@ -780,31 +802,58 @@ class PreferenceManager(private val context: Context) {
         return true
     }
 
-    suspend fun restoreHistoryBackupFromUri(uri: Uri): Result<HistoryBackupPayload> {
+    suspend fun restoreHistoryBackupFromUri(uri: Uri, isHardReset: Boolean = false): Result<HistoryBackupPayload> {
         return try {
             val payloadText = context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { reader ->
                 reader.readText()
             } ?: throw IOException("Could not read selected backup file.")
 
             val payload = json.decodeFromString<HistoryBackupPayload>(payloadText)
-            val mergedHistorical = mergeHistoricalMeasurements(
-                historicalGlucoseArchive.first(),
+            
+            val historicalToSave = if (isHardReset) {
                 payload.historicalGlucoseArchive
-            )
-            val mergedCapillary = mergeCapillaryMeasurements(
-                capillaryReadings.first(),
+            } else {
+                mergeHistoricalMeasurements(
+                    historicalGlucoseArchive.first(),
+                    payload.historicalGlucoseArchive
+                )
+            }
+            
+            val capillaryToSave = if (isHardReset) {
                 payload.capillaryReadings
-            )
-            val mergedInsulin = mergeInsulinDoses(
-                insulinDoses.first(),
+            } else {
+                mergeCapillaryMeasurements(
+                    capillaryReadings.first(),
+                    payload.capillaryReadings
+                )
+            }
+            
+            val insulinToSave = if (isHardReset) {
                 payload.insulinDoses
-            )
-            val mergedSensorLogs = mergeSensorLogs(
-                sensorLogs.first(),
+            } else {
+                mergeInsulinDoses(
+                    insulinDoses.first(),
+                    payload.insulinDoses
+                )
+            }
+            
+            val sensorLogsToSave = if (isHardReset) {
                 payload.sensorLogs
-            )
+            } else {
+                mergeSensorLogs(
+                    sensorLogs.first(),
+                    payload.sensorLogs
+                )
+            }
 
             context.dataStore.edit { preferences ->
+                if (isHardReset) {
+                    preferences.clear()
+                    // Re-save essential auth if needed? No, hard reset should probably keep auth or clear it?
+                    // User said "hard reset of the data of my database". 
+                    // Usually implies clearing settings too if it's a full restore.
+                }
+
                 // Overwrite configuration settings if present in the backup payload
                 payload.glucoseOffset?.let { preferences[GLUCOSE_OFFSET_KEY] = it }
                 payload.glucoseOffsetRanges?.let { preferences[GLUCOSE_OFFSET_RANGES_KEY] = json.encodeToString(it) }
@@ -830,11 +879,11 @@ class PreferenceManager(private val context: Context) {
                 payload.batteryCriticalThreshold?.let { preferences[BATTERY_CRITICAL_THRESHOLD_KEY] = it }
                 payload.disableFastRefreshOnSlowCharge?.let { preferences[DISABLE_FAST_REFRESH_ON_SLOW_CHARGE_KEY] = it }
 
-                // Merge data
-                preferences[HISTORICAL_GLUCOSE_KEY] = json.encodeToString(mergedHistorical)
-                preferences[CAPILLARY_READINGS_KEY] = json.encodeToString(mergedCapillary)
-                preferences[INSULIN_DOSES_KEY] = json.encodeToString(mergedInsulin)
-                preferences[SENSOR_LOGS_KEY] = json.encodeToString(mergedSensorLogs)
+                // Save data
+                preferences[HISTORICAL_GLUCOSE_KEY] = json.encodeToString(historicalToSave)
+                preferences[CAPILLARY_READINGS_KEY] = json.encodeToString(capillaryToSave)
+                preferences[INSULIN_DOSES_KEY] = json.encodeToString(insulinToSave)
+                preferences[SENSOR_LOGS_KEY] = json.encodeToString(sensorLogsToSave)
 
                 // Overwrite schedules
                 preferences[WATCH_NOTIFICATION_SCHEDULES_KEY] = json.encodeToString(payload.watchNotificationSchedules)
@@ -865,6 +914,87 @@ class PreferenceManager(private val context: Context) {
 
     private fun saveHistoryBackupPayload(payload: HistoryBackupPayload) {
         historyBackupFile().writeText(json.encodeToString(payload))
+    }
+
+    suspend fun getCurrentBackupPayload(): HistoryBackupPayload = buildCurrentHistoryBackupPayload()
+
+    suspend fun restoreFromPayload(payload: HistoryBackupPayload, isHardReset: Boolean = false): Boolean {
+        return try {
+            val historicalToSave = if (isHardReset) {
+                payload.historicalGlucoseArchive
+            } else {
+                mergeHistoricalMeasurements(
+                    historicalGlucoseArchive.first(),
+                    payload.historicalGlucoseArchive
+                )
+            }
+            
+            val capillaryToSave = if (isHardReset) {
+                payload.capillaryReadings
+            } else {
+                mergeCapillaryMeasurements(
+                    capillaryReadings.first(),
+                    payload.capillaryReadings
+                )
+            }
+            
+            val insulinToSave = if (isHardReset) {
+                payload.insulinDoses
+            } else {
+                mergeInsulinDoses(
+                    insulinDoses.first(),
+                    payload.insulinDoses
+                )
+            }
+            
+            val sensorLogsToSave = if (isHardReset) {
+                payload.sensorLogs
+            } else {
+                mergeSensorLogs(
+                    sensorLogs.first(),
+                    payload.sensorLogs
+                )
+            }
+
+            context.dataStore.edit { preferences ->
+                if (isHardReset) preferences.clear()
+
+                payload.glucoseOffset?.let { preferences[GLUCOSE_OFFSET_KEY] = it }
+                payload.glucoseOffsetRanges?.let { preferences[GLUCOSE_OFFSET_RANGES_KEY] = json.encodeToString(it) }
+                payload.autoAdjustEnabled?.let { preferences[AUTO_ADJUST_ENABLED_KEY] = it }
+                payload.autoRangeOffsetsEnabled?.let { preferences[AUTO_RANGE_OFFSETS_ENABLED_KEY] = it }
+                payload.autoRangeOffsetMode?.let { preferences[AUTO_RANGE_OFFSET_MODE_KEY] = it.name }
+                payload.rapidDurationMins?.let { preferences[RAPID_DURATION_MINS_KEY] = it }
+                payload.slowDurationMins?.let { preferences[SLOW_DURATION_MINS_KEY] = it }
+                payload.icRuleConstant?.let { preferences[IC_RULE_CONSTANT_KEY] = it }
+                payload.isfRuleConstant?.let { preferences[ISF_RULE_CONSTANT_KEY] = it }
+                payload.manualTdi?.let { preferences[MANUAL_TDI_KEY] = it }
+                payload.manualIsf?.let { preferences[MANUAL_ISF_KEY] = it }
+                payload.targetGlucose?.let { preferences[TARGET_GLUCOSE_KEY] = it }
+                payload.watchAlertsEnabled?.let { preferences[WATCH_ALERTS_ENABLED_KEY] = it }
+                payload.watchNotificationMode?.let { preferences[WATCH_NOTIFICATION_MODE_KEY] = it.name }
+                payload.watchAlertIntervalMinutes?.let { preferences[WATCH_ALERT_INTERVAL_MINUTES_KEY] = it }
+                payload.watchAlertStartMinute?.let { preferences[WATCH_ALERT_START_MINUTE_KEY] = it }
+                payload.lowGlucoseAlarmEnabled?.let { preferences[LOW_GLUCOSE_ALARM_ENABLED_KEY] = it }
+                payload.highGlucoseAlarmEnabled?.let { preferences[HIGH_GLUCOSE_ALARM_ENABLED_KEY] = it }
+                payload.useCalibratedForAlarms?.let { preferences[USE_CALIBRATED_FOR_ALARMS_KEY] = it }
+                payload.historyRetentionDays?.let { preferences[HISTORY_RETENTION_DAYS_KEY] = it }
+                payload.batteryLowThreshold?.let { preferences[BATTERY_LOW_THRESHOLD_KEY] = it }
+                payload.batteryCriticalThreshold?.let { preferences[BATTERY_CRITICAL_THRESHOLD_KEY] = it }
+                payload.disableFastRefreshOnSlowCharge?.let { preferences[DISABLE_FAST_REFRESH_ON_SLOW_CHARGE_KEY] = it }
+
+                preferences[HISTORICAL_GLUCOSE_KEY] = json.encodeToString(historicalToSave)
+                preferences[CAPILLARY_READINGS_KEY] = json.encodeToString(capillaryToSave)
+                preferences[INSULIN_DOSES_KEY] = json.encodeToString(insulinToSave)
+                preferences[SENSOR_LOGS_KEY] = json.encodeToString(sensorLogsToSave)
+                preferences[WATCH_NOTIFICATION_SCHEDULES_KEY] = json.encodeToString(payload.watchNotificationSchedules)
+                preferences[GLUCOSE_ALARM_SCHEDULES_KEY] = json.encodeToString(payload.glucoseAlarmSchedules)
+            }
+            updateBackupPayload()
+            true
+        } catch (e: Exception) {
+            false
+        }
     }
 
     private suspend fun buildCurrentHistoryBackupPayload(): HistoryBackupPayload {
