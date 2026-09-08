@@ -11,8 +11,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tonio.libre2clock.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,7 +29,7 @@ fun SettingsCloudScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Sincronización en la Nube") },
+                title = { Text(stringResource(R.string.settings_cloud_sync_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -44,7 +46,7 @@ fun SettingsCloudScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                SettingsSection(title = "Cuenta") {
+                SettingsSection(title = stringResource(R.string.cloud_account_section)) {
                     Column(modifier = Modifier.padding(8.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
@@ -56,11 +58,11 @@ fun SettingsCloudScreen(
                             Spacer(modifier = Modifier.width(16.dp))
                             Column {
                                 Text(
-                                    if (firebaseUser != null) "Conectado como" else "No conectado",
+                                    if (firebaseUser != null) stringResource(R.string.cloud_connected_as) else stringResource(R.string.cloud_not_connected),
                                     style = MaterialTheme.typography.labelSmall
                                 )
                                 Text(
-                                    firebaseUser?.email ?: "Inicia sesión con Gmail para sincronizar",
+                                    firebaseUser?.email ?: stringResource(R.string.cloud_connect_hint),
                                     style = MaterialTheme.typography.bodyLarge
                                 )
                             }
@@ -75,7 +77,7 @@ fun SettingsCloudScreen(
                             ) {
                                 Icon(Icons.AutoMirrored.Filled.Login, contentDescription = null)
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Conectar con Google")
+                                Text(stringResource(R.string.cloud_connect_button))
                             }
                         } else {
                             OutlinedButton(
@@ -84,7 +86,7 @@ fun SettingsCloudScreen(
                             ) {
                                 Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null)
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Cerrar Sesión")
+                                Text(stringResource(R.string.cloud_logout_button))
                             }
                         }
                     }
@@ -93,16 +95,16 @@ fun SettingsCloudScreen(
 
             if (firebaseUser != null) {
                 item {
-                    SettingsSection(title = "Opciones de Sincronización") {
+                    SettingsSection(title = stringResource(R.string.cloud_options_section)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("Sincronización Automática")
+                                Text(stringResource(R.string.cloud_auto_sync_label))
                                 Text(
-                                    "Mantiene ajustes e historial sincronizados entre tus dispositivos.",
+                                    stringResource(R.string.cloud_auto_sync_desc),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -116,7 +118,7 @@ fun SettingsCloudScreen(
                         if (isEnabled) {
                             HorizontalDivider()
                             Text(
-                                lastSuccess?.let { "Última sincronización: ${formatTimestamp(it)}" } ?: "Sincronización pendiente...",
+                                lastSuccess?.let { stringResource(R.string.cloud_last_sync, formatTimestamp(it)) } ?: stringResource(R.string.cloud_sync_pending),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -127,7 +129,7 @@ fun SettingsCloudScreen(
             
             item {
                 Text(
-                    "Tus datos se guardan de forma segura en tu cuenta personal de Google Firebase. Solo tú tienes acceso a ellos.",
+                    stringResource(R.string.cloud_privacy_note),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 8.dp)

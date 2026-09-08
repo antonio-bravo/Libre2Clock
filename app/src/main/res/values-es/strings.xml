@@ -262,6 +262,10 @@
     <string name="settings_history_backup">Historial y Copia de Seguridad</string>
     <string name="settings_retention_days_label">Días de retención (30-365)</string>
     <string name="settings_history_backup_desc">Libre2Clock guarda tu historial localmente y pide a Android que haga una copia en tu cuenta de Google.</string>
+    <string name="settings_cloud_sync_title">Sincronización en la Nube</string>
+    <string name="settings_cloud_sync_desc">Sincroniza tus datos entre dispositivos usando tu cuenta de Google.</string>
+    <string name="settings_llu_account_header">Cuenta LibreLinkUp</string>
+    <string name="settings_llu_account_desc">Esta es tu fuente de datos de glucosa.</string>
     <string name="settings_google_cloud_backup">Copia en Google Cloud</string>
     <string name="settings_last_request">Última petición: %1$s</string>
     <string name="settings_no_request">Ninguna petición enviada aún.</string>
@@ -357,4 +361,25 @@
     <string name="settings_apply_intelligent_suggestions">Aplicar sugerencias inteligentes (%1$d rangos)</string>
     <string name="settings_real_deviation_label">Desvío real de este rango: %1$.1f%%</string>
     <string name="settings_smart_estimated_deviation_label">Desvío estimado smart: %1$.1f%%</string>
+
+    <!-- Cloud Sync Screen -->
+    <string name="cloud_account_section">Cuenta</string>
+    <string name="cloud_connected_as">Conectado como</string>
+    <string name="cloud_not_connected">No conectado</string>
+    <string name="cloud_connect_hint">Inicia sesión con Gmail para sincronizar</string>
+    <string name="cloud_connect_button">Conectar con Google</string>
+    <string name="cloud_logout_button">Cerrar Sesión</string>
+    <string name="cloud_options_section">Opciones de Sincronización</string>
+    <string name="cloud_auto_sync_label">Sincronización Automática</string>
+    <string name="cloud_auto_sync_desc">Mantiene ajustes e historial sincronizados entre tus dispositivos.</string>
+    <string name="cloud_last_sync">Última sincronización: %1$s</string>
+    <string name="cloud_sync_pending">Sincronización pendiente…</string>
+    <string name="cloud_privacy_note">Tus datos se guardan de forma segura en tu cuenta personal de Google Firebase. Solo tú tienes acceso a ellos.</string>
+    <string name="cloud_configure_button">Configurar Sincronización</string>
+
+    <!-- Backup Restore Dialog -->
+    <string name="restore_dialog_title">Restaurar Copia de Seguridad</string>
+    <string name="restore_dialog_desc">¿Cómo quieres restaurar los datos?\n\nFusionar: Combina con los datos actuales.\nHard Reset: Borra todo y deja solo lo del backup.</string>
+    <string name="restore_merge_button">Fusionar</string>
+    <string name="restore_hard_reset_button">Hard Reset</string>
 </resources>

@@ -56,7 +56,7 @@ fun SettingsScreen(
             item {
                 Spacer(modifier = Modifier.height(8.dp))
 
-                SettingsSection(title = "Cuenta LibreLinkUp") {
+                SettingsSection(title = stringResource(R.string.settings_llu_account_header)) {
                     Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                         Icon(
                             Icons.Default.Person,
@@ -66,11 +66,11 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
-                                libreLinkUpEmail ?: "Sesión iniciada",
+                                libreLinkUpEmail ?: stringResource(R.string.settings_confirm), // fallback to generic confirm/active
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             Text(
-                                "Esta es tu fuente de datos de glucosa.",
+                                stringResource(R.string.settings_llu_account_desc),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -116,8 +116,8 @@ fun SettingsScreen(
                 )
 
                 SettingsCategoryItem(
-                    title = "Sincronización en la Nube",
-                    description = "Sincroniza tus datos entre dispositivos usando tu cuenta de Google.",
+                    title = stringResource(R.string.settings_cloud_sync_title),
+                    description = stringResource(R.string.settings_cloud_sync_desc),
                     icon = Icons.Default.CloudSync,
                     onClick = onNavigateToCloud
                 )

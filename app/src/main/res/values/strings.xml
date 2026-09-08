@@ -262,6 +262,10 @@
     <string name="settings_history_backup">History &amp; Backup</string>
     <string name="settings_retention_days_label">Retention days (30-365)</string>
     <string name="settings_history_backup_desc">Libre2Clock keeps your history locally and asks Android to back it up to your Google account.</string>
+    <string name="settings_cloud_sync_title">Cloud Sync</string>
+    <string name="settings_cloud_sync_desc">Sync your settings and history across devices using your Google account.</string>
+    <string name="settings_llu_account_header">LibreLinkUp Account</string>
+    <string name="settings_llu_account_desc">This is your primary glucose data source.</string>
     <string name="settings_google_cloud_backup">Google Cloud Backup</string>
     <string name="settings_last_request">Last request: %1$s</string>
     <string name="settings_no_request">No request sent yet.</string>
@@ -361,4 +365,25 @@
     <string name="settings_apply_intelligent_suggestions">Apply intelligent suggestions (%1$d ranges)</string>
     <string name="settings_real_deviation_label">Real deviation for this range: %1$.1f%%</string>
     <string name="settings_smart_estimated_deviation_label">Smart estimated deviation: %1$.1f%%</string>
+
+    <!-- Cloud Sync Screen -->
+    <string name="cloud_account_section">Account</string>
+    <string name="cloud_connected_as">Connected as</string>
+    <string name="cloud_not_connected">Not connected</string>
+    <string name="cloud_connect_hint">Sign in with Gmail to sync</string>
+    <string name="cloud_connect_button">Connect with Google</string>
+    <string name="cloud_logout_button">Sign Out</string>
+    <string name="cloud_options_section">Sync Options</string>
+    <string name="cloud_auto_sync_label">Automatic Sync</string>
+    <string name="cloud_auto_sync_desc">Keep settings and history synced across your devices.</string>
+    <string name="cloud_last_sync">Last sync: %1$s</string>
+    <string name="cloud_sync_pending">Sync pending…</string>
+    <string name="cloud_privacy_note">Your data is securely stored in your personal Google Firebase account. Only you have access to it.</string>
+    <string name="cloud_configure_button">Configure Sync</string>
+
+    <!-- Backup Restore Dialog -->
+    <string name="restore_dialog_title">Restore Backup</string>
+    <string name="restore_dialog_desc">How do you want to restore the data?\n\nMerge: Combines with current data.\nHard Reset: Deletes everything and leaves only the backup content.</string>
+    <string name="restore_merge_button">Merge</string>
+    <string name="restore_hard_reset_button">Hard Reset</string>
 </resources>

@@ -46,27 +46,27 @@ fun SettingsDataScreen(
     if (showRestoreConfirmDialog && restoreUriToProcess != null) {
         AlertDialog(
             onDismissRequest = { showRestoreConfirmDialog = false },
-            title = { Text("Restaurar Copia de Seguridad") },
-            text = { Text("¿Cómo quieres restaurar los datos? \n\nFusionar: Combina con los datos actuales.\nHard Reset: Borra todo y deja solo lo del backup.") },
+            title = { Text(stringResource(R.string.restore_dialog_title)) },
+            text = { Text(stringResource(R.string.restore_dialog_desc)) },
             confirmButton = {
                 Row {
                     TextButton(onClick = {
                         showRestoreConfirmDialog = false
                         viewModel.restoreLocalBackup(restoreUriToProcess!!, isHardReset = false)
                     }) {
-                        Text("Fusionar")
+                        Text(stringResource(R.string.restore_merge_button))
                     }
                     TextButton(onClick = {
                         showRestoreConfirmDialog = false
                         viewModel.restoreLocalBackup(restoreUriToProcess!!, isHardReset = true)
                     }) {
-                        Text("Hard Reset", color = MaterialTheme.colorScheme.error)
+                        Text(stringResource(R.string.restore_hard_reset_button), color = MaterialTheme.colorScheme.error)
                     }
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showRestoreConfirmDialog = false }) {
-                    Text("Cancelar")
+                    Text(stringResource(android.R.string.cancel))
                 }
             }
         )
@@ -114,10 +114,10 @@ fun SettingsDataScreen(
                     )
                 }
 
-                SettingsSection(title = "Sincronización en la Nube") {
-                    Text(text = "Sincroniza automáticamente tus datos con tu cuenta de Google.", style = MaterialTheme.typography.bodyMedium)
+                SettingsSection(title = stringResource(R.string.settings_cloud_sync_title)) {
+                    Text(text = stringResource(R.string.settings_cloud_sync_desc), style = MaterialTheme.typography.bodyMedium)
                     Button(onClick = onNavigateToCloud, modifier = Modifier.fillMaxWidth()) {
-                        Text("Configurar Sincronización")
+                        Text(stringResource(R.string.cloud_configure_button))
                     }
                 }
 
