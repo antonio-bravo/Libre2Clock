@@ -28,8 +28,21 @@ class GlucoseHistoryDatabaseHelper(context: Context) :
             )
             """.trimIndent()
         )
+        db.execSQL(
+            """
+            CREATE TABLE system_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp INTEGER NOT NULL,
+                level TEXT NOT NULL,
+                tag TEXT NOT NULL,
+                message TEXT NOT NULL,
+                detail TEXT
+            )
+            """.trimIndent()
+        )
         db.execSQL("CREATE INDEX idx_glucose_history_sort_epoch ON glucose_history(sort_epoch_ms DESC)")
         db.execSQL("CREATE INDEX idx_glucose_history_window ON glucose_history(sort_epoch_ms DESC, raw_value)")
+        db.execSQL("CREATE INDEX idx_system_events_timestamp ON system_events(timestamp DESC)")
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
@@ -39,6 +52,21 @@ class GlucoseHistoryDatabaseHelper(context: Context) :
         }
         if (oldVersion < 2) {
             db.execSQL("CREATE INDEX IF NOT EXISTS idx_glucose_history_window ON glucose_history(sort_epoch_ms DESC, raw_value)")
+        }
+        if (oldVersion < 3) {
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS system_events (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp INTEGER NOT NULL,
+                    level TEXT NOT NULL,
+                    tag TEXT NOT NULL,
+                    message TEXT NOT NULL,
+                    detail TEXT
+                )
+                """.trimIndent()
+            )
+            db.execSQL("CREATE INDEX IF NOT EXISTS idx_system_events_timestamp ON system_events(timestamp DESC)")
         }
     }
 
@@ -262,6 +290,6 @@ class GlucoseHistoryDatabaseHelper(context: Context) :
 
     companion object {
         private const val DATABASE_NAME = "glucose_history.db"
-        private const val DATABASE_VERSION = 2
+        private const val DATABASE_VERSION = 3
     }
 }

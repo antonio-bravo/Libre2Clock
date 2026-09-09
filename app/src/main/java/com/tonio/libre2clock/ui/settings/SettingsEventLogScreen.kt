@@ -1,5 +1,6 @@
 package com.tonio.libre2clock.ui.settings
 
+import android.content.ClipData
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,7 +14,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import com.tonio.libre2clock.R
@@ -23,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tonio.libre2clock.util.LogEvent
 import com.tonio.libre2clock.util.LogLevel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,7 +34,8 @@ fun SettingsEventLogScreen(
     onBack: () -> Unit
 ) {
     val events by viewModel.eventLogs.collectAsStateWithLifecycle()
-    val clipboardManager = LocalClipboardManager.current
+    val clipboard = LocalClipboard.current
+    val coroutineScope = rememberCoroutineScope()
     var selectedEvent by remember { mutableStateOf<LogEvent?>(null) }
 
     Scaffold(
@@ -103,7 +107,11 @@ fun SettingsEventLogScreen(
                             "Tag: ${selectedEvent!!.tag}\n" +
                             "Message: ${selectedEvent!!.message}\n" +
                             "Detail: ${selectedEvent!!.detail ?: "N/A"}"
-                    clipboardManager.setText(AnnotatedString(textToCopy))
+                    
+                    coroutineScope.launch {
+                        val clipData = ClipData.newPlainText("Event Log", textToCopy)
+                        clipboard.setClipEntry(ClipEntry(clipData))
+                    }
                     selectedEvent = null
                 }) {
                     Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(18.dp))
