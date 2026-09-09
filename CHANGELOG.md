@@ -1,5 +1,34 @@
 # Changelog
 
+## 4c611dd (Sep 09, 2026 11:43:27)
+fix CloudSync — antonio-bravo
+[detail](#4c611dd-details)
+
+<details id='4c611dd-details'>
+<summary>Changed files</summary>
+
+- app/proguard-rules.pro [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/sync/AuthManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsDataScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+</details>
+
+
+---
+## e993d19 (Sep 08, 2026 22:47:46)
+Update changelog — github-actions[bot]
+[detail](#e993d19-details)
+
+<details id='e993d19-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 1f4f37d (Sep 09, 2026 00:47:33)
 Authentication Manager — antonio-bravo
 [detail](#1f4f37d-details)
@@ -738,33 +767,6 @@ He simplificado la "firma" de la caché para que sea más rápida de generar y m
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
-</details>
-
-
----
-## 3fc2f53 (Aug 13, 2026 19:04:04)
-Update changelog — github-actions[bot]
-[detail](#3fc2f53-details)
-
-<details id='3fc2f53-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 1679081 (Aug 13, 2026 21:03:52)
-fix graph — antonio-bravo
-[detail](#1679081-details)
-
-<details id='1679081-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
 </details>
 
 
