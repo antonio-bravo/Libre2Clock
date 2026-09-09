@@ -1,5 +1,43 @@
 # Changelog
 
+## 0f86c19 (Sep 09, 2026 16:27:51)
+Error Log + continue if crash — antonio-bravo
+[detail](#0f86c19-details)
+
+<details id='0f86c19-details'>
+<summary>Changed files</summary>
+
+- app/proguard-rules.pro [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/model/AlarmSchedule.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/model/LibreModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/di/AppContainer.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/navigation/Destinations.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsAdvancedScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEventLogScreen.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/EventLogManager.kt [Deleted]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 862e53c (Sep 09, 2026 13:15:17)
+Update changelog — github-actions[bot]
+[detail](#862e53c-details)
+
+<details id='862e53c-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 03883e6 (Sep 09, 2026 15:14:21)
 time out on sync — antonio-bravo
 [detail](#03883e6-details)
@@ -701,32 +739,6 @@ fix HbA1c using cache and back button — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
-</details>
-
-
----
-## 7d582f6 (Aug 15, 2026 17:36:40)
-Update changelog — github-actions[bot]
-[detail](#7d582f6-details)
-
-<details id='7d582f6-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## b1f212b (Aug 15, 2026 19:36:27)
-fix back button — antonio-bravo
-[detail](#b1f212b-details)
-
-<details id='b1f212b-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepository.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
 </details>
 
 
