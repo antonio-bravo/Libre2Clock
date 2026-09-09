@@ -1,5 +1,29 @@
 # Changelog
 
+## 49ce3d9 (Sep 09, 2026 17:45:21)
+fix datetime HH MM — antonio-bravo
+[detail](#49ce3d9-details)
+
+<details id='49ce3d9-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
+</details>
+
+
+---
+## 7eb4400 (Sep 09, 2026 15:12:12)
+Update changelog — github-actions[bot]
+[detail](#7eb4400-details)
+
+<details id='7eb4400-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## c501d14 (Sep 09, 2026 17:11:56)
 Add EventLog — antonio-bravo
 [detail](#c501d14-details)
@@ -699,33 +723,6 @@ time in local — antonio-bravo
 
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
-</details>
-
-
----
-## f87b4b6 (Aug 17, 2026 17:17:05)
-Update changelog — github-actions[bot]
-[detail](#f87b4b6-details)
-
-<details id='f87b4b6-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 5f31a2f (Aug 17, 2026 19:16:54)
-time in UTC — antonio-bravo
-[detail](#5f31a2f-details)
-
-<details id='5f31a2f-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
 </details>
 
