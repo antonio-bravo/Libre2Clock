@@ -187,11 +187,11 @@ fun InsulinHubScreen(
                 ) {
                     Icon(Icons.Default.History, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
-            // Section 6: SETTINGS (Always Visible)
+                    Text(stringResource(R.string.insulin_view_logs))
                 }
             }
 
-            // Section 5: SETTINGS (Always Visible)
+            // Section 6: SETTINGS (Always Visible)
             item {
                 AdvancedSettingsCard(
                     rapidDurationMins,
@@ -466,10 +466,9 @@ fun BolusCalculatorCard(
                 value = carbsSliderValue,
                 onValueChange = { 
                     carbsSliderValue = it
-                    carbsText = if (it == 0f) "" else "%.0f".format(it)
+                    carbsText = if (it < 0.5f) "" else "%.0f".format(it)
                 },
                 valueRange = 0f..150f,
-                steps = 149,
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -791,20 +790,20 @@ fun InsulinDoseDialog(
     val now = Instant.now().atZone(zone)
 
     var doseDate by remember {
-        val initialDateStr = initialDose?.timestamp?.substringBefore(" ")
+        val initialDateStr = initialDose?.timestamp?.takeIf { it.contains(" ") }?.substringBefore(" ")
         val parsed = initialDateStr?.let {
             runCatching { LocalDate.parse(it, DateTimeFormatter.ISO_LOCAL_DATE) }.getOrNull()
         }
         mutableStateOf(parsed ?: now.toLocalDate())
     }
     var doseHour by remember {
-        val initialTimeStr = initialDose?.timestamp?.substringAfter(" ")
-        val h = initialTimeStr?.substringBefore(":") ?: now.hour.toString().padStart(2, '0')
+        val timeStr = initialDose?.timestamp?.takeIf { it.contains(" ") }?.substringAfter(" ")
+        val h = timeStr?.substringBefore(":")?.takeIf { it.isNotBlank() } ?: now.hour.toString().padStart(2, '0')
         mutableStateOf(h)
     }
     var doseMinute by remember {
-        val initialTimeStr = initialDose?.timestamp?.substringAfter(" ")
-        val m = if (initialTimeStr?.contains(":") == true) initialTimeStr.substringAfter(":") else now.minute.toString().padStart(2, '0')
+        val timeStr = initialDose?.timestamp?.takeIf { it.contains(" ") }?.substringAfter(" ")
+        val m = timeStr?.substringAfter(":")?.takeIf { it.isNotBlank() } ?: now.minute.toString().padStart(2, '0')
         mutableStateOf(m)
     }
 
