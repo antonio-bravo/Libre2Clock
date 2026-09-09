@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
+import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -156,7 +157,7 @@ class DashboardViewModel(
         .flowOn(Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    // Processed history for live metrics (Fast: 2 days)
+    // Processed history for live metrics (Fast: 3 days to ensure yesterday is always fully covered)
     private val processedLiveHistory: Flow<List<GlucoseMeasurement>> = combine(
         combine(
             preferenceManager.glucoseOffset,
@@ -169,7 +170,7 @@ class DashboardViewModel(
         preferenceManager.capillaryReadings,
         repository.dataVersion
     ) { config, capillaries, _ ->
-        val cutoff = Instant.now().minus(java.time.Duration.ofDays(2))
+        val cutoff = Instant.now().minus(Duration.ofDays(3))
         val startEpochMs = cutoff.toEpochMilli()
         val endEpochMs = Instant.now().toEpochMilli()
 
@@ -179,7 +180,7 @@ class DashboardViewModel(
             capillaryReadings = capillaries
         )
 
-        repository.getHistoricalGlucoseWindow(startEpochMs, endEpochMs, maxItems = 3000)
+        repository.getHistoricalGlucoseWindow(startEpochMs, endEpochMs, maxItems = 5000)
             .map {
                 GlucoseProcessor.process(
                     measurement = it,
@@ -236,7 +237,7 @@ class DashboardViewModel(
             val cutoff = Instant.now().minus(java.time.Duration.ofDays(90))
             val startEpochMs = cutoff.toEpochMilli()
             val endEpochMs = Instant.now().toEpochMilli()
-            val rawHistorical = repository.getHistoricalGlucoseWindow(startEpochMs, endEpochMs, maxItems = 50000)
+            val rawHistorical = repository.getHistoricalGlucoseWindow(startEpochMs, endEpochMs, maxItems = 150000)
 
             val calcContext = GlucoseProcessor.buildContext(
                 autoRangeOffsetMode = autoRangeMode,

@@ -54,16 +54,17 @@ object DashboardMetricsCalculator {
         val yesterdayItems = mutableListOf<GlucoseMeasurement>()
 
         measurements.forEach { m ->
-            // Filter out failure values (<= 40 mg/dL)
+            // Filter out common sensor failure values (e.g. exactly 40 or 0)
             if (m.value <= 40) return@forEach
             val instant = parseMeasurementInstant(m) ?: return@forEach
             
-            val beforeToday = instant.isBefore(startOfToday)
-            val notBeforeYesterday = !instant.isBefore(startOfYesterday)
+            // Only group measurements that have a clear date relative to Today
+            val isYesterday = instant.isBefore(startOfToday) && !instant.isBefore(startOfYesterday)
+            val isToday = !instant.isBefore(startOfToday)
 
-            if (!beforeToday) {
+            if (isToday) {
                 todayItems.add(m)
-            } else if (notBeforeYesterday) {
+            } else if (isYesterday) {
                 yesterdayItems.add(m)
             }
         }
@@ -121,11 +122,12 @@ object DashboardMetricsCalculator {
         val avgRawForA1c = if (a1cItems.isNotEmpty()) a1cRawSum.toDouble() / a1cItems.size else 0.0
         val avgCalibratedForA1c = if (a1cItems.isNotEmpty()) a1cCalibratedSum.toDouble() / a1cItems.size else 0.0
         
-        val estimatedA1c = if (avgCalibratedForA1c > 10.0 && a1cItems.size > 2) { 
-            val gmiRaw = 3.31 + (0.02392 * avgRawForA1c)
-            val gmiCalibrated = 3.31 + (0.02392 * avgCalibratedForA1c)
+        val estimatedA1c = if (avgCalibratedForA1c > 20.0 && a1cItems.size > 5) { 
+            // ADAG formula: HbA1c (%) = (mean_glucose + 46.7) / 28.7
+            val a1cRaw = (avgRawForA1c + 46.7) / 28.7
+            val a1cCalibrated = (avgCalibratedForA1c + 46.7) / 28.7
             DisplayMetric(
-                primary = String.format(Locale.US, "%.1f%%(%.1f%%)", gmiRaw, gmiCalibrated),
+                primary = String.format(Locale.US, "%.1f%%(%.1f%%)", a1cRaw, a1cCalibrated),
                 secondary = ""
             )
         } else {
@@ -177,12 +179,12 @@ object DashboardMetricsCalculator {
             val instant = parseMeasurementInstant(m) ?: return@forEach
             
             // Only group measurements that have a clear date relative to Today
-            val beforeToday = instant.isBefore(startOfToday)
-            val notBeforeYesterday = !instant.isBefore(startOfYesterday)
+            val isYesterday = instant.isBefore(startOfToday) && !instant.isBefore(startOfYesterday)
+            val isToday = !instant.isBefore(startOfToday)
 
-            if (!beforeToday) {
+            if (isToday) {
                 todayItems.add(m)
-            } else if (notBeforeYesterday) {
+            } else if (isYesterday) {
                 yesterdayItems.add(m)
             }
             
@@ -205,17 +207,14 @@ object DashboardMetricsCalculator {
             }
         }
 
-        // HbA1c / GMI Calculation
-        // Standard clinical recommendation is to use at least 14 days of data for a reliable GMI.
-        // GMI formula (Standard for CGMs): GMI (%) = 3.31 + 0.02392 * [mean glucose in mg/dL]
         val avgRawForA1c = if (a1cItems.isNotEmpty()) a1cItems.map { it.value }.average() else 0.0
         val avgCalibratedForA1c = if (a1cItems.isNotEmpty()) a1cItems.map { it.calibratedValue }.average() else 0.0
         
-        val estimatedA1c = if (avgCalibratedForA1c > 10.0 && a1cItems.size > 2) { 
-            val gmiRaw = 3.31 + (0.02392 * avgRawForA1c)
-            val gmiCalibrated = 3.31 + (0.02392 * avgCalibratedForA1c)
+        val estimatedA1c = if (avgCalibratedForA1c > 20.0 && a1cItems.size > 5) { 
+            val a1cRaw = (avgRawForA1c + 46.7) / 28.7
+            val a1cCalibrated = (avgCalibratedForA1c + 46.7) / 28.7
             DisplayMetric(
-                primary = String.format(Locale.US, "%.1f%%(%.1f%%)", gmiRaw, gmiCalibrated),
+                primary = String.format(Locale.US, "%.1f%%(%.1f%%)", a1cRaw, a1cCalibrated),
                 secondary = ""
             )
         } else {
@@ -284,8 +283,8 @@ object DashboardMetricsCalculator {
         val oscCal = maxOf(maxCal.roundToInt() - avgCalibrated, avgCalibrated - minCal.roundToInt()).coerceAtLeast(0)
 
         return DisplayMetric(
-            primary = "Avg $avgRaw ± $oscRaw",
-            secondary = "(avg $avgCalibrated ± $oscCal)"
+            primary = "$avgRaw ± $oscRaw",
+            secondary = "($avgCalibrated ± $oscCal)"
         )
     }
 
