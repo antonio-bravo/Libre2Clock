@@ -1,5 +1,38 @@
 # Changelog
 
+## cd3dfee (Sep 09, 2026 23:18:16)
+fix — antonio-bravo
+[detail](#cd3dfee-details)
+
+<details id='cd3dfee-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepository.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsCacheRepository.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCalibrationScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 3315f38 (Sep 09, 2026 20:31:03)
+Update changelog — github-actions[bot]
+[detail](#3315f38-details)
+
+<details id='3315f38-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 1822291 (Sep 09, 2026 22:30:50)
 fix HbA1c after restore — antonio-bravo
 [detail](#1822291-details)
@@ -703,34 +736,6 @@ Loggin and improve performance — antonio-bravo
 - app/src/main/res/values-es/strings.xml [Modified]
 - app/src/main/res/values/strings.xml [Modified]
 - gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## dcd788d (Aug 22, 2026 14:34:09)
-Update changelog — github-actions[bot]
-[detail](#dcd788d-details)
-
-<details id='dcd788d-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## ee30cd3 (Aug 22, 2026 16:32:07)
-fix copy and summary sensor errors — antonio-bravo
-[detail](#ee30cd3-details)
-
-<details id='ee30cd3-details'>
-<summary>Changed files</summary>
-
-- .idea/deploymentTargetSelector.xml [Modified]
-- .idea/planningMode.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/sensor/SensorLogsScreen.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
 </details>
 
 
