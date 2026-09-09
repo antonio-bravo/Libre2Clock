@@ -929,6 +929,23 @@ class PreferenceManager(private val context: Context) {
 
     suspend fun getCurrentBackupPayload(): HistoryBackupPayload = buildCurrentHistoryBackupPayload()
 
+    suspend fun getSettingsOnlyPayload(): HistoryBackupPayload {
+        val full = buildCurrentHistoryBackupPayload()
+        return full.copy(
+            historicalGlucoseArchive = emptyList(),
+            capillaryReadings = emptyList(),
+            insulinDoses = emptyList(),
+            sensorLogs = emptyList()
+        )
+    }
+
+    suspend fun getCloudDataPayload(): HistoryBackupPayload {
+        val full = buildCurrentHistoryBackupPayload()
+        return full.copy(
+            historicalGlucoseArchive = emptyList() // History is synced separately
+        )
+    }
+
     suspend fun restoreFromPayload(payload: HistoryBackupPayload, isHardReset: Boolean = false): Boolean {
         return try {
             val historicalToSave = if (isHardReset) {
