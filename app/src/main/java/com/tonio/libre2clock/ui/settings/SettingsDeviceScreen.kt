@@ -49,7 +49,11 @@ fun SettingsDeviceScreen(
                         value = sensorDurationText,
                         onValueChange = {
                             sensorDurationText = it
-                            it.toIntOrNull()?.let { viewModel.updateSensorDurationDays(it) }
+                            it.toIntOrNull()?.let { days ->
+                                if (days in 1..30) {
+                                    viewModel.updateSensorDurationDays(days)
+                                }
+                            }
                         },
                         label = { Text(stringResource(R.string.settings_sensor_duration_label)) },
                         modifier = Modifier.fillMaxWidth(),

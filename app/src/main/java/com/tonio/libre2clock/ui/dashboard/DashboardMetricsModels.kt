@@ -119,16 +119,22 @@ object DashboardMetricsCalculator {
             }
         }
 
-        val avgRawForA1c = if (a1cItems.isNotEmpty()) a1cRawSum.toDouble() / a1cItems.size else 0.0
-        val avgCalibratedForA1c = if (a1cItems.isNotEmpty()) a1cCalibratedSum.toDouble() / a1cItems.size else 0.0
+        val dailyAverages = a1cItems.groupBy { m ->
+            parseMeasurementInstant(m)?.atZone(zone)?.toLocalDate()
+        }.filterKeys { it != null }.values.map { day ->
+            day.map { it.value.toDouble() }.average() to day.map { it.calibratedValue.toDouble() }.average()
+        }
+
+        val avgRawForA1c = if (dailyAverages.isNotEmpty()) dailyAverages.map { it.first }.average() else 0.0
+        val avgCalibratedForA1c = if (dailyAverages.isNotEmpty()) dailyAverages.map { it.second }.average() else 0.0
         
         val estimatedA1c = if (avgCalibratedForA1c > 40.0 && a1cItems.size > 100) { 
             // ADAG formula: HbA1c (%) = (mean_glucose + 46.7) / 28.7
             val a1cRaw = (avgRawForA1c + 46.7) / 28.7
             val a1cCalibrated = (avgCalibratedForA1c + 46.7) / 28.7
             DisplayMetric(
-                primary = String.format(Locale.US, "%.1f%%", a1cCalibrated),
-                secondary = String.format(Locale.US, "Raw: %.1f%%", a1cRaw)
+                primary = String.format(Locale.US, "%.1f%% (%.1f%%)", a1cCalibrated, a1cRaw),
+                secondary = ""
             )
         } else {
             DisplayMetric("--", "")
@@ -207,15 +213,21 @@ object DashboardMetricsCalculator {
             }
         }
 
-        val avgRawForA1c = if (a1cItems.isNotEmpty()) a1cItems.map { it.value }.average() else 0.0
-        val avgCalibratedForA1c = if (a1cItems.isNotEmpty()) a1cItems.map { it.calibratedValue }.average() else 0.0
+        val dailyAverages = a1cItems.groupBy { m ->
+            parseMeasurementInstant(m)?.atZone(zone)?.toLocalDate()
+        }.filterKeys { it != null }.values.map { day ->
+            day.map { it.value.toDouble() }.average() to day.map { it.calibratedValue.toDouble() }.average()
+        }
+
+        val avgRawForA1c = if (dailyAverages.isNotEmpty()) dailyAverages.map { it.first }.average() else 0.0
+        val avgCalibratedForA1c = if (dailyAverages.isNotEmpty()) dailyAverages.map { it.second }.average() else 0.0
         
         val estimatedA1c = if (avgCalibratedForA1c > 40.0 && a1cItems.size > 100) { 
             val a1cRaw = (avgRawForA1c + 46.7) / 28.7
             val a1cCalibrated = (avgCalibratedForA1c + 46.7) / 28.7
             DisplayMetric(
-                primary = String.format(Locale.US, "%.1f%%", a1cCalibrated),
-                secondary = String.format(Locale.US, "Raw: %.1f%%", a1cRaw)
+                primary = String.format(Locale.US, "%.1f%% (%.1f%%)", a1cCalibrated, a1cRaw),
+                secondary = ""
             )
         } else {
             DisplayMetric("--", "")
@@ -257,34 +269,46 @@ object DashboardMetricsCalculator {
             return DisplayMetric(primary = "--", secondary = "")
         }
 
-        var sumRaw = 0.0
-        var sumCal = 0.0
+        val zone = ZoneId.systemDefault()
+        val dailyGroups = measurements.groupBy { m ->
+            parseMeasurementInstant(m)?.atZone(zone)?.toLocalDate()
+        }.filterKeys { it != null }
+
+        if (dailyGroups.isEmpty()) return DisplayMetric("--", "")
+
+        val dailyAveragesRaw = mutableListOf<Double>()
+        val dailyAveragesCal = mutableListOf<Double>()
         var maxRaw = Double.MIN_VALUE
         var minRaw = Double.MAX_VALUE
         var maxCal = Double.MIN_VALUE
         var minCal = Double.MAX_VALUE
 
-        measurements.forEach { m ->
-            val rv = m.value.toDouble()
-            val cv = m.calibratedValue.toDouble()
-            sumRaw += rv
-            sumCal += cv
-            if (rv > maxRaw) maxRaw = rv
-            if (rv < minRaw) minRaw = rv
-            if (cv > maxCal) maxCal = cv
-            if (cv < minCal) minCal = cv
+        dailyGroups.values.forEach { dayPoints ->
+            val rawSum = dayPoints.sumOf { it.value.toDouble() }
+            val calSum = dayPoints.sumOf { it.calibratedValue.toDouble() }
+            val count = dayPoints.size
+            dailyAveragesRaw.add(rawSum / count)
+            dailyAveragesCal.add(calSum / count)
+
+            dayPoints.forEach { m ->
+                val rv = m.value.toDouble()
+                val cv = m.calibratedValue.toDouble()
+                if (rv > maxRaw) maxRaw = rv
+                if (rv < minRaw) minRaw = rv
+                if (cv > maxCal) maxCal = cv
+                if (cv < minCal) minCal = cv
+            }
         }
 
-        val count = measurements.size
-        val avgRaw = (sumRaw / count).roundToInt()
-        val avgCalibrated = (sumCal / count).roundToInt()
+        val avgRaw = dailyAveragesRaw.average().roundToInt()
+        val avgCalibrated = dailyAveragesCal.average().roundToInt()
         
         val oscRaw = maxOf(maxRaw.roundToInt() - avgRaw, avgRaw - minRaw.roundToInt()).coerceAtLeast(0)
         val oscCal = maxOf(maxCal.roundToInt() - avgCalibrated, avgCalibrated - minCal.roundToInt()).coerceAtLeast(0)
 
         return DisplayMetric(
-            primary = "$avgRaw ± $oscRaw",
-            secondary = "($avgCalibrated ± $oscCal)"
+            primary = "$avgCalibrated ± $oscCal ($avgRaw ± $oscRaw)",
+            secondary = ""
         )
     }
 

@@ -46,6 +46,19 @@ class CloudSyncManager(
                 }
             }
         }
+
+        // Automatic push of settings when they change locally
+        scope.launch {
+            preferenceManager.settingsUpdatedAt.collect { updatedAt ->
+                if (updatedAt == null) return@collect
+                val user = authManager.user.value
+                val isEnabled = preferenceManager.isCloudSyncEnabled.first()
+                val patientId = preferenceManager.patientId.first()
+                if (user != null && isEnabled && patientId != null) {
+                    syncSettingsToCloud(user.uid, patientId)
+                }
+            }
+        }
     }
 
     private fun log(msg: String) {

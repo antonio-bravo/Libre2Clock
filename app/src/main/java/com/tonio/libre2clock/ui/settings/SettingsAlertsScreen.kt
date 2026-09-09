@@ -90,7 +90,11 @@ fun SettingsAlertsScreen(
                             value = watchIntervalText,
                             onValueChange = {
                                 watchIntervalText = it
-                                it.toIntOrNull()?.let { viewModel.updateWatchAlertIntervalMinutes(it) }
+                                it.toIntOrNull()?.let { mins ->
+                                    if (mins in 5..180) {
+                                        viewModel.updateWatchAlertIntervalMinutes(mins)
+                                    }
+                                }
                             },
                             label = { Text(stringResource(R.string.settings_watch_interval_label)) },
                             modifier = Modifier.fillMaxWidth(),
@@ -103,7 +107,11 @@ fun SettingsAlertsScreen(
                             value = watchStartMinuteText,
                             onValueChange = {
                                 watchStartMinuteText = it
-                                it.toIntOrNull()?.let { viewModel.updateWatchAlertStartMinute(it) }
+                                it.toIntOrNull()?.let { min ->
+                                    if (min in 0..59) {
+                                        viewModel.updateWatchAlertStartMinute(min)
+                                    }
+                                }
                             },
                             label = { Text(stringResource(R.string.settings_watch_start_minute_label)) },
                             modifier = Modifier.fillMaxWidth(),

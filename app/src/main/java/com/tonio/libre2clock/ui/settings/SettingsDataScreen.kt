@@ -98,7 +98,11 @@ fun SettingsDataScreen(
                         value = historyRetentionDaysText,
                         onValueChange = {
                             historyRetentionDaysText = it
-                            it.toIntOrNull()?.let { viewModel.updateHistoryRetentionDays(it) }
+                            it.toIntOrNull()?.let { days ->
+                                if (days in 30..365) {
+                                    viewModel.updateHistoryRetentionDays(days)
+                                }
+                            }
                         },
                         label = { Text(stringResource(R.string.settings_retention_days_label)) },
                         modifier = Modifier.fillMaxWidth(),
