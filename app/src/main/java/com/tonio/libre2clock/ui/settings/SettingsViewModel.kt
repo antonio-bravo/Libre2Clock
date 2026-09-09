@@ -47,6 +47,12 @@ class SettingsViewModel(
     private val _isApiDebugLoading = MutableStateFlow(false)
     val isApiDebugLoading: StateFlow<Boolean> = _isApiDebugLoading.asStateFlow()
 
+    private val _cloudSyncDebugOutput = MutableStateFlow<String?>(null)
+    val cloudSyncDebugOutput: StateFlow<String?> = _cloudSyncDebugOutput.asStateFlow()
+
+    private val _isCloudSyncDebugLoading = MutableStateFlow(false)
+    val isCloudSyncDebugLoading: StateFlow<Boolean> = _isCloudSyncDebugLoading.asStateFlow()
+
     private val _sectionPerfStats = MutableStateFlow<List<SectionPerfTelemetry.Snapshot>>(emptyList())
     val sectionPerfStats: StateFlow<List<SectionPerfTelemetry.Snapshot>> = _sectionPerfStats.asStateFlow()
 
