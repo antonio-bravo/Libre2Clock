@@ -122,13 +122,13 @@ object DashboardMetricsCalculator {
         val avgRawForA1c = if (a1cItems.isNotEmpty()) a1cRawSum.toDouble() / a1cItems.size else 0.0
         val avgCalibratedForA1c = if (a1cItems.isNotEmpty()) a1cCalibratedSum.toDouble() / a1cItems.size else 0.0
         
-        val estimatedA1c = if (avgCalibratedForA1c > 20.0 && a1cItems.size > 5) { 
+        val estimatedA1c = if (avgCalibratedForA1c > 40.0 && a1cItems.size > 100) { 
             // ADAG formula: HbA1c (%) = (mean_glucose + 46.7) / 28.7
             val a1cRaw = (avgRawForA1c + 46.7) / 28.7
             val a1cCalibrated = (avgCalibratedForA1c + 46.7) / 28.7
             DisplayMetric(
-                primary = String.format(Locale.US, "%.1f%%(%.1f%%)", a1cRaw, a1cCalibrated),
-                secondary = ""
+                primary = String.format(Locale.US, "%.1f%%", a1cCalibrated),
+                secondary = String.format(Locale.US, "Raw: %.1f%%", a1cRaw)
             )
         } else {
             DisplayMetric("--", "")
@@ -210,12 +210,12 @@ object DashboardMetricsCalculator {
         val avgRawForA1c = if (a1cItems.isNotEmpty()) a1cItems.map { it.value }.average() else 0.0
         val avgCalibratedForA1c = if (a1cItems.isNotEmpty()) a1cItems.map { it.calibratedValue }.average() else 0.0
         
-        val estimatedA1c = if (avgCalibratedForA1c > 20.0 && a1cItems.size > 5) { 
+        val estimatedA1c = if (avgCalibratedForA1c > 40.0 && a1cItems.size > 100) { 
             val a1cRaw = (avgRawForA1c + 46.7) / 28.7
             val a1cCalibrated = (avgCalibratedForA1c + 46.7) / 28.7
             DisplayMetric(
-                primary = String.format(Locale.US, "%.1f%%(%.1f%%)", a1cRaw, a1cCalibrated),
-                secondary = ""
+                primary = String.format(Locale.US, "%.1f%%", a1cCalibrated),
+                secondary = String.format(Locale.US, "Raw: %.1f%%", a1cRaw)
             )
         } else {
             DisplayMetric("--", "")

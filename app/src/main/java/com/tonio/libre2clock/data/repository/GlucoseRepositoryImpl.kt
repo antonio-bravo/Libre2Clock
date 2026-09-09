@@ -64,6 +64,11 @@ class GlucoseRepositoryImpl(
         preferenceManager.saveDemoMode(false)
     }
 
+    override suspend fun clearCache() {
+        historicalWindowCache.clear()
+        _dataVersion.value++
+    }
+
     override suspend fun login(email: String, password: String): Result<Unit> {
         return try {
             var response = LibreService.api.login(LoginRequest(email, password))

@@ -217,7 +217,7 @@ fun SettingsCloudScreen(
                     Spacer(modifier = Modifier.height(32.dp))
                     HorizontalDivider()
                     Text(
-                        "Zona de Peligro",
+                        stringResource(R.string.cloud_danger_zone),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
@@ -228,13 +228,13 @@ fun SettingsCloudScreen(
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(
-                                "Hard Reset de la Nube",
+                                stringResource(R.string.cloud_hard_reset_title),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.error
                             )
                             Text(
-                                "Borra todos los datos actuales de la nube y sube tu estado local como la nueva copia maestra. Útil para corregir duplicados tras cambios de versión.",
+                                stringResource(R.string.cloud_hard_reset_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 modifier = Modifier.padding(vertical = 8.dp)
                             )
@@ -247,7 +247,7 @@ fun SettingsCloudScreen(
                                 if (isResetting) {
                                     CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onError)
                                 } else {
-                                    Text("Borrar Nube y Sincronizar Local")
+                                    Text(stringResource(R.string.cloud_hard_reset_button))
                                 }
                             }
                         }
@@ -259,10 +259,12 @@ fun SettingsCloudScreen(
     }
 
     if (showResetConfirm) {
+        val successMsg = stringResource(R.string.cloud_hard_reset_success)
+        val errorMsg = stringResource(R.string.cloud_hard_reset_error)
         AlertDialog(
             onDismissRequest = { showResetConfirm = false },
-            title = { Text("¿Confirmar Hard Reset?") },
-            text = { Text("Se borrarán permanentemente los datos de la nube para este paciente y se sustituirán por los de este móvil. Esta acción no se puede deshacer.") },
+            title = { Text(stringResource(R.string.cloud_hard_reset_confirm_title)) },
+            text = { Text(stringResource(R.string.cloud_hard_reset_confirm_desc)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -272,19 +274,19 @@ fun SettingsCloudScreen(
                             isResetting = false
                             scope.launch {
                                 snackbarHostState.showSnackbar(
-                                    if (success) "Reseteo completado con éxito" else "Error al resetear la nube"
+                                    if (success) successMsg else errorMsg
                                 )
                             }
                         }
                     },
                     colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("SÍ, BORRAR TODO")
+                    Text(stringResource(R.string.cloud_hard_reset_confirm_button))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showResetConfirm = false }) {
-                    Text("CANCELAR")
+                    Text(stringResource(R.string.event_log_close))
                 }
             }
         )

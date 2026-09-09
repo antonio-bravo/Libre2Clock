@@ -292,6 +292,7 @@
     <string name="settings_perf_refresh">Actualizar</string>
     <string name="settings_perf_reset">Reset</string>
     <string name="settings_perf_recompute">Recalc.</string>
+    <string name="settings_perf_recompute_long">Recalcular Caché</string>
     <string name="settings_perf_no_data">Aún no hay datos. Navega por Dashboard/Reports y vuelve a refrescar.</string>
     <string name="settings_perf_hits_row">Llamadas: %1$d | Aciertos Caché: %2$d%% (%3$d/%1$d)</string>
     <string name="settings_perf_times_row">Media: %1$.1f ms | Máx: %2$d ms | Fallos Caché: %3$d</string>
@@ -396,4 +397,20 @@
     <string name="restore_dialog_desc">¿Cómo quieres restaurar los datos?\n\nFusionar: Combina con los datos actuales.\nHard Reset: Borra todo y deja solo lo del backup.</string>
     <string name="restore_merge_button">Fusionar</string>
     <string name="restore_hard_reset_button">Hard Reset</string>
+
+    <!-- Cloud Hard Reset -->
+    <string name="cloud_danger_zone">Zona de Peligro</string>
+    <string name="cloud_hard_reset_title">Hard Reset de la Nube</string>
+    <string name="cloud_hard_reset_desc">Borra todos los datos actuales de la nube y sube tu estado local como la nueva copia maestra. Útil para corregir duplicados o problemas de sincronización.</string>
+    <string name="cloud_hard_reset_button">Borrar Nube y Sincronizar Local</string>
+    <string name="cloud_hard_reset_confirm_title">¿Confirmar Hard Reset?</string>
+    <string name="cloud_hard_reset_confirm_desc">Se borrarán permanentemente los datos de la nube para este paciente y se sustituirán por los de este móvil. Esta acción no se puede deshacer.</string>
+    <string name="cloud_hard_reset_confirm_button">SÍ, BORRAR TODO</string>
+    <string name="cloud_hard_reset_success">Reseteo completado con éxito</string>
+    <string name="cloud_hard_reset_error">Error al resetear la nube</string>
+
+    <!-- Restore Success Messages -->
+    <string name="restore_success_merge">Copia de seguridad restaurada y fusionada.</string>
+    <string name="restore_success_hard">Copia de seguridad restaurada (Hard Reset).</string>
+    <string name="restore_failed">Error al restaurar.</string>
 </resources>

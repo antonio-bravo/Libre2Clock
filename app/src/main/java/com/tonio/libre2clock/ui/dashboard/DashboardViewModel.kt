@@ -224,6 +224,8 @@ class DashboardViewModel(
         val signature = DashboardMetricsCacheRepository.buildSignatureFast(
             dataVersion = version,
             capillaries = capillaries,
+            ranges = ranges,
+            sensorLogs = sensorLogs,
             manualOffset = manualOffset,
             autoAdjust = autoAdjust,
             autoRangeMode = autoRangeMode.name

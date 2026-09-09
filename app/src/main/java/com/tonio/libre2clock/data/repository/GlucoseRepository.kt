@@ -19,4 +19,5 @@ interface GlucoseRepository {
     suspend fun syncLocalArchiveFromPreferences()
     suspend fun enableDemoMode()
     suspend fun disableDemoMode()
+    suspend fun clearCache()
 }

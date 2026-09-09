@@ -292,6 +292,7 @@
     <string name="settings_perf_refresh">Refresh</string>
     <string name="settings_perf_reset">Reset</string>
     <string name="settings_perf_recompute">Recalc</string>
+    <string name="settings_perf_recompute_long">Recalculate Cache</string>
     <string name="settings_perf_no_data">No data yet. Navigate through Dashboard/Reports and refresh again.</string>
     <string name="settings_perf_hits_row">Calls: %1$d | Cache Hits: %2$d%% (%3$d/%1$d)</string>
     <string name="settings_perf_times_row">Avg: %1$.1f ms | Max: %2$d ms | Cache Misses: %3$d</string>
@@ -400,4 +401,20 @@
     <string name="restore_dialog_desc">How do you want to restore the data?\n\nMerge: Combines with current data.\nHard Reset: Deletes everything and leaves only the backup content.</string>
     <string name="restore_merge_button">Merge</string>
     <string name="restore_hard_reset_button">Hard Reset</string>
+
+    <!-- Cloud Hard Reset -->
+    <string name="cloud_danger_zone">Danger Zone</string>
+    <string name="cloud_hard_reset_title">Cloud Hard Reset</string>
+    <string name="cloud_hard_reset_desc">Permanently deletes current cloud data and uploads your local state as the new master copy. Useful for fixing duplicates or sync issues.</string>
+    <string name="cloud_hard_reset_button">Clear Cloud and Sync Local</string>
+    <string name="cloud_hard_reset_confirm_title">Confirm Hard Reset?</string>
+    <string name="cloud_hard_reset_confirm_desc">Cloud data for this patient will be permanently deleted and replaced by data from this device. This action cannot be undone.</string>
+    <string name="cloud_hard_reset_confirm_button">YES, DELETE EVERYTHING</string>
+    <string name="cloud_hard_reset_success">Reset completed successfully</string>
+    <string name="cloud_hard_reset_error">Error resetting cloud data</string>
+
+    <!-- Restore Success Messages -->
+    <string name="restore_success_merge">Backup restored and merged.</string>
+    <string name="restore_success_hard">Backup restored (Hard Reset).</string>
+    <string name="restore_failed">Restore failed.</string>
 </resources>

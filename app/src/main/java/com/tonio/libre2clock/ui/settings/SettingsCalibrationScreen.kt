@@ -7,6 +7,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -134,10 +135,20 @@ fun SettingsCalibrationScreen(
             
             item {
                 OutlinedButton(
+                    onClick = { viewModel.recomputeAllCache() },
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                ) {
+                    Icon(Icons.Default.Refresh, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.settings_perf_recompute_long))
+                }
+
+                OutlinedButton(
                     onClick = { viewModel.addDefaultRange() },
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(stringResource(R.string.settings_add_range))
                 }
 

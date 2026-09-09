@@ -3,6 +3,8 @@ package com.tonio.libre2clock.ui.dashboard
 import android.content.Context
 import com.tonio.libre2clock.data.local.SectionCacheDatabaseHelper
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
+import com.tonio.libre2clock.data.model.GlucoseOffsetRange
+import com.tonio.libre2clock.data.model.SensorLog
 import com.tonio.libre2clock.util.SectionPerfTelemetry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -80,17 +82,32 @@ class DashboardMetricsCacheRepository(
         fun buildSignatureFast(
             dataVersion: Long,
             capillaries: List<com.tonio.libre2clock.data.model.CapillaryMeasurement>,
+            ranges: List<GlucoseOffsetRange> = emptyList(),
+            sensorLogs: List<SensorLog> = emptyList(),
             manualOffset: Int = 0,
             autoAdjust: Boolean = false,
             autoRangeMode: String = "OFF"
         ): String {
-            // capillary count/last timestamp captures calibration changes immediately.
+            // Improved capillary signature: size + sum of hashes + first timestamp
+            // captures additions, deletions, and edits to any field (like sensorSerialNumber).
             val capSig = if (capillaries.isNotEmpty()) {
-                "${capillaries.size}-${capillaries.first().timestamp}"
+                val hashSum = capillaries.sumOf { it.hashCode().toLong() }
+                "${capillaries.size}-$hashSum-${capillaries.first().timestamp}"
             } else "no-cap"
 
-            // dataVersion changes for every persisted history update, including restores, so a
-            // result computed from an earlier archive can never be reused after that update.
+            // ranges signature ensures calibration changes invalidate the cache.
+            val rangeSig = if (ranges.isNotEmpty()) {
+                val sum = ranges.sumOf { it.offset + it.percentage }
+                "${ranges.size}-$sum"
+            } else "no-ranges"
+
+            // sensorLogs signature handles sensor changes or duration adjustments.
+            val logSig = if (sensorLogs.isNotEmpty()) {
+                val last = sensorLogs.first()
+                "${sensorLogs.size}-${last.serialNumber}-${last.startDate}"
+            } else "no-logs"
+
+            // dataVersion changes for every persisted history update.
             // timeBucket ensures that even if no new data arrived, we eventually re-calculate 
             // as the 90-day window slides forward.
             val timeBucket = System.currentTimeMillis() / HISTORICAL_SIGNATURE_BUCKET_MS
@@ -102,6 +119,10 @@ class DashboardMetricsCacheRepository(
                 append(dataVersion)
                 append(";cp=")
                 append(capSig)
+                append(";rg=")
+                append(rangeSig)
+                append(";sl=")
+                append(logSig)
                 append(";mo=")
                 append(manualOffset)
                 append(";aa=")

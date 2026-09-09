@@ -13,6 +13,7 @@ import com.tonio.libre2clock.data.model.WatchNotificationMode
 import com.tonio.libre2clock.data.repository.GlucoseRepository
 import com.tonio.libre2clock.data.repository.PreferenceManager
 import com.tonio.libre2clock.data.repository.GlucoseProcessor
+import com.tonio.libre2clock.R
 import com.tonio.libre2clock.di.AppContainer
 import com.tonio.libre2clock.util.LogEvent
 import com.tonio.libre2clock.util.SectionPerfTelemetry
@@ -375,6 +376,7 @@ class SettingsViewModel(
     fun recomputeAllCache() {
         viewModelScope.launch {
             settingsCache.clearAllCache()
+            repository.clearCache()
             refreshSectionPerfStats()
             _backupStatusMessage.value = "Cache cleared. Metrics will be recomputed."
         }
@@ -459,8 +461,8 @@ class SettingsViewModel(
                 repository.syncLocalArchiveFromPreferences()
             }
             _backupStatusMessage.value = result.fold(
-                onSuccess = { "Local backup restored and merged." },
-                onFailure = { error -> error.message ?: "Local backup restore failed." }
+                onSuccess = { androidContext.getString(R.string.restore_success_merge) },
+                onFailure = { error -> error.message ?: androidContext.getString(R.string.restore_failed) }
             )
         }
     }
@@ -550,8 +552,11 @@ class SettingsViewModel(
                 repository.syncLocalArchiveFromPreferences()
             }
             _backupStatusMessage.value = result.fold(
-                onSuccess = { if (isHardReset) "Backup restored (Hard Reset)." else "Backup restored and merged." },
-                onFailure = { it.message ?: "Restore failed." }
+                onSuccess = { 
+                    if (isHardReset) androidContext.getString(R.string.restore_success_hard)
+                    else androidContext.getString(R.string.restore_success_merge)
+                },
+                onFailure = { it.message ?: androidContext.getString(R.string.restore_failed) }
             )
         }
     }
