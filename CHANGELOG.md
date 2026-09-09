@@ -1,5 +1,33 @@
 # Changelog
 
+## 89a3f2b (Sep 09, 2026 14:46:24)
+cloud sync — antonio-bravo
+[detail](#89a3f2b-details)
+
+<details id='89a3f2b-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 91b8218 (Sep 09, 2026 11:16:37)
+Update changelog — github-actions[bot]
+[detail](#91b8218-details)
+
+<details id='91b8218-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## daf5a14 (Sep 09, 2026 13:16:21)
 Test cloud sync — antonio-bravo
 [detail](#daf5a14-details)
@@ -703,38 +731,6 @@ update labels for performance metrics — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/ui/report/ReportSectionCacheRepository.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
-</details>
-
-
----
-## ca277de (Aug 15, 2026 17:15:01)
-Update changelog — github-actions[bot]
-[detail](#ca277de-details)
-
-<details id='ca277de-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## dc45378 (Aug 15, 2026 19:14:46)
-add recalculated button for cache — antonio-bravo
-[detail](#dc45378-details)
-
-<details id='dc45378-details'>
-<summary>Changed files</summary>
-
-- .idea/misc.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/local/SectionCacheDatabaseHelper.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsSectionCacheRepository.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
 </details>
 
 
