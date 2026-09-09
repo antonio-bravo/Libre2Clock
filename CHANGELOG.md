@@ -1,5 +1,32 @@
 # Changelog
 
+## fba2130 (Sep 09, 2026 16:55:12)
+fix wait for app — antonio-bravo
+[detail](#fba2130-details)
+
+<details id='fba2130-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/local/GlucoseHistoryDatabaseHelper.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEventLogScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/EventLogManager.kt [Modified]
+</details>
+
+
+---
+## ab3bb2c (Sep 09, 2026 14:28:20)
+Update changelog — github-actions[bot]
+[detail](#ab3bb2c-details)
+
+<details id='ab3bb2c-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 0f86c19 (Sep 09, 2026 16:27:51)
 Error Log + continue if crash — antonio-bravo
 [detail](#0f86c19-details)
@@ -707,38 +734,6 @@ optmize — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/ui/sensor/SensorLogsScreen.kt [Modified]
 - app/src/main/res/values-es/strings.xml [Modified]
 - app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 380ef3f (Aug 15, 2026 18:48:42)
-Update changelog — github-actions[bot]
-[detail](#380ef3f-details)
-
-<details id='380ef3f-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 6294013 (Aug 15, 2026 20:48:28)
-fix HbA1c using cache and back button — antonio-bravo
-[detail](#6294013-details)
-
-<details id='6294013-details'>
-<summary>Changed files</summary>
-
-- .idea/misc.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/local/GlucoseHistoryDatabaseHelper.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseProcessor.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsCacheRepository.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
 </details>
 
 
