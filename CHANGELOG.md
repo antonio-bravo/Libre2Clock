@@ -1,5 +1,31 @@
 # Changelog
 
+## daf5a14 (Sep 09, 2026 13:16:21)
+Test cloud sync — antonio-bravo
+[detail](#daf5a14-details)
+
+<details id='daf5a14-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+</details>
+
+
+---
+## c63d0eb (Sep 09, 2026 11:03:02)
+Update changelog — github-actions[bot]
+[detail](#c63d0eb-details)
+
+<details id='c63d0eb-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 59f479a (Sep 09, 2026 13:02:46)
 Test cloud sync — antonio-bravo
 [detail](#59f479a-details)
@@ -709,43 +735,6 @@ add recalculated button for cache — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
 - app/src/main/res/values-es/strings.xml [Modified]
 - app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 5e66d2c (Aug 15, 2026 16:26:43)
-Update changelog — github-actions[bot]
-[detail](#5e66d2c-details)
-
-<details id='5e66d2c-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 4f3377a (Aug 15, 2026 18:26:31)
-App opmization — antonio-bravo
-[detail](#4f3377a-details)
-
-<details id='4f3377a-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/local/GlucoseHistoryDatabaseHelper.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/local/SectionCacheDatabaseHelper.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepository.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/report/ReportSectionCacheRepository.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/sensor/SensorLogsScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/SensorErrorSummary.kt [Deleted]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-- app/src/test/java/com/tonio/libre2clock/ExampleUnitTest.kt [Modified]
 </details>
 
 
