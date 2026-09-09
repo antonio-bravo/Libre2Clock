@@ -12,6 +12,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -64,6 +65,7 @@ fun DashboardScreen(
     onNavigateToSensorLogs: () -> Unit,
     onNavigateToInsulinHub: () -> Unit,
     onNavigateToReports: () -> Unit,
+    onNavigateToEventLog: () -> Unit,
     onAddDose: (InsulinDose) -> Unit
 ) {
     val currentGlucose by viewModel.currentGlucose.collectAsStateWithLifecycle()
@@ -170,6 +172,16 @@ fun DashboardScreen(
                         onNavigateToReports()
                     },
                     icon = { Icon(Icons.Default.Assessment, contentDescription = null) },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+                NavigationDrawerItem(
+                    label = { Text(stringResource(R.string.event_log_title)) },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        onNavigateToEventLog()
+                    },
+                    icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
             }

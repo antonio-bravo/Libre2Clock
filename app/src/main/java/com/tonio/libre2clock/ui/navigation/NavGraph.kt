@@ -100,6 +100,9 @@ fun NavGraph(
                     onNavigateToReports = {
                         backStack.add(Destination.Reports)
                     },
+                    onNavigateToEventLog = {
+                        backStack.add(Destination.SettingsEventLog)
+                    },
                     onAddDose = { dose ->
                         dashboardViewModel.addInsulinDose(dose)
                     }

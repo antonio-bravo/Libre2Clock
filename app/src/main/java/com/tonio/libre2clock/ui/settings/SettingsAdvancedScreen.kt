@@ -109,8 +109,8 @@ fun SettingsAdvancedScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 SettingsCategoryItem(
-                    title = "Registro de Eventos",
-                    description = "Ver logs detallados y errores del sistema.",
+                    title = stringResource(R.string.event_log_title),
+                    description = stringResource(R.string.settings_event_log_desc),
                     icon = Icons.AutoMirrored.Filled.List,
                     onClick = onNavigateToEventLog
                 )
