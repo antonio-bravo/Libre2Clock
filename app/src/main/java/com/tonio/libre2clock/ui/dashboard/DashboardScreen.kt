@@ -732,13 +732,11 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
         java.time.Duration.between(it, now).toMinutes() > 15 
     } ?: false
 
-    val context = LocalContext.current
     val lastSyncText = remember(measurementInstant) {
         measurementInstant?.let { instant ->
-            val date = Date.from(instant)
-            val dateFormat = android.text.format.DateFormat.getDateFormat(context)
-            val timeFormat = android.text.format.DateFormat.getTimeFormat(context)
-            "${dateFormat.format(date)} ${timeFormat.format(date)}"
+            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                .withZone(ZoneId.systemDefault())
+            formatter.format(instant)
         } ?: "------ --:--:--"
     }
 

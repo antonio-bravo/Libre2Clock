@@ -88,6 +88,16 @@ class CloudSyncManager(
         }
     }
 
+    fun triggerManualSync() {
+        scope.launch {
+            val user = authManager.user.value
+            val patientId = preferenceManager.patientId.first()
+            if (user != null && patientId != null) {
+                startSync(user.uid, patientId)
+            }
+        }
+    }
+
     private fun startSync(googleUid: String, patientId: String) {
         scope.launch {
             try {

@@ -27,10 +27,12 @@ import com.tonio.libre2clock.data.model.SensorLog
 import com.tonio.libre2clock.ui.settings.SettingsViewModel
 import com.tonio.libre2clock.util.buildSensorErrorSummary
 import com.tonio.libre2clock.util.SensorErrorSummary
+import com.tonio.libre2clock.util.TimestampParser
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -193,6 +195,22 @@ fun SensorLogItem(
     val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()
 
+    val displayFormatter = remember {
+        DateTimeFormatter.ofPattern("EEE, d MMM yyyy, HH:mm")
+            .withZone(ZoneId.systemDefault())
+            .withLocale(Locale.getDefault())
+    }
+
+    val formatLogDate = { dateStr: String ->
+        TimestampParser.parseFlexibleInstant(dateStr)?.let {
+            displayFormatter.format(it)
+        } ?: dateStr
+    }
+
+    val displayStartDate = formatLogDate(log.startDate)
+    val displayExpiryDate = formatLogDate(log.expiryDate)
+    val displayEndDate = log.endDate?.let { formatLogDate(it) }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -239,13 +257,13 @@ fun SensorLogItem(
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = stringResource(R.string.sensor_log_start, log.startDate),
+                    text = stringResource(R.string.sensor_log_start, displayStartDate),
                     style = MaterialTheme.typography.bodySmall
                 )
-                if (log.endDate != null) {
+                if (displayEndDate != null) {
                     Column {
                         Text(
-                            text = stringResource(R.string.sensor_log_actual_end, log.endDate),
+                            text = stringResource(R.string.sensor_log_actual_end, displayEndDate),
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Bold,
                             color = if (log.hasFailed) MaterialTheme.colorScheme.error else Color.Unspecified
@@ -261,7 +279,7 @@ fun SensorLogItem(
                     }
                 } else {
                     Text(
-                        text = stringResource(R.string.sensor_log_expiry, log.expiryDate),
+                        text = stringResource(R.string.sensor_log_expiry, displayExpiryDate),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -317,8 +335,8 @@ fun SensorLogItem(
             
             Row {
                 IconButton(onClick = {
-                    val text = "Sensor Log\nSN: ${log.serialNumber}\nStart: ${log.startDate}\n" +
-                            (if (log.endDate != null) "End: ${log.endDate}" else "Expected Expiry: ${log.expiryDate}") +
+                    val text = "Sensor Log\nSN: ${log.serialNumber}\nStart: $displayStartDate\n" +
+                            (if (displayEndDate != null) "End: $displayEndDate" else "Expected Expiry: $displayExpiryDate") +
                             (if (log.hasFailed) "\nFAILED (Code: ${log.errorCode ?: "-"})" else "") +
                             (if (log.actualDaysUsed != null) "\nDays used: ${log.actualDaysUsed}" else "") +
                             (if (!log.notes.isNullOrBlank()) "\nNotes: ${log.notes}" else "")

@@ -50,8 +50,7 @@ class SettingsViewModel(
     private val _isApiDebugLoading = MutableStateFlow(false)
     val isApiDebugLoading: StateFlow<Boolean> = _isApiDebugLoading.asStateFlow()
 
-    private val _cloudSyncDebugOutput = MutableStateFlow<String?>(null)
-    val cloudSyncDebugOutput: StateFlow<String?> = _cloudSyncDebugOutput.asStateFlow()
+    val cloudSyncDebugOutput: StateFlow<String?> = cloudSyncManager.cloudSyncDebugOutput
 
     private val _isCloudSyncDebugLoading = MutableStateFlow(false)
     val isCloudSyncDebugLoading: StateFlow<Boolean> = _isCloudSyncDebugLoading.asStateFlow()
@@ -489,16 +488,13 @@ class SettingsViewModel(
     fun runCloudSyncDiagnostic() {
         viewModelScope.launch {
             _isCloudSyncDebugLoading.value = true
-            _cloudSyncDebugOutput.value = "Starting test..."
-            cloudSyncManager.runDiagnostic { progress ->
-                _cloudSyncDebugOutput.value = progress
-            }
+            cloudSyncManager.runDiagnostic()
             _isCloudSyncDebugLoading.value = false
         }
     }
 
     fun clearCloudSyncDebugOutput() {
-        _cloudSyncDebugOutput.value = null
+        // Handled by manager when starting new diagnostic, but can add a clear method to manager if needed
     }
 
     fun formatLogTimestamp(timestamp: Long): String = eventLogManager.formatTimestamp(timestamp)

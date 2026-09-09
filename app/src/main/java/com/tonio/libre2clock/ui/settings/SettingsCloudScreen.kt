@@ -20,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tonio.libre2clock.R
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -291,6 +293,6 @@ fun SettingsCloudScreen(
 
 private fun formatTimestamp(timestamp: Long): String {
     val date = java.util.Date(timestamp)
-    val sdf = java.text.SimpleDateFormat("HH:mm, dd MMM", java.util.Locale.getDefault())
+    val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
     return sdf.format(date)
 }
