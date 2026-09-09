@@ -10,6 +10,8 @@ import com.tonio.libre2clock.data.model.CapillaryMeasurement
 import com.tonio.libre2clock.data.model.HistoryBackupPayload
 import com.tonio.libre2clock.data.model.InsulinDose
 import com.tonio.libre2clock.data.repository.PreferenceManager
+import com.tonio.libre2clock.di.AppContainer
+import com.tonio.libre2clock.util.LogLevel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -28,6 +30,7 @@ class CloudSyncManager(
     private val firestore = FirebaseFirestore.getInstance()
     private val dbHelper = GlucoseHistoryDatabaseHelper(context)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val eventLogger = AppContainer.provideEventLogManager(context)
 
     init {
         scope.launch {
@@ -82,15 +85,16 @@ class CloudSyncManager(
                     .collection("patients").document(patientId)
                     .collection("config").document("diagnostic")
                 
-                val writeTask = testDoc.set(mapOf(
+                val testData = mapOf(
                     "last_test" to System.currentTimeMillis(),
                     "device" to Build.MODEL
-                ))
+                )
 
                 withTimeout(10000) {
-                    writeTask.await()
+                    testDoc.set(testData).await()
                 }
                 log("Result: SUCCESS (Write test passed)")
+                eventLogger.log(LogLevel.INFO, "CloudSync", "Diagnostic write test successful")
                 
                 log("Starting settings sync test...")
                 syncSettingsToCloud(user.uid, patientId)
@@ -120,6 +124,7 @@ class CloudSyncManager(
             } catch (e: Exception) {
                 log("Result: FAIL")
                 log("Error: ${e.message}")
+                eventLogger.log(LogLevel.ERROR, "CloudSync", "Diagnostic failed", e.stackTraceToString())
                 if (e.message?.contains("permission-denied") == true) {
                     log("TIP: Check Firestore Rules in Firebase Console.")
                 }
@@ -191,26 +196,73 @@ class CloudSyncManager(
         // Listen for settings
         patientDoc.collection("config").document("settings")
             .addSnapshotListener { snapshot, e ->
-                if (e != null) return@addSnapshotListener
-                snapshot?.toObject(HistoryBackupPayload::class.java)?.let { payload ->
-                    scope.launch { preferenceManager.restoreFromPayload(payload, isHardReset = false) }
+                if (e != null) {
+                    Log.e("CloudSync", "Settings listener error", e)
+                    return@addSnapshotListener
+                }
+                try {
+                    snapshot?.toObject(HistoryBackupPayload::class.java)?.let { payload ->
+                        scope.launch { 
+                            try {
+                                preferenceManager.restoreFromPayload(payload, isHardReset = false) 
+                            } catch (e: Exception) {
+                                Log.e("CloudSync", "Error restoring settings from payload", e)
+                                eventLogger.log(LogLevel.ERROR, "CloudSync", "Settings sync error", e.stackTraceToString())
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("CloudSync", "Error deserializing settings", e)
+                    eventLogger.log(LogLevel.ERROR, "CloudSync", "Deserialization error", e.stackTraceToString())
                 }
             }
 
         // Listen for data lists
-        patientDoc.collection("data").document("capillary").addSnapshotListener { snapshot, _ ->
-            snapshot?.toObject(ListWrapper::class.java)?.let { wrapper ->
-                @Suppress("UNCHECKED_CAST")
-                val items = wrapper.items as? List<CapillaryMeasurement> ?: return@let
-                scope.launch { preferenceManager.saveCapillaryReadings(items) }
+        patientDoc.collection("data").document("capillary").addSnapshotListener { snapshot, e ->
+            if (e != null) {
+                Log.e("CloudSync", "Capillary listener error", e)
+                return@addSnapshotListener
+            }
+            try {
+                snapshot?.toObject(ListWrapper::class.java)?.let { wrapper ->
+                    @Suppress("UNCHECKED_CAST")
+                    val items = wrapper.items as? List<CapillaryMeasurement> ?: return@let
+                    scope.launch { 
+                        try {
+                            preferenceManager.saveCapillaryReadings(items) 
+                        } catch (e: Exception) {
+                            Log.e("CloudSync", "Error saving capillary readings", e)
+                            eventLogger.log(LogLevel.ERROR, "CloudSync", "Capillary sync error", e.stackTraceToString())
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("CloudSync", "Error deserializing capillary", e)
+                eventLogger.log(LogLevel.ERROR, "CloudSync", "Capillary deserialization error", e.stackTraceToString())
             }
         }
         
-        patientDoc.collection("data").document("insulin").addSnapshotListener { snapshot, _ ->
-            snapshot?.toObject(ListWrapper::class.java)?.let { wrapper ->
-                @Suppress("UNCHECKED_CAST")
-                val items = wrapper.items as? List<InsulinDose> ?: return@let
-                scope.launch { preferenceManager.saveInsulinDoses(items) }
+        patientDoc.collection("data").document("insulin").addSnapshotListener { snapshot, e ->
+            if (e != null) {
+                Log.e("CloudSync", "Insulin listener error", e)
+                return@addSnapshotListener
+            }
+            try {
+                snapshot?.toObject(ListWrapper::class.java)?.let { wrapper ->
+                    @Suppress("UNCHECKED_CAST")
+                    val items = wrapper.items as? List<InsulinDose> ?: return@let
+                    scope.launch { 
+                        try {
+                            preferenceManager.saveInsulinDoses(items) 
+                        } catch (e: Exception) {
+                            Log.e("CloudSync", "Error saving insulin doses", e)
+                            eventLogger.log(LogLevel.ERROR, "CloudSync", "Insulin sync error", e.stackTraceToString())
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("CloudSync", "Error deserializing insulin", e)
+                eventLogger.log(LogLevel.ERROR, "CloudSync", "Insulin deserialization error", e.stackTraceToString())
             }
         }
     }

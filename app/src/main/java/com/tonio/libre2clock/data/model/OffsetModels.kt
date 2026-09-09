@@ -4,9 +4,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class GlucoseOffsetRange(
-    val min: Int,
-    val max: Int?,
-    val offset: Int,
+    val min: Int = 0,
+    val max: Int? = null,
+    val offset: Int = 0,
     val percentage: Int = 0
 )
 
@@ -44,8 +44,8 @@ data class RangeOffsetInsight(
 
 @Serializable
 data class CapillaryMeasurement(
-    val value: Int,
-    val timestamp: String,
+    val value: Int = 0,
+    val timestamp: String = "",
     val sensorValue: Int? = null,
     val delta: Int? = null,
     val sensorSerialNumber: String? = null
@@ -58,18 +58,18 @@ enum class InsulinType {
 
 @Serializable
 data class InsulinDose(
-    val units: Double,
-    val timestamp: String,
-    val type: InsulinType,
-    val durationMinutes: Int,
+    val units: Double = 0.0,
+    val timestamp: String = "",
+    val type: InsulinType = InsulinType.RAPID,
+    val durationMinutes: Int = 0,
     val carbs: Double? = null
 )
 
 @Serializable
 data class SensorLog(
-    val serialNumber: String,
-    val startDate: String,
-    val expiryDate: String,
+    val serialNumber: String = "",
+    val startDate: String = "",
+    val expiryDate: String = "",
     val endDate: String? = null,
     val actualDaysUsed: Double? = null,
     val hasFailed: Boolean = false,

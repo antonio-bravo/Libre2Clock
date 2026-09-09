@@ -382,6 +382,15 @@
     <string name="cloud_diag_log_title">Log de Sincronización</string>
     <string name="cloud_diag_close">Cerrar</string>
 
+    <!-- Event Log Screen -->
+    <string name="event_log_title">Registro de Eventos</string>
+    <string name="event_log_empty">No hay eventos registrados</string>
+    <string name="event_log_copy_all">Copiar Todo</string>
+    <string name="event_log_close">Cerrar</string>
+    <string name="event_log_clear_tooltip">Borrar Registros</string>
+    <string name="event_log_item_tag">Etiqueta</string>
+    <string name="settings_event_log_desc">Ver logs detallados y errores del sistema.</string>
+
     <!-- Backup Restore Dialog -->
     <string name="restore_dialog_title">Restaurar Copia de Seguridad</string>
     <string name="restore_dialog_desc">¿Cómo quieres restaurar los datos?\n\nFusionar: Combina con los datos actuales.\nHard Reset: Borra todo y deja solo lo del backup.</string>

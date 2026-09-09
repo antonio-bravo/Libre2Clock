@@ -94,13 +94,13 @@ data class SensorStatus(
 @JsonClass(generateAdapter = false)
 @Serializable
 data class GlucoseMeasurement(
-    @param:Json(name = "FactoryTimestamp") val factoryTimestamp: String,
-    @param:Json(name = "Timestamp") val timestamp: String,
-    @param:Json(name = "type") val type: Int,
-    @param:Json(name = "ValueInMgPerDl") val valueInMgPerDl: Int,
-    @param:Json(name = "TrendArrow") val trendArrow: Int?,
-    @param:Json(name = "MeasurementColor") val measurementColor: Int?,
-    @param:Json(name = "Value") val value: Int,
+    @param:Json(name = "FactoryTimestamp") val factoryTimestamp: String = "",
+    @param:Json(name = "Timestamp") val timestamp: String = "",
+    @param:Json(name = "type") val type: Int = 0,
+    @param:Json(name = "ValueInMgPerDl") val valueInMgPerDl: Int = 0,
+    @param:Json(name = "TrendArrow") val trendArrow: Int? = null,
+    @param:Json(name = "MeasurementColor") val measurementColor: Int? = null,
+    @param:Json(name = "Value") val value: Int = 0,
     val calibratedValue: Int = value,
     val epochSeconds: Long? = null
 )

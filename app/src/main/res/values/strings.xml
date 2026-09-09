@@ -386,6 +386,15 @@
     <string name="cloud_diag_log_title">Sync Log</string>
     <string name="cloud_diag_close">Close</string>
 
+    <!-- Event Log Screen -->
+    <string name="event_log_title">Event Log</string>
+    <string name="event_log_empty">No events recorded yet</string>
+    <string name="event_log_copy_all">Copy All</string>
+    <string name="event_log_close">Close</string>
+    <string name="event_log_clear_tooltip">Clear Logs</string>
+    <string name="event_log_item_tag">Tag</string>
+    <string name="settings_event_log_desc">View detailed logs and system errors.</string>
+
     <!-- Backup Restore Dialog -->
     <string name="restore_dialog_title">Restore Backup</string>
     <string name="restore_dialog_desc">How do you want to restore the data?\n\nMerge: Combines with current data.\nHard Reset: Deletes everything and leaves only the backup content.</string>

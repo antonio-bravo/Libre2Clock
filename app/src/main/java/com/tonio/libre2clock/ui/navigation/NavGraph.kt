@@ -22,6 +22,7 @@ import com.tonio.libre2clock.ui.capillary.CapillaryScreen
 import com.tonio.libre2clock.ui.sensor.SensorLogsScreen
 import com.tonio.libre2clock.ui.insulin.InsulinHubScreen
 import com.tonio.libre2clock.ui.insulin.InsulinLogsScreen
+import com.tonio.libre2clock.ui.settings.SettingsEventLogScreen
 import com.tonio.libre2clock.ui.strategy.StrategyScreen
 
 @Composable
@@ -162,6 +163,13 @@ fun NavGraph(
             }
             entry<Destination.SettingsAdvanced> {
                 com.tonio.libre2clock.ui.settings.SettingsAdvancedScreen(
+                    viewModel = settingsViewModel,
+                    onBack = { backStack.removeAt(backStack.size - 1) },
+                    onNavigateToEventLog = { backStack.add(Destination.SettingsEventLog) }
+                )
+            }
+            entry<Destination.SettingsEventLog> {
+                SettingsEventLogScreen(
                     viewModel = settingsViewModel,
                     onBack = { backStack.removeAt(backStack.size - 1) }
                 )

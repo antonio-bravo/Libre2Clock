@@ -675,7 +675,6 @@ class PreferenceManager(private val context: Context) {
             return false
         }
 
-        BackupManager(context).dataChanged()
         context.dataStore.edit { preferences ->
             preferences[LAST_HISTORY_BACKUP_REQUEST_AT_KEY] = now
         }

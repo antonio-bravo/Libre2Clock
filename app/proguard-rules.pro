@@ -37,7 +37,10 @@
 # Keep LibreLinkUp API, Models and Sync
 -keep class com.tonio.libre2clock.data.api.** { *; }
 -keep class com.tonio.libre2clock.data.model.** { *; }
--keepclassmembers class com.tonio.libre2clock.data.model.** { *; }
+-keepclassmembers class com.tonio.libre2clock.data.model.** {
+    <init>(...);
+    *;
+}
 -keep class com.tonio.libre2clock.data.sync.** { *; }
 
 # Moshi and Retrofit (Critical for API)

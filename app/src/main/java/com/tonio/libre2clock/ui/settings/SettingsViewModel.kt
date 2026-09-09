@@ -13,6 +13,8 @@ import com.tonio.libre2clock.data.model.WatchNotificationMode
 import com.tonio.libre2clock.data.repository.GlucoseRepository
 import com.tonio.libre2clock.data.repository.PreferenceManager
 import com.tonio.libre2clock.data.repository.GlucoseProcessor
+import com.tonio.libre2clock.di.AppContainer
+import com.tonio.libre2clock.util.LogEvent
 import com.tonio.libre2clock.util.SectionPerfTelemetry
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -35,6 +37,7 @@ class SettingsViewModel(
     private val androidContext: android.content.Context
 ) : ViewModel() {
 
+    private val eventLogManager = AppContainer.provideEventLogManager(androidContext)
     private val cloudSyncManager = com.tonio.libre2clock.di.AppContainer.provideCloudSyncManager(androidContext)
     private val settingsCache = SettingsSectionCacheRepository(androidContext)
 
@@ -52,6 +55,9 @@ class SettingsViewModel(
 
     private val _isCloudSyncDebugLoading = MutableStateFlow(false)
     val isCloudSyncDebugLoading: StateFlow<Boolean> = _isCloudSyncDebugLoading.asStateFlow()
+
+    val eventLogs: StateFlow<List<LogEvent>> = eventLogManager.events
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _sectionPerfStats = MutableStateFlow<List<SectionPerfTelemetry.Snapshot>>(emptyList())
     val sectionPerfStats: StateFlow<List<SectionPerfTelemetry.Snapshot>> = _sectionPerfStats.asStateFlow()
@@ -491,6 +497,12 @@ class SettingsViewModel(
 
     fun clearCloudSyncDebugOutput() {
         _cloudSyncDebugOutput.value = null
+    }
+
+    fun formatLogTimestamp(timestamp: Long): String = eventLogManager.formatTimestamp(timestamp)
+
+    fun clearEventLogs() {
+        viewModelScope.launch { eventLogManager.clear() }
     }
 
     fun signInWithGoogle(context: android.content.Context) {

@@ -5,6 +5,7 @@ import com.tonio.libre2clock.data.repository.GlucoseRepositoryImpl
 import com.tonio.libre2clock.data.repository.PreferenceManager
 import com.tonio.libre2clock.data.sync.AuthManager
 import com.tonio.libre2clock.data.sync.CloudSyncManager
+import com.tonio.libre2clock.util.EventLogManager
 
 object AppContainer {
 
@@ -19,6 +20,9 @@ object AppContainer {
 
     @Volatile
     private var cloudSyncManager: CloudSyncManager? = null
+
+    @Volatile
+    private var eventLogManager: EventLogManager? = null
 
     fun providePreferenceManager(context: Context): PreferenceManager {
         val existing = preferenceManager
@@ -59,6 +63,17 @@ object AppContainer {
                 cloudSyncManager = manager
                 manager
             }
+        }
+    }
+
+    fun provideEventLogManager(context: Context): EventLogManager {
+        val existing = eventLogManager
+        if (existing != null) return existing
+
+        return synchronized(this) {
+            val cached = eventLogManager
+            if (cached != null) cached
+            else EventLogManager(context.applicationContext).also { eventLogManager = it }
         }
     }
 

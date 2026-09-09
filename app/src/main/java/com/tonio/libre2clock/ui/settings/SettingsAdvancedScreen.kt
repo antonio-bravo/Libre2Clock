@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,7 +21,8 @@ import kotlin.math.roundToInt
 @Composable
 fun SettingsAdvancedScreen(
     viewModel: SettingsViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onNavigateToEventLog: () -> Unit
 ) {
     val isApiDebugLoading by viewModel.isApiDebugLoading.collectAsStateWithLifecycle()
     val apiDebugOutput by viewModel.apiDebugOutput.collectAsStateWithLifecycle()
@@ -102,6 +104,17 @@ fun SettingsAdvancedScreen(
                     }
                 }
                 
+                Spacer(modifier = Modifier.height(24.dp))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(16.dp))
+
+                SettingsCategoryItem(
+                    title = "Registro de Eventos",
+                    description = "Ver logs detallados y errores del sistema.",
+                    icon = Icons.AutoMirrored.Filled.List,
+                    onClick = onNavigateToEventLog
+                )
+
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }
