@@ -1,5 +1,34 @@
 # Changelog
 
+## b7d34ab (Sep 09, 2026 22:08:58)
+Fix and adjust datetime on main screen — antonio-bravo
+[detail](#b7d34ab-details)
+
+<details id='b7d34ab-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/sensor/SensorLogsScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+</details>
+
+
+---
+## ebb64fe (Sep 09, 2026 19:50:54)
+Update changelog — github-actions[bot]
+[detail](#ebb64fe-details)
+
+<details id='ebb64fe-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## e733210 (Sep 09, 2026 21:50:40)
 Cloud Sync + Hard Reset — antonio-bravo
 [detail](#e733210-details)
@@ -701,33 +730,6 @@ remove  repository.dataVersion.map { it / 10 }.distinctUntilChanged() // Throttl
 <summary>Changed files</summary>
 
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-</details>
-
-
----
-## b95c1a2 (Aug 17, 2026 18:21:57)
-Update changelog — github-actions[bot]
-[detail](#b95c1a2-details)
-
-<details id='b95c1a2-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 46c151d (Aug 17, 2026 20:21:41)
-the api is in UTC the phone conver to local time zone — antonio-bravo
-[detail](#46c151d-details)
-
-<details id='46c151d-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
 </details>
 
 
