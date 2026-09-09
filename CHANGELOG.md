@@ -1,5 +1,32 @@
 # Changelog
 
+## 7d9c11a (Sep 09, 2026 12:43:35)
+Sync on cloud in smaller packages — antonio-bravo
+[detail](#7d9c11a-details)
+
+<details id='7d9c11a-details'>
+<summary>Changed files</summary>
+
+- .idea/misc.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 9820d29 (Sep 09, 2026 09:43:40)
+Update changelog — github-actions[bot]
+[detail](#9820d29-details)
+
+<details id='9820d29-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 4c611dd (Sep 09, 2026 11:43:27)
 fix CloudSync — antonio-bravo
 [detail](#4c611dd-details)
@@ -719,54 +746,6 @@ Update README.md — antonio-bravo
 <summary>Changed files</summary>
 
 - README.md [Modified]
-</details>
-
-
----
-## 9c437ce (Aug 15, 2026 15:42:44)
-Update changelog — github-actions[bot]
-[detail](#9c437ce-details)
-
-<details id='9c437ce-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## c7f4650 (Aug 15, 2026 17:42:31)
-He realizado una optimización profunda en el motor de procesamiento de datos para solucionar los picos de carga (esos 500ms que veías) y mejorar drásticamente la fluidez:
-1. Reingeniería del Procesamiento (O(N+M))
-He identificado que el problema era que la app recalculaba las fórmulas matemáticas complejas (como las regresiones de los "Smart Offsets") por cada una de las miles de mediciones en tu historial.
-•
-Contexto de Cálculo Único: Ahora, la app calcula la configuración de calibración una sola vez para todo el bloque de datos y la reutiliza. Esto cambia el rendimiento de exponencial a lineal, lo que debería reducir los tiempos de carga de 500ms a menos de 50ms.
-•
-Búsqueda Inteligente: He optimizado la búsqueda de mediciones capilares para que se detenga en cuanto encuentra la más cercana en el tiempo, en lugar de revisar toda la lista siempre.
-2. Caché de Tiempos (Epoch)
-•
-Evitando el procesado de texto: Antes, la app tenía que convertir miles de textos de fecha ("2026-08-15...") a tiempo real en cada segundo. Ahora, he añadido un campo epochSeconds directamente en la base de datos.
-•
-Carga instantánea: Al leer del historial, la app ya sabe exactamente en qué segundo ocurrió cada medición sin tener que analizar el texto, lo que acelera enormemente el dibujado de la gráfica y el cálculo de promedios.
-3. Ventana Inteligente en el Dashboard
-•
-Límite de 90 días: Aunque guardes un año de historial en la base de datos, el Dashboard ahora solo procesa los últimos 90 días (lo necesario para el HbA1c). El resto de los datos permanecen seguros en la base de datos pero no consumen CPU innecesaria en la pantalla principal.
-4. Estabilidad de la Firma
-He simplificado la "firma" de la caché para que sea más rápida de generar y más estable, asegurando que si navegas entre pantallas y los datos no han cambiado, el "Cache Hit" sea del 100% de forma instantánea. — antonio-bravo
-[detail](#c7f4650-details)
-
-<details id='c7f4650-details'>
-<summary>Changed files</summary>
-
-- .idea/misc.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/local/GlucoseHistoryDatabaseHelper.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/model/LibreModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseProcessor.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsCacheRepository.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
 </details>
 
 
