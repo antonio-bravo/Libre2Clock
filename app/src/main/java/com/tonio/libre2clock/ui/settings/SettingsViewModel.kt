@@ -73,6 +73,9 @@ class SettingsViewModel(
     val cloudSyncLastSuccessAt: StateFlow<Long?> = preferenceManager.cloudSyncLastSuccessAt
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    val settingsUpdatedAt: StateFlow<Long?> = preferenceManager.settingsUpdatedAt
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
     val glucoseOffset: StateFlow<Int> = preferenceManager.glucoseOffset
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
@@ -502,6 +505,18 @@ class SettingsViewModel(
 
     fun clearEventLogs() {
         viewModelScope.launch { eventLogManager.clear() }
+    }
+
+    fun resetCloudData(onComplete: (Boolean) -> Unit) {
+        val user = authManager.user.value
+        viewModelScope.launch {
+            val patientId = preferenceManager.patientId.first()
+            if (user != null && patientId != null) {
+                cloudSyncManager.resetCloudData(user.uid, patientId, onComplete)
+            } else {
+                onComplete(false)
+            }
+        }
     }
 
     fun signInWithGoogle(context: android.content.Context) {

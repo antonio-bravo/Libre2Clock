@@ -1,6 +1,7 @@
 package com.tonio.libre2clock.data.sync
 
 import android.content.Context
+import android.util.Log
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
@@ -29,7 +30,7 @@ class AuthManager(private val context: Context) {
         android.util.Log.d("AuthManager", "Starting Google Sign In with client ID: $webClientId")
         return try {
             val googleIdOption = GetGoogleIdOption.Builder()
-                .setFilterByAuthorizedAccounts(false)
+                .setFilterByAuthorizedAccounts(false) // Permite ver todas las cuentas, no solo las de la app
                 .setServerClientId(webClientId)
                 .setAutoSelectEnabled(false)
                 .build()
@@ -38,9 +39,9 @@ class AuthManager(private val context: Context) {
                 .addCredentialOption(googleIdOption)
                 .build()
 
-            android.util.Log.d("AuthManager", "Requesting credentials...")
+            // Esto abrirá el panel inferior de Google permitiendo "Añadir cuenta"
+            Log.d("AuthManager", "Requesting credentials...")
             val result = credentialManager.getCredential(context, request)
-            android.util.Log.d("AuthManager", "Credential received, handling sign in...")
             handleSignIn(result)
             Result.success(Unit)
         } catch (e: Exception) {

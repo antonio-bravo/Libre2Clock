@@ -1,5 +1,6 @@
 package com.tonio.libre2clock.ui.settings
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -14,9 +15,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tonio.libre2clock.R
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,11 +30,18 @@ fun SettingsCloudScreen(
     val firebaseUser by viewModel.firebaseUser.collectAsStateWithLifecycle()
     val isEnabled by viewModel.isCloudSyncEnabled.collectAsStateWithLifecycle()
     val lastSuccess by viewModel.cloudSyncLastSuccessAt.collectAsStateWithLifecycle()
+    val settingsUpdated by viewModel.settingsUpdatedAt.collectAsStateWithLifecycle()
     val debugOutput by viewModel.cloudSyncDebugOutput.collectAsStateWithLifecycle()
     val isDebugLoading by viewModel.isCloudSyncDebugLoading.collectAsStateWithLifecycle()
+    
+    var showResetConfirm by remember { mutableStateOf(false) }
+    var isResetting by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
     val context = androidx.compose.ui.platform.LocalContext.current
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.settings_cloud_sync_title)) },
@@ -120,6 +130,12 @@ fun SettingsCloudScreen(
                             )
                         }
                         
+                        Text(
+                            text = settingsUpdated?.let { "Ajustes modificados: ${formatTimestamp(it)}" } ?: "Usando valores por defecto",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        
                         HorizontalDivider()
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -193,7 +209,83 @@ fun SettingsCloudScreen(
                     modifier = Modifier.padding(horizontal = 8.dp)
                 )
             }
+
+            item {
+                if (firebaseUser != null) {
+                    Spacer(modifier = Modifier.height(32.dp))
+                    HorizontalDivider()
+                    Text(
+                        "Zona de Peligro",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+                    )
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f)),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f))
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                "Hard Reset de la Nube",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                            Text(
+                                "Borra todos los datos actuales de la nube y sube tu estado local como la nueva copia maestra. Útil para corregir duplicados tras cambios de versión.",
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+                            Button(
+                                onClick = { showResetConfirm = true },
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = !isResetting
+                            ) {
+                                if (isResetting) {
+                                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onError)
+                                } else {
+                                    Text("Borrar Nube y Sincronizar Local")
+                                }
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(48.dp))
+                }
+            }
         }
+    }
+
+    if (showResetConfirm) {
+        AlertDialog(
+            onDismissRequest = { showResetConfirm = false },
+            title = { Text("¿Confirmar Hard Reset?") },
+            text = { Text("Se borrarán permanentemente los datos de la nube para este paciente y se sustituirán por los de este móvil. Esta acción no se puede deshacer.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showResetConfirm = false
+                        isResetting = true
+                        viewModel.resetCloudData { success ->
+                            isResetting = false
+                            scope.launch {
+                                snackbarHostState.showSnackbar(
+                                    if (success) "Reseteo completado con éxito" else "Error al resetear la nube"
+                                )
+                            }
+                        }
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("SÍ, BORRAR TODO")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetConfirm = false }) {
+                    Text("CANCELAR")
+                }
+            }
+        )
     }
 }
 

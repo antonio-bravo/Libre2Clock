@@ -1,6 +1,7 @@
 package com.tonio.libre2clock.data.model
 
 import kotlinx.serialization.Serializable
+import java.util.UUID
 
 @Serializable
 data class GlucoseOffsetRange(
@@ -44,11 +45,14 @@ data class RangeOffsetInsight(
 
 @Serializable
 data class CapillaryMeasurement(
+    val id: String = UUID.randomUUID().toString(),
     val value: Int = 0,
     val timestamp: String = "",
     val sensorValue: Int? = null,
     val delta: Int? = null,
-    val sensorSerialNumber: String? = null
+    val sensorSerialNumber: String? = null,
+    val updatedAtMs: Long = System.currentTimeMillis(),
+    val isDeleted: Boolean = false
 )
 
 @Serializable
@@ -58,11 +62,14 @@ enum class InsulinType {
 
 @Serializable
 data class InsulinDose(
+    val id: String = UUID.randomUUID().toString(),
     val units: Double = 0.0,
     val timestamp: String = "",
     val type: InsulinType = InsulinType.RAPID,
     val durationMinutes: Int = 0,
-    val carbs: Double? = null
+    val carbs: Double? = null,
+    val updatedAtMs: Long = System.currentTimeMillis(),
+    val isDeleted: Boolean = false
 )
 
 @Serializable
@@ -83,6 +90,8 @@ data class HistoryBackupPayload(
     val capillaryReadings: List<CapillaryMeasurement> = emptyList(),
     val insulinDoses: List<InsulinDose> = emptyList(),
     val sensorLogs: List<SensorLog> = emptyList(),
+    // Metadata
+    val settingsUpdatedAtMs: Long? = null,
     // Glucose Config
     val glucoseOffset: Int? = null,
     val glucoseOffsetRanges: List<GlucoseOffsetRange>? = null,

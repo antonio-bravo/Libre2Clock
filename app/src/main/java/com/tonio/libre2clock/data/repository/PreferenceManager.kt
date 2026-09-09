@@ -91,6 +91,7 @@ class PreferenceManager(private val context: Context) {
     private val SENSOR_DURATION_DAYS_KEY = androidx.datastore.preferences.core.intPreferencesKey("sensor_duration_days")
     private val IS_CLOUD_SYNC_ENABLED_KEY = booleanPreferencesKey("is_cloud_sync_enabled")
     private val CLOUD_SYNC_LAST_SUCCESS_AT_KEY = longPreferencesKey("cloud_sync_last_success_at")
+    private val SETTINGS_UPDATED_AT_KEY = longPreferencesKey("settings_updated_at")
 
     val authToken: Flow<String?> = context.dataStore.data.map { preferences ->
         preferences[TOKEN_KEY]
@@ -346,6 +347,10 @@ class PreferenceManager(private val context: Context) {
 
     val cloudSyncLastSuccessAt: Flow<Long?> = context.dataStore.data.map { preferences ->
         preferences[CLOUD_SYNC_LAST_SUCCESS_AT_KEY]
+    }
+
+    val settingsUpdatedAt: Flow<Long?> = context.dataStore.data.map { preferences ->
+        preferences[SETTINGS_UPDATED_AT_KEY]
     }
 
     private fun getDefaultRanges() = listOf(
@@ -651,6 +656,9 @@ class PreferenceManager(private val context: Context) {
     }
 
     private suspend fun updateBackupPayload() {
+        context.dataStore.edit { preferences ->
+            preferences[SETTINGS_UPDATED_AT_KEY] = System.currentTimeMillis()
+        }
         val payload = buildCurrentHistoryBackupPayload()
         saveHistoryBackupPayload(payload)
         requestHistoryCloudBackupIfDue()
@@ -1030,6 +1038,7 @@ class PreferenceManager(private val context: Context) {
             capillaryReadings = capillaryReadings.first(),
             insulinDoses = insulinDoses.first(),
             sensorLogs = sensorLogs.first(),
+            settingsUpdatedAtMs = settingsUpdatedAt.first(),
             glucoseOffset = glucoseOffset.first(),
             glucoseOffsetRanges = glucoseOffsetRanges.first(),
             autoAdjustEnabled = autoAdjustEnabled.first(),

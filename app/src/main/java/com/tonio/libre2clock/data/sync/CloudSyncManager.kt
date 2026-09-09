@@ -12,15 +12,13 @@ import com.tonio.libre2clock.data.model.InsulinDose
 import com.tonio.libre2clock.data.repository.PreferenceManager
 import com.tonio.libre2clock.di.AppContainer
 import com.tonio.libre2clock.util.LogLevel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withTimeout
 
 class CloudSyncManager(
     private val context: Context,
@@ -32,265 +30,175 @@ class CloudSyncManager(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val eventLogger = AppContainer.provideEventLogManager(context)
 
+    private val _cloudSyncDebugOutput = MutableStateFlow<String?>(null)
+    val cloudSyncDebugOutput: StateFlow<String?> = _cloudSyncDebugOutput.asStateFlow()
+
     init {
         scope.launch {
-            combine(
-                authManager.user,
-                preferenceManager.isCloudSyncEnabled,
-                preferenceManager.patientId
-            ) { user, isEnabled, patientId ->
-                Triple(user, isEnabled, patientId)
-            }.distinctUntilChanged().collect { (user, isEnabled, patientId) ->
-                if (user != null && isEnabled && patientId != null) {
-                    startSync(user.uid, patientId)
-                }
-            }
-        }
-    }
-
-    fun triggerManualSync() {
-        Log.d("CloudSync", "Manual sync triggered")
-        scope.launch {
-            val user = authManager.user.value
-            val patientId = preferenceManager.patientId.first()
-            if (user != null && patientId != null) {
-                startSync(user.uid, patientId)
-            } else {
-                Log.w("CloudSync", "Cannot sync: user=$user, patientId=$patientId")
-            }
-        }
-    }
-
-    suspend fun runDiagnostic(onProgress: (String) -> Unit): String = buildString {
-        fun log(msg: String) {
-            appendLine(msg)
-            onProgress(this.toString())
-        }
-
-        log("=== Cloud Sync Diagnostic ===")
-        val user = authManager.user.value
-        log("Google User: ${user?.email ?: "NOT LOGGED IN"}")
-        
-        val patientId = preferenceManager.patientId.first()
-        log("Patient ID: ${patientId ?: "MISSING (Login to LLU first)"}")
-
-        if (user != null && patientId != null) {
-            try {
-                log("Google UID: ${user.uid}")
-                log("Ensuring Firestore is online...")
-                firestore.enableNetwork().await()
-                
-                log("Testing Firestore write (with 10s timeout)...")
-                val testDoc = firestore.collection("users").document(user.uid)
-                    .collection("patients").document(patientId)
-                    .collection("config").document("diagnostic")
-                
-                val testData = mapOf(
-                    "last_test" to System.currentTimeMillis(),
-                    "device" to Build.MODEL
-                )
-
-                withTimeout(10000) {
-                    testDoc.set(testData).await()
-                }
-                log("Result: SUCCESS (Write test passed)")
-                eventLogger.log(LogLevel.INFO, "CloudSync", "Diagnostic write test successful")
-                
-                log("Starting settings sync test...")
-                syncSettingsToCloud(user.uid, patientId)
-                log("Settings sync: OK")
-                
-                log("Starting history sync test (first 50 items)...")
-                val localMeasurements = dbHelper.readAllNewestFirst().take(50)
-                if (localMeasurements.isEmpty()) {
-                    log("History: No local data to sync.")
-                } else {
-                    val historyColl = firestore.collection("users").document(user.uid)
-                        .collection("patients").document(patientId)
-                        .collection("glucose_history")
-                    val batch = firestore.batch()
-                    localMeasurements.forEach { m ->
-                        val docId = "${m.epochSeconds}-${m.value}"
-                        batch.set(historyColl.document(docId), m, SetOptions.merge())
+            combine(authManager.user, preferenceManager.isCloudSyncEnabled) { user, isEnabled ->
+                user to isEnabled
+            }.collect { (user, isEnabled) ->
+                if (user != null && isEnabled) {
+                    val patientId = preferenceManager.patientId.first()
+                    if (patientId != null) {
+                        startSync(user.uid, patientId)
                     }
-                    batch.commit().await()
-                    log("History sync: OK (${localMeasurements.size} items)")
-                }
-                
-                log("Finalizing diagnostic...")
-                preferenceManager.saveCloudSyncLastSuccessAt(System.currentTimeMillis())
-                log("Diagnostic Complete: EVERYTHING OK")
-                
-            } catch (e: Exception) {
-                log("Result: FAIL")
-                log("Error: ${e.message}")
-                eventLogger.log(LogLevel.ERROR, "CloudSync", "Diagnostic failed", e.stackTraceToString())
-                if (e.message?.contains("permission-denied") == true) {
-                    log("TIP: Check Firestore Rules in Firebase Console.")
-                }
-                if (e.message?.contains("unavailable") == true) {
-                    log("TIP: Check internet connection or Firebase availability.")
                 }
             }
-        } else {
-            log("Result: SKIPPED (Requirements not met)")
+        }
+    }
+
+    private fun log(msg: String) {
+        val current = _cloudSyncDebugOutput.value ?: ""
+        _cloudSyncDebugOutput.value = current + msg + "\n"
+    }
+
+    fun runDiagnostic() {
+        _cloudSyncDebugOutput.value = ""
+        scope.launch {
+            log("=== Cloud Sync Diagnostic ===")
+            val user = authManager.user.value
+            log("Google User: ${user?.email ?: "NOT LOGGED IN"}")
+            
+            val patientId = preferenceManager.patientId.first()
+            log("Patient ID: ${patientId ?: "MISSING (Login to LLU first)"}")
+
+            if (user != null && patientId != null) {
+                try {
+                    log("Google UID: ${user.uid}")
+                    log("Ensuring Firestore is online...")
+                    firestore.enableNetwork().await()
+                    
+                    log("Testing Firestore write...")
+                    val testDoc = firestore.collection("users").document(user.uid)
+                        .collection("patients").document(patientId)
+                        .collection("config").document("diagnostic")
+                    
+                    val testData = mapOf("last_test" to System.currentTimeMillis(), "device" to Build.MODEL)
+                    withTimeout(10000) { testDoc.set(testData).await() }
+                    log("Result: SUCCESS")
+                    
+                    startSync(user.uid, patientId)
+                    log("Full sync triggered: OK")
+                } catch (e: Exception) {
+                    log("Result: FAIL - ${e.message}")
+                    eventLogger.log(LogLevel.ERROR, "CloudSync", "Diagnostic failed", e.stackTraceToString())
+                }
+            }
         }
     }
 
     private fun startSync(googleUid: String, patientId: String) {
         scope.launch {
             try {
-                Log.d("CloudSync", "Starting sync session for patient: $patientId")
+                val patientDoc = firestore.collection("users").document(googleUid)
+                    .collection("patients").document(patientId)
+                
+                // 1. Initial Merge for settings
+                val remoteSettings = patientDoc.collection("config").document("settings").get().await()
+                if (remoteSettings.exists()) {
+                    remoteSettings.toObject(HistoryBackupPayload::class.java)?.let { payload ->
+                        preferenceManager.restoreFromPayload(payload, isHardReset = false)
+                    }
+                }
+                
+                // 2. Push local state
                 syncSettingsToCloud(googleUid, patientId)
                 syncDataListsToCloud(googleUid, patientId)
-                listenToRemoteSettings(googleUid, patientId)
                 syncHistory(googleUid, patientId)
-                Log.d("CloudSync", "Sync session initialized")
+                
+                // 3. Start listeners
+                listenToRemoteChanges(googleUid, patientId)
+                
+                preferenceManager.saveCloudSyncLastSuccessAt(System.currentTimeMillis())
             } catch (e: Exception) {
-                Log.e("CloudSync", "Fatal error during sync initialization", e)
+                Log.e("CloudSync", "Sync error", e)
             }
         }
     }
 
     private suspend fun syncSettingsToCloud(googleUid: String, patientId: String) {
-        try {
-            val payload = preferenceManager.getSettingsOnlyPayload()
-            firestore.collection("users").document(googleUid)
-                .collection("patients").document(patientId)
-                .collection("config").document("settings")
-                .set(payload, SetOptions.merge())
-                .await()
-            Log.d("CloudSync", "Settings pushed for patient: $patientId")
-            preferenceManager.saveCloudSyncLastSuccessAt(System.currentTimeMillis())
-        } catch (e: Exception) {
-            Log.e("CloudSync", "Error pushing settings", e)
-        }
+        val payload = preferenceManager.getSettingsOnlyPayload()
+        firestore.collection("users").document(googleUid)
+            .collection("patients").document(patientId)
+            .collection("config").document("settings")
+            .set(payload, SetOptions.merge()).await()
     }
 
     private suspend fun syncDataListsToCloud(googleUid: String, patientId: String) {
-        try {
-            // Sync smaller lists (Capillary, Insulin, SensorLogs) as separate docs
-            // to avoid hitting document size limits.
-            val patientDoc = firestore.collection("users").document(googleUid)
-                .collection("patients").document(patientId)
-            
-            val capillary = preferenceManager.capillaryReadings.first()
-            patientDoc.collection("data").document("capillary").set(mapOf("items" to capillary)).await()
+        val patientDoc = firestore.collection("users").document(googleUid)
+            .collection("patients").document(patientId)
+        
+        val insulin = preferenceManager.insulinDoses.first()
+        val insulinColl = patientDoc.collection("insulin_doses")
+        insulin.forEach { dose -> insulinColl.document(dose.id).set(dose, SetOptions.merge()) }
 
-            val insulin = preferenceManager.insulinDoses.first()
-            patientDoc.collection("data").document("insulin").set(mapOf("items" to insulin)).await()
-
-            val sensorLogs = preferenceManager.sensorLogs.first()
-            patientDoc.collection("data").document("sensor_logs").set(mapOf("items" to sensorLogs)).await()
-            
-            Log.d("CloudSync", "Data lists pushed for patient: $patientId")
-        } catch (e: Exception) {
-            Log.e("CloudSync", "Error pushing data lists", e)
-        }
+        val capillary = preferenceManager.capillaryReadings.first()
+        val capillaryColl = patientDoc.collection("capillary_readings")
+        capillary.forEach { r -> capillaryColl.document(r.id).set(r, SetOptions.merge()) }
     }
 
-    private fun listenToRemoteSettings(googleUid: String, patientId: String) {
+    private fun listenToRemoteChanges(googleUid: String, patientId: String) {
         val patientDoc = firestore.collection("users").document(googleUid)
             .collection("patients").document(patientId)
 
-        // Listen for settings
-        patientDoc.collection("config").document("settings")
-            .addSnapshotListener { snapshot, e ->
-                if (e != null) {
-                    Log.e("CloudSync", "Settings listener error", e)
-                    return@addSnapshotListener
+        patientDoc.collection("insulin_doses").addSnapshotListener { snapshots, e ->
+            if (e != null || snapshots == null) return@addSnapshotListener
+            scope.launch {
+                val remote = snapshots.documents.mapNotNull { it.toObject(InsulinDose::class.java) }
+                if (remote.isNotEmpty()) {
+                    val local = preferenceManager.insulinDoses.first()
+                    val merged = (local + remote).associateBy { it.id }.values
+                        .filter { !it.isDeleted }.sortedByDescending { it.timestamp }
+                    preferenceManager.saveInsulinDoses(merged)
                 }
-                try {
-                    snapshot?.toObject(HistoryBackupPayload::class.java)?.let { payload ->
-                        scope.launch { 
-                            try {
-                                preferenceManager.restoreFromPayload(payload, isHardReset = false) 
-                            } catch (e: Exception) {
-                                Log.e("CloudSync", "Error restoring settings from payload", e)
-                                eventLogger.log(LogLevel.ERROR, "CloudSync", "Settings sync error", e.stackTraceToString())
-                            }
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.e("CloudSync", "Error deserializing settings", e)
-                    eventLogger.log(LogLevel.ERROR, "CloudSync", "Deserialization error", e.stackTraceToString())
-                }
-            }
-
-        // Listen for data lists
-        patientDoc.collection("data").document("capillary").addSnapshotListener { snapshot, e ->
-            if (e != null) {
-                Log.e("CloudSync", "Capillary listener error", e)
-                return@addSnapshotListener
-            }
-            try {
-                snapshot?.toObject(ListWrapper::class.java)?.let { wrapper ->
-                    @Suppress("UNCHECKED_CAST")
-                    val items = wrapper.items as? List<CapillaryMeasurement> ?: return@let
-                    scope.launch { 
-                        try {
-                            preferenceManager.saveCapillaryReadings(items) 
-                        } catch (e: Exception) {
-                            Log.e("CloudSync", "Error saving capillary readings", e)
-                            eventLogger.log(LogLevel.ERROR, "CloudSync", "Capillary sync error", e.stackTraceToString())
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e("CloudSync", "Error deserializing capillary", e)
-                eventLogger.log(LogLevel.ERROR, "CloudSync", "Capillary deserialization error", e.stackTraceToString())
             }
         }
-        
-        patientDoc.collection("data").document("insulin").addSnapshotListener { snapshot, e ->
-            if (e != null) {
-                Log.e("CloudSync", "Insulin listener error", e)
-                return@addSnapshotListener
-            }
-            try {
-                snapshot?.toObject(ListWrapper::class.java)?.let { wrapper ->
-                    @Suppress("UNCHECKED_CAST")
-                    val items = wrapper.items as? List<InsulinDose> ?: return@let
-                    scope.launch { 
-                        try {
-                            preferenceManager.saveInsulinDoses(items) 
-                        } catch (e: Exception) {
-                            Log.e("CloudSync", "Error saving insulin doses", e)
-                            eventLogger.log(LogLevel.ERROR, "CloudSync", "Insulin sync error", e.stackTraceToString())
-                        }
-                    }
+
+        patientDoc.collection("capillary_readings").addSnapshotListener { snapshots, e ->
+            if (e != null || snapshots == null) return@addSnapshotListener
+            scope.launch {
+                val remote = snapshots.documents.mapNotNull { it.toObject(CapillaryMeasurement::class.java) }
+                if (remote.isNotEmpty()) {
+                    val local = preferenceManager.capillaryReadings.first()
+                    val merged = (local + remote).associateBy { it.id }.values
+                        .filter { !it.isDeleted }.sortedByDescending { it.timestamp }
+                    preferenceManager.saveCapillaryReadings(merged)
                 }
-            } catch (e: Exception) {
-                Log.e("CloudSync", "Error deserializing insulin", e)
-                eventLogger.log(LogLevel.ERROR, "CloudSync", "Insulin deserialization error", e.stackTraceToString())
             }
         }
     }
 
-    private data class ListWrapper(val items: List<Any> = emptyList())
-
     private suspend fun syncHistory(googleUid: String, patientId: String) {
-        try {
-            val localMeasurements = dbHelper.readAllNewestFirst()
-            val historyColl = firestore.collection("users").document(googleUid)
-                .collection("patients").document(patientId)
-                .collection("glucose_history")
-            
-            // Sync in smaller chunks to be extra safe
-            val itemsToSync = localMeasurements.take(300) 
-            itemsToSync.chunked(50).forEach { chunk ->
-                val batch = firestore.batch()
-                chunk.forEach { m ->
-                    val docId = "${m.epochSeconds}-${m.value}"
-                    batch.set(historyColl.document(docId), m, SetOptions.merge())
+        val local = dbHelper.readAllNewestFirst().take(200)
+        val historyColl = firestore.collection("users").document(googleUid)
+            .collection("patients").document(patientId)
+            .collection("glucose_history")
+        
+        local.chunked(25).forEach { chunk ->
+            val batch = firestore.batch()
+            chunk.forEach { m -> batch.set(historyColl.document("${m.epochSeconds}-${m.value}"), m, SetOptions.merge()) }
+            batch.commit().await()
+        }
+    }
+
+    fun resetCloudData(googleUid: String, patientId: String, onComplete: (Boolean) -> Unit) {
+        scope.launch {
+            try {
+                val patientDoc = firestore.collection("users").document(googleUid)
+                    .collection("patients").document(patientId)
+                val collections = listOf("insulin_doses", "capillary_readings", "glucose_history", "config")
+                for (coll in collections) {
+                    val snapshot = patientDoc.collection(coll).get().await()
+                    val batch = firestore.batch()
+                    snapshot.documents.forEach { batch.delete(it.reference) }
+                    batch.commit().await()
                 }
-                batch.commit().await()
+                startSync(googleUid, patientId)
+                withContext(Dispatchers.Main) { onComplete(true) }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) { onComplete(false) }
             }
-            
-            Log.d("CloudSync", "History chunks pushed for patient: $patientId")
-            preferenceManager.saveCloudSyncLastSuccessAt(System.currentTimeMillis())
-        } catch (e: Exception) {
-            Log.e("CloudSync", "Error pushing history", e)
         }
     }
 }
