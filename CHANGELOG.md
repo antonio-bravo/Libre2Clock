@@ -1,5 +1,29 @@
 # Changelog
 
+## 03883e6 (Sep 09, 2026 15:14:21)
+time out on sync — antonio-bravo
+[detail](#03883e6-details)
+
+<details id='03883e6-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
+</details>
+
+
+---
+## 3a81060 (Sep 09, 2026 12:46:49)
+Update changelog — github-actions[bot]
+[detail](#3a81060-details)
+
+<details id='3a81060-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 89a3f2b (Sep 09, 2026 14:46:24)
 cloud sync — antonio-bravo
 [detail](#89a3f2b-details)
@@ -703,34 +727,6 @@ fix back button — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepository.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-</details>
-
-
----
-## 5cb19fc (Aug 15, 2026 17:25:56)
-Update changelog — github-actions[bot]
-[detail](#5cb19fc-details)
-
-<details id='5cb19fc-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## f4f9553 (Aug 15, 2026 19:25:43)
-update labels for performance metrics — antonio-bravo
-[detail](#f4f9553-details)
-
-<details id='f4f9553-details'>
-<summary>Changed files</summary>
-
-- .idea/misc.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsCacheRepository.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/report/ReportSectionCacheRepository.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
 </details>
 
 
