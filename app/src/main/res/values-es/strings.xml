@@ -376,6 +376,11 @@
     <string name="cloud_sync_pending">Sincronización pendiente…</string>
     <string name="cloud_privacy_note">Tus datos se guardan de forma segura en tu cuenta personal de Google Firebase. Solo tú tienes acceso a ellos.</string>
     <string name="cloud_configure_button">Configurar Sincronización</string>
+    <string name="cloud_sync_now">Sincronizar ahora</string>
+    <string name="cloud_diag_title">Herramientas de Diagnóstico</string>
+    <string name="cloud_diag_run">Ejecutar Test de Sincronización</string>
+    <string name="cloud_diag_log_title">Log de Sincronización</string>
+    <string name="cloud_diag_close">Cerrar</string>
 
     <!-- Backup Restore Dialog -->
     <string name="restore_dialog_title">Restaurar Copia de Seguridad</string>

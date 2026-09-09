@@ -481,7 +481,10 @@ class SettingsViewModel(
     fun runCloudSyncDiagnostic() {
         viewModelScope.launch {
             _isCloudSyncDebugLoading.value = true
-            _cloudSyncDebugOutput.value = cloudSyncManager.runDiagnostic()
+            _cloudSyncDebugOutput.value = "Starting test..."
+            cloudSyncManager.runDiagnostic { progress ->
+                _cloudSyncDebugOutput.value = progress
+            }
             _isCloudSyncDebugLoading.value = false
         }
     }

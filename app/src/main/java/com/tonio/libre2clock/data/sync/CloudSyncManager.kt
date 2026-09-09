@@ -56,37 +56,66 @@ class CloudSyncManager(
         }
     }
 
-    suspend fun runDiagnostic(): String = buildString {
-        appendLine("=== Cloud Sync Diagnostic ===")
+    suspend fun runDiagnostic(onProgress: (String) -> Unit): String = buildString {
+        fun log(msg: String) {
+            appendLine(msg)
+            onProgress(this.toString())
+        }
+
+        log("=== Cloud Sync Diagnostic ===")
         val user = authManager.user.value
-        appendLine("Google User: ${user?.email ?: "NOT LOGGED IN"}")
+        log("Google User: ${user?.email ?: "NOT LOGGED IN"}")
         
         val patientId = preferenceManager.patientId.first()
-        appendLine("Patient ID: ${patientId ?: "MISSING (Login to LLU first)"}")
+        log("Patient ID: ${patientId ?: "MISSING (Login to LLU first)"}")
 
         if (user != null && patientId != null) {
             try {
-                appendLine("Testing Firestore write...")
+                log("Testing Firestore write...")
                 val testDoc = firestore.collection("users").document(user.uid)
                     .collection("patients").document(patientId)
                     .collection("config").document("diagnostic")
                 
                 testDoc.set(mapOf("last_test" to System.currentTimeMillis())).await()
-                appendLine("Result: SUCCESS (Write test passed)")
+                log("Result: SUCCESS (Write test passed)")
                 
-                appendLine("Starting full sync test...")
+                log("Starting settings sync test...")
                 syncSettingsToCloud(user.uid, patientId)
-                appendLine("Settings sync: OK")
+                log("Settings sync: OK")
+                
+                log("Starting history sync test (first 50 items)...")
+                val localMeasurements = dbHelper.readAllNewestFirst().take(50)
+                if (localMeasurements.isEmpty()) {
+                    log("History: No local data to sync.")
+                } else {
+                    val historyColl = firestore.collection("users").document(user.uid)
+                        .collection("patients").document(patientId)
+                        .collection("glucose_history")
+                    val batch = firestore.batch()
+                    localMeasurements.forEach { m ->
+                        val docId = "${m.epochSeconds}-${m.value}"
+                        batch.set(historyColl.document(docId), m, SetOptions.merge())
+                    }
+                    batch.commit().await()
+                    log("History sync: OK (${localMeasurements.size} items)")
+                }
+                
+                log("Finalizing diagnostic...")
+                preferenceManager.saveCloudSyncLastSuccessAt(System.currentTimeMillis())
+                log("Diagnostic Complete: EVERYTHING OK")
                 
             } catch (e: Exception) {
-                appendLine("Result: FAIL")
-                appendLine("Error: ${e.message}")
+                log("Result: FAIL")
+                log("Error: ${e.message}")
                 if (e.message?.contains("permission-denied") == true) {
-                    appendLine("TIP: Check Firestore Rules in Firebase Console.")
+                    log("TIP: Check Firestore Rules in Firebase Console.")
+                }
+                if (e.message?.contains("unavailable") == true) {
+                    log("TIP: Check internet connection or Firebase availability.")
                 }
             }
         } else {
-            appendLine("Result: SKIPPED (Requirements not met)")
+            log("Result: SKIPPED (Requirements not met)")
         }
     }
 

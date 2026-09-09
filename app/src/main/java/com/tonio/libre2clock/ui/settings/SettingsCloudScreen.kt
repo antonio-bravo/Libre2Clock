@@ -135,7 +135,7 @@ fun SettingsCloudScreen(
                             TextButton(onClick = viewModel::triggerCloudSync) {
                                 Icon(Icons.Default.Sync, contentDescription = null, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("Sincronizar ahora", style = MaterialTheme.typography.labelMedium)
+                                Text(stringResource(R.string.cloud_sync_now), style = MaterialTheme.typography.labelMedium)
                             }
                         }
                     }
@@ -143,7 +143,7 @@ fun SettingsCloudScreen(
             }
 
             item {
-                SettingsSection(title = "Herramientas de Diagnóstico") {
+                SettingsSection(title = stringResource(R.string.cloud_diag_title)) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button(
                             onClick = viewModel::runCloudSyncDiagnostic,
@@ -153,7 +153,7 @@ fun SettingsCloudScreen(
                             if (isDebugLoading) {
                                 CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
                             } else {
-                                Text("Ejecutar Test de Sincronización")
+                                Text(stringResource(R.string.cloud_diag_run))
                             }
                         }
 
@@ -168,9 +168,9 @@ fun SettingsCloudScreen(
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Text("Log de Sincronización", style = MaterialTheme.typography.labelMedium)
+                                        Text(stringResource(R.string.cloud_diag_log_title), style = MaterialTheme.typography.labelMedium)
                                         TextButton(onClick = viewModel::clearCloudSyncDebugOutput) {
-                                            Text("Cerrar")
+                                            Text(stringResource(R.string.cloud_diag_close))
                                         }
                                     }
                                     Text(

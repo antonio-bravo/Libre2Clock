@@ -380,6 +380,11 @@
     <string name="cloud_sync_pending">Sync pending…</string>
     <string name="cloud_privacy_note">Your data is securely stored in your personal Google Firebase account. Only you have access to it.</string>
     <string name="cloud_configure_button">Configure Sync</string>
+    <string name="cloud_sync_now">Sync Now</string>
+    <string name="cloud_diag_title">Diagnostic Tools</string>
+    <string name="cloud_diag_run">Run Sync Test</string>
+    <string name="cloud_diag_log_title">Sync Log</string>
+    <string name="cloud_diag_close">Close</string>
 
     <!-- Backup Restore Dialog -->
     <string name="restore_dialog_title">Restore Backup</string>
