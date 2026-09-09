@@ -1,5 +1,29 @@
 # Changelog
 
+## 59f479a (Sep 09, 2026 13:02:46)
+Test cloud sync — antonio-bravo
+[detail](#59f479a-details)
+
+<details id='59f479a-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+</details>
+
+
+---
+## 6ea30c5 (Sep 09, 2026 10:43:48)
+Update changelog — github-actions[bot]
+[detail](#6ea30c5-details)
+
+<details id='6ea30c5-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 7d9c11a (Sep 09, 2026 12:43:35)
 Sync on cloud in smaller packages — antonio-bravo
 [detail](#7d9c11a-details)
@@ -722,30 +746,6 @@ App opmization — antonio-bravo
 - app/src/main/res/values-es/strings.xml [Modified]
 - app/src/main/res/values/strings.xml [Modified]
 - app/src/test/java/com/tonio/libre2clock/ExampleUnitTest.kt [Modified]
-</details>
-
-
----
-## 4cb75d4 (Aug 15, 2026 16:02:41)
-Update changelog — github-actions[bot]
-[detail](#4cb75d4-details)
-
-<details id='4cb75d4-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## fe652a2 (Aug 15, 2026 18:02:30)
-Update README.md — antonio-bravo
-[detail](#fe652a2-details)
-
-<details id='fe652a2-details'>
-<summary>Changed files</summary>
-
-- README.md [Modified]
 </details>
 
 
