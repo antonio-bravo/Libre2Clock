@@ -1,5 +1,35 @@
 # Changelog
 
+## e733210 (Sep 09, 2026 21:50:40)
+Cloud Sync + Hard Reset — antonio-bravo
+[detail](#e733210-details)
+
+<details id='e733210-details'>
+<summary>Changed files</summary>
+
+- .idea/misc.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/sync/AuthManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+</details>
+
+
+---
+## ca29135 (Sep 09, 2026 15:45:35)
+Update changelog — github-actions[bot]
+[detail](#ca29135-details)
+
+<details id='ca29135-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 49ce3d9 (Sep 09, 2026 17:45:21)
 fix datetime HH MM — antonio-bravo
 [detail](#49ce3d9-details)
@@ -697,32 +727,6 @@ the api is in UTC the phone conver to local time zone — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
-</details>
-
-
----
-## 7083615 (Aug 17, 2026 17:23:20)
-Update changelog — github-actions[bot]
-[detail](#7083615-details)
-
-<details id='7083615-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 96645ec (Aug 17, 2026 19:23:07)
-time in local — antonio-bravo
-[detail](#96645ec-details)
-
-<details id='96645ec-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
 </details>
 
