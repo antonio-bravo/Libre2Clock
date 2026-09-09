@@ -1,6 +1,7 @@
 package com.tonio.libre2clock.data.sync
 
 import android.content.Context
+import android.os.Build
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withTimeout
 
 class CloudSyncManager(
     private val context: Context,
@@ -71,12 +73,23 @@ class CloudSyncManager(
 
         if (user != null && patientId != null) {
             try {
-                log("Testing Firestore write...")
+                log("Google UID: ${user.uid}")
+                log("Ensuring Firestore is online...")
+                firestore.enableNetwork().await()
+                
+                log("Testing Firestore write (with 10s timeout)...")
                 val testDoc = firestore.collection("users").document(user.uid)
                     .collection("patients").document(patientId)
                     .collection("config").document("diagnostic")
                 
-                testDoc.set(mapOf("last_test" to System.currentTimeMillis())).await()
+                val writeTask = testDoc.set(mapOf(
+                    "last_test" to System.currentTimeMillis(),
+                    "device" to Build.MODEL
+                ))
+
+                withTimeout(10000) {
+                    writeTask.await()
+                }
                 log("Result: SUCCESS (Write test passed)")
                 
                 log("Starting settings sync test...")
