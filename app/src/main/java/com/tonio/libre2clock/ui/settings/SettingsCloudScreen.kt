@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tonio.libre2clock.R
@@ -26,6 +27,8 @@ fun SettingsCloudScreen(
     val firebaseUser by viewModel.firebaseUser.collectAsStateWithLifecycle()
     val isEnabled by viewModel.isCloudSyncEnabled.collectAsStateWithLifecycle()
     val lastSuccess by viewModel.cloudSyncLastSuccessAt.collectAsStateWithLifecycle()
+    val debugOutput by viewModel.cloudSyncDebugOutput.collectAsStateWithLifecycle()
+    val isDebugLoading by viewModel.isCloudSyncDebugLoading.collectAsStateWithLifecycle()
     val context = androidx.compose.ui.platform.LocalContext.current
 
     Scaffold(
@@ -117,23 +120,64 @@ fun SettingsCloudScreen(
                             )
                         }
                         
-                        if (isEnabled) {
-                            HorizontalDivider()
-                            Row(
+                        HorizontalDivider()
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                lastSuccess?.let { stringResource(R.string.cloud_last_sync, formatTimestamp(it)) } ?: stringResource(R.string.cloud_sync_pending),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.weight(1f)
+                            )
+                            TextButton(onClick = viewModel::triggerCloudSync) {
+                                Icon(Icons.Default.Sync, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Sincronizar ahora", style = MaterialTheme.typography.labelMedium)
+                            }
+                        }
+                    }
+                }
+            }
+
+            item {
+                SettingsSection(title = "Herramientas de Diagnóstico") {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(
+                            onClick = viewModel::runCloudSyncDiagnostic,
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !isDebugLoading && firebaseUser != null
+                        ) {
+                            if (isDebugLoading) {
+                                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
+                            } else {
+                                Text("Ejecutar Test de Sincronización")
+                            }
+                        }
+
+                        if (debugOutput != null) {
+                            Card(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                             ) {
-                                Text(
-                                    lastSuccess?.let { stringResource(R.string.cloud_last_sync, formatTimestamp(it)) } ?: stringResource(R.string.cloud_sync_pending),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                TextButton(onClick = viewModel::triggerCloudSync) {
-                                    Icon(Icons.Default.Sync, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Sincronizar ahora", style = MaterialTheme.typography.labelMedium)
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text("Log de Sincronización", style = MaterialTheme.typography.labelMedium)
+                                        TextButton(onClick = viewModel::clearCloudSyncDebugOutput) {
+                                            Text("Cerrar")
+                                        }
+                                    }
+                                    Text(
+                                        debugOutput!!,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontFamily = FontFamily.Monospace
+                                    )
                                 }
                             }
                         }

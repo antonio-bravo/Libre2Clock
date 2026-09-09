@@ -478,6 +478,18 @@ class SettingsViewModel(
         }
     }
 
+    fun runCloudSyncDiagnostic() {
+        viewModelScope.launch {
+            _isCloudSyncDebugLoading.value = true
+            _cloudSyncDebugOutput.value = cloudSyncManager.runDiagnostic()
+            _isCloudSyncDebugLoading.value = false
+        }
+    }
+
+    fun clearCloudSyncDebugOutput() {
+        _cloudSyncDebugOutput.value = null
+    }
+
     fun signInWithGoogle(context: android.content.Context) {
         viewModelScope.launch {
             try {

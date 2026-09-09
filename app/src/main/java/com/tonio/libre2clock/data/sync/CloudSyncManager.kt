@@ -56,6 +56,40 @@ class CloudSyncManager(
         }
     }
 
+    suspend fun runDiagnostic(): String = buildString {
+        appendLine("=== Cloud Sync Diagnostic ===")
+        val user = authManager.user.value
+        appendLine("Google User: ${user?.email ?: "NOT LOGGED IN"}")
+        
+        val patientId = preferenceManager.patientId.first()
+        appendLine("Patient ID: ${patientId ?: "MISSING (Login to LLU first)"}")
+
+        if (user != null && patientId != null) {
+            try {
+                appendLine("Testing Firestore write...")
+                val testDoc = firestore.collection("users").document(user.uid)
+                    .collection("patients").document(patientId)
+                    .collection("config").document("diagnostic")
+                
+                testDoc.set(mapOf("last_test" to System.currentTimeMillis())).await()
+                appendLine("Result: SUCCESS (Write test passed)")
+                
+                appendLine("Starting full sync test...")
+                syncSettingsToCloud(user.uid, patientId)
+                appendLine("Settings sync: OK")
+                
+            } catch (e: Exception) {
+                appendLine("Result: FAIL")
+                appendLine("Error: ${e.message}")
+                if (e.message?.contains("permission-denied") == true) {
+                    appendLine("TIP: Check Firestore Rules in Firebase Console.")
+                }
+            }
+        } else {
+            appendLine("Result: SKIPPED (Requirements not met)")
+        }
+    }
+
     private fun startSync(googleUid: String, patientId: String) {
         scope.launch {
             try {
