@@ -1,5 +1,30 @@
 # Changelog
 
+## 1822291 (Sep 09, 2026 22:30:50)
+fix HbA1c after restore — antonio-bravo
+[detail](#1822291-details)
+
+<details id='1822291-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+</details>
+
+
+---
+## ec5ef82 (Sep 09, 2026 20:09:11)
+Update changelog — github-actions[bot]
+[detail](#ec5ef82-details)
+
+<details id='ec5ef82-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## b7d34ab (Sep 09, 2026 22:08:58)
 Fix and adjust datetime on main screen — antonio-bravo
 [detail](#b7d34ab-details)
@@ -706,30 +731,6 @@ fix copy and summary sensor errors — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/ui/sensor/SensorLogsScreen.kt [Modified]
 - app/src/main/res/values-es/strings.xml [Modified]
 - app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 3236b7e (Aug 17, 2026 18:37:10)
-Update changelog — github-actions[bot]
-[detail](#3236b7e-details)
-
-<details id='3236b7e-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 1c62fb0 (Aug 17, 2026 20:36:56)
-remove  repository.dataVersion.map { it / 10 }.distinctUntilChanged() // Throttled: only every 10 new readings — antonio-bravo
-[detail](#1c62fb0-details)
-
-<details id='1c62fb0-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
 </details>
 
 
