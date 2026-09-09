@@ -1,5 +1,31 @@
 # Changelog
 
+## c501d14 (Sep 09, 2026 17:11:56)
+Add EventLog — antonio-bravo
+[detail](#c501d14-details)
+
+<details id='c501d14-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsAdvancedScreen.kt [Modified]
+</details>
+
+
+---
+## 8604c0f (Sep 09, 2026 14:55:29)
+Update changelog — github-actions[bot]
+[detail](#8604c0f-details)
+
+<details id='8604c0f-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## fba2130 (Sep 09, 2026 16:55:12)
 fix wait for app — antonio-bravo
 [detail](#fba2130-details)
@@ -701,39 +727,6 @@ time in UTC — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
-</details>
-
-
----
-## 3d21a8c (Aug 17, 2026 15:56:35)
-Update changelog — github-actions[bot]
-[detail](#3d21a8c-details)
-
-<details id='3d21a8c-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 8d0ba1d (Aug 17, 2026 17:56:19)
-optmize — antonio-bravo
-[detail](#8d0ba1d-details)
-
-<details id='8d0ba1d-details'>
-<summary>Changed files</summary>
-
-- .idea/misc.xml [Modified]
-- .idea/planningMode.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseProcessor.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/sensor/SensorLogsScreen.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
 </details>
 
 
