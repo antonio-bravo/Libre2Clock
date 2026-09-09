@@ -34,16 +34,25 @@
 # Missing transitive annotations from Tink/Google libraries
 -dontwarn com.google.errorprone.annotations.**
 
-# Keep LibreLinkUp API models
+# Keep LibreLinkUp API, Models and Sync
+-keep class com.tonio.libre2clock.data.api.** { *; }
 -keep class com.tonio.libre2clock.data.model.** { *; }
 -keepclassmembers class com.tonio.libre2clock.data.model.** { *; }
-
-# Also keep sync models
 -keep class com.tonio.libre2clock.data.sync.** { *; }
 
-# Keep Moshi / Retrofit
+# Moshi and Retrofit (Critical for API)
 -keep class com.squareup.moshi.** { *; }
+-keepclassmembers class * {
+    @com.squareup.moshi.Json *;
+}
 -keep class retrofit2.** { *; }
+
+# Google and Firebase (Critical for Sync)
+-keep class androidx.credentials.** { *; }
+-keep class com.google.android.libraries.identity.googleid.** { *; }
+-keep class com.google.firebase.** { *; }
+-keep class com.google.android.gms.auth.** { *; }
+-keep class com.google.android.gms.common.** { *; }
 
 # Keep Kotlin Serialization
 -keepattributes *Annotation*, InnerClasses
@@ -57,7 +66,20 @@
 -keep class androidx.credentials.** { *; }
 -keep class com.google.android.libraries.identity.googleid.** { *; }
 -keep class com.google.firebase.** { *; }
+-keep class com.google.android.gms.auth.** { *; }
+-keep class com.google.android.gms.common.** { *; }
+
+# Prevent obfuscation of credential types
+-keepnames class com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+-keepnames class com.google.android.libraries.identity.googleid.GetGoogleIdOption
 
 # Keep generated resources for Google Services
 -keep class com.google.android.gms.common.api.internal.** { *; }
 -keep class com.tonio.libre2clock.R$string { <fields>; }
+
+# Moshi and Retrofit specific
+-keepclassmembers class * {
+    @com.squareup.moshi.Json *;
+}
+-keep class com.squareup.moshi.** { *; }
+-dontwarn com.squareup.moshi.**

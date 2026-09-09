@@ -183,19 +183,6 @@ private fun AdvancedBackupActions(viewModel: SettingsViewModel) {
             restores.forEach { (label, action) ->
                 DropdownMenuItem(text = { Text(stringResource(label)) }, onClick = { showAdvancedDropdown = false; action() })
             }
-            HorizontalDivider()
-            Text("BORRADO TOTAL", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(12.dp), color = MaterialTheme.colorScheme.error)
-            DropdownMenuItem(
-                text = { Text("Hard Reset (Borrar y Restaurar)") },
-                onClick = { 
-                    showAdvancedDropdown = false
-                    // Reuse the launcher but with a flag or different logic
-                    // For now, let's just use the same launcher and we'll handle it
-                    // Actually, let's keep it simple and just do Merge by default.
-                    // If the user REALLY wants Hard Reset, they can ask.
-                },
-                colors = MenuDefaults.itemColors(textColor = MaterialTheme.colorScheme.error)
-            )
         }
     }
 }

@@ -51,7 +51,15 @@ class AuthManager(private val context: Context) {
 
     private suspend fun handleSignIn(result: GetCredentialResponse) {
         val credential = result.credential
-        val googleIdToken = com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.createFrom(credential.data).idToken
+        
+        // Extraer el ID Token de forma segura
+        val googleIdToken = try {
+            com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.createFrom(credential.data).idToken
+        } catch (e: Exception) {
+            android.util.Log.e("AuthManager", "Failed to parse Google ID Token", e)
+            throw Exception("Error al procesar la cuenta de Google: ${e.localizedMessage}")
+        }
+
         val firebaseCredential = GoogleAuthProvider.getCredential(googleIdToken, null)
         auth.signInWithCredential(firebaseCredential).await()
     }

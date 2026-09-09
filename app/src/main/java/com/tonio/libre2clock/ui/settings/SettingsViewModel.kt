@@ -35,6 +35,7 @@ class SettingsViewModel(
     private val androidContext: android.content.Context
 ) : ViewModel() {
 
+    private val cloudSyncManager = com.tonio.libre2clock.di.AppContainer.provideCloudSyncManager(androidContext)
     private val settingsCache = SettingsSectionCacheRepository(androidContext)
 
     private val _backupStatusMessage = MutableStateFlow<String?>(null)
@@ -458,6 +459,16 @@ class SettingsViewModel(
     fun updateCloudSyncEnabled(enabled: Boolean) {
         viewModelScope.launch {
             preferenceManager.saveCloudSyncEnabled(enabled)
+            if (enabled) {
+                cloudSyncManager.triggerManualSync()
+            }
+        }
+    }
+
+    fun triggerCloudSync() {
+        viewModelScope.launch {
+            cloudSyncManager.triggerManualSync()
+            _backupStatusMessage.value = "Manual sync triggered."
         }
     }
 

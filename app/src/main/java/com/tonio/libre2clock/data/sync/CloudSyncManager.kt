@@ -41,6 +41,19 @@ class CloudSyncManager(
         }
     }
 
+    fun triggerManualSync() {
+        Log.d("CloudSync", "Manual sync triggered")
+        scope.launch {
+            val user = authManager.user.value
+            val patientId = preferenceManager.patientId.first()
+            if (user != null && patientId != null) {
+                startSync(user.uid, patientId)
+            } else {
+                Log.w("CloudSync", "Cannot sync: user=$user, patientId=$patientId")
+            }
+        }
+    }
+
     private fun startSync(googleUid: String, patientId: String) {
         scope.launch {
             syncSettingsToCloud(googleUid, patientId)
@@ -58,6 +71,8 @@ class CloudSyncManager(
                 .set(payload, SetOptions.merge())
                 .await()
             Log.d("CloudSync", "Settings pushed for patient: $patientId")
+            // Actualizar timestamp también aquí para confirmar éxito
+            preferenceManager.saveCloudSyncLastSuccessAt(System.currentTimeMillis())
         } catch (e: Exception) {
             Log.e("CloudSync", "Error pushing settings", e)
         }
