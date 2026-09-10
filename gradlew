@@ -88,15 +88,6 @@ APP_BASE_NAME=${0##*/}
 # Discard cd standard output in case $CDPATH is set (https://github.com/gradle/gradle/issues/25036)
 APP_HOME=$( cd -P "${APP_HOME:-./}" > /dev/null && printf '%s\n' "$PWD" ) || exit
 
-# Fix AGP 9.3.0 environment variable conflict
-unset ANDROID_PREFS_ROOT
-
-# Force local JDK if it exists (prevents VS Code JRE issues)
-LOCAL_JDK="/Library/Java/JavaVirtualMachines/temurin-25.jdk/Contents/Home"
-if [ -d "$LOCAL_JDK" ]; then
-    export JAVA_HOME="$LOCAL_JDK"
-fi
-
 # Use the maximum available, or set MAX_FD != -1 to use that value.
 MAX_FD=maximum
 

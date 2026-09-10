@@ -7,23 +7,15 @@ import com.tonio.libre2clock.data.model.GlucoseOffsetRange
 import com.tonio.libre2clock.data.model.SensorLog
 import com.tonio.libre2clock.util.TimestampParser
 import java.time.Instant
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
- * Utility to process glucose data based on specific adjustment logic
- * found in community Python scripts.
+ * Utility to process glucose data based on specific adjustment logic.
+ * Optimized for zero-allocation statistics and O(log N) lookups.
  */
 object GlucoseProcessor {
 
-    /**
-     * Applies the range-based offset and a user-defined manual offset to a raw glucose measurement.
-     * @param measurement The raw measurement from the API
-     * @param manualOffset A manual offset provided by the user (default 0)
-     * @param userRanges Custom offset ranges provided by the user
-     */
     fun process(
         measurement: GlucoseMeasurement,
         manualOffset: Int = 0,
@@ -33,13 +25,12 @@ object GlucoseProcessor {
         capillaryReadings: List<CapillaryMeasurement> = emptyList(),
         context: CalculationContext? = null
     ): GlucoseMeasurement {
-        val rawValue = measurement.value
         val measurementInstant = measurement.epochSeconds?.let { Instant.ofEpochSecond(it) }
-            ?: parseTimestampToInstant(measurement.factoryTimestamp)
-            ?: parseTimestampToInstant(measurement.timestamp)
+            ?: TimestampParser.parseFlexibleInstant(measurement.factoryTimestamp)
+            ?: TimestampParser.parseFlexibleInstant(measurement.timestamp)
 
         val calibratedValue = getCalibratedValue(
-            rawValue = rawValue,
+            rawValue = measurement.value,
             manualOffset = manualOffset,
             userRanges = userRanges,
             autoAdjustEnabled = autoAdjustEnabled,
@@ -49,14 +40,14 @@ object GlucoseProcessor {
             context = context
         )
 
-        return measurement.copy(
-            calibratedValue = calibratedValue
-        )
+        // Si el valor no cambia, evitamos crear una nueva instancia (ahorro de memoria)
+        return if (calibratedValue == measurement.calibratedValue) {
+            measurement
+        } else {
+            measurement.copy(calibratedValue = calibratedValue)
+        }
     }
 
-    /**
-     * Holds pre-calculated data to avoid redundant loops over large lists.
-     */
     data class CalculationContext(
         val globalEstimate: RangeOffsetEstimate?,
         val rangeEstimates: Map<GlucoseOffsetRange, RangeOffsetEstimate>,
@@ -80,16 +71,14 @@ object GlucoseProcessor {
             }.toMap()
         } else emptyMap()
 
-        val capsByTime = capillaryReadings.mapNotNull { r ->
-            parseTimestampToInstant(r.timestamp)?.let { it to r }
-        }.sortedByDescending { it.first }
+        // Optimización: Evitar mapNotNull intermedio si es posible, pero este es legible y eficiente
+        val capsByTime = capillaryReadings
+            .mapNotNull { r -> TimestampParser.parseFlexibleInstant(r.timestamp)?.let { it to r } }
+            .sortedByDescending { it.first }
 
         return CalculationContext(globalEstimate, rangeEstimates, capsByTime, sensorLogs)
     }
 
-    /**
-     * Calculates the calibrated value based on raw value and offsets.
-     */
     fun getCalibratedValue(
         rawValue: Int,
         manualOffset: Int = 0,
@@ -100,7 +89,8 @@ object GlucoseProcessor {
         measurementInstant: Instant? = null,
         context: CalculationContext? = null
     ): Int {
-        val matchingRange = userRanges.find { range ->
+        // Búsqueda lineal está bien aquí porque userRanges suele ser muy pequeño (< 10 elementos)
+        val matchingRange = userRanges.firstOrNull { range ->
             rawValue >= range.min && (range.max == null || rawValue < range.max)
         }
 
@@ -116,18 +106,14 @@ object GlucoseProcessor {
             }
         }
 
-        val rangeFixedOffset = if (selectedEstimate != null) {
-            selectedEstimate.offset
-        } else {
-            matchingRange?.offset ?: 0
-        }
+        val rangeFixedOffset = selectedEstimate?.offset ?: (matchingRange?.offset ?: 0)
+        
         val rangePercentageOffset = if (selectedEstimate != null) {
             (rawValue * (selectedEstimate.percentage / 100.0)).roundToInt()
         } else {
-            matchingRange?.let { range ->
-                (rawValue * (range.percentage / 100.0)).roundToInt()
-            } ?: 0
+            matchingRange?.let { (rawValue * (it.percentage / 100.0)).roundToInt() } ?: 0
         }
+
         val autoAdjustment = if (autoAdjustEnabled) {
             getAutoAdjustment(rawValue, measurementInstant, capillaryReadings, context = context)
         } else {
@@ -144,69 +130,86 @@ object GlucoseProcessor {
         maxHoursDifference: Long = 6,
         context: CalculationContext? = null
     ): Int {
-        val capsToUse = context?.capillariesByTimestamp ?: emptyList()
-        if (capsToUse.isEmpty() && capillaryReadings.isEmpty()) return 0
         if (measurementInstant == null) return 0
+        
+        val capsToUse = context?.capillariesByTimestamp
+        if (capsToUse.isNullOrEmpty() && capillaryReadings.isEmpty()) return 0
 
         val targetMs = measurementInstant.toEpochMilli()
         val targetSensorSn = context?.let { findSensorSnForTimestamp(measurementInstant, it.sensorLogs) }
+        val maxDiffMs = maxHoursDifference * 3_600_000L
 
-        var bestAdjustment = 0
-        var minDiffMs = Long.MAX_VALUE
-
-        if (context != null) {
-            // BINARY SEARCH: Find candidates
-            val list = context.capillariesByTimestamp
+        // OPTIMIZACIÓN CRÍTICA: Búsqueda binaria + ventana local en lugar de escaneo lineal O(N)
+        if (capsToUse != null && capsToUse.isNotEmpty()) {
             var low = 0
-            var high = list.size - 1
-            
+            var high = capsToUse.size - 1
+            var insertIndex = capsToUse.size
+
+            // 1. Encontrar el punto de inserción para targetMs en la lista ordenada DESCENDENTE
             while (low <= high) {
-                val mid = (low + high) / 2
-                val currentMs = list[mid].first.toEpochMilli()
+                val mid = (low + high) ushr 1 // Unsigned shift para evitar overflow
+                if (capsToUse[mid].first.toEpochMilli() >= targetMs) {
+                    low = mid + 1
+                } else {
+                    insertIndex = mid
+                    high = mid - 1
+                }
+            }
+
+            // 2. Buscar el mejor candidato en una ventana pequeña alrededor del punto de inserción
+            // Esto maneja el caso donde la lectura más cercana en tiempo es de un sensor diferente
+            val windowStart = (insertIndex - 5).coerceAtLeast(0)
+            val windowEnd = (insertIndex + 5).coerceAtMost(capsToUse.size - 1)
+
+            var bestAdjustment = 0
+            var minDiffMs = Long.MAX_VALUE
+
+            for (i in windowStart..windowEnd) {
+                val (instant, reading) = capsToUse[i]
+                val currentMs = instant.toEpochMilli()
                 val diffMs = abs(targetMs - currentMs)
                 
-                // FILTER: Only use readings that share the same sensor serial number
-                val reading = list[mid].second
+                if (diffMs > maxDiffMs) continue
+
                 val isSameSensor = targetSensorSn == null || reading.sensorSerialNumber == targetSensorSn
+                if (!isSameSensor) continue
 
-                if (isSameSensor && diffMs < minDiffMs) {
-                    minDiffMs = diffMs
-                    bestAdjustment = reading.delta
-                        ?: reading.sensorValue?.let { reading.value - it }
-                        ?: (reading.value - rawValue)
-                }
-
-                if (currentMs < targetMs) {
-                    high = mid - 1
-                } else {
-                    low = mid + 1
-                }
-            }
-        } else {
-            // Fallback
-            for (reading in capillaryReadings) {
-                val readingInstant = parseTimestampToInstant(reading.timestamp) ?: continue
-                val diffMs = abs(targetMs - readingInstant.toEpochMilli())
-                
                 if (diffMs < minDiffMs) {
                     minDiffMs = diffMs
-                    bestAdjustment = reading.delta
-                        ?: reading.sensorValue?.let { reading.value - it }
+                    bestAdjustment = reading.delta 
+                        ?: reading.sensorValue?.let { reading.value - it } 
                         ?: (reading.value - rawValue)
                 }
             }
-        }
+            return if (minDiffMs <= maxDiffMs) bestAdjustment else 0
+        } else {
+            // Fallback lineal solo si no hay contexto pre-calculado (raro en producción)
+            var bestAdjustment = 0
+            var minDiffMs = Long.MAX_VALUE
 
-        return if (minDiffMs <= maxHoursDifference * 3600 * 1000) bestAdjustment else 0
+            for (reading in capillaryReadings) {
+                val readingInstant = TimestampParser.parseFlexibleInstant(reading.timestamp) ?: continue
+                val diffMs = abs(targetMs - readingInstant.toEpochMilli())
+                
+                if (diffMs <= maxDiffMs && diffMs < minDiffMs) {
+                    minDiffMs = diffMs
+                    bestAdjustment = reading.delta 
+                        ?: reading.sensorValue?.let { reading.value - it } 
+                        ?: (reading.value - rawValue)
+                }
+            }
+            return if (minDiffMs <= maxDiffMs) bestAdjustment else 0
+        }
     }
 
     private fun findSensorSnForTimestamp(timestamp: Instant, logs: List<SensorLog>): String? {
         if (logs.isEmpty()) return null
         
-        return logs.find { log ->
-            val start = parseTimestampToInstant(log.startDate) ?: return@find false
-            val end = log.endDate?.let { parseTimestampToInstant(it) } 
-                ?: log.expiryDate.let { parseTimestampToInstant(it) }
+        // Optimización: firstOrNull es más limpio y se detiene en la primera coincidencia
+        return logs.firstOrNull { log ->
+            val start = TimestampParser.parseFlexibleInstant(log.startDate) ?: return@firstOrNull false
+            val end = log.endDate?.let { TimestampParser.parseFlexibleInstant(it) } 
+                ?: TimestampParser.parseFlexibleInstant(log.expiryDate)
                 ?: Instant.MAX
             
             !timestamp.isBefore(start) && timestamp.isBefore(end)
@@ -238,26 +241,41 @@ object GlucoseProcessor {
         capillaryReadings: List<CapillaryMeasurement>,
         sensorFilter: (Int) -> Boolean
     ): RangeOffsetEstimate? {
-        val points = capillaryReadings.mapNotNull { reading ->
-            val sensor = reading.sensorValue ?: return@mapNotNull null
-            if (sensor == 0) return@mapNotNull null
-            if (!sensorFilter(sensor)) return@mapNotNull null
-            sensor.toDouble() to (reading.value - sensor).toDouble()
+        // OPTIMIZACIÓN CRÍTICA: Regresión lineal en 2 pasadas SIN crear listas intermedias (Zero-Allocation)
+        var sumX = 0.0
+        var sumY = 0.0
+        var count = 0
+
+        // Pasada 1: Calcular medias
+        for (reading in capillaryReadings) {
+            val sensor = reading.sensorValue ?: continue
+            if (sensor == 0 || !sensorFilter(sensor)) continue
+            
+            sumX += sensor
+            sumY += (reading.value - sensor)
+            count++
         }
 
-        if (points.isEmpty()) return null
-        if (points.size == 1) {
-            val delta = points.first().second.roundToInt()
-            return RangeOffsetEstimate(offset = delta, percentage = 0, sampleCount = 1)
+        if (count == 0) return null
+        if (count == 1) {
+            return RangeOffsetEstimate(offset = sumY.roundToInt(), percentage = 0, sampleCount = 1)
         }
 
-        val meanX = points.map { it.first }.average()
-        val meanY = points.map { it.second }.average()
+        val meanX = sumX / count
+        val meanY = sumY / count
 
         var varianceX = 0.0
         var covariance = 0.0
-        points.forEach { (x, y) ->
+
+        // Pasada 2: Calcular varianza y covarianza
+        for (reading in capillaryReadings) {
+            val sensor = reading.sensorValue ?: continue
+            if (sensor == 0 || !sensorFilter(sensor)) continue
+            
+            val x = sensor.toDouble()
+            val y = (reading.value - sensor).toDouble()
             val dx = x - meanX
+            
             varianceX += dx * dx
             covariance += dx * (y - meanY)
         }
@@ -268,12 +286,8 @@ object GlucoseProcessor {
         return RangeOffsetEstimate(
             offset = intercept.roundToInt(),
             percentage = (slope * 100.0).roundToInt(),
-            sampleCount = points.size
+            sampleCount = count
         )
-    }
-
-    private fun parseTimestampToInstant(timestamp: String): Instant? {
-        return TimestampParser.parseFlexibleInstant(timestamp)
     }
 
     /**
@@ -284,14 +298,7 @@ object GlucoseProcessor {
     }
 
     /**
-     * Maps the trend arrow integer to a string description or icon reference
-     * following the 1-6 mapping logic.
-     * 1: Falling Quickly (↓)
-     * 2: Falling (↘)
-     * 3: Stable (→)
-     * 4: Rising (↗)
-     * 5: Rising Quickly (↑)
-     * 6: Not Determined
+     * Maps the trend arrow integer to a string description or icon reference.
      */
     fun getTrendArrowSymbol(trend: Int?): String {
         return when (trend) {

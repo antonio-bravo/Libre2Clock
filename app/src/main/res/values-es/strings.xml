@@ -257,10 +257,12 @@
     <string name="settings_slow_charge_protection">Protección de Carga Lenta</string>
     <string name="settings_slow_charge_desc">Entra en modo de ahorro de batería cuando se carga por USB.</string>
     <string name="settings_sensor_duration_label">Duración del sensor (días)</string>
+    <string name="settings_sensor_duration_error">Por favor, introduce un valor entre 1 y 30</string>
     <string name="settings_demo_mode_desc">Simula lecturas de glucosa y estado del sensor para propósitos de prueba.</string>
     <string name="settings_enable_demo_mode">Activar Modo Demo</string>
     <string name="settings_history_backup">Historial y Copia de Seguridad</string>
     <string name="settings_retention_days_label">Días de retención (30-365)</string>
+    <string name="settings_retention_days_error">Por favor, introduce un valor entre 30 y 365</string>
     <string name="settings_history_backup_desc">Libre2Clock guarda tu historial localmente y pide a Android que haga una copia en tu cuenta de Google.</string>
     <string name="settings_cloud_sync_title">Sincronización en la Nube</string>
     <string name="settings_cloud_sync_desc">Sincroniza tus datos entre dispositivos usando tu cuenta de Google.</string>
@@ -316,7 +318,7 @@
     <string name="settings_perf_health_fair">Buena</string>
     <string name="settings_perf_health_slow">Lento</string>
 
-    <string name="settings_schedule_interval_row">Intervalo: %1$s | Inicio: :%2$s</string>
+    <string name="settings_schedule_interval_row">Intervalo: %1$s | Inicio: %2$s</string>
     <string name="day_mon">Lun</string>
     <string name="day_tue">Mar</string>
     <string name="day_wed">Mié</string>
@@ -373,6 +375,8 @@
     <string name="cloud_options_section">Opciones de Sincronización</string>
     <string name="cloud_auto_sync_label">Sincronización Automática</string>
     <string name="cloud_auto_sync_desc">Mantiene ajustes e historial sincronizados entre tus dispositivos.</string>
+    <string name="cloud_settings_modified_at">Ajustes modificados el: %1$s</string>
+    <string name="cloud_settings_default">Usando ajustes por defecto</string>
     <string name="cloud_last_sync">Última sincronización: %1$s</string>
     <string name="cloud_sync_pending">Sincronización pendiente…</string>
     <string name="cloud_privacy_note">Tus datos se guardan de forma segura en tu cuenta personal de Google Firebase. Solo tú tienes acceso a ellos.</string>
@@ -394,6 +398,7 @@
 
     <!-- Backup Restore Dialog -->
     <string name="restore_dialog_title">Restaurar Copia de Seguridad</string>
+    <string name="restore_dialog_message">¿Estás seguro de que quieres restaurar? Los datos se fusionarán.</string>
     <string name="restore_dialog_desc">¿Cómo quieres restaurar los datos?\n\nFusionar: Combina con los datos actuales.\nHard Reset: Borra todo y deja solo lo del backup.</string>
     <string name="restore_merge_button">Fusionar</string>
     <string name="restore_hard_reset_button">Hard Reset</string>

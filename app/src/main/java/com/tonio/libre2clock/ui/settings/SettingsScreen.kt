@@ -8,12 +8,12 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tonio.libre2clock.R
-import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,12 +28,21 @@ fun SettingsScreen(
     onNavigateToCloud: () -> Unit,
     onNavigateToAdvanced: () -> Unit
 ) {
-    var showLogoutConfirmDialog by remember { mutableStateOf(false) }
     val sectionPerfStats by viewModel.sectionPerfStats.collectAsStateWithLifecycle()
     val libreLinkUpEmail by viewModel.libreLinkUpEmail.collectAsStateWithLifecycle()
-    val dashboardEnterStats = sectionPerfStats.find { it.section == "dashboard_screen_enter" }
-    val historicalStats = sectionPerfStats.find { it.section == "historical_metrics_v2" }
-    val calibrationStats = sectionPerfStats.find { it.section == "settings_range_insights_v1" }
+
+    var showLogoutConfirmDialog by remember { mutableStateOf(false) }
+
+    // OPTIMIZACIÓN: Memoizar las búsquedas para evitar ejecutarlas en cada recomposición
+    val dashboardEnterStats = remember(sectionPerfStats) { 
+        sectionPerfStats.find { it.section == "dashboard_screen_enter" } 
+    }
+    val historicalStats = remember(sectionPerfStats) { 
+        sectionPerfStats.find { it.section == "historical_metrics_v2" } 
+    }
+    val calibrationStats = remember(sectionPerfStats) { 
+        sectionPerfStats.find { it.section == "settings_range_insights_v1" } 
+    }
 
     Scaffold(
         topBar = {
@@ -47,44 +56,30 @@ fun SettingsScreen(
             )
         }
     ) { innerPadding ->
+        // OPTIMIZACIÓN: Usar spacedBy elimina la necesidad de Spacers manuales entre items
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            item {
+            // OPTIMIZACIÓN: Cada sección es un 'item' independiente con 'key' para aislar recomposiciones
+            item(key = "account_header") {
                 Spacer(modifier = Modifier.height(8.dp))
+                AccountHeaderSection(email = libreLinkUpEmail)
+            }
 
-                SettingsSection(title = stringResource(R.string.settings_llu_account_header)) {
-                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Default.Person,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(
-                                libreLinkUpEmail ?: stringResource(R.string.settings_confirm), // fallback to generic confirm/active
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                            Text(
-                                stringResource(R.string.settings_llu_account_desc),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
-
+            item(key = "alerts") {
                 SettingsCategoryItem(
                     title = stringResource(R.string.settings_watch_notifications),
                     description = stringResource(R.string.settings_watch_notifications_desc),
                     icon = Icons.Default.Watch,
                     onClick = onNavigateToAlerts
                 )
+            }
 
+            item(key = "calibration") {
                 SettingsCategoryItem(
                     title = stringResource(R.string.settings_range_based_offsets),
                     description = stringResource(R.string.settings_range_based_offsets_desc),
@@ -92,21 +87,27 @@ fun SettingsScreen(
                     perfStats = calibrationStats,
                     onClick = onNavigateToCalibration
                 )
+            }
 
+            item(key = "battery") {
                 SettingsCategoryItem(
                     title = stringResource(R.string.settings_battery_optimization),
                     description = stringResource(R.string.settings_battery_optimization_desc),
                     icon = Icons.Default.BatteryChargingFull,
                     onClick = onNavigateToBattery
                 )
+            }
 
+            item(key = "device") {
                 SettingsCategoryItem(
                     title = stringResource(R.string.settings_device_title),
                     description = stringResource(R.string.settings_device_desc),
                     icon = Icons.Default.Memory,
                     onClick = onNavigateToDevice
                 )
+            }
 
+            item(key = "data") {
                 SettingsCategoryItem(
                     title = stringResource(R.string.settings_history_backup),
                     description = stringResource(R.string.settings_history_backup_desc),
@@ -114,14 +115,18 @@ fun SettingsScreen(
                     perfStats = historicalStats,
                     onClick = onNavigateToData
                 )
+            }
 
+            item(key = "cloud") {
                 SettingsCategoryItem(
                     title = stringResource(R.string.settings_cloud_sync_title),
                     description = stringResource(R.string.settings_cloud_sync_desc),
                     icon = Icons.Default.CloudSync,
                     onClick = onNavigateToCloud
                 )
+            }
 
+            item(key = "advanced") {
                 SettingsCategoryItem(
                     title = stringResource(R.string.settings_perf_title),
                     description = stringResource(R.string.settings_perf_desc),
@@ -129,8 +134,10 @@ fun SettingsScreen(
                     perfStats = dashboardEnterStats,
                     onClick = onNavigateToAdvanced
                 )
+            }
 
-                Spacer(modifier = Modifier.height(24.dp))
+            item(key = "logout_section") {
+                Spacer(modifier = Modifier.height(16.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -168,5 +175,33 @@ fun SettingsScreen(
                 }
             }
         )
+    }
+}
+
+// --- Componente Extraído para Aislar Recomposiciones ---
+
+@Composable
+private fun AccountHeaderSection(email: String?) {
+    SettingsSection(title = stringResource(R.string.settings_llu_account_header)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                Icons.Default.Person,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+                Text(
+                    text = email ?: stringResource(R.string.settings_confirm),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Medium
+                )
+                Text(
+                    text = stringResource(R.string.settings_llu_account_desc),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }

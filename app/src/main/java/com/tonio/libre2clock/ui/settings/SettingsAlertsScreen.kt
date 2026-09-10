@@ -2,6 +2,7 @@ package com.tonio.libre2clock.ui.settings
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -25,6 +26,7 @@ fun SettingsAlertsScreen(
     onBack: () -> Unit,
     onTestNotification: () -> Unit
 ) {
+    // 1. Recopilación de estado optimizada
     val watchNotificationMode by viewModel.watchNotificationMode.collectAsStateWithLifecycle()
     val watchAlertIntervalMinutes by viewModel.watchAlertIntervalMinutes.collectAsStateWithLifecycle()
     val watchAlertStartMinute by viewModel.watchAlertStartMinute.collectAsStateWithLifecycle()
@@ -34,10 +36,11 @@ fun SettingsAlertsScreen(
     val highGlucoseAlarmEnabled by viewModel.highGlucoseAlarmEnabled.collectAsStateWithLifecycle()
     val useCalibratedForAlarms by viewModel.useCalibratedForAlarms.collectAsStateWithLifecycle()
 
-    var showAddWatchScheduleDialog by remember { mutableStateOf(false) }
+    // 2. Gestión de diálogos unificada y limpia
     var editingWatchSchedule by remember { mutableStateOf<AlarmSchedule?>(null) }
-    var showAddAlarmScheduleDialog by remember { mutableStateOf(false) }
     var editingAlarmSchedule by remember { mutableStateOf<AlarmSchedule?>(null) }
+    var showAddWatchSchedule by remember { mutableStateOf(false) }
+    var showAddAlarmSchedule by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -55,148 +58,277 @@ fun SettingsAlertsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // OPTIMIZACIÓN: Cada sección es un 'item' independiente para aislar recomposiciones
             item {
-                SettingsSection(title = stringResource(R.string.settings_watch_notifications)) {
-                    Text(
-                        text = stringResource(R.string.settings_watch_notifications_desc),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    FlowRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        val modes = listOf(
-                            WatchNotificationMode.OFF to R.string.settings_watch_mode_off,
-                            WatchNotificationMode.PERIODIC_ONLY to R.string.settings_watch_mode_periodic,
-                            WatchNotificationMode.SCHEDULES_ONLY to R.string.settings_watch_mode_schedules,
-                            WatchNotificationMode.PERIODIC_AND_SCHEDULES to R.string.settings_watch_mode_all
-                        )
-                        modes.forEach { (mode, labelRes) ->
-                            FilterChip(
-                                selected = watchNotificationMode == mode,
-                                onClick = { viewModel.updateWatchNotificationMode(mode) },
-                                label = { Text(stringResource(labelRes)) }
-                            )
-                        }
-                    }
-                    
-                    if (watchNotificationMode != WatchNotificationMode.OFF) {
-                        var watchIntervalText by remember(watchAlertIntervalMinutes) {
-                            mutableStateOf(watchAlertIntervalMinutes.toString())
-                        }
-                        OutlinedTextField(
-                            value = watchIntervalText,
-                            onValueChange = {
-                                watchIntervalText = it
-                                it.toIntOrNull()?.let { mins ->
-                                    if (mins in 5..180) {
-                                        viewModel.updateWatchAlertIntervalMinutes(mins)
-                                    }
-                                }
-                            },
-                            label = { Text(stringResource(R.string.settings_watch_interval_label)) },
-                            modifier = Modifier.fillMaxWidth(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                        )
-                        var watchStartMinuteText by remember(watchAlertStartMinute) {
-                            mutableStateOf(watchAlertStartMinute.toString())
-                        }
-                        OutlinedTextField(
-                            value = watchStartMinuteText,
-                            onValueChange = {
-                                watchStartMinuteText = it
-                                it.toIntOrNull()?.let { min ->
-                                    if (min in 0..59) {
-                                        viewModel.updateWatchAlertStartMinute(min)
-                                    }
-                                }
-                            },
-                            label = { Text(stringResource(R.string.settings_watch_start_minute_label)) },
-                            modifier = Modifier.fillMaxWidth(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                        )
-                    }
+                WatchNotificationSection(
+                    mode = watchNotificationMode,
+                    intervalMinutes = watchAlertIntervalMinutes,
+                    startMinute = watchAlertStartMinute,
+                    onModeChange = viewModel::updateWatchNotificationMode,
+                    onIntervalChange = viewModel::updateWatchAlertIntervalMinutes,
+                    onStartMinuteChange = viewModel::updateWatchAlertStartMinute,
+                    onTestNotification = onTestNotification
+                )
+            }
 
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(
-                        onClick = onTestNotification,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(Icons.Default.NotificationsActive, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(R.string.settings_test_notification))
-                    }
-                }
-
+            item {
                 SettingsSection(title = stringResource(R.string.settings_watch_active_schedules)) {
                     if (watchSchedules.isEmpty()) {
-                        Text(stringResource(R.string.settings_schedules_global_desc), style = MaterialTheme.typography.bodySmall)
-                    }
-                    watchSchedules.forEach { schedule ->
-                        ScheduleItem(
-                            schedule = schedule,
-                            onDelete = { viewModel.removeWatchSchedule(schedule) },
-                            onEdit = { editingWatchSchedule = schedule },
-                            onToggle = { viewModel.updateWatchSchedule(schedule.copy(isEnabled = it)) }
+                        Text(
+                            stringResource(R.string.settings_schedules_global_desc), 
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                    }
-                    OutlinedButton(
-                        onClick = { showAddWatchScheduleDialog = true },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null)
-                        Text(stringResource(R.string.settings_add_watch_schedule))
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
+            }
 
-                SettingsSection(title = stringResource(R.string.settings_glucose_alarms)) {
-                    Text(stringResource(R.string.settings_glucose_alarms_desc), style = MaterialTheme.typography.bodyMedium)
-                    
-                    ToggleItem(R.string.settings_low_glucose_alarm_label, lowGlucoseAlarmEnabled, viewModel::updateLowGlucoseAlarmEnabled)
-                    ToggleItem(R.string.settings_high_glucose_alarm_label, highGlucoseAlarmEnabled, viewModel::updateHighGlucoseAlarmEnabled)
-                    ToggleItem(R.string.settings_use_calibrated_alarms, useCalibratedForAlarms, viewModel::updateUseCalibratedForAlarms)
+            // OPTIMIZACIÓN: Uso de 'items' con 'key' en lugar de 'forEach' para Lazy Loading real
+            items(
+                items = watchSchedules,
+                key = { schedule -> "${schedule.startTime}_${schedule.daysOfWeek.hashCode()}" } // Clave estable
+            ) { schedule ->
+                ScheduleItem(
+                    schedule = schedule,
+                    onDelete = { viewModel.removeWatchSchedule(schedule) },
+                    onEdit = { editingWatchSchedule = schedule },
+                    onToggle = { viewModel.updateWatchSchedule(schedule.copy(isEnabled = it)) }
+                )
+            }
+
+            item {
+                OutlinedButton(
+                    onClick = { showAddWatchSchedule = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.settings_add_watch_schedule))
                 }
+            }
 
+            item {
+                GlucoseAlarmsSection(
+                    lowEnabled = lowGlucoseAlarmEnabled,
+                    highEnabled = highGlucoseAlarmEnabled,
+                    useCalibrated = useCalibratedForAlarms,
+                    onLowChange = viewModel::updateLowGlucoseAlarmEnabled,
+                    onHighChange = viewModel::updateHighGlucoseAlarmEnabled,
+                    onCalibratedChange = viewModel::updateUseCalibratedForAlarms
+                )
+            }
+
+            item {
                 SettingsSection(title = stringResource(R.string.settings_alarm_active_schedules)) {
                     if (alarmSchedules.isEmpty()) {
-                        Text(stringResource(R.string.settings_schedules_global_desc), style = MaterialTheme.typography.bodySmall)
-                    }
-                    alarmSchedules.forEach { schedule ->
-                        ScheduleItem(
-                            schedule = schedule,
-                            onDelete = { viewModel.removeAlarmSchedule(schedule) },
-                            onEdit = { editingAlarmSchedule = schedule },
-                            onToggle = { viewModel.updateAlarmSchedule(schedule.copy(isEnabled = it)) }
+                        Text(
+                            stringResource(R.string.settings_schedules_global_desc), 
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                    }
-                    OutlinedButton(
-                        onClick = { showAddAlarmScheduleDialog = true },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null)
-                        Text(stringResource(R.string.settings_add_alarm_schedule))
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
-                
+            }
+
+            items(
+                items = alarmSchedules,
+                key = { schedule -> "${schedule.startTime}_${schedule.daysOfWeek.hashCode()}" }
+            ) { schedule ->
+                ScheduleItem(
+                    schedule = schedule,
+                    onDelete = { viewModel.removeAlarmSchedule(schedule) },
+                    onEdit = { editingAlarmSchedule = schedule },
+                    onToggle = { viewModel.updateAlarmSchedule(schedule.copy(isEnabled = it)) }
+                )
+            }
+
+            item {
+                OutlinedButton(
+                    onClick = { showAddAlarmSchedule = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.settings_add_alarm_schedule))
+                }
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }
 
-    if (showAddWatchScheduleDialog) {
-        ScheduleDialog(isWatchSchedule = true, onDismiss = { showAddWatchScheduleDialog = false }, onConfirm = { viewModel.addWatchSchedule(it); showAddWatchScheduleDialog = false })
+    // 3. Diálogos renderizados condicionalmente de forma limpia
+    if (showAddWatchSchedule) {
+        ScheduleDialog(
+            isWatchSchedule = true,
+            onDismiss = { showAddWatchSchedule = false },
+            onConfirm = { viewModel.addWatchSchedule(it); showAddWatchSchedule = false }
+        )
     }
-    editingWatchSchedule?.let { s ->
-        ScheduleDialog(isWatchSchedule = true, initialSchedule = s, onDismiss = { editingWatchSchedule = null }, onConfirm = { viewModel.updateWatchSchedule(it); editingWatchSchedule = null })
+    
+    editingWatchSchedule?.let { schedule ->
+        ScheduleDialog(
+            isWatchSchedule = true,
+            initialSchedule = schedule,
+            onDismiss = { editingWatchSchedule = null },
+            onConfirm = { viewModel.updateWatchSchedule(it); editingWatchSchedule = null }
+        )
     }
-    if (showAddAlarmScheduleDialog) {
-        ScheduleDialog(isWatchSchedule = false, onDismiss = { showAddAlarmScheduleDialog = false }, onConfirm = { viewModel.addAlarmSchedule(it); showAddAlarmScheduleDialog = false })
+
+    if (showAddAlarmSchedule) {
+        ScheduleDialog(
+            isWatchSchedule = false,
+            onDismiss = { showAddAlarmSchedule = false },
+            onConfirm = { viewModel.addAlarmSchedule(it); showAddAlarmSchedule = false }
+        )
     }
-    editingAlarmSchedule?.let { s ->
-        ScheduleDialog(isWatchSchedule = false, initialSchedule = s, onDismiss = { editingAlarmSchedule = null }, onConfirm = { viewModel.updateAlarmSchedule(it); editingAlarmSchedule = null })
+    
+    editingAlarmSchedule?.let { schedule ->
+        ScheduleDialog(
+            isWatchSchedule = false,
+            initialSchedule = schedule,
+            onDismiss = { editingAlarmSchedule = null },
+            onConfirm = { viewModel.updateAlarmSchedule(it); editingAlarmSchedule = null }
+        )
     }
+}
+
+// --- Componentes Extraídos para Aislar Recomposiciones ---
+
+@Composable
+private fun WatchNotificationSection(
+    mode: WatchNotificationMode,
+    intervalMinutes: Int,
+    startMinute: Int,
+    onModeChange: (WatchNotificationMode) -> Unit,
+    onIntervalChange: (Int) -> Unit,
+    onStartMinuteChange: (Int) -> Unit,
+    onTestNotification: () -> Unit
+) {
+    SettingsSection(title = stringResource(R.string.settings_watch_notifications)) {
+        Text(
+            text = stringResource(R.string.settings_watch_notifications_desc),
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            val modes = listOf(
+                WatchNotificationMode.OFF to R.string.settings_watch_mode_off,
+                WatchNotificationMode.PERIODIC_ONLY to R.string.settings_watch_mode_periodic,
+                WatchNotificationMode.SCHEDULES_ONLY to R.string.settings_watch_mode_schedules,
+                WatchNotificationMode.PERIODIC_AND_SCHEDULES to R.string.settings_watch_mode_all
+            )
+            modes.forEach { (modeOption, labelRes) ->
+                FilterChip(
+                    selected = mode == modeOption,
+                    onClick = { onModeChange(modeOption) },
+                    label = { Text(stringResource(labelRes)) }
+                )
+            }
+        }
+        
+        if (mode != WatchNotificationMode.OFF) {
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // OPTIMIZACIÓN UX: Validación suave que permite escribir "1" antes de "15"
+            NumericSettingField(
+                value = intervalMinutes,
+                onValueChange = onIntervalChange,
+                label = stringResource(R.string.settings_watch_interval_label),
+                min = 5,
+                max = 180
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            NumericSettingField(
+                value = startMinute,
+                onValueChange = onStartMinuteChange,
+                label = stringResource(R.string.settings_watch_start_minute_label),
+                min = 0,
+                max = 59
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(
+            onClick = onTestNotification,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(Icons.Default.NotificationsActive, contentDescription = null)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(stringResource(R.string.settings_test_notification))
+        }
+    }
+}
+
+@Composable
+private fun GlucoseAlarmsSection(
+    lowEnabled: Boolean,
+    highEnabled: Boolean,
+    useCalibrated: Boolean,
+    onLowChange: (Boolean) -> Unit,
+    onHighChange: (Boolean) -> Unit,
+    onCalibratedChange: (Boolean) -> Unit
+) {
+    SettingsSection(title = stringResource(R.string.settings_glucose_alarms)) {
+        Text(
+            text = stringResource(R.string.settings_glucose_alarms_desc), 
+            style = MaterialTheme.typography.bodyMedium
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        
+        ToggleItem(R.string.settings_low_glucose_alarm_label, lowEnabled, onLowChange)
+        Spacer(modifier = Modifier.height(8.dp))
+        ToggleItem(R.string.settings_high_glucose_alarm_label, highEnabled, onHighChange)
+        Spacer(modifier = Modifier.height(8.dp))
+        ToggleItem(R.string.settings_use_calibrated_alarms, useCalibrated, onCalibratedChange)
+    }
+}
+
+@Composable
+private fun NumericSettingField(
+    value: Int,
+    onValueChange: (Int) -> Unit,
+    label: String,
+    min: Int,
+    max: Int
+) {
+    var textValue by remember { mutableStateOf(value.toString()) }
+    
+    // Sincronizar si el valor cambia externamente (ej. reset)
+    LaunchedEffect(value) {
+        if (textValue != value.toString()) {
+            textValue = value.toString()
+        }
+    }
+
+    OutlinedTextField(
+        value = textValue,
+        onValueChange = { newText ->
+            // Permitir solo dígitos
+            val digitsOnly = newText.filter { it.isDigit() }
+            textValue = digitsOnly
+            
+            // Actualizar el ViewModel solo si es un número válido en el rango
+            val intValue = digitsOnly.toIntOrNull()
+            if (intValue != null && intValue in min..max) {
+                onValueChange(intValue)
+            }
+        },
+        label = { Text(label) },
+        modifier = Modifier.fillMaxWidth(),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        isError = textValue.toIntOrNull()?.let { it < min || it > max } == true && textValue.isNotEmpty()
+    )
 }
 
 @Composable
@@ -206,7 +338,11 @@ private fun ToggleItem(labelRes: Int, checked: Boolean, onCheckedChange: (Boolea
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(stringResource(labelRes), style = MaterialTheme.typography.bodyMedium)
+        Text(
+            stringResource(labelRes), 
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.weight(1f).padding(end = 8.dp)
+        )
         Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }

@@ -3,6 +3,7 @@ package com.tonio.libre2clock.ui.insulin
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -13,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -31,6 +33,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 import kotlin.system.measureTimeMillis
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,10 +52,10 @@ fun InsulinHubScreen(
     val manualIsf by viewModel.manualIsf.collectAsStateWithLifecycle()
     val targetGlucose by viewModel.targetGlucose.collectAsStateWithLifecycle()
     val currentGlucoseData by viewModel.currentGlucose.collectAsStateWithLifecycle()
+    val useCalibratedForAlarms by viewModel.useCalibratedForAlarms.collectAsStateWithLifecycle()
 
     var showAddDialog by remember { mutableStateOf(false) }
 
-    // IOB decays continuously with time, so it must refresh periodically, not just when doses change.
     var nowTick by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) {
         while (true) {
@@ -67,12 +70,16 @@ fun InsulinHubScreen(
     val isf = manualIsf ?: calculatedIsf
     val icRatio = if (tdi > 0) icRuleConstant.toDouble() / tdi else 0.0
 
+    // OPTIMIZACIÓN: Partición en una sola pasada en lugar de dos filtros separados
+    val (rapidDoses, slowDoses) = remember(doses) {
+        doses.partition { it.type == InsulinType.RAPID }
+    }
+
     val totalIOB = remember(doses, nowTick) { InsulinProcessor.calculateTotalIOB(doses) }
-    val rapidIOB = remember(doses, nowTick) { doses.filter { it.type == InsulinType.RAPID }.let { InsulinProcessor.calculateTotalIOB(it) } }
-    val slowIOB = remember(doses, nowTick) { doses.filter { it.type == InsulinType.SLOW }.let { InsulinProcessor.calculateTotalIOB(it) } }
+    val rapidIOB = remember(rapidDoses, nowTick) { InsulinProcessor.calculateTotalIOB(rapidDoses) }
+    val slowIOB = remember(slowDoses, nowTick) { InsulinProcessor.calculateTotalIOB(slowDoses) }
     val activeThreads = remember(doses, nowTick) { doses.count { InsulinProcessor.calculateIOB(it) > 0 } }
 
-    // Parses every dose's timestamp (exception-heavy); keep it off the composition/main thread.
     var isBasalExpiringSoon by remember { mutableStateOf(false) }
     LaunchedEffect(doses) {
         isBasalExpiringSoon = withContext(Dispatchers.Default) {
@@ -96,9 +103,10 @@ fun InsulinHubScreen(
     }
 
     val today = LocalDate.now()
+    // OPTIMIZACIÓN: 'today' añadido a las claves de remember para recalcular si cambia el día
     val todayTotal = remember(doses, today) { InsulinProcessor.calculateDailyTotal(doses, today) }
-    val todayRapid = remember(doses) { InsulinProcessor.calculateDailyTotal(doses, today, InsulinType.RAPID) }
-    val todaySlow = remember(doses) { InsulinProcessor.calculateDailyTotal(doses, today, InsulinType.SLOW) }
+    val todayRapid = remember(doses, today) { InsulinProcessor.calculateDailyTotal(doses, today, InsulinType.RAPID) }
+    val todaySlow = remember(doses, today) { InsulinProcessor.calculateDailyTotal(doses, today, InsulinType.SLOW) }
 
     Scaffold(
         topBar = {
@@ -124,7 +132,6 @@ fun InsulinHubScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Section 1: ACTIVE STATUS
             item {
                 ActiveInsulinCard(
                     total = totalIOB,
@@ -139,8 +146,6 @@ fun InsulinHubScreen(
                     isManualTdi = manualTdi != null
                 )
             }
-
-            // Section 2: SUMMARY
             item {
                 InsulinSummaryCard(
                     tdi = tdi,
@@ -153,8 +158,6 @@ fun InsulinHubScreen(
                     isManualIsf = manualIsf != null
                 )
             }
-
-            // Section 3: CALCULATOR
             item {
                 BolusCalculatorCard(
                     tdi = tdi,
@@ -169,16 +172,12 @@ fun InsulinHubScreen(
                     targetGlucose = targetGlucose,
                     currentGlucose = currentGlucoseData,
                     doses = doses,
-                    viewModel = viewModel
+                    viewModel = viewModel,
+                    isBasalExpiringSoon = isBasalExpiringSoon,
+                    useCalibratedForAlarms = useCalibratedForAlarms
                 )
             }
-
-            // Section 4: TODAY STATS
-            item {
-                TodayStatsCard(todayRapid, todaySlow)
-            }
-
-            // Section 5: VIEW LOGS (Bottom link)
+            item { TodayStatsCard(todayRapid, todaySlow) }
             item {
                 Button(
                     onClick = onNavigateToLogs,
@@ -190,8 +189,6 @@ fun InsulinHubScreen(
                     Text(stringResource(R.string.insulin_view_logs))
                 }
             }
-
-            // Section 6: SETTINGS (Always Visible)
             item {
                 AdvancedSettingsCard(
                     rapidDurationMins,
@@ -203,7 +200,6 @@ fun InsulinHubScreen(
                     viewModel
                 )
             }
-            
             item { Spacer(modifier = Modifier.height(80.dp)) }
         }
     }
@@ -225,86 +221,48 @@ fun InsulinHubScreen(
 
 @Composable
 fun InsulinSummaryCard(
-    tdi: Double,
-    calculatedTdi: Double,
-    isf: Double,
-    calculatedIsf: Double,
-    icRatio: Double,
-    todayTotal: Double,
-    isManualTdi: Boolean,
-    isManualIsf: Boolean
+    tdi: Double, calculatedTdi: Double, isf: Double, calculatedIsf: Double,
+    icRatio: Double, todayTotal: Double, isManualTdi: Boolean, isManualIsf: Boolean
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                text = stringResource(R.string.insulin_summary_title),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
+            Text(text = stringResource(R.string.insulin_summary_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(text = stringResource(R.string.insulin_tdi_full), style = MaterialTheme.typography.labelSmall)
-                    Text(text = "%.1f U".format(tdi), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text(
-                        text = if (isManualTdi) stringResource(R.string.insulin_manual) else stringResource(R.string.insulin_auto_30d),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
-                    )
+                    Text(text = String.format(Locale.US, "%.1f U", tdi), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(text = if (isManualTdi) stringResource(R.string.insulin_manual) else stringResource(R.string.insulin_auto_30d), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f))
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     Text(text = stringResource(R.string.insulin_isf_full), style = MaterialTheme.typography.labelSmall)
-                    Text(text = "%.1f".format(isf), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text(
-                        text = if (isManualIsf) stringResource(R.string.insulin_manual) else stringResource(R.string.insulin_calculated),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
-                    )
+                    Text(text = String.format(Locale.US, "%.1f", isf), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(text = if (isManualIsf) stringResource(R.string.insulin_manual) else stringResource(R.string.insulin_calculated), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f))
                 }
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(text = stringResource(R.string.insulin_ic_full), style = MaterialTheme.typography.labelSmall)
-                    Text(text = "%.1f g/U".format(icRatio), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                    Text(
-                        text = stringResource(R.string.insulin_calculated_with_tdi),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
-                    )
+                    Text(text = String.format(Locale.US, "%.1f g/U", icRatio), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                    Text(text = stringResource(R.string.insulin_calculated_with_tdi), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f))
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     Text(text = stringResource(R.string.insulin_daily_total_today_label), style = MaterialTheme.typography.labelSmall)
-                    Text(text = "%.1f U".format(todayTotal), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text(
-                        text = stringResource(R.string.insulin_tdi_calc_short, calculatedTdi),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
-                    )
+                    Text(text = String.format(Locale.US, "%.1f U", todayTotal), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(text = stringResource(R.string.insulin_tdi_calc_short, calculatedTdi), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f))
                 }
             }
-            Text(
-                text = stringResource(R.string.insulin_isf_calc_val, calculatedIsf),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.75f)
-            )
+            Text(text = stringResource(R.string.insulin_isf_calc_val, calculatedIsf), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.75f))
         }
     }
 }
 
 @Composable
 fun ActiveInsulinCard(
-    total: Double,
-    rapid: Double,
-    slow: Double,
-    fs: Double,
-    activeThreads: Int,
-    isManualFs: Boolean,
-    calculatedTdi: Double,
-    calculatedIsf: Double,
-    todayTotal: Double,
-    isManualTdi: Boolean
+    total: Double, rapid: Double, slow: Double, fs: Double, activeThreads: Int,
+    isManualFs: Boolean, calculatedTdi: Double, calculatedIsf: Double, todayTotal: Double, isManualTdi: Boolean
 ) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
@@ -312,129 +270,55 @@ fun ActiveInsulinCard(
     ) {
         Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(text = stringResource(R.string.insulin_active_total), style = MaterialTheme.typography.titleMedium)
-            Text(
-                text = stringResource(R.string.insulin_active_units, total),
-                style = MaterialTheme.typography.displayMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-            Text(
-                text = stringResource(R.string.insulin_active_split, rapid, slow),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-            )
+            Text(text = stringResource(R.string.insulin_active_units, total), style = MaterialTheme.typography.displayMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+            Text(text = stringResource(R.string.insulin_active_split, rapid, slow), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f))
             Text(text = stringResource(R.string.insulin_active_threads, activeThreads), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f))
-            Text(
-                text = stringResource(R.string.insulin_daily_total_today_val, todayTotal),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-            )
+            Text(text = stringResource(R.string.insulin_daily_total_today_val, todayTotal), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f))
             Spacer(modifier = Modifier.height(8.dp))
-            Surface(
-                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f),
-                shape = MaterialTheme.shapes.small
-            ) {
+            Surface(color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f), shape = MaterialTheme.shapes.small) {
                 Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = stringResource(R.string.dash_fs_label, fs),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text(text = stringResource(R.string.dash_fs_label, fs), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = if (isManualFs) stringResource(R.string.insulin_manual) else stringResource(R.string.insulin_calculated),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
-                    )
+                    Text(text = if (isManualFs) stringResource(R.string.insulin_manual) else stringResource(R.string.insulin_calculated), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f))
                 }
             }
-            Text(
-                text = stringResource(
-                    R.string.insulin_tdi_30d_val,
-                    calculatedTdi,
-                    if (isManualTdi) stringResource(R.string.insulin_manual) else stringResource(R.string.insulin_auto_30d)
-                ),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-            )
-            Text(
-                text = stringResource(R.string.insulin_isf_auto_from_tdi, calculatedIsf),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-            )
+            Text(text = stringResource(R.string.insulin_tdi_30d_val, calculatedTdi, if (isManualTdi) stringResource(R.string.insulin_manual) else stringResource(R.string.insulin_auto_30d)), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f))
+            Text(text = stringResource(R.string.insulin_isf_auto_from_tdi, calculatedIsf), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f))
         }
     }
 }
 
 @Composable
 fun BolusCalculatorCard(
-    tdi: Double,
-    calculatedTdi: Double,
-    icRatio: Double,
-    isf: Double,
-    calculatedIsf: Double,
-    manualIsf: Double?,
-    manualTdi: Double?,
-    icConstant: Int,
-    isfConstant: Int,
-    targetGlucose: Int,
-    currentGlucose: GlucoseMeasurement?,
-    doses: List<InsulinDose>,
-    viewModel: SettingsViewModel
+    tdi: Double, calculatedTdi: Double, icRatio: Double, isf: Double, calculatedIsf: Double,
+    manualIsf: Double?, manualTdi: Double?, icConstant: Int, isfConstant: Int,
+    targetGlucose: Int, currentGlucose: GlucoseMeasurement?, doses: List<InsulinDose>,
+    viewModel: SettingsViewModel, isBasalExpiringSoon: Boolean, useCalibratedForAlarms: Boolean
 ) {
     var carbsText by remember { mutableStateOf("") }
-    var carbsSliderValue by remember { mutableFloatStateOf(0f) }
     
-    // Sync text and slider
-    LaunchedEffect(carbsText) {
-        val c = carbsText.toFloatOrNull() ?: 0f
-        if (c != carbsSliderValue) carbsSliderValue = c.coerceIn(0f, 150f)
-    }
-
     val initialGlucoseText = remember(currentGlucose) {
         val real = currentGlucose?.value ?: 0
         val cal = currentGlucose?.calibratedValue ?: 0
-        if (real > 0 && real != cal) {
-            "$real($cal)"
-        } else if (real > 0) {
-            "$real"
-        } else {
-            ""
-        }
+        if (real > 0 && real != cal) "$real($cal)" else if (real > 0) "$real" else ""
     }
-    
     var glucoseText by remember(initialGlucoseText) { mutableStateOf(initialGlucoseText) }
 
-    // isBasalExpiringSoon parses every dose timestamp (exception-heavy); keep it off the composition/main thread.
-    var isBasalExpiringSoon by remember { mutableStateOf(false) }
-    LaunchedEffect(doses) {
-        var result = false
-        val duration = measureTimeMillis {
-            result = withContext(Dispatchers.Default) { InsulinProcessor.isBasalExpiringSoon(doses) }
-        }
-        SectionPerfTelemetry.record(section = "insulin_basal_expiry", durationMs = duration, cacheHit = true)
-        isBasalExpiringSoon = result
-    }
+    // OPTIMIZACIÓN: Derivación de estado en lugar de LaunchedEffect para el slider
+    val carbsFloat = carbsText.toFloatOrNull() ?: 0f
 
-    val suggestedResults = remember(carbsText, glucoseText, tdi, isBasalExpiringSoon, isf, targetGlucose) {
-        var output: Triple<Int, Int, Pair<InsulinProcessor.BolusBreakdown, InsulinProcessor.BolusBreakdown>>
-        val duration = measureTimeMillis {
-            val carbs = carbsText.toDoubleOrNull() ?: 0.0
+    val suggestedResults = remember(carbsText, glucoseText, tdi, isBasalExpiringSoon, isf, targetGlucose, icConstant) {
+        val carbs = carbsText.toDoubleOrNull() ?: 0.0
+        val cleanText = glucoseText.replace(" ", "")
+        val glucoseParts = cleanText.replace(")", "").split("(")
+        val realG = glucoseParts.getOrNull(0)?.toIntOrNull() ?: 0
+        val calG = glucoseParts.getOrNull(1)?.toIntOrNull() ?: realG
 
-            val cleanText = glucoseText.replace(" ", "")
-            val glucoseParts = cleanText.replace(")", "").split("(")
-            val realG = glucoseParts.getOrNull(0)?.toIntOrNull() ?: 0
-            val calG = glucoseParts.getOrNull(1)?.toIntOrNull() ?: realG
+        val breakdownReal = InsulinProcessor.getSuggestedBolusDetailed(carbs, realG, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon)
+        val breakdownCal = if (calG == realG) breakdownReal else
+            InsulinProcessor.getSuggestedBolusDetailed(carbs, calG, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon)
 
-            val breakdownReal = InsulinProcessor.getSuggestedBolusDetailed(carbs, realG, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon)
-            val breakdownCal = if (calG == realG) breakdownReal else
-                InsulinProcessor.getSuggestedBolusDetailed(carbs, calG, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon)
-
-            output = Triple(realG, calG, breakdownReal to breakdownCal)
-        }
-        SectionPerfTelemetry.record(section = "insulin_bolus_calc", durationMs = duration, cacheHit = true)
-        output
+        Triple(realG, calG, breakdownReal to breakdownCal)
     }
 
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -445,16 +329,14 @@ fun BolusCalculatorCard(
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = carbsText,
-                    onValueChange = { 
-                        carbsText = it 
-                    },
+                    onValueChange = { carbsText = it.filter { char -> char.isDigit() || char == '.' } },
                     label = { Text(stringResource(R.string.calc_carbs_label)) },
                     modifier = Modifier.weight(1f),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                 )
                 OutlinedTextField(
                     value = glucoseText,
-                    onValueChange = { glucoseText = it },
+                    onValueChange = { glucoseText = it.filter { char -> char.isDigit() || char == '(' || char == ')' } },
                     label = { Text(stringResource(R.string.calc_glucose_label)) },
                     modifier = Modifier.weight(1f),
                     placeholder = { Text(stringResource(R.string.insulin_placeholder_real_offset)) }
@@ -463,10 +345,9 @@ fun BolusCalculatorCard(
 
             Spacer(modifier = Modifier.height(4.dp))
             Slider(
-                value = carbsSliderValue,
-                onValueChange = { 
-                    carbsSliderValue = it
-                    carbsText = if (it < 0.5f) "" else "%.0f".format(it)
+                value = carbsFloat.coerceIn(0f, 150f),
+                onValueChange = { newValue ->
+                    carbsText = if (newValue < 0.5f) "" else String.format(Locale.US, "%.0f", newValue)
                 },
                 valueRange = 0f..150f,
                 modifier = Modifier.fillMaxWidth()
@@ -495,16 +376,13 @@ fun BolusCalculatorCard(
             
             val (realG, calG, breakdowns) = suggestedResults
             val (bReal, bCal) = breakdowns
-
             val isDual = realG != calG && realG > 0
             
-            // Format with floor(x * 100) / 100 to match user's 3.86 expectation
             val formatValue = { v: Double -> (Math.floor(v * 100) / 100.0) }
-            
             val suggestedText = if (isDual) {
-                "${"%.2f".format(formatValue(bReal.total))}(${"%.2f".format(formatValue(bCal.total))})"
+                "${String.format(Locale.US, "%.2f", formatValue(bReal.total))}(${String.format(Locale.US, "%.2f", formatValue(bCal.total))})"
             } else {
-                "%.2f".format(formatValue(bReal.total))
+                String.format(Locale.US, "%.2f", formatValue(bReal.total))
             }
             
             var showLogDialog by remember { mutableStateOf(false) }
@@ -517,9 +395,7 @@ fun BolusCalculatorCard(
                 ) {
                     AnimatedContent(
                         targetState = suggestedText,
-                        transitionSpec = {
-                            fadeIn() togetherWith fadeOut()
-                        },
+                        transitionSpec = { fadeIn() togetherWith fadeOut() },
                         label = "suggested_units_anim",
                         modifier = Modifier.weight(1f)
                     ) { targetUnits ->
@@ -536,17 +412,20 @@ fun BolusCalculatorCard(
                 }
                 
                 if (showLogDialog) {
-                    val initialUnits = if (viewModel.useCalibratedForAlarms.collectAsState(initial = true).value) bCal.total else bReal.total
+                    val initialUnits = if (useCalibratedForAlarms) bCal.total else bReal.total
+                    val rapidDuration by viewModel.rapidDurationMins.collectAsStateWithLifecycle()
+                    val slowDuration by viewModel.slowDurationMins.collectAsStateWithLifecycle()
+                    
                     InsulinDoseDialog(
                         initialDose = InsulinDose(
                             units = (Math.floor(initialUnits * 100) / 100.0),
-                            timestamp = "", // Handled by dialog
+                            timestamp = "",
                             type = InsulinType.RAPID,
-                            durationMinutes = 0, // Handled by dialog
+                            durationMinutes = 0,
                             carbs = carbsText.toDoubleOrNull()
                         ),
-                        rapidDuration = viewModel.rapidDurationMins.collectAsState(initial = 240).value,
-                        slowDuration = viewModel.slowDurationMins.collectAsState(initial = 1440).value,
+                        rapidDuration = rapidDuration,
+                        slowDuration = slowDuration,
                         onDismiss = { showLogDialog = false },
                         onConfirm = {
                             viewModel.addInsulinDose(it)
@@ -557,7 +436,7 @@ fun BolusCalculatorCard(
                 
                 if (isDual) {
                     Text(
-                        text = "R: (HC: %.2f + Corr: %.2f) | O: (HC: %.2f + Corr: %.2f)".format(bReal.carbDose, bReal.correctionDose, bCal.carbDose, bCal.correctionDose),
+                        text = "R: (HC: %.2f + Corr: %.2f) | O: (HC: %.2f + Corr: %.2f)".format(Locale.US, bReal.carbDose, bReal.correctionDose, bCal.carbDose, bCal.correctionDose),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
@@ -572,31 +451,11 @@ fun BolusCalculatorCard(
             
             HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
             
-            // Ratio info
             Text(text = stringResource(R.string.calc_ic_ratio, icConstant, icRatio), style = MaterialTheme.typography.labelMedium)
-            Text(
-                text = stringResource(R.string.calc_isf, isf) + " " + if (manualIsf != null) stringResource(R.string.insulin_manual) else stringResource(R.string.insulin_calculated),
-                style = MaterialTheme.typography.labelMedium
-            )
-            Text(
-                text = stringResource(R.string.insulin_isf_auto_from_tdi, calculatedIsf),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-            )
-            Text(
-                text = stringResource(
-                    R.string.insulin_tdi_used_val,
-                    tdi,
-                    if (manualTdi != null) stringResource(R.string.insulin_manual) else stringResource(R.string.insulin_auto_30d)
-                ),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-            )
-            Text(
-                text = stringResource(R.string.insulin_tdi_calc_30d_val, calculatedTdi),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-            )
+            Text(text = stringResource(R.string.calc_isf, isf) + " " + if (manualIsf != null) stringResource(R.string.insulin_manual) else stringResource(R.string.insulin_calculated), style = MaterialTheme.typography.labelMedium)
+            Text(text = stringResource(R.string.insulin_isf_auto_from_tdi, calculatedIsf), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+            Text(text = stringResource(R.string.insulin_tdi_used_val, tdi, if (manualTdi != null) stringResource(R.string.insulin_manual) else stringResource(R.string.insulin_auto_30d)), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+            Text(text = stringResource(R.string.insulin_tdi_calc_30d_val, calculatedTdi), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
         }
     }
 }
@@ -607,38 +466,34 @@ fun TodayStatsCard(rapid: Double, slow: Double) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(text = stringResource(R.string.insulin_today_stats), style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = stringResource(R.string.insulin_total_breakdown, rapid + slow, rapid, slow),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
+            Text(text = stringResource(R.string.insulin_total_breakdown, rapid + slow, rapid, slow), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         }
     }
 }
 
 @Composable
 fun AdvancedSettingsCard(
-    rapidMin: Int,
-    slowMin: Int,
-    icC: Int,
-    isfC: Int,
-    mTdi: Double?,
-    mIsf: Double?,
-    viewModel: SettingsViewModel
+    rapidMin: Int, slowMin: Int, icC: Int, isfC: Int, mTdi: Double?, mIsf: Double?, viewModel: SettingsViewModel
 ) {
     var tdiText by remember(mTdi) { mutableStateOf(mTdi?.toString() ?: "") }
     var isfText by remember(mIsf) { mutableStateOf(mIsf?.toString() ?: "") }
+
+    // OPTIMIZACIÓN: Debounce para evitar escrituras excesivas en DataStore mientras el usuario escribe
+    LaunchedEffect(tdiText) {
+        delay(600)
+        tdiText.toDoubleOrNull()?.let { viewModel.updateManualTdi(it) }
+    }
+    LaunchedEffect(isfText) {
+        delay(600)
+        isfText.toDoubleOrNull()?.let { viewModel.updateManualIsf(it) }
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
     ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(
-                text = stringResource(R.string.settings_advanced_insulin),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
+            Text(text = stringResource(R.string.settings_advanced_insulin), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
 
             DurationInput(stringResource(R.string.settings_rapid_duration), rapidMin, viewModel::updateRapidDuration)
             DurationInput(stringResource(R.string.settings_slow_duration), slowMin, viewModel::updateSlowDuration)
@@ -663,72 +518,48 @@ fun AdvancedSettingsCard(
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), thickness = 0.5.dp)
 
-            // Manual TDI with Switch
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text(text = stringResource(R.string.settings_manual_tdi), style = MaterialTheme.typography.bodyMedium)
                     Switch(
                         checked = mTdi != null,
                         onCheckedChange = { isEnabled ->
-                            if (!isEnabled) {
-                                viewModel.updateManualTdi(null)
-                            } else {
-                                viewModel.updateManualTdi(tdiText.toDoubleOrNull() ?: 0.0)
-                            }
+                            if (!isEnabled) viewModel.updateManualTdi(null)
+                            else tdiText.toDoubleOrNull()?.let { viewModel.updateManualTdi(it) }
                         }
                     )
                 }
                 if (mTdi != null) {
                     OutlinedTextField(
                         value = tdiText,
-                        onValueChange = {
-                            tdiText = it
-                            if (it.isNotBlank()) {
-                                it.toDoubleOrNull()?.let(viewModel::updateManualTdi)
-                            }
-                        },
+                        onValueChange = { tdiText = it },
                         label = { Text(stringResource(R.string.insulin_manual_tdi_value_label)) },
                         modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(onDone = { tdiText.toDoubleOrNull()?.let { viewModel.updateManualTdi(it) } })
                     )
                 }
             }
 
-            // Manual ISF with Switch
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Text(text = stringResource(R.string.settings_manual_isf), style = MaterialTheme.typography.bodyMedium)
                     Switch(
                         checked = mIsf != null,
                         onCheckedChange = { isEnabled ->
-                            if (!isEnabled) {
-                                viewModel.updateManualIsf(null)
-                            } else {
-                                viewModel.updateManualIsf(isfText.toDoubleOrNull() ?: 0.0)
-                            }
+                            if (!isEnabled) viewModel.updateManualIsf(null)
+                            else isfText.toDoubleOrNull()?.let { viewModel.updateManualIsf(it) }
                         }
                     )
                 }
                 if (mIsf != null) {
                     OutlinedTextField(
                         value = isfText,
-                        onValueChange = {
-                            isfText = it
-                            if (it.isNotBlank()) {
-                                it.toDoubleOrNull()?.let(viewModel::updateManualIsf)
-                            }
-                        },
+                        onValueChange = { isfText = it },
                         label = { Text(stringResource(R.string.insulin_manual_isf_value_label)) },
                         modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(onDone = { isfText.toDoubleOrNull()?.let { viewModel.updateManualIsf(it) } })
                     )
                 }
             }
@@ -737,11 +568,7 @@ fun AdvancedSettingsCard(
 }
 
 @Composable
-fun DoseItem(
-    dose: InsulinDose,
-    onDelete: () -> Unit,
-    onEdit: () -> Unit
-) {
+fun DoseItem(dose: InsulinDose, onDelete: () -> Unit, onEdit: () -> Unit) {
     val iob = remember(dose) { InsulinProcessor.calculateIOB(dose) }
     Card(
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
@@ -753,20 +580,12 @@ fun DoseItem(
                 Text(text = "${dose.units} U - $typeLabel" + (if (dose.carbs != null) " (${dose.carbs}g HC)" else ""), fontWeight = FontWeight.Bold)
                 Text(text = dose.timestamp, style = MaterialTheme.typography.bodySmall)
                 if (iob > 0) {
-                    Text(
-                        text = "Active: %.2f U".format(iob),
-                        color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.labelMedium
-                    )
+                    Text(text = String.format(Locale.US, "Active: %.2f U", iob), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelMedium)
                 }
             }
             Row {
-                IconButton(onClick = onEdit) {
-                    Icon(Icons.Default.Edit, contentDescription = "Edit")
-                }
-                IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete")
-                }
+                IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, contentDescription = "Edit") }
+                IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, contentDescription = "Delete") }
             }
         }
     }
@@ -789,22 +608,19 @@ fun InsulinDoseDialog(
     val zone = ZoneId.systemDefault()
     val now = Instant.now().atZone(zone)
 
-    var doseDate by remember {
-        val initialDateStr = initialDose?.timestamp?.takeIf { it.contains(" ") }?.substringBefore(" ")
-        val parsed = initialDateStr?.let {
-            runCatching { LocalDate.parse(it, DateTimeFormatter.ISO_LOCAL_DATE) }.getOrNull()
-        }
-        mutableStateOf(parsed ?: now.toLocalDate())
+    // OPTIMIZACIÓN: Parseo de fecha/hora más limpio y robusto
+    val initialDateStr = initialDose?.timestamp?.substringBefore(" ")
+    val parsedDate = initialDateStr?.let {
+        runCatching { LocalDate.parse(it, DateTimeFormatter.ISO_LOCAL_DATE) }.getOrNull()
+    } ?: now.toLocalDate()
+    var doseDate by remember { mutableStateOf(parsedDate) }
+
+    val initialTimeStr = initialDose?.timestamp?.substringAfter(" ", "")
+    var doseHour by remember { 
+        mutableStateOf(initialTimeStr?.substringBefore(":")?.takeIf { it.isNotBlank() } ?: now.hour.toString().padStart(2, '0')) 
     }
-    var doseHour by remember {
-        val timeStr = initialDose?.timestamp?.takeIf { it.contains(" ") }?.substringAfter(" ")
-        val h = timeStr?.substringBefore(":")?.takeIf { it.isNotBlank() } ?: now.hour.toString().padStart(2, '0')
-        mutableStateOf(h)
-    }
-    var doseMinute by remember {
-        val timeStr = initialDose?.timestamp?.takeIf { it.contains(" ") }?.substringAfter(" ")
-        val m = timeStr?.substringAfter(":")?.takeIf { it.isNotBlank() } ?: now.minute.toString().padStart(2, '0')
-        mutableStateOf(m)
+    var doseMinute by remember { 
+        mutableStateOf(initialTimeStr?.substringAfter(":")?.takeIf { it.isNotBlank() } ?: now.minute.toString().padStart(2, '0')) 
     }
 
     AlertDialog(
@@ -813,40 +629,28 @@ fun InsulinDoseDialog(
         text = {
             Column {
                 if (suggestedUnits != null) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = stringResource(R.string.calc_suggested_bolus, suggestedUnits),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        TextButton(onClick = { unitsText = "%.2f".format(suggestedUnits) }) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Text(text = stringResource(R.string.calc_suggested_bolus, suggestedUnits), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                        TextButton(onClick = { unitsText = String.format(Locale.US, "%.2f", suggestedUnits) }) {
                             Text(stringResource(R.string.insulin_use_suggested))
                         }
                     }
                     if (isBasalExpiringSoon) {
-                        Text(
-                            text = stringResource(R.string.calc_basal_expiring_warning_short),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.error
-                        )
+                        Text(text = stringResource(R.string.calc_basal_expiring_warning_short), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                 }
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
                         value = unitsText,
-                        onValueChange = { unitsText = it },
+                        onValueChange = { unitsText = it.filter { char -> char.isDigit() || char == '.' } },
                         label = { Text(stringResource(R.string.insulin_units_label)) },
                         modifier = Modifier.weight(1f),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                     )
                     OutlinedTextField(
                         value = carbsText,
-                        onValueChange = { carbsText = it },
+                        onValueChange = { carbsText = it.filter { char -> char.isDigit() || char == '.' } },
                         label = { Text(stringResource(R.string.calc_carbs_label)) },
                         modifier = Modifier.weight(1f),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
@@ -896,22 +700,16 @@ fun InsulinDoseDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(android.R.string.cancel))
-            }
+            TextButton(onClick = onDismiss) { Text(stringResource(android.R.string.cancel)) }
         }
     )
 }
 
 @Composable
-fun DurationInput(
-    label: String,
-    initialMinutes: Int,
-    onValueChange: (Int) -> Unit
-) {
+fun DurationInput(label: String, initialMinutes: Int, onValueChange: (Int) -> Unit) {
     val hours = initialMinutes / 60
     val mins = initialMinutes % 60
-    var textValue by remember(initialMinutes) { mutableStateOf("%02d:%02d".format(hours, mins)) }
+    var textValue by remember(initialMinutes) { mutableStateOf(String.format(Locale.US, "%02d:%02d", hours, mins)) }
 
     OutlinedTextField(
         value = textValue,
@@ -927,6 +725,6 @@ fun DurationInput(
         label = { Text(label) },
         modifier = Modifier.fillMaxWidth(),
         placeholder = { Text("HH:mm") },
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
     )
 }

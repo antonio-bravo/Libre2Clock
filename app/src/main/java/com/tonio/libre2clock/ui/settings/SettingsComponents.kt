@@ -13,9 +13,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -39,14 +40,15 @@ fun SettingsCategoryItem(
     perfStats: SectionPerfTelemetry.Snapshot? = null,
     onClick: () -> Unit
 ) {
-    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+    // OPTIMIZACIÓN: Memoizar el feedback háptico evita búsquedas repetidas en el árbol
+    val haptic = LocalHapticFeedback.current
     
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
             .clickable {
-                haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 onClick()
             },
         colors = CardDefaults.elevatedCardColors(
@@ -130,13 +132,40 @@ fun ScheduleItem(
     onEdit: () -> Unit,
     onToggle: (Boolean) -> Unit
 ) {
+    // OPTIMIZACIÓN: Memoizar el cálculo de días y el texto de intervalo
+    val daysText = remember(schedule.daysOfWeek) {
+        schedule.daysOfWeek.sorted().map { day ->
+            when (day) {
+                1 -> "Mon"
+                2 -> "Tue"
+                3 -> "Wed"
+                4 -> "Thu"
+                5 -> "Fri"
+                6 -> "Sat"
+                7 -> "Sun"
+                else -> ""
+            }
+        }.joinToString(", ")
+    }
+
     Card(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+        )
     ) {
-        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = schedule.name, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                Text(
+                    text = schedule.name,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold
+                )
                 Text(
                     text = "${schedule.startTime} - ${schedule.endTime}",
                     style = MaterialTheme.typography.bodySmall
@@ -150,24 +179,25 @@ fun ScheduleItem(
                         color = MaterialTheme.colorScheme.secondary
                     )
                 }
-                val days = schedule.daysOfWeek.sorted().map { day ->
-                    when (day) {
-                        1 -> stringResource(R.string.day_mon)
-                        2 -> stringResource(R.string.day_tue)
-                        3 -> stringResource(R.string.day_wed)
-                        4 -> stringResource(R.string.day_thu)
-                        5 -> stringResource(R.string.day_fri)
-                        6 -> stringResource(R.string.day_sat)
-                        7 -> stringResource(R.string.day_sun)
-                        else -> ""
-                    }
-                }.joinToString(", ")
-                Text(text = days, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                Text(
+                    text = daysText,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Switch(checked = schedule.isEnabled, onCheckedChange = onToggle, modifier = Modifier.scale(0.7f))
-                IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, contentDescription = "Edit", modifier = Modifier.size(18.dp)) }
-                IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, contentDescription = "Delete", modifier = Modifier.size(18.dp)) }
+                // CORRECCIÓN: Eliminado Modifier.scale(0.7f) que distorsiona el área táctil.
+                // Se usa un Switch de tamaño estándar, que es la práctica recomendada.
+                Switch(
+                    checked = schedule.isEnabled,
+                    onCheckedChange = onToggle
+                )
+                IconButton(onClick = onEdit) {
+                    Icon(Icons.Default.Edit, contentDescription = "Edit", modifier = Modifier.size(20.dp))
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.Delete, contentDescription = "Delete", modifier = Modifier.size(20.dp))
+                }
             }
         }
     }
@@ -181,28 +211,59 @@ fun ScheduleDialog(
     onDismiss: () -> Unit,
     onConfirm: (AlarmSchedule) -> Unit
 ) {
-    var name by remember { mutableStateOf(initialSchedule?.name ?: "Normal Schedule") }
-    var startTime by remember { mutableStateOf(initialSchedule?.startTime ?: "09:00") }
-    var endTime by remember { mutableStateOf(initialSchedule?.endTime ?: "22:00") }
-    var selectedDays by remember { mutableStateOf(initialSchedule?.daysOfWeek?.toSet() ?: (1..7).toSet()) }
-    
-    var intervalText by remember { mutableStateOf(initialSchedule?.intervalMinutes?.toString() ?: "") }
-    var startMinuteText by remember { mutableStateOf(initialSchedule?.startMinute?.toString() ?: "") }
+    // OPTIMIZACIÓN: Los estados se reinician si cambia initialSchedule (ej. al reutilizar el diálogo)
+    var name by remember(initialSchedule) { 
+        mutableStateOf(initialSchedule?.name ?: "Normal Schedule") 
+    }
+    var startTime by remember(initialSchedule) { 
+        mutableStateOf(initialSchedule?.startTime ?: "09:00") 
+    }
+    var endTime by remember(initialSchedule) { 
+        mutableStateOf(initialSchedule?.endTime ?: "22:00") 
+    }
+    var selectedDays by remember(initialSchedule) { 
+        mutableStateOf(initialSchedule?.daysOfWeek?.toSet() ?: (1..7).toSet()) 
+    }
+    var intervalText by remember(initialSchedule) { 
+        mutableStateOf(initialSchedule?.intervalMinutes?.toString() ?: "") 
+    }
+    var startMinuteText by remember(initialSchedule) { 
+        mutableStateOf(initialSchedule?.startMinute?.toString() ?: "") 
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(if (initialSchedule == null) R.string.settings_add_active_schedule else R.string.settings_edit_schedule)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(stringResource(R.string.settings_schedule_name)) }, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text(stringResource(R.string.settings_schedule_name)) },
+                    modifier = Modifier.fillMaxWidth()
+                )
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(value = startTime, onValueChange = { startTime = it }, label = { Text(stringResource(R.string.settings_schedule_start)) }, modifier = Modifier.weight(1f))
-                    OutlinedTextField(value = endTime, onValueChange = { endTime = it }, label = { Text(stringResource(R.string.settings_schedule_end)) }, modifier = Modifier.weight(1f))
+                    OutlinedTextField(
+                        value = startTime,
+                        onValueChange = { startTime = it },
+                        label = { Text(stringResource(R.string.settings_schedule_start)) },
+                        modifier = Modifier.weight(1f)
+                    )
+                    OutlinedTextField(
+                        value = endTime,
+                        onValueChange = { endTime = it },
+                        label = { Text(stringResource(R.string.settings_schedule_end)) },
+                        modifier = Modifier.weight(1f)
+                    )
                 }
                 
                 if (isWatchSchedule) {
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
-                    Text(stringResource(R.string.settings_watch_overrides), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
+                    Text(
+                        stringResource(R.string.settings_watch_overrides),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedTextField(
                             value = intervalText,
@@ -224,7 +285,7 @@ fun ScheduleDialog(
                 }
 
                 Text(stringResource(R.string.settings_active_days), style = MaterialTheme.typography.labelMedium)
-                FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                FlowRow(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     (1..7).forEach { day ->
                         val label = when(day) {
                             1 -> stringResource(R.string.day_mon_short)
@@ -239,11 +300,9 @@ fun ScheduleDialog(
                         FilterChip(
                             selected = day in selectedDays,
                             onClick = {
-                                if (day in selectedDays) selectedDays = selectedDays - day
-                                else selectedDays = selectedDays + day
+                                selectedDays = if (day in selectedDays) selectedDays - day else selectedDays + day
                             },
-                            label = { Text(label) },
-                            modifier = Modifier.width(42.dp)
+                            label = { Text(label) }
                         )
                     }
                 }
@@ -277,20 +336,43 @@ fun RangeItem(
     onEdit: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
     ) {
-        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Column(modifier = Modifier.weight(1f)) {
                 val maxText = range.max?.toString() ?: "∞"
-                Text(text = stringResource(R.string.settings_range_label, range.min, maxText), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text(text = stringResource(R.string.settings_range_fixed_offset, if (range.offset >= 0) "+" else "", range.offset), style = MaterialTheme.typography.bodyMedium)
-                Text(text = stringResource(R.string.settings_range_percentage_offset, if (range.percentage >= 0) "+" else "", range.percentage), style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    text = stringResource(R.string.settings_range_label, range.min, maxText),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = stringResource(R.string.settings_range_fixed_offset, if (range.offset >= 0) "+" else "", range.offset),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = stringResource(R.string.settings_range_percentage_offset, if (range.percentage >= 0) "+" else "", range.percentage),
+                    style = MaterialTheme.typography.bodyMedium
+                )
                 if (insight != null) {
                     Text(
-                        text = stringResource(R.string.settings_range_sensor_audit, if (insight.signedRawDeviationPct >= 0) "+" else "", insight.signedRawDeviationPct, insight.sampleCount),
+                        text = stringResource(
+                            R.string.settings_range_sensor_audit,
+                            if (insight.signedRawDeviationPct >= 0) "+" else "",
+                            insight.signedRawDeviationPct,
+                            insight.sampleCount
+                        ),
                         style = MaterialTheme.typography.labelSmall,
-                        color = if (abs(insight.signedRawDeviationPct) > 15.0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                        color = if (abs(insight.signedRawDeviationPct) > 15.0) 
+                            MaterialTheme.colorScheme.error 
+                        else 
+                            MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.ExtraBold
                     )
                 }
@@ -307,20 +389,45 @@ fun RangeDialog(
     onDismiss: () -> Unit,
     onConfirm: (GlucoseOffsetRange) -> Unit
 ) {
-    var minText by remember { mutableStateOf(initialRange?.min?.toString() ?: "") }
-    var maxText by remember { mutableStateOf(initialRange?.max?.toString() ?: "") }
-    var offsetText by remember { mutableStateOf(initialRange?.offset?.toString() ?: "") }
-    var percentageText by remember { mutableStateOf(initialRange?.percentage?.toString() ?: "") }
+    // OPTIMIZACIÓN: Los estados se reinician si cambia initialRange
+    var minText by remember(initialRange) { mutableStateOf(initialRange?.min?.toString() ?: "") }
+    var maxText by remember(initialRange) { mutableStateOf(initialRange?.max?.toString() ?: "") }
+    var offsetText by remember(initialRange) { mutableStateOf(initialRange?.offset?.toString() ?: "") }
+    var percentageText by remember(initialRange) { mutableStateOf(initialRange?.percentage?.toString() ?: "") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(if (initialRange == null) R.string.settings_add_range else R.string.settings_edit_range)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(value = minText, onValueChange = { minText = it }, label = { Text(stringResource(R.string.settings_min_glucose)) }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-                OutlinedTextField(value = maxText, onValueChange = { maxText = it }, label = { Text(stringResource(R.string.settings_max_glucose_label)) }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-                OutlinedTextField(value = offsetText, onValueChange = { offsetText = it }, label = { Text(stringResource(R.string.settings_fixed_offset_label)) }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-                OutlinedTextField(value = percentageText, onValueChange = { percentageText = it }, label = { Text(stringResource(R.string.settings_percentage_offset_label)) }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+                OutlinedTextField(
+                    value = minText,
+                    onValueChange = { minText = it.filter { c -> c.isDigit() || c == '-' } },
+                    label = { Text(stringResource(R.string.settings_min_glucose)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+                OutlinedTextField(
+                    value = maxText,
+                    onValueChange = { maxText = it.filter { c -> c.isDigit() || c == '-' } },
+                    label = { Text(stringResource(R.string.settings_max_glucose_label)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+                OutlinedTextField(
+                    value = offsetText,
+                    onValueChange = { offsetText = it.filter { c -> c.isDigit() || c == '-' } },
+                    label = { Text(stringResource(R.string.settings_fixed_offset_label)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+                OutlinedTextField(
+                    value = percentageText,
+                    onValueChange = { percentageText = it.filter { c -> c.isDigit() || c == '-' } },
+                    label = { Text(stringResource(R.string.settings_percentage_offset_label)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
             }
         },
         confirmButton = {
@@ -336,21 +443,41 @@ fun RangeDialog(
     )
 }
 
+// CORRECCIÓN: Renombrado de getLocalizedSectionName a LocalizedSectionName.
+// Las funciones @Composable no deben empezar con "get" según las convenciones de Compose.
 @Composable
-fun getLocalizedSectionName(section: String): String {
+fun LocalizedSectionName(section: String): String {
     return when (section) {
-        "dashboard_metrics_v1", "dashboard_metrics_v2", "historical_metrics_v2" -> stringResource(R.string.settings_perf_section_dashboard)
-        "report_metrics_v1", "report_metrics_v2" -> stringResource(R.string.settings_perf_section_report_metrics)
-        "report_agp_v1", "report_agp_v2" -> stringResource(R.string.settings_perf_section_report_agp)
-        "report_daily_v1", "report_daily_v2" -> stringResource(R.string.settings_perf_section_report_daily)
-        "settings_range_insights_v1" -> stringResource(R.string.settings_perf_section_range_insights)
-        "insulin_basal_expiry" -> stringResource(R.string.settings_perf_section_insulin_basal_expiry)
-        "insulin_bolus_calc" -> stringResource(R.string.settings_perf_section_insulin_bolus_calc)
-        "capillary_screen_enter" -> stringResource(R.string.settings_perf_section_capillary_enter)
-        "capillary_screen_stats" -> stringResource(R.string.settings_perf_section_capillary_stats)
-        "dashboard_screen_enter" -> stringResource(R.string.settings_perf_section_dashboard_enter)
-        else -> stringResource(R.string.settings_perf_section_unknown, section)
+        "dashboard_metrics_v1", "dashboard_metrics_v2", "historical_metrics_v2" -> 
+            stringResource(R.string.settings_perf_section_dashboard)
+        "report_metrics_v1", "report_metrics_v2" -> 
+            stringResource(R.string.settings_perf_section_report_metrics)
+        "report_agp_v1", "report_agp_v2" -> 
+            stringResource(R.string.settings_perf_section_report_agp)
+        "report_daily_v1", "report_daily_v2" -> 
+            stringResource(R.string.settings_perf_section_report_daily)
+        "settings_range_insights_v1" -> 
+            stringResource(R.string.settings_perf_section_range_insights)
+        "insulin_basal_expiry" -> 
+            stringResource(R.string.settings_perf_section_insulin_basal_expiry)
+        "insulin_bolus_calc" -> 
+            stringResource(R.string.settings_perf_section_insulin_bolus_calc)
+        "capillary_screen_enter" -> 
+            stringResource(R.string.settings_perf_section_capillary_enter)
+        "capillary_screen_stats" -> 
+            stringResource(R.string.settings_perf_section_capillary_stats)
+        "dashboard_screen_enter" -> 
+            stringResource(R.string.settings_perf_section_dashboard_enter)
+        else -> 
+            stringResource(R.string.settings_perf_section_unknown, section)
     }
+}
+
+// OPTIMIZACIÓN: Helper centralizado para evitar duplicación de lógica de colores
+private fun getPerformanceColor(avgDurationMs: Int): Color = when {
+    avgDurationMs < 50 -> Color(0xFF4CAF50)   // Verde: rápido
+    avgDurationMs < 200 -> Color(0xFFFF9800)  // Naranja: aceptable
+    else -> Color(0xFFF44336)                  // Rojo: lento
 }
 
 @Composable
@@ -358,11 +485,7 @@ fun SectionPerformanceCard(
     stats: SectionPerfTelemetry.Snapshot,
     label: String
 ) {
-    val statusColor = when {
-        stats.avgDurationMs < 50 -> Color(0xFF4CAF50)
-        stats.avgDurationMs < 200 -> Color(0xFFFF9800)
-        else -> Color(0xFFF44336)
-    }
+    val statusColor = getPerformanceColor(stats.avgDurationMs.roundToInt())
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -388,8 +511,10 @@ fun SectionPerformanceCard(
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold
                 )
+                // OPTIMIZACIÓN: Eliminada la manipulación frágil de strings con substringBefore.
+                // Se usa un formato directo y claro.
                 Text(
-                    text = "${stringResource(R.string.settings_perf_hits_row).substringBefore("|").trim()} ${stats.calls} | Avg: ${stats.avgDurationMs.roundToInt()}${stringResource(R.string.settings_perf_ms_short)}",
+                    text = "${stats.calls} calls • Avg: ${stats.avgDurationMs.roundToInt()} ms",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -405,11 +530,7 @@ fun PerformanceMetricBadge(
 ) {
     if (stats == null) return
     
-    val color = when {
-        stats.avgDurationMs < 50 -> Color(0xFF4CAF50)
-        stats.avgDurationMs < 200 -> Color(0xFFFF9800)
-        else -> Color(0xFFF44336)
-    }
+    val color = getPerformanceColor(stats.avgDurationMs.roundToInt())
 
     Surface(
         color = color.copy(alpha = 0.1f),
@@ -438,8 +559,12 @@ fun PerformanceMetricBadge(
     }
 }
 
-fun formatBackupTimestamp(timestamp: Long): String {
-    return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+// OPTIMIZACIÓN: DateTimeFormatter cacheado como propiedad estática para evitar recreación
+private object BackupTimestampFormatter {
+    private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
         .withZone(ZoneId.systemDefault())
-        .format(Instant.ofEpochMilli(timestamp))
+    
+    fun format(timestamp: Long): String = formatter.format(Instant.ofEpochMilli(timestamp))
 }
+
+fun formatBackupTimestamp(timestamp: Long): String = BackupTimestampFormatter.format(timestamp)

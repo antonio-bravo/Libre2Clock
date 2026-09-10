@@ -20,8 +20,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 
 /**
- * Two numeric boxes for hour/minute that auto-advance focus and validate ranges.
- */
+ * Two numeric boxes for hour/minute that auto-advance focus, validate ranges intelligently,
+ * and auto-pad single digits with a leading zero for better UX.
+        */
 @Composable
 fun HourMinuteInputFields(
     hour: String,
@@ -41,10 +42,21 @@ fun HourMinuteInputFields(
         OutlinedTextField(
             value = hour,
             onValueChange = { input ->
-                val digits = input.filter(Char::isDigit).take(2)
-                val clamped = digits.toIntOrNull()?.coerceIn(0, 23)?.toString() ?: digits
-                onHourChange(clamped)
-                if (clamped.length == 2) {
+                // 1. Filtrar solo dígitos y limitar a 2 caracteres
+                val digits = input.filter { it.isDigit() }.take(2)
+                
+                // 2. Validación inteligente: Si son 2 dígitos y > 23, descartamos el último dígito 
+                // (ej: "25" se convierte en "2", no en "23" que es confuso).
+                val validHour = if (digits.length == 2 && (digits.toIntOrNull() ?: 0) > 23) {
+                    digits.dropLast(1)
+                } else {
+                    digits
+                }
+                
+                onHourChange(validHour)
+                
+                // 3. Auto-avance al completar 2 dígitos válidos
+                if (validHour.length == 2) {
                     minuteFocusRequester.requestFocus()
                 }
             },
@@ -55,17 +67,34 @@ fun HourMinuteInputFields(
                 imeAction = ImeAction.Next
             ),
             keyboardActions = KeyboardActions(
-                onNext = { minuteFocusRequester.requestFocus() }
+                onNext = {
+                    // 4. UX: Auto-relleno con cero a la izquierda si el usuario pulsa "Siguiente" con 1 dígito
+                    if (hour.length == 1) onHourChange("0$hour")
+                    minuteFocusRequester.requestFocus()
+                }
             ),
             modifier = Modifier.width(80.dp)
         )
-        Text(":", style = MaterialTheme.typography.headlineSmall)
+        
+        Text(
+            text = ":", 
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier.width(8.dp) // Ancho fijo para evitar saltos de layout
+        )
+        
         OutlinedTextField(
             value = minute,
             onValueChange = { input ->
-                val digits = input.filter(Char::isDigit).take(2)
-                val clamped = digits.toIntOrNull()?.coerceIn(0, 59)?.toString() ?: digits
-                onMinuteChange(clamped)
+                val digits = input.filter { it.isDigit() }.take(2)
+                
+                // Validación inteligente para minutos (máximo 59)
+                val validMinute = if (digits.length == 2 && (digits.toIntOrNull() ?: 0) > 59) {
+                    digits.dropLast(1)
+                } else {
+                    digits
+                }
+                
+                onMinuteChange(validMinute)
             },
             label = { Text("MM") },
             singleLine = true,
@@ -74,7 +103,11 @@ fun HourMinuteInputFields(
                 imeAction = ImeAction.Done
             ),
             keyboardActions = KeyboardActions(
-                onDone = { focusManager.clearFocus() }
+                onDone = {
+                    // UX: Auto-relleno con cero a la izquierda al finalizar
+                    if (minute.length == 1) onMinuteChange("0$minute")
+                    focusManager.clearFocus()
+                }
             ),
             modifier = Modifier
                 .width(80.dp)

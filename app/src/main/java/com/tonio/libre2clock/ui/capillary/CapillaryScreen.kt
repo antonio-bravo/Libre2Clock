@@ -23,6 +23,8 @@ import com.tonio.libre2clock.ui.components.DateHourMinuteInput
 import com.tonio.libre2clock.ui.settings.SettingsViewModel
 import com.tonio.libre2clock.util.SectionPerfTelemetry
 import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlin.math.abs
@@ -34,8 +36,6 @@ fun CapillaryScreen(
     viewModel: SettingsViewModel,
     onBack: () -> Unit
 ) {
-    // Measures how long it takes for the shared ViewModel's flows to deliver their first
-    // value after entering this screen (cold-start subscription lag is a common jank source).
     val screenEnterAtMs = remember { System.currentTimeMillis() }
     var enterTimingRecorded by remember { mutableStateOf(false) }
 
@@ -55,26 +55,37 @@ fun CapillaryScreen(
 
     var showCapillaryDialog by remember { mutableStateOf(false) }
     var capillaryValueText by remember { mutableStateOf("") }
-    var capillaryDate by remember { mutableStateOf(java.time.LocalDate.now()) }
+    var capillaryDate by remember { mutableStateOf(LocalDate.now()) }
     var capillaryHour by remember { mutableStateOf("") }
     var capillaryMinute by remember { mutableStateOf("") }
 
     val avgDeviation = remember(capillaryReadings) {
-        var result: Double?
         val duration = measureTimeMillis {
             var totalDeviation = 0.0
             var validCount = 0
-            capillaryReadings.forEach { reading ->
-                val sensor = reading.sensorValue ?: return@forEach
-                if (sensor == 0) return@forEach
+            
+            for (reading in capillaryReadings) {
+                val sensor = reading.sensorValue ?: continue
+                if (sensor == 0) continue
 
                 totalDeviation += abs(reading.value - sensor).toDouble() / sensor * 100.0
                 validCount++
             }
-            result = if (validCount > 0) totalDeviation / validCount else null
+            
+            if (validCount > 0) totalDeviation / validCount else null
         }
         SectionPerfTelemetry.record(section = "capillary_screen_stats", durationMs = duration, cacheHit = true)
-        result
+        if (capillaryReadings.isNotEmpty()) {
+            var totalDeviation = 0.0
+            var validCount = 0
+            for (reading in capillaryReadings) {
+                val sensor = reading.sensorValue ?: continue
+                if (sensor == 0) continue
+                totalDeviation += abs(reading.value - sensor).toDouble() / sensor * 100.0
+                validCount++
+            }
+            if (validCount > 0) totalDeviation / validCount else null
+        } else null
     }
 
     Scaffold(
@@ -90,10 +101,10 @@ fun CapillaryScreen(
         },
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                val now = java.time.LocalTime.now()
-                capillaryDate = java.time.LocalDate.now()
-                capillaryHour = "%02d".format(now.hour)
-                capillaryMinute = "%02d".format(now.minute)
+                val now = LocalTime.now()
+                capillaryDate = LocalDate.now()
+                capillaryHour = now.hour.toString().padStart(2, '0')
+                capillaryMinute = now.minute.toString().padStart(2, '0')
                 showCapillaryDialog = true
             }) {
                 Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_capillary_reading))
@@ -142,7 +153,11 @@ fun CapillaryScreen(
                     }
                 }
             } else {
-                items(capillaryReadings) { reading ->
+                // OPTIMIZACIÓN: Usar key para mejorar el rendimiento de LazyColumn
+                items(
+                    items = capillaryReadings,
+                    key = { it.timestamp }
+                ) { reading ->
                     CapillaryItem(
                         reading = reading,
                         onDelete = { viewModel.removeCapillaryReading(reading) }
@@ -193,11 +208,8 @@ fun CapillaryScreen(
                     val delta = sensorValue?.let { value - it }
                     val hour = capillaryHour.toIntOrNull() ?: 0
                     val minute = capillaryMinute.toIntOrNull() ?: 0
-                    val timestamp = "%s %02d:%02d".format(
-                        capillaryDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
-                        hour,
-                        minute
-                    )
+                    val timestamp = "${capillaryDate.format(DateTimeFormatter.ISO_LOCAL_DATE)} ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}"
+                    
                     viewModel.addCapillaryReading(
                         CapillaryMeasurement(
                             value = value,
@@ -207,10 +219,10 @@ fun CapillaryScreen(
                         )
                     )
                     capillaryValueText = ""
-                    val resetNow = java.time.LocalTime.now()
-                    capillaryDate = java.time.LocalDate.now()
-                    capillaryHour = "%02d".format(resetNow.hour)
-                    capillaryMinute = "%02d".format(resetNow.minute)
+                    val resetNow = LocalTime.now()
+                    capillaryDate = LocalDate.now()
+                    capillaryHour = resetNow.hour.toString().padStart(2, '0')
+                    capillaryMinute = resetNow.minute.toString().padStart(2, '0')
                     showCapillaryDialog = false
                 }) {
                     Text(stringResource(android.R.string.ok))
@@ -230,6 +242,15 @@ private fun CapillaryItem(
     reading: CapillaryMeasurement,
     onDelete: () -> Unit
 ) {
+    // OPTIMIZACIÓN: Pre-calcular la desviación una sola vez por item
+    val deviation = remember(reading) {
+        reading.sensorValue?.let { sensor ->
+            if (sensor != 0) {
+                abs(reading.value - sensor).toDouble() / sensor * 100.0
+            } else null
+        }
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -244,22 +265,30 @@ private fun CapillaryItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = "${reading.value} mg/dL", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text(text = reading.timestamp, style = MaterialTheme.typography.bodySmall)
+                Text(
+                    text = "${reading.value} mg/dL",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = reading.timestamp,
+                    style = MaterialTheme.typography.bodySmall
+                )
                 
                 reading.sensorValue?.let { sensor ->
                     if (sensor != 0) {
-                        val deviation = abs(reading.value - sensor).toDouble() / sensor * 100.0
                         Text(
                             text = stringResource(R.string.capillary_sensor_value, sensor),
                             style = MaterialTheme.typography.bodySmall
                         )
-                        Text(
-                            text = stringResource(R.string.capillary_deviation, deviation),
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                        if (deviation != null) {
+                            Text(
+                                text = stringResource(R.string.capillary_deviation, deviation),
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 }
                 

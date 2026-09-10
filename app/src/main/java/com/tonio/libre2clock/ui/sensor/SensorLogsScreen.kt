@@ -2,10 +2,10 @@ package com.tonio.libre2clock.ui.sensor
 
 import android.content.ClipData
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -19,20 +19,24 @@ import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tonio.libre2clock.R
 import com.tonio.libre2clock.data.model.SensorLog
 import com.tonio.libre2clock.ui.settings.SettingsViewModel
 import com.tonio.libre2clock.util.buildSensorErrorSummary
-import com.tonio.libre2clock.util.SensorErrorSummary
 import com.tonio.libre2clock.util.TimestampParser
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+
+// Constante para evitar recrear el formateador cada vez que se abre el diálogo
+private val dialogDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+    .withZone(ZoneId.systemDefault())
+
+private fun currentDateTimeText(): String = dialogDateFormatter.format(Instant.now())
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,24 +46,40 @@ fun SensorLogsScreen(
 ) {
     val sensorLogs by viewModel.sensorLogs.collectAsStateWithLifecycle()
     val capillaryReadings by viewModel.capillaryReadings.collectAsStateWithLifecycle()
+    
+    var editingLog by remember { mutableStateOf<SensorLog?>(null) }
+    var showOnlyFailed by remember { mutableStateOf(false) }
+
+    // OPTIMIZACIÓN 1: Mapa para búsqueda O(1) en lugar de .find() O(N) en cada item
     val sensorErrorSummary = remember(sensorLogs, capillaryReadings) {
         buildSensorErrorSummary(sensorLogs, capillaryReadings)
     }
-    var editingLog by remember { mutableStateOf<SensorLog?>(null) }
-    var showOnlyFailed by remember { mutableStateOf(false) }
+    val errorSummaryMap = remember(sensorErrorSummary) {
+        sensorErrorSummary.associateBy { it.serialNumber }
+    }
 
     val filteredLogs = remember(sensorLogs, showOnlyFailed) {
         if (showOnlyFailed) sensorLogs.filter { it.hasFailed } else sensorLogs
     }
 
+    // OPTIMIZACIÓN 2: Cálculo de estadísticas en una sola pasada O(N) en lugar de filter+map+sorted
     val failedStats = remember(sensorLogs) {
-        val failed = sensorLogs.filter { it.hasFailed }
-        if (failed.isEmpty()) null
-        else {
-            val dates = failed.map { it.startDate }.filter { it.isNotBlank() }.sorted()
-            if (dates.isEmpty()) Triple(failed.size, "-", "-")
-            else Triple(failed.size, dates.first(), dates.last())
+        var count = 0
+        var minDate: String? = null
+        var maxDate: String? = null
+
+        for (log in sensorLogs) {
+            if (log.hasFailed) {
+                count++
+                val date = log.startDate
+                if (date.isNotBlank()) {
+                    if (minDate == null || date < minDate) minDate = date
+                    if (maxDate == null || date > maxDate) maxDate = date
+                }
+            }
         }
+        
+        if (count == 0) null else Triple(count, minDate ?: "-", maxDate ?: "-")
     }
 
     Scaffold(
@@ -79,7 +99,6 @@ fun SensorLogsScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // Stats & Filter Header
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -158,8 +177,12 @@ fun SensorLogsScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     contentPadding = PaddingValues(bottom = 16.dp)
                 ) {
-                    items(filteredLogs) { log ->
-                        val summary = sensorErrorSummary.find { it.serialNumber == log.serialNumber }
+                    // OPTIMIZACIÓN 3: Clave estable para evitar recomposiciones innecesarias al hacer scroll/filtrar
+                    items(
+                        items = filteredLogs,
+                        key = { "${it.serialNumber}_${it.startDate}" }
+                    ) { log ->
+                        val summary = errorSummaryMap[log.serialNumber]
                         SensorLogItem(
                             log = log,
                             errorSummary = summary,
@@ -187,7 +210,7 @@ fun SensorLogsScreen(
 @Composable
 fun SensorLogItem(
     log: SensorLog,
-    errorSummary: SensorErrorSummary?,
+    errorSummary: com.tonio.libre2clock.util.SensorErrorSummary?,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -195,21 +218,24 @@ fun SensorLogItem(
     val clipboard = LocalClipboard.current
     val scope = rememberCoroutineScope()
 
+    // OPTIMIZACIÓN 4: Formateador memoizado
     val displayFormatter = remember {
-        DateTimeFormatter.ofPattern("EEE, d MMM yyyy, HH:mm")
+        DateTimeFormatter.ofPattern("EEE, d MMM yyyy, HH:mm", Locale.getDefault())
             .withZone(ZoneId.systemDefault())
-            .withLocale(Locale.getDefault())
     }
 
-    val formatLogDate = { dateStr: String ->
-        TimestampParser.parseFlexibleInstant(dateStr)?.let {
-            displayFormatter.format(it)
-        } ?: dateStr
+    // OPTIMIZACIÓN 5: Parseo y formateo memoizado por campo individual
+    val displayStartDate = remember(log.startDate) {
+        TimestampParser.parseFlexibleInstant(log.startDate)?.let { displayFormatter.format(it) } ?: log.startDate
     }
-
-    val displayStartDate = formatLogDate(log.startDate)
-    val displayExpiryDate = formatLogDate(log.expiryDate)
-    val displayEndDate = log.endDate?.let { formatLogDate(it) }
+    val displayExpiryDate = remember(log.expiryDate) {
+        TimestampParser.parseFlexibleInstant(log.expiryDate)?.let { displayFormatter.format(it) } ?: log.expiryDate
+    }
+    val displayEndDate = remember(log.endDate) {
+        log.endDate?.let { 
+            TimestampParser.parseFlexibleInstant(it)?.let { displayFormatter.format(it) } ?: it 
+        }
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -239,7 +265,7 @@ fun SensorLogItem(
                         Surface(
                             color = MaterialTheme.colorScheme.error.copy(alpha = 0.1f),
                             shape = MaterialTheme.shapes.extraSmall,
-                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error)
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error)
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
@@ -270,7 +296,7 @@ fun SensorLogItem(
                         )
                         if (log.hasFailed && log.actualDaysUsed != null) {
                             Text(
-                                text = stringResource(R.string.sensor_log_days_used_label) + ": ${log.actualDaysUsed}",
+                                text = "${stringResource(R.string.sensor_log_days_used_label)}: ${log.actualDaysUsed}",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.error
@@ -290,7 +316,7 @@ fun SensorLogItem(
                         if (!log.hasFailed) {
                             log.actualDaysUsed?.let {
                                 Text(
-                                    text = stringResource(R.string.sensor_log_days_used_label) + ": $it",
+                                    text = "${stringResource(R.string.sensor_log_days_used_label)}: $it",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -298,7 +324,7 @@ fun SensorLogItem(
                         }
                         log.errorCode?.let {
                             Text(
-                                text = stringResource(R.string.sensor_log_error_code_label) + ": $it",
+                                text = "${stringResource(R.string.sensor_log_error_code_label)}: $it",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.error
                             )
@@ -306,15 +332,13 @@ fun SensorLogItem(
                     }
                 }
                 
-                log.notes?.let {
-                    if (it.isNotBlank()) {
-                        Text(
-                            text = it,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(top = 4.dp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
-                        )
-                    }
+                if (!log.notes.isNullOrBlank()) {
+                    Text(
+                        text = log.notes,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(top = 4.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                    )
                 }
 
                 if (errorSummary != null) {
@@ -335,11 +359,14 @@ fun SensorLogItem(
             
             Row {
                 IconButton(onClick = {
-                    val text = "Sensor Log\nSN: ${log.serialNumber}\nStart: $displayStartDate\n" +
-                            (if (displayEndDate != null) "End: $displayEndDate" else "Expected Expiry: $displayExpiryDate") +
-                            (if (log.hasFailed) "\nFAILED (Code: ${log.errorCode ?: "-"})" else "") +
-                            (if (log.actualDaysUsed != null) "\nDays used: ${log.actualDaysUsed}" else "") +
-                            (if (!log.notes.isNullOrBlank()) "\nNotes: ${log.notes}" else "")
+                    val text = buildString {
+                        append("Sensor Log\nSN: ${log.serialNumber}\nStart: $displayStartDate\n")
+                        if (displayEndDate != null) append("End: $displayEndDate\n") 
+                        else append("Expected Expiry: $displayExpiryDate\n")
+                        if (log.hasFailed) append("FAILED (Code: ${log.errorCode ?: "-"})\n")
+                        if (log.actualDaysUsed != null) append("Days used: ${log.actualDaysUsed}\n")
+                        if (!log.notes.isNullOrBlank()) append("Notes: ${log.notes}")
+                    }
                     scope.launch {
                         clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("Sensor Log", text)))
                     }
@@ -422,10 +449,4 @@ fun SensorLogEditDialog(
             }
         }
     )
-}
-
-private fun currentDateTimeText(): String {
-    return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
-        .withZone(ZoneId.systemDefault())
-        .format(Instant.now())
 }

@@ -11,18 +11,16 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.system.measureTimeMillis
+import java.util.concurrent.atomic.AtomicLong
 
 class DashboardMetricsCacheRepository(
     context: Context,
-    private val json: Json = Json {
-        ignoreUnknownKeys = true
-        encodeDefaults = true
-        coerceInputValues = true
-    }
+    private val json: Json = Companion.defaultJson
 ) {
 
     private val db = SectionCacheDatabaseHelper(context.applicationContext)
-    private var lastPurgeAtMs: Long = 0L
+    // Thread-safe purge tracking para evitar purgas redundantes por condiciones de carrera
+    private val lastPurgeAtMs = AtomicLong(0L)
 
     suspend fun getOrCompute(
         sectionKey: String,
@@ -31,23 +29,30 @@ class DashboardMetricsCacheRepository(
         calculator: suspend () -> DashboardMetrics
     ): DashboardMetrics = withContext(Dispatchers.IO) {
         purgeIfNeeded(retentionDays)
+        
         var result: DashboardMetrics? = null
         var cacheHit = false
+        
         val duration = measureTimeMillis {
             val cached = db.getCachedPayload(sectionKey, signature)
             if (cached != null) {
-                runCatching { json.decodeFromString<DashboardMetrics>(cached) }
-                    .getOrNull()
-                    ?.let {
-                        cacheHit = true
-                        result = it
-                        return@measureTimeMillis
-                    }
+                try {
+                    // try-catch nativo es más rápido que runCatching (evita crear objetos Result/Exception)
+                    result = json.decodeFromString<DashboardMetrics>(cached)
+                    cacheHit = true
+                    return@measureTimeMillis
+                } catch (e: Exception) {
+                    // Caché corrupta o cambio de esquema: se ignora y se recalcula
+                }
             }
 
             val fresh = calculator()
-            val payload = json.encodeToString(fresh)
-            db.upsertPayload(sectionKey, signature, payload)
+            try {
+                val payload = json.encodeToString(fresh)
+                db.upsertPayload(sectionKey, signature, payload)
+            } catch (e: Exception) {
+                // Fallo de escritura en DB: registramos o ignoramos, pero devolvemos los datos frescos
+            }
             result = fresh
         }
 
@@ -57,23 +62,33 @@ class DashboardMetricsCacheRepository(
 
     private fun purgeIfNeeded(retentionDays: Int) {
         val now = System.currentTimeMillis()
-        if (now - lastPurgeAtMs < PURGE_INTERVAL_MS) return
-
-        val safeDays = retentionDays.coerceIn(MIN_RETENTION_DAYS, MAX_RETENTION_DAYS)
-        val cutoff = now - safeDays * DAY_MS
-        db.purgeOlderThan(cutoff)
-        lastPurgeAtMs = now
+        val lastPurge = lastPurgeAtMs.get()
+        
+        // Chequeo rápido sin bloqueo
+        if (now - lastPurge < PURGE_INTERVAL_MS) return
+        
+        // Solo una corrutina logrará actualizar el valor y ejecutar la purga
+        if (lastPurgeAtMs.compareAndSet(lastPurge, now)) {
+            val safeDays = retentionDays.coerceIn(MIN_RETENTION_DAYS, MAX_RETENTION_DAYS)
+            val cutoff = now - safeDays * DAY_MS
+            db.purgeOlderThan(cutoff)
+        }
     }
 
     companion object {
         const val DASHBOARD_SECTION_KEY = "dashboard_metrics_v2"
-        private const val PURGE_INTERVAL_MS = 12L * 60L * 60L * 1000L
+        private const val PURGE_INTERVAL_MS = 12L * 60L * 60L * 1000L // 12 horas
         private const val DAY_MS = 24L * 60L * 60L * 1000L
         private const val MIN_RETENTION_DAYS = 30
         private const val MAX_RETENTION_DAYS = 365
-        // Rolling week/month/quarter averages don't need sub-bucket freshness; throttling recompute
-        // to once per bucket avoids re-scanning up to 50k historical measurements on every new CGM reading.
-        private const val HISTORICAL_SIGNATURE_BUCKET_MS = 5L * 60L * 1000L
+        private const val HISTORICAL_SIGNATURE_BUCKET_MS = 5L * 60L * 1000L // 5 minutos
+
+        // Instancia única para evitar sobrecarga de inicialización del serializador
+        private val defaultJson = Json {
+            ignoreUnknownKeys = true
+            encodeDefaults = true
+            coerceInputValues = true
+        }
 
         /**
          * Builds a signature without requiring the full measurements list to avoid expensive DB fetches
@@ -88,76 +103,57 @@ class DashboardMetricsCacheRepository(
             autoAdjust: Boolean = false,
             autoRangeMode: String = "OFF"
         ): String {
-            // Improved capillary signature: size + sum of hashes + first timestamp
-            // captures additions, deletions, and edits to any field (like sensorSerialNumber).
             val capSig = if (capillaries.isNotEmpty()) {
                 val hashSum = capillaries.sumOf { it.hashCode().toLong() }
                 "${capillaries.size}-$hashSum-${capillaries.first().timestamp}"
             } else "no-cap"
 
-            // ranges signature ensures calibration changes invalidate the cache.
             val rangeSig = if (ranges.isNotEmpty()) {
                 val sum = ranges.sumOf { it.offset + it.percentage }
                 "${ranges.size}-$sum"
             } else "no-ranges"
 
-            // sensorLogs signature handles sensor changes or duration adjustments.
             val logSig = if (sensorLogs.isNotEmpty()) {
                 val last = sensorLogs.first()
                 "${sensorLogs.size}-${last.serialNumber}-${last.startDate}"
             } else "no-logs"
 
-            // dataVersion changes for every persisted history update.
-            // timeBucket ensures that even if no new data arrived, we eventually re-calculate 
-            // as the 90-day window slides forward.
             val timeBucket = System.currentTimeMillis() / HISTORICAL_SIGNATURE_BUCKET_MS
 
-            return buildString {
-                append("tb=")
-                append(timeBucket)
-                append(";v=")
-                append(dataVersion)
-                append(";cp=")
-                append(capSig)
-                append(";rg=")
-                append(rangeSig)
-                append(";sl=")
-                append(logSig)
-                append(";mo=")
-                append(manualOffset)
-                append(";aa=")
-                append(autoAdjust)
-                append(";am=")
-                append(autoRangeMode)
+            // Pre-asignación de capacidad (64 chars) para evitar redimensionamientos del StringBuilder
+            return buildString(64) {
+                append("tb=").append(timeBucket)
+                append(";v=").append(dataVersion)
+                append(";cp=").append(capSig)
+                append(";rg=").append(rangeSig)
+                append(";sl=").append(logSig)
+                append(";mo=").append(manualOffset)
+                append(";aa=").append(autoAdjust)
+                append(";am=").append(autoRangeMode)
             }
         }
 
         fun buildSignature(measurements: List<GlucoseMeasurement>): String {
             if (measurements.isEmpty()) return "empty"
 
-            // Use total sums to ensure any change in any measurement invalidates the cache.
-            // This is critical when old historical values are recalculated after a new capillary reading.
+            // OPTIMIZACIÓN: Un solo bucle es más rápido que dos llamadas a sumOf() en listas de 50k elementos
             var rawSum = 0L
             var calibratedSum = 0L
-            measurements.forEach {
-                rawSum += it.value
-                calibratedSum += it.calibratedValue
+            for (m in measurements) {
+                rawSum += m.value
+                calibratedSum += m.calibratedValue
             }
 
             val first = measurements.first()
             val last = measurements.last()
 
-            return buildString {
-                append("c=")
-                append(measurements.size)
-                append(";rS=")
-                append(rawSum)
-                append(";cS=")
-                append(calibratedSum)
-                append(";f=")
-                append(first.epochSeconds ?: first.factoryTimestamp)
-                append(";l=")
-                append(last.epochSeconds ?: last.factoryTimestamp)
+            // Pre-asignación de capacidad (48 chars)
+            return buildString(48) {
+                append("c=").append(measurements.size)
+                append(";rS=").append(rawSum)
+                append(";cS=").append(calibratedSum)
+                append(";f=").append(first.epochSeconds ?: first.factoryTimestamp)
+                append(";l=").append(last.epochSeconds ?: last.factoryTimestamp)
             }
         }
     }

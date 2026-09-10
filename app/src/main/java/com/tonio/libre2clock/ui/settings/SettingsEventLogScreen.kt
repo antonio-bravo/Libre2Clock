@@ -17,12 +17,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
-import com.tonio.libre2clock.R
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tonio.libre2clock.R
 import com.tonio.libre2clock.util.LogEvent
 import com.tonio.libre2clock.util.LogLevel
 import kotlinx.coroutines.launch
@@ -48,50 +47,81 @@ fun SettingsEventLogScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { viewModel.clearEventLogs() }) {
-                        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.event_log_clear_tooltip))
+                    IconButton(
+                        onClick = { viewModel.clearEventLogs() },
+                        enabled = events.isNotEmpty() // OPTIMIZACIÓN: Deshabilitar si está vacío
+                    ) {
+                        Icon(
+                            Icons.Default.Delete, 
+                            contentDescription = stringResource(R.string.event_log_clear_tooltip)
+                        )
                     }
                 }
             )
         }
     ) { innerPadding ->
         if (events.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
-                Text(stringResource(R.string.event_log_empty), style = MaterialTheme.typography.bodyMedium)
+            Box(
+                modifier = Modifier.fillMaxSize().padding(innerPadding), 
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    stringResource(R.string.event_log_empty), 
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(innerPadding)
             ) {
-                items(events) { event ->
+                // OPTIMIZACIÓN: Clave estable para reciclado eficiente de elementos
+                items(
+                    items = events,
+                    key = { event -> "${event.timestamp}_${event.tag}" }
+                ) { event ->
                     EventLogItem(
                         event = event,
                         formatTimestamp = viewModel::formatLogTimestamp,
                         onClick = { selectedEvent = event }
                     )
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                 }
             }
         }
     }
 
-    if (selectedEvent != null) {
+    // OPTIMIZACIÓN: Uso de ?.let para evitar el uso de !! y hacer el código más seguro
+    selectedEvent?.let { event ->
         AlertDialog(
             onDismissRequest = { selectedEvent = null },
-            title = { Text("${selectedEvent!!.level} - ${selectedEvent!!.tag}") },
+            title = { Text("${event.level.name} - ${event.tag}") },
             text = {
+                // OPTIMIZACIÓN: Memoizar el formateo de la fecha para evitar recálculos
+                val formattedTime = remember(event.timestamp) { 
+                    viewModel.formatLogTimestamp(event.timestamp) 
+                }
+                
                 Column {
-                    Text(viewModel.formatLogTimestamp(selectedEvent!!.timestamp), style = MaterialTheme.typography.labelSmall)
+                    Text(
+                        text = formattedTime, 
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(selectedEvent!!.message, fontWeight = FontWeight.Bold)
-                    if (selectedEvent!!.detail != null) {
+                    Text(
+                        text = event.message, 
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    
+                    event.detail?.let { detail ->
                         Spacer(modifier = Modifier.height(8.dp))
                         Surface(
                             color = MaterialTheme.colorScheme.surfaceVariant,
                             shape = MaterialTheme.shapes.small
                         ) {
                             Text(
-                                selectedEvent!!.detail!!,
+                                text = detail,
                                 modifier = Modifier.padding(8.dp).fillMaxWidth(),
                                 style = MaterialTheme.typography.bodySmall,
                                 fontFamily = FontFamily.Monospace
@@ -102,11 +132,14 @@ fun SettingsEventLogScreen(
             },
             confirmButton = {
                 TextButton(onClick = {
-                    val textToCopy = "Time: ${viewModel.formatLogTimestamp(selectedEvent!!.timestamp)}\n" +
-                            "Level: ${selectedEvent!!.level}\n" +
-                            "Tag: ${selectedEvent!!.tag}\n" +
-                            "Message: ${selectedEvent!!.message}\n" +
-                            "Detail: ${selectedEvent!!.detail ?: "N/A"}"
+                    // OPTIMIZACIÓN: buildString es mucho más eficiente que la concatenación con +
+                    val textToCopy = buildString {
+                        append("Time: ").appendLine(viewModel.formatLogTimestamp(event.timestamp))
+                        append("Level: ").appendLine(event.level.name)
+                        append("Tag: ").appendLine(event.tag)
+                        append("Message: ").appendLine(event.message)
+                        append("Detail: ").append(event.detail ?: "N/A")
+                    }
                     
                     coroutineScope.launch {
                         val clipData = ClipData.newPlainText("Event Log", textToCopy)
@@ -134,11 +167,16 @@ private fun EventLogItem(
     formatTimestamp: (Long) -> String,
     onClick: () -> Unit
 ) {
+    // OPTIMIZACIÓN: El color se calcula una vez por item
     val color = when (event.level) {
         LogLevel.ERROR -> MaterialTheme.colorScheme.error
-        LogLevel.WARNING -> Color(0xFFFFA500)
+        LogLevel.WARNING -> Color(0xFFFFA500) // Naranja para warnings
         LogLevel.INFO -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
+
+    // OPTIMIZACIÓN: Evita formatear la fecha en cada recomposición
+    val formattedTime = remember(event.timestamp) { formatTimestamp(event.timestamp) }
 
     Column(
         modifier = Modifier
@@ -155,7 +193,7 @@ private fun EventLogItem(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = formatTimestamp(event.timestamp),
+                text = formattedTime,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -166,5 +204,7 @@ private fun EventLogItem(
             style = MaterialTheme.typography.bodyMedium,
             maxLines = 2
         )
+        // OPTIMIZACIÓN: Divider integrado en el item para una estructura de LazyColumn más limpia
+        HorizontalDivider(modifier = Modifier.padding(top = 16.dp))
     }
 }
