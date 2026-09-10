@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -111,7 +112,61 @@ fun DashboardScreen(
         drawerContent = {
             ModalDrawerSheet {
                 Spacer(modifier = Modifier.height(12.dp))
-                // ... (NavigationDrawerItems sin cambios, omitidos por brevedad, son eficientes)
+                Text(
+                    text = stringResource(R.string.app_name),
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(16.dp),
+                    color = MaterialTheme.colorScheme.primary
+                )
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                NavigationDrawerItem(
+                    label = { Text(stringResource(R.string.menu_strategies)) },
+                    selected = false,
+                    onClick = { scope.launch { drawerState.close() }; onNavigateToStrategy() },
+                    icon = { Icon(Icons.AutoMirrored.Filled.TrendingUp, contentDescription = null) },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+                NavigationDrawerItem(
+                    label = { Text(stringResource(R.string.menu_capillary)) },
+                    selected = false,
+                    onClick = { scope.launch { drawerState.close() }; onNavigateToCapillary() },
+                    icon = { Icon(Icons.Default.WaterDrop, contentDescription = null) },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+                NavigationDrawerItem(
+                    label = { Text(stringResource(R.string.menu_sensor_logs)) },
+                    selected = false,
+                    onClick = { scope.launch { drawerState.close() }; onNavigateToSensorLogs() },
+                    icon = { Icon(Icons.Default.DeveloperBoard, contentDescription = null) },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+                NavigationDrawerItem(
+                    label = { Text(stringResource(R.string.menu_insulin_hub)) },
+                    selected = false,
+                    onClick = { scope.launch { drawerState.close() }; onNavigateToInsulinHub() },
+                    icon = { Icon(Icons.Default.Medication, contentDescription = null) },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+                NavigationDrawerItem(
+                    label = { Text(stringResource(R.string.menu_reports)) },
+                    selected = false,
+                    onClick = { scope.launch { drawerState.close() }; onNavigateToReports() },
+                    icon = { Icon(Icons.Default.BarChart, contentDescription = null) },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+                NavigationDrawerItem(
+                    label = { Text(stringResource(R.string.event_log_title)) },
+                    selected = false,
+                    onClick = { scope.launch { drawerState.close() }; onNavigateToEventLog() },
+                    icon = { Icon(Icons.Default.History, contentDescription = null) },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+                
+                Spacer(modifier = Modifier.weight(1f))
+                HorizontalDivider()
+                
                 NavigationDrawerItem(
                     label = { Text(stringResource(R.string.menu_settings)) },
                     selected = false,
@@ -119,7 +174,7 @@ fun DashboardScreen(
                     icon = { Icon(Icons.Default.Settings, contentDescription = null) },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
-                // ... (resto de items del drawer)
+                Spacer(modifier = Modifier.height(12.dp))
             }
         }
     ) {
