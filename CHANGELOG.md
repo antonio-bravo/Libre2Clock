@@ -1,5 +1,29 @@
 # Changelog
 
+## 5209775 (Sep 10, 2026 20:22:19)
+fix display HbA1c raw(calibrated) — antonio-bravo
+[detail](#5209775-details)
+
+<details id='5209775-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
+</details>
+
+
+---
+## f20de2b (Sep 10, 2026 18:05:46)
+Update changelog — github-actions[bot]
+[detail](#f20de2b-details)
+
+<details id='f20de2b-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 68e912f (Sep 10, 2026 20:05:33)
 add all functions to burger menu — antonio-bravo
 [detail](#68e912f-details)
@@ -720,36 +744,6 @@ fix HbA1c after optimization — antonio-bravo
 
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsCacheRepository.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-</details>
-
-
----
-## cbef033 (Sep 04, 2026 07:25:42)
-Update changelog — github-actions[bot]
-[detail](#cbef033-details)
-
-<details id='cbef033-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## dfe2afa (Sep 04, 2026 09:25:28)
-improve performance — antonio-bravo
-[detail](#dfe2afa-details)
-
-<details id='dfe2afa-details'>
-<summary>Changed files</summary>
-
-- .idea/planningMode.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/capillary/CapillaryScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
 </details>
 
 
