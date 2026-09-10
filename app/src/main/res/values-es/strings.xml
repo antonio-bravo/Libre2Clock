@@ -434,4 +434,5 @@
     <string name="restore_success_merge">Copia de seguridad restaurada y fusionada.</string>
     <string name="restore_success_hard">Copia de seguridad restaurada (Hard Reset).</string>
     <string name="restore_failed">Error al restaurar.</string>
+    <string name="app_version">Versión: %1$s (%2$d)</string>
 </resources>

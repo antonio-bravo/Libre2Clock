@@ -153,6 +153,25 @@ fun SettingsScreen(
                 
                 Spacer(modifier = Modifier.height(32.dp))
             }
+
+            item(key = "app_version") {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = stringResource(
+                            R.string.app_version,
+                            com.tonio.libre2clock.BuildConfig.VERSION_NAME,
+                            com.tonio.libre2clock.BuildConfig.VERSION_CODE
+                        ),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    )
+                }
+            }
         }
     }
 
