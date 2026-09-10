@@ -1,5 +1,30 @@
 # Changelog
 
+## 4f0027c (Sep 10, 2026 22:29:32)
+fix ranges — antonio-bravo
+[detail](#4f0027c-details)
+
+<details id='4f0027c-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
+</details>
+
+
+---
+## 0bc226c (Sep 10, 2026 20:11:58)
+Update changelog — github-actions[bot]
+[detail](#0bc226c-details)
+
+<details id='0bc226c-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## a9d229c (Sep 10, 2026 22:11:42)
 optimization — antonio-bravo
 [detail](#a9d229c-details)
@@ -721,39 +746,6 @@ Change Layout + Add Firebase + signatures — antonio-bravo
 - app/src/main/res/values/strings.xml [Modified]
 - build.gradle.kts [Modified]
 - gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 86e2529 (Sep 08, 2026 10:12:53)
-Update changelog — github-actions[bot]
-[detail](#86e2529-details)
-
-<details id='86e2529-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 0ec5405 (Sep 08, 2026 12:12:38)
-Improvements — antonio-bravo
-[detail](#0ec5405-details)
-
-<details id='0ec5405-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/capillary/CapillaryScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/components/DateTimeEntryFields.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/ui/components/HourMinuteInputFields.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsCacheRepository.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
 </details>
 
 
