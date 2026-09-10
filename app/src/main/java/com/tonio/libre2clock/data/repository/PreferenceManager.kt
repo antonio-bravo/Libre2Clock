@@ -432,8 +432,8 @@ class PreferenceManager(private val context: Context) {
     }
 
     // --- Backup y Restauración Optimizados ---
-    private suspend fun updateBackupPayload() {
-        context.dataStore.edit { it[SETTINGS_UPDATED_AT_KEY] = System.currentTimeMillis() }
+    private suspend fun updateBackupPayload(timestamp: Long? = null) {
+        context.dataStore.edit { it[SETTINGS_UPDATED_AT_KEY] = timestamp ?: System.currentTimeMillis() }
         val payload = buildCurrentHistoryBackupPayload()
         saveHistoryBackupPayload(payload)
         requestHistoryCloudBackupIfDue()
@@ -547,7 +547,7 @@ class PreferenceManager(private val context: Context) {
             
             applyPayloadToPreferences(preferences, payload)
         }
-        updateBackupPayload()
+        updateBackupPayload(payload.settingsUpdatedAtMs)
         return true
     }
 
@@ -583,7 +583,7 @@ class PreferenceManager(private val context: Context) {
                 preferences[WATCH_NOTIFICATION_SCHEDULES_KEY] = json.encodeToString(payload.watchNotificationSchedules)
                 preferences[GLUCOSE_ALARM_SCHEDULES_KEY] = json.encodeToString(payload.glucoseAlarmSchedules)
             }
-            updateBackupPayload()
+            updateBackupPayload(payload.settingsUpdatedAtMs)
             Result.success(payload)
         } catch (e: Exception) {
             Result.failure(e)
@@ -648,7 +648,7 @@ class PreferenceManager(private val context: Context) {
                 preferences[WATCH_NOTIFICATION_SCHEDULES_KEY] = json.encodeToString(payload.watchNotificationSchedules)
                 preferences[GLUCOSE_ALARM_SCHEDULES_KEY] = json.encodeToString(payload.glucoseAlarmSchedules)
             }
-            updateBackupPayload()
+            updateBackupPayload(payload.settingsUpdatedAtMs)
             true
         } catch (e: Exception) {
             false
@@ -738,6 +738,7 @@ class PreferenceManager(private val context: Context) {
         payload.batteryCriticalThreshold?.let { preferences[BATTERY_CRITICAL_THRESHOLD_KEY] = it }
         payload.disableFastRefreshOnSlowCharge?.let { preferences[DISABLE_FAST_REFRESH_ON_SLOW_CHARGE_KEY] = it }
         payload.sensorDurationDays?.let { preferences[SENSOR_DURATION_DAYS_KEY] = it }
+        payload.settingsUpdatedAtMs?.let { preferences[SETTINGS_UPDATED_AT_KEY] = it }
     }
 
     private fun deleteExistingDownloadsBackup(relativePath: String) {

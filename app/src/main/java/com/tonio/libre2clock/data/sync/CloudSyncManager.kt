@@ -134,9 +134,17 @@ class CloudSyncManager(
                     patientDoc.collection("config").document("settings").get().await()
                 }
                 if (remoteSettings.exists()) {
-                    remoteSettings.toObject(HistoryBackupPayload::class.java)?.let { payload ->
-                        preferenceManager.restoreFromPayload(payload, isHardReset = false)
-                        log("Settings restored from cloud.")
+                    val remotePayload = remoteSettings.toObject(HistoryBackupPayload::class.java)
+                    val localTimestamp = preferenceManager.settingsUpdatedAt.first() ?: 0L
+                    val remoteTimestamp = remotePayload?.settingsUpdatedAtMs ?: 0L
+
+                    if (remoteTimestamp > localTimestamp) {
+                        remotePayload?.let { payload ->
+                            preferenceManager.restoreFromPayload(payload, isHardReset = false)
+                            log("Settings restored from cloud (remote is newer).")
+                        }
+                    } else {
+                        log("Skipping settings restore (local is newer or equal: local=$localTimestamp, remote=$remoteTimestamp).")
                     }
                 }
 
