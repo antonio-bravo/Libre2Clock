@@ -1,5 +1,60 @@
 # Changelog
 
+## d4572c8 (Sep 10, 2026 18:34:45)
+app optimization — antonio-bravo
+[detail](#d4572c8-details)
+
+<details id='d4572c8-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/local/SectionCacheDatabaseHelper.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseProcessor.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/InsulinProcessor.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/capillary/CapillaryScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/components/DateTimeEntryFields.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/components/HourMinuteInputFields.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsCacheRepository.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/sensor/SensorLogsScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsAdvancedScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsAlertsScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsBatteryScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCalibrationScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsComponents.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsDataScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsDeviceScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEventLogScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsSectionCacheRepository.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+- gradle/wrapper/gradle-wrapper.jar [Modified]
+- gradle/wrapper/gradle-wrapper.properties [Modified]
+- gradlew [Modified]
+</details>
+
+
+---
+## 31eee24 (Sep 09, 2026 22:16:00)
+Update changelog — github-actions[bot]
+[detail](#31eee24-details)
+
+<details id='31eee24-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## ad9a1cf (Sep 10, 2026 00:15:51)
 more fixes — antonio-bravo
 [detail](#ad9a1cf-details)
@@ -699,31 +754,6 @@ add performance metrix — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
 - app/src/main/res/values-es/strings.xml [Modified]
 - app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 66d5c9e (Sep 01, 2026 19:24:10)
-Update changelog — github-actions[bot]
-[detail](#66d5c9e-details)
-
-<details id='66d5c9e-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 134a0bc (Sep 01, 2026 21:23:42)
-fix error — antonio-bravo
-[detail](#134a0bc-details)
-
-<details id='134a0bc-details'>
-<summary>Changed files</summary>
-
-- app/proguard-rules.pro [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseProcessor.kt [Modified]
 </details>
 
 
