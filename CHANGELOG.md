@@ -1,5 +1,40 @@
 # Changelog
 
+## a9d229c (Sep 10, 2026 22:11:42)
+optimization — antonio-bravo
+[detail](#a9d229c-details)
+
+<details id='a9d229c-details'>
+<summary>Changed files</summary>
+
+- .idea/misc.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsCacheRepository.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportSectionCacheRepository.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/LocalDateSerializer.kt [Deleted]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 308e363 (Sep 10, 2026 18:22:34)
+Update changelog — github-actions[bot]
+[detail](#308e363-details)
+
+<details id='308e363-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 5209775 (Sep 10, 2026 20:22:19)
 fix display HbA1c raw(calibrated) — antonio-bravo
 [detail](#5209775-details)
@@ -719,31 +754,6 @@ Improvements — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
 - app/src/main/res/values-es/strings.xml [Modified]
 - app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 96cc8c1 (Sep 04, 2026 07:57:22)
-Update changelog — github-actions[bot]
-[detail](#96cc8c1-details)
-
-<details id='96cc8c1-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## d3002d3 (Sep 04, 2026 09:57:06)
-fix HbA1c after optimization — antonio-bravo
-[detail](#d3002d3-details)
-
-<details id='d3002d3-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsCacheRepository.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
 </details>
 
 
