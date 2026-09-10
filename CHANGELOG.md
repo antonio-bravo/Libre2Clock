@@ -1,5 +1,29 @@
 # Changelog
 
+## 68e912f (Sep 10, 2026 20:05:33)
+add all functions to burger menu — antonio-bravo
+[detail](#68e912f-details)
+
+<details id='68e912f-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+</details>
+
+
+---
+## e1c45a6 (Sep 10, 2026 16:35:01)
+Update changelog — github-actions[bot]
+[detail](#e1c45a6-details)
+
+<details id='e1c45a6-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## d4572c8 (Sep 10, 2026 18:34:45)
 app optimization — antonio-bravo
 [detail](#d4572c8-details)
@@ -726,34 +750,6 @@ improve performance — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
-</details>
-
-
----
-## 09e42cb (Sep 01, 2026 19:43:09)
-Update changelog — github-actions[bot]
-[detail](#09e42cb-details)
-
-<details id='09e42cb-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 2da5626 (Sep 01, 2026 21:42:47)
-add performance metrix — antonio-bravo
-[detail](#2da5626-details)
-
-<details id='2da5626-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/capillary/CapillaryScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
 </details>
 
 
