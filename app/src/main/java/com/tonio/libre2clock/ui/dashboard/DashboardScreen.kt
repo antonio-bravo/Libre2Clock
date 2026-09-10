@@ -52,7 +52,14 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 import kotlin.math.roundToInt
+
+// OPTIMIZACIÓN: Constantes de nivel superior para evitar recreación en cada recomposición
+private val SyncDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault())
+private val ColorPagerActive = Color(0xFF0B57D0)
+private val ColorPagerInactive = Color(0xFFD6DCE5)
+private val TrendColors = arrayOf(Color.Gray, Color.Red, Color.Red, Color.Gray, Color.Green, Color.Green, Color.Gray)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -192,7 +199,6 @@ fun DashboardScreen(
                             capillaryValueText = ""
                             val now = LocalTime.now()
                             capillaryDate = LocalDate.now()
-                            // OPTIMIZACIÓN: padStart es mucho más rápido que String.format
                             capillaryHour = now.hour.toString().padStart(2, '0')
                             capillaryMinute = now.minute.toString().padStart(2, '0')
                             showCapillaryDialog = true
@@ -254,7 +260,7 @@ fun DashboardScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(text = "Trend Graph", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        Text(text = stringResource(R.string.trend_graph), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                         var showGraphMenu by remember { mutableStateOf(false) }
                         Box {
                             TextButton(
@@ -272,7 +278,7 @@ fun DashboardScreen(
                             DropdownMenu(expanded = showGraphMenu, onDismissRequest = { showGraphMenu = false }) {
                                 listOf(1, 2, 7, 14, 30, 90).forEach { days ->
                                     DropdownMenuItem(
-                                        text = { Text("${days} days") },
+                                        text = { Text(stringResource(R.string.days_format, days)) },
                                         onClick = { viewModel.setGraphWindow(days); showGraphMenu = false }
                                     )
                                 }
@@ -332,7 +338,9 @@ fun DashboardScreen(
                     val delta = sensorValue?.let { value - it }
                     val hour = capillaryHour.toIntOrNull() ?: 0
                     val minute = capillaryMinute.toIntOrNull() ?: 0
-                    val timestamp = "%s %02d:%02d".format(
+                    val timestamp = String.format(
+                        Locale.US,
+                        "%s %02d:%02d",
                         capillaryDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
                         hour,
                         minute
@@ -377,7 +385,6 @@ fun InsulinHealthCard(
 
     var nowTick by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) {
-        // OPTIMIZACIÓN: isActive previene fugas de memoria si el composable se destruye
         while (isActive) {
             delay(60_000)
             nowTick = System.currentTimeMillis()
@@ -394,7 +401,6 @@ fun InsulinHealthCard(
     
     val yesterdaySplit = remember(doses) { InsulinProcessor.calculateDailyTotalSplit(doses, yesterday) }
     
-    // OPTIMIZACIÓN: Filtrar las listas UNA SOLA VEZ cuando cambian las dosis, no cada 60s
     val rapidDoses = remember(doses) { doses.filter { it.type == InsulinType.RAPID } }
     val slowDoses = remember(doses) { doses.filter { it.type == InsulinType.SLOW } }
     
@@ -466,17 +472,17 @@ fun InsulinHealthCard(
                     0 -> Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(text = stringResource(R.string.insulin_active_rapid), style = MaterialTheme.typography.labelSmall)
-                            Text(text = "%.2f U".format(rapidIOB), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                            Text(text = String.format(Locale.US, "%.2f U", rapidIOB), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                         }
                         VerticalDivider(modifier = Modifier.height(40.dp).padding(horizontal = 8.dp))
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(text = stringResource(R.string.insulin_active_slow), style = MaterialTheme.typography.labelSmall)
-                            Text(text = "%.2f U".format(slowIOB), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                            Text(text = String.format(Locale.US, "%.2f U", slowIOB), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                         }
                         VerticalDivider(modifier = Modifier.height(40.dp).padding(horizontal = 8.dp))
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(text = "Total IOB", style = MaterialTheme.typography.labelSmall)
-                            Text(text = "%.2f U".format(totalIOB), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                            Text(text = stringResource(R.string.total_iob), style = MaterialTheme.typography.labelSmall)
+                            Text(text = String.format(Locale.US, "%.2f U", totalIOB), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
                             Text(
                                 text = stringResource(R.string.dash_fs_label, currentIsf) + if (manualIsf != null) " (M)" else " (C)",
                                 style = MaterialTheme.typography.labelSmall,
@@ -486,18 +492,18 @@ fun InsulinHealthCard(
                     }
                     1 -> Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(text = "%.1f U".format(yesterdaySplit.total), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                            Text(text = "%.1fR/%.1fS".format(yesterdaySplit.rapid, yesterdaySplit.slow), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f))
+                            Text(text = String.format(Locale.US, "%.1f U", yesterdaySplit.total), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text(text = String.format(Locale.US, "%.1fR/%.1fS", yesterdaySplit.rapid, yesterdaySplit.slow), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f))
                             Text(text = stringResource(R.string.insulin_yesterday), style = MaterialTheme.typography.labelSmall)
                         }
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(text = "%.1f U".format(weekAvg.total), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                            Text(text = "%.1fR/%.1fS".format(weekAvg.rapid, weekAvg.slow), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f))
+                            Text(text = String.format(Locale.US, "%.1f U", weekAvg.total), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text(text = String.format(Locale.US, "%.1fR/%.1fS", weekAvg.rapid, weekAvg.slow), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f))
                             Text(text = stringResource(R.string.insulin_7d_avg), style = MaterialTheme.typography.labelSmall)
                         }
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(text = "%.1f U".format(monthAvg.total), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                            Text(text = "%.1fR/%.1fS".format(monthAvg.rapid, monthAvg.slow), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f))
+                            Text(text = String.format(Locale.US, "%.1f U", monthAvg.total), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text(text = String.format(Locale.US, "%.1fR/%.1fS", monthAvg.rapid, monthAvg.slow), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f))
                             Text(text = stringResource(R.string.insulin_30d_avg), style = MaterialTheme.typography.labelSmall)
                         }
                     }
@@ -595,7 +601,12 @@ fun SensorHealthCard(
                         Spacer(modifier = Modifier.width(8.dp))
                         IconButton(
                             onClick = {
-                                val text = "Sensor SN: ${status.serialNumber}\n${status.startDate}\n${status.expiryDate}\nRemaining: ${status.daysRemaining}"
+                                val text = buildString {
+                                    append("Sensor SN: ").appendLine(status.serialNumber)
+                                    appendLine(status.startDate)
+                                    appendLine(status.expiryDate)
+                                    append("Remaining: ").append(status.daysRemaining)
+                                }
                                 scope.launch {
                                     clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("Sensor Info", text)))
                                 }
@@ -679,7 +690,6 @@ fun SensorHealthCard(
 
 @Composable
 private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetrics) {
-    // OPTIMIZACIÓN: Parsear el tiempo solo una vez cuando cambia la medición
     val measurementInstant = remember(measurement) {
         measurement?.let { m ->
             m.epochSeconds?.let { Instant.ofEpochSecond(it) }
@@ -688,15 +698,16 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
         }
     }
     
-    // Se evalúa dinámicamente para que si el usuario deja la app abierta >15 min, se actualice
+    // OPTIMIZACIÓN: Cacheamos Instant.now() para evitar múltiples llamadas al reloj del sistema
+    val now = remember { Instant.now() }
     val isStale = measurementInstant?.let { instant ->
-        java.time.Duration.between(instant, Instant.now()).toMinutes() > 15
+        java.time.Duration.between(instant, now).toMinutes() > 15
     } ?: false
 
+    // OPTIMIZACIÓN: Usar DateTimeFormatter de nivel superior
     val lastSyncText = remember(measurementInstant) {
         measurementInstant?.let { instant ->
-            val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault())
-            formatter.format(instant)
+            SyncDateFormatter.format(instant)
         } ?: "------ --:--:--"
     }
 
@@ -713,7 +724,7 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
                 verticalAlignment = Alignment.Top
             ) {
                 CornerMetric(
-                    title = "Estimated HbA1c (90d)",
+                    title = stringResource(R.string.estimated_hba1c_90d),
                     primary = metrics.estimatedA1c.primary,
                     secondary = metrics.estimatedA1c.secondary,
                     isStale = isStale,
@@ -721,7 +732,7 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 CornerMetric(
-                    title = "Avg Glucose",
+                    title = stringResource(R.string.avg_glucose),
                     primary = metrics.todayAvg.primary,
                     secondary = metrics.todayAvg.secondary,
                     alignEnd = true,
@@ -739,7 +750,7 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
                     if (isStale) {
                         Surface(color = MaterialTheme.colorScheme.error, shape = RoundedCornerShape(4.dp), modifier = Modifier.padding(bottom = 8.dp)) {
                             Text(
-                                text = "SIGNAL LOST / STALE",
+                                text = stringResource(R.string.signal_lost_stale),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onError,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
@@ -748,7 +759,6 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
                     }
                     
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        // OPTIMIZACIÓN: Evita que AnimatedContent se dispare si el padre se recomponen pero el valor es el mismo
                         val displayValue = remember(measurement) {
                             GlucoseProcessor.formatDualValue(measurement.value, measurement.calibratedValue)
                         }
@@ -833,10 +843,11 @@ private fun DashboardSlidesCard(
     onRefresh: () -> Unit
 ) {
     val pagerState = rememberPagerState(pageCount = { 3 })
+    // OPTIMIZACIÓN: Usar stringResource para i18n
     val pageTitle = when (pagerState.currentPage) {
-        0 -> "Avg Glucose"
-        1 -> "Avg Glucose Last Month"
-        else -> "Hypos Last Month"
+        0 -> stringResource(R.string.avg_glucose)
+        1 -> stringResource(R.string.avg_glucose_last_month)
+        else -> stringResource(R.string.hypos_last_month)
     }
 
     Card(
@@ -858,8 +869,9 @@ private fun DashboardSlidesCard(
                             Box(
                                 modifier = Modifier
                                     .size(8.dp)
+                                    // OPTIMIZACIÓN: Usar constantes de color de nivel superior
                                     .background(
-                                        color = if (active) Color(0xFF0B57D0) else Color(0xFFD6DCE5),
+                                        color = if (active) ColorPagerActive else ColorPagerInactive,
                                         shape = RoundedCornerShape(50)
                                     )
                             )
@@ -870,7 +882,7 @@ private fun DashboardSlidesCard(
                         if (isRefreshing) {
                             CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
                         } else {
-                            Icon(imageVector = Icons.Default.Refresh, contentDescription = "Refresh historical data")
+                            Icon(imageVector = Icons.Default.Refresh, contentDescription = stringResource(R.string.refresh_historical_data))
                         }
                     }
                 }
@@ -884,17 +896,17 @@ private fun DashboardSlidesCard(
                         first = metrics.yesterdayAvg,
                         second = metrics.weekAvg,
                         third = metrics.monthAvg,
-                        firstLabel = "Yesterday",
-                        secondLabel = "Week",
-                        thirdLabel = "Month"
+                        firstLabel = stringResource(R.string.yesterday),
+                        secondLabel = stringResource(R.string.week),
+                        thirdLabel = stringResource(R.string.month)
                     )
                     1 -> MetricsRow(
                         first = metrics.breakfastMonthAvg,
                         second = metrics.lunchMonthAvg,
                         third = metrics.dinnerMonthAvg,
-                        firstLabel = "Breakfast",
-                        secondLabel = "Lunch",
-                        thirdLabel = "Dinner"
+                        firstLabel = stringResource(R.string.breakfast),
+                        secondLabel = stringResource(R.string.lunch),
+                        thirdLabel = stringResource(R.string.dinner)
                     )
                     else -> HyposRow(
                         breakfast = metrics.breakfastHypos,
@@ -930,9 +942,9 @@ private fun HyposRow(
     dinner: CountMetric
 ) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        HypoCell(metric = breakfast, label = "Breakfast", modifier = Modifier.weight(1f))
-        HypoCell(metric = lunch, label = "Lunch", modifier = Modifier.weight(1f))
-        HypoCell(metric = dinner, label = "Dinner", modifier = Modifier.weight(1f))
+        HypoCell(metric = breakfast, label = stringResource(R.string.breakfast), modifier = Modifier.weight(1f))
+        HypoCell(metric = lunch, label = stringResource(R.string.lunch), modifier = Modifier.weight(1f))
+        HypoCell(metric = dinner, label = stringResource(R.string.dinner), modifier = Modifier.weight(1f))
     }
 }
 
@@ -965,13 +977,11 @@ private fun HypoCell(metric: CountMetric, label: String, modifier: Modifier = Mo
     }
 }
 
+// OPTIMIZACIÓN: Acceso directo a array en lugar de when statement
 @Composable
 fun TrendIcon(trend: Int?) {
     val symbol = GlucoseProcessor.getTrendArrowSymbol(trend)
-    val color = when (trend) {
-        1, 2 -> Color.Red
-        4, 5 -> Color.Green
-        else -> Color.Gray
-    }
+    val colorIndex = trend?.coerceIn(0, 6) ?: 0
+    val color = TrendColors[colorIndex]
     Text(text = symbol, color = color, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold)
 }

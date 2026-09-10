@@ -22,6 +22,7 @@
     <string name="insulin_7d_avg">7d Avg</string>
     <string name="insulin_30d_avg">30d Avg</string>
     <string name="insulin_yesterday_total">Yesterday\'s Total: %1$.1f U</string>
+    <string name="total_iob">Total IOB</string>
     <string name="insulin_active_threads">Active Threads: %1$d</string>
 
     <string name="sensor_remaining_days">%1$dd %2$dh %3$dm remaining</string>
@@ -417,6 +418,21 @@
     <string name="cloud_hard_reset_confirm_button">YES, DELETE EVERYTHING</string>
     <string name="cloud_hard_reset_success">Reset completed successfully</string>
     <string name="cloud_hard_reset_error">Error resetting cloud data</string>
+
+    <string name="yesterday">Yesterday</string>
+    <string name="week">Week</string>
+    <string name="month">Month</string>
+    <string name="breakfast">Breakfast</string>
+    <string name="lunch">Lunch</string>
+    <string name="dinner">Dinner</string>
+    <string name="days_format">%1$d days</string>
+    <string name="trend_graph">Trend Graph</string>
+    <string name="avg_glucose_last_month">Avg Glucose (Last Month)</string>
+    <string name="hypos_last_month">Hypos (Last Month)</string>
+    <string name="estimated_hba1c_90d">Est. HbA1c (90d)</string>
+    <string name="avg_glucose">Avg. Glucose</string>
+    <string name="signal_lost_stale">SIGNAL LOST / STALE</string>
+    <string name="refresh_historical_data">Refresh historical data</string>
 
     <!-- Restore Success Messages -->
     <string name="restore_success_merge">Backup restored and merged.</string>

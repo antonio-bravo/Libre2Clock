@@ -22,6 +22,7 @@
     <string name="insulin_7d_avg">Media 7d</string>
     <string name="insulin_30d_avg">Media 30d</string>
     <string name="insulin_yesterday_total">Total Ayer: %1$.1f U</string>
+    <string name="total_iob">IOB Total</string>
     <string name="insulin_active_threads">Hilos Activos: %1$d</string>
 
     <string name="sensor_remaining_days">%1$dd %2$dh %3$dm restantes</string>
@@ -413,6 +414,21 @@
     <string name="cloud_hard_reset_confirm_button">SÍ, BORRAR TODO</string>
     <string name="cloud_hard_reset_success">Reseteo completado con éxito</string>
     <string name="cloud_hard_reset_error">Error al resetear la nube</string>
+
+    <string name="yesterday">Ayer</string>
+    <string name="week">Semana</string>
+    <string name="month">Mes</string>
+    <string name="breakfast">Desayuno</string>
+    <string name="lunch">Comida</string>
+    <string name="dinner">Cena</string>
+    <string name="days_format">%1$d días</string>
+    <string name="trend_graph">Gráfico de Tendencia</string>
+    <string name="avg_glucose_last_month">Glucosa Media (Último Mes)</string>
+    <string name="hypos_last_month">Hipos (Último Mes)</string>
+    <string name="estimated_hba1c_90d">HbA1c Est. (90d)</string>
+    <string name="avg_glucose">Glucosa Media</string>
+    <string name="signal_lost_stale">SEÑAL PERDIDA / ANTIGUO</string>
+    <string name="refresh_historical_data">Actualizar datos históricos</string>
 
     <!-- Restore Success Messages -->
     <string name="restore_success_merge">Copia de seguridad restaurada y fusionada.</string>

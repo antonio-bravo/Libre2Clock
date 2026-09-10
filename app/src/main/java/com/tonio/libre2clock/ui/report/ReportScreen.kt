@@ -32,7 +32,16 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
+
+// OPTIMIZACIÓN: Colores como constantes para evitar asignaciones en cada recomposición/animación
+private val ColorTir = Color(0xFF4CAF50)
+private val ColorTbrLow = Color.Red
+private val ColorTbrVLow = Color(0xFF8B0000)
+private val ColorTarHigh = Color(0xFFFFA500)
+private val ColorTarVHigh = Color(0xFFFF4500)
+private val ColorBgBar = Color.LightGray.copy(alpha = 0.2f)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,12 +61,10 @@ fun ReportScreen(
     val isGenerating by viewModel.isGenerating.collectAsStateWithLifecycle()
     
     var selectedLayout by remember { mutableStateOf(ReportLayout.FULL) }
+    var showDatePicker by remember { mutableStateOf<DatePickerType?>(null) }
 
     val reportFailedMsg = stringResource(R.string.report_failed_generate)
     val shareReportTitle = stringResource(R.string.report_share_chooser)
-
-    var showStartDatePicker by remember { mutableStateOf(false) }
-    var showEndDatePicker by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -110,10 +117,8 @@ fun ReportScreen(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Presets Section
                 PresetsSelector(onSelect = viewModel::setRange)
 
-                // Custom Date Range Section
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
@@ -126,13 +131,13 @@ fun ReportScreen(
                         DateDisplay(
                             label = stringResource(R.string.report_start_date),
                             date = startDate,
-                            onClick = { showStartDatePicker = true },
+                            onClick = { showDatePicker = DatePickerType.START },
                             modifier = Modifier.weight(1f)
                         )
                         DateDisplay(
                             label = stringResource(R.string.report_end_date),
                             date = endDate,
-                            onClick = { showEndDatePicker = true },
+                            onClick = { showDatePicker = DatePickerType.END },
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -144,7 +149,7 @@ fun ReportScreen(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(text = if (useOffset) stringResource(R.string.report_using_calibrated) else stringResource(R.string.report_using_raw))
-                    Switch(checked = useOffset, onCheckedChange = { viewModel.setUseOffsetValues(it) })
+                    Switch(checked = useOffset, onCheckedChange = viewModel::setUseOffsetValues)
                 }
 
                 LayoutSelector(selected = selectedLayout, onSelect = { selectedLayout = it })
@@ -155,7 +160,23 @@ fun ReportScreen(
                 }
 
                 Text(text = stringResource(R.string.report_preview_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                val previewData = remember(dailySummaries) { dailySummaries.flatMap { it.glucose }.take(200) }
+                
+                // OPTIMIZACIÓN CRÍTICA: Evitar flatMap en toda la lista. 
+                // Solo tomamos 200 elementos sin crear listas intermedias gigantes en memoria.
+                val previewData = remember(dailySummaries) {
+                    val result = mutableListOf<com.tonio.libre2clock.data.model.GlucoseMeasurement>()
+                    var count = 0
+                    for (summary in dailySummaries) {
+                        for (g in summary.glucose) {
+                            result.add(g)
+                            count++
+                            if (count >= 200) break
+                        }
+                        if (count >= 200) break
+                    }
+                    result
+                }
+                
                 InteractiveTrendGraph(
                     measurements = previewData,
                     modifier = Modifier.fillMaxWidth().height(250.dp)
@@ -168,46 +189,32 @@ fun ReportScreen(
                 GenerationLoadingDialog()
             }
 
-            if (showStartDatePicker) {
+            // OPTIMIZACIÓN: Diálogo de fecha unificado y limpio
+            showDatePicker?.let { type ->
+                val initialDate = if (type == DatePickerType.START) startDate else endDate
                 val datePickerState = rememberDatePickerState(
-                    initialSelectedDateMillis = startDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                    initialSelectedDateMillis = initialDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
                 )
+                
                 DatePickerDialog(
-                    onDismissRequest = { showStartDatePicker = false },
+                    onDismissRequest = { showDatePicker = null },
                     confirmButton = {
                         TextButton(onClick = {
-                            datePickerState.selectedDateMillis?.let {
-                                val selectedDate = Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
-                                viewModel.setCustomRange(selectedDate, endDate)
+                            datePickerState.selectedDateMillis?.let { millis ->
+                                val selectedDate = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDate()
+                                if (type == DatePickerType.START) {
+                                    viewModel.setCustomRange(selectedDate, endDate)
+                                } else {
+                                    viewModel.setCustomRange(startDate, selectedDate)
+                                }
                             }
-                            showStartDatePicker = false
+                            showDatePicker = null
                         }) { Text(stringResource(android.R.string.ok)) }
                     },
                     dismissButton = {
-                        TextButton(onClick = { showStartDatePicker = false }) { Text(stringResource(android.R.string.cancel)) }
-                    }
-                ) {
-                    DatePicker(state = datePickerState)
-                }
-            }
-
-            if (showEndDatePicker) {
-                val datePickerState = rememberDatePickerState(
-                    initialSelectedDateMillis = endDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-                )
-                DatePickerDialog(
-                    onDismissRequest = { showEndDatePicker = false },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            datePickerState.selectedDateMillis?.let {
-                                val selectedDate = Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate()
-                                viewModel.setCustomRange(startDate, selectedDate)
-                            }
-                            showEndDatePicker = false
-                        }) { Text(stringResource(android.R.string.ok)) }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showEndDatePicker = false }) { Text(stringResource(android.R.string.cancel)) }
+                        TextButton(onClick = { showDatePicker = null }) { 
+                            Text(stringResource(android.R.string.cancel)) 
+                        }
                     }
                 ) {
                     DatePicker(state = datePickerState)
@@ -216,6 +223,9 @@ fun ReportScreen(
         }
     }
 }
+
+// Enum auxiliar para manejar qué fecha se está editando
+private enum class DatePickerType { START, END }
 
 @Composable
 private fun GenerationLoadingDialog() {
@@ -231,10 +241,10 @@ private fun GenerationLoadingDialog() {
                 CircularProgressIndicator()
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(stringResource(R.string.report_generating), style = MaterialTheme.typography.bodyMedium)
-                Text(stringResource(R.string.report_generating_wait), 
+                Text(
+                    stringResource(R.string.report_generating_wait), 
                     style = MaterialTheme.typography.labelSmall, 
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    fontWeight = FontWeight.Normal
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
             }
         }
@@ -242,28 +252,27 @@ private fun GenerationLoadingDialog() {
 }
 
 @Composable
-fun PresetsSelector(onSelect: (ReportRange) -> Unit) {
+private fun PresetsSelector(onSelect: (ReportRange) -> Unit) {
     Column {
         Text(text = stringResource(R.string.report_presets_label), style = MaterialTheme.typography.labelMedium)
-        val ranges = ReportRange.entries
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            ranges.forEach { range ->
-                val label = when (range) {
-                    ReportRange.ONE_DAY -> stringResource(R.string.report_range_1d)
-                    ReportRange.SEVEN_DAYS -> stringResource(R.string.report_range_7d)
-                    ReportRange.FIFTEEN_DAYS -> stringResource(R.string.report_range_15d)
-                    ReportRange.THIRTY_DAYS -> stringResource(R.string.report_range_30d)
-                    ReportRange.NINETY_DAYS -> stringResource(R.string.report_range_90d)
+            ReportRange.entries.forEach { range ->
+                val labelRes = when (range) {
+                    ReportRange.ONE_DAY -> R.string.report_range_1d
+                    ReportRange.SEVEN_DAYS -> R.string.report_range_7d
+                    ReportRange.FIFTEEN_DAYS -> R.string.report_range_15d
+                    ReportRange.THIRTY_DAYS -> R.string.report_range_30d
+                    ReportRange.NINETY_DAYS -> R.string.report_range_90d
                 }
                 OutlinedButton(
                     onClick = { onSelect(range) },
                     modifier = Modifier.weight(1f),
                     contentPadding = PaddingValues(4.dp)
                 ) {
-                    Text(label, maxLines = 1, style = MaterialTheme.typography.labelSmall)
+                    Text(stringResource(labelRes), maxLines = 1, style = MaterialTheme.typography.labelSmall)
                 }
             }
         }
@@ -271,7 +280,7 @@ fun PresetsSelector(onSelect: (ReportRange) -> Unit) {
 }
 
 @Composable
-fun DateDisplay(label: String, date: java.time.LocalDate, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun DateDisplay(label: String, date: LocalDate, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(modifier = modifier.clickable { onClick() }) {
         Text(text = label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
         Text(
@@ -283,7 +292,7 @@ fun DateDisplay(label: String, date: java.time.LocalDate, onClick: () -> Unit, m
 }
 
 @Composable
-fun LayoutSelector(selected: ReportLayout, onSelect: (ReportLayout) -> Unit) {
+private fun LayoutSelector(selected: ReportLayout, onSelect: (ReportLayout) -> Unit) {
     Column {
         Text(text = stringResource(R.string.report_type_label), style = MaterialTheme.typography.labelMedium)
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -295,7 +304,7 @@ fun LayoutSelector(selected: ReportLayout, onSelect: (ReportLayout) -> Unit) {
 }
 
 @Composable
-fun LayoutButton(layout: ReportLayout, label: String, isSelected: Boolean, onSelect: (ReportLayout) -> Unit, modifier: Modifier) {
+private fun LayoutButton(layout: ReportLayout, label: String, isSelected: Boolean, onSelect: (ReportLayout) -> Unit, modifier: Modifier) {
     FilterChip(
         selected = isSelected,
         onClick = { onSelect(layout) },
@@ -305,7 +314,7 @@ fun LayoutButton(layout: ReportLayout, label: String, isSelected: Boolean, onSel
 }
 
 @Composable
-fun GlucoseStatsSection(metrics: ReportMetrics) {
+private fun GlucoseStatsSection(metrics: ReportMetrics) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(text = stringResource(R.string.report_glucose_summary), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -321,7 +330,7 @@ fun GlucoseStatsSection(metrics: ReportMetrics) {
 }
 
 @Composable
-fun InsulinStatsSection(metrics: ReportMetrics) {
+private fun InsulinStatsSection(metrics: ReportMetrics) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(text = stringResource(R.string.report_insulin_stats), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -333,7 +342,7 @@ fun InsulinStatsSection(metrics: ReportMetrics) {
 }
 
 @Composable
-fun MetricRow(label: String, value: String) {
+private fun MetricRow(label: String, value: String) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         Text(text = label, style = MaterialTheme.typography.bodyMedium)
         Text(text = value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
@@ -341,7 +350,7 @@ fun MetricRow(label: String, value: String) {
 }
 
 @Composable
-fun TirBarAdvanced(m: ReportMetrics) {
+private fun TirBarAdvanced(m: ReportMetrics) {
     val tirAnim by animateFloatAsState(targetValue = m.tir.toFloat(), animationSpec = tween(1000), label = "tir")
     val tbrLowAnim by animateFloatAsState(targetValue = m.tbrLow.toFloat(), animationSpec = tween(1000), label = "tbr_low")
     val tbrVLowAnim by animateFloatAsState(targetValue = m.tbrVLow.toFloat(), animationSpec = tween(1000), label = "tbr_vlow")
@@ -354,17 +363,25 @@ fun TirBarAdvanced(m: ReportMetrics) {
             Text(text = "%.0f%%".format(m.tir), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
         }
         
-        Row(modifier = Modifier.fillMaxWidth().height(12.dp).background(Color.LightGray.copy(alpha = 0.2f))) {
-            if (tbrVLowAnim > 0.1f) Box(Modifier.weight(tbrVLowAnim).fillMaxHeight().background(Color(0xFF8B0000)))
-            if (tbrLowAnim > 0.1f) Box(Modifier.weight(tbrLowAnim).fillMaxHeight().background(Color.Red))
-            if (tirAnim > 0.1f) Box(Modifier.weight(tirAnim).fillMaxHeight().background(Color(0xFF4CAF50)))
-            if (tarHighAnim > 0.1f) Box(Modifier.weight(tarHighAnim).fillMaxHeight().background(Color(0xFFFFA500)))
-            if (tarVHighAnim > 0.1f) Box(Modifier.weight(tarVHighAnim).fillMaxHeight().background(Color(0xFFFF4500)))
+        Row(modifier = Modifier.fillMaxWidth().height(12.dp).background(ColorBgBar)) {
+            if (tbrVLowAnim > 0.1f) Box(Modifier.weight(tbrVLowAnim).fillMaxHeight().background(ColorTbrVLow))
+            if (tbrLowAnim > 0.1f) Box(Modifier.weight(tbrLowAnim).fillMaxHeight().background(ColorTbrLow))
+            if (tirAnim > 0.1f) Box(Modifier.weight(tirAnim).fillMaxHeight().background(ColorTir))
+            if (tarHighAnim > 0.1f) Box(Modifier.weight(tarHighAnim).fillMaxHeight().background(ColorTarHigh))
+            if (tarVHighAnim > 0.1f) Box(Modifier.weight(tarVHighAnim).fillMaxHeight().background(ColorTarVHigh))
         }
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(text = stringResource(R.string.report_low_percent, m.tbrLow + m.tbrVLow), style = MaterialTheme.typography.labelSmall, color = Color.Red)
-            Text(text = stringResource(R.string.report_high_percent, m.tarHigh + m.tarVHigh), style = MaterialTheme.typography.labelSmall, color = Color(0xFFFFA500))
+            Text(
+                text = stringResource(R.string.report_low_percent, m.tbrLow + m.tbrVLow), 
+                style = MaterialTheme.typography.labelSmall, 
+                color = ColorTbrLow
+            )
+            Text(
+                text = stringResource(R.string.report_high_percent, m.tarHigh + m.tarVHigh), 
+                style = MaterialTheme.typography.labelSmall, 
+                color = ColorTarHigh
+            )
         }
     }
 }

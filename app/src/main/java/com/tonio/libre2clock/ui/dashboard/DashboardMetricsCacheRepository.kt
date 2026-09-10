@@ -19,7 +19,6 @@ class DashboardMetricsCacheRepository(
 ) {
 
     private val db = SectionCacheDatabaseHelper(context.applicationContext)
-    // Thread-safe purge tracking para evitar purgas redundantes por condiciones de carrera
     private val lastPurgeAtMs = AtomicLong(0L)
 
     suspend fun getOrCompute(
@@ -37,7 +36,6 @@ class DashboardMetricsCacheRepository(
             val cached = db.getCachedPayload(sectionKey, signature)
             if (cached != null) {
                 try {
-                    // try-catch nativo es más rápido que runCatching (evita crear objetos Result/Exception)
                     result = json.decodeFromString<DashboardMetrics>(cached)
                     cacheHit = true
                     return@measureTimeMillis
@@ -51,7 +49,7 @@ class DashboardMetricsCacheRepository(
                 val payload = json.encodeToString(fresh)
                 db.upsertPayload(sectionKey, signature, payload)
             } catch (e: Exception) {
-                // Fallo de escritura en DB: registramos o ignoramos, pero devolvemos los datos frescos
+                // Fallo de escritura en DB: ignoramos para no interrumpir el flujo
             }
             result = fresh
         }
@@ -64,10 +62,8 @@ class DashboardMetricsCacheRepository(
         val now = System.currentTimeMillis()
         val lastPurge = lastPurgeAtMs.get()
         
-        // Chequeo rápido sin bloqueo
         if (now - lastPurge < PURGE_INTERVAL_MS) return
         
-        // Solo una corrutina logrará actualizar el valor y ejecutar la purga
         if (lastPurgeAtMs.compareAndSet(lastPurge, now)) {
             val safeDays = retentionDays.coerceIn(MIN_RETENTION_DAYS, MAX_RETENTION_DAYS)
             val cutoff = now - safeDays * DAY_MS
@@ -77,23 +73,18 @@ class DashboardMetricsCacheRepository(
 
     companion object {
         const val DASHBOARD_SECTION_KEY = "dashboard_metrics_v2"
-        private const val PURGE_INTERVAL_MS = 12L * 60L * 60L * 1000L // 12 horas
+        private const val PURGE_INTERVAL_MS = 12L * 60L * 60L * 1000L
         private const val DAY_MS = 24L * 60L * 60L * 1000L
         private const val MIN_RETENTION_DAYS = 30
         private const val MAX_RETENTION_DAYS = 365
-        private const val HISTORICAL_SIGNATURE_BUCKET_MS = 5L * 60L * 1000L // 5 minutos
+        private const val HISTORICAL_SIGNATURE_BUCKET_MS = 5L * 60L * 1000L
 
-        // Instancia única para evitar sobrecarga de inicialización del serializador
         private val defaultJson = Json {
             ignoreUnknownKeys = true
             encodeDefaults = true
             coerceInputValues = true
         }
 
-        /**
-         * Builds a signature without requiring the full measurements list to avoid expensive DB fetches
-         * when checking for cache hits.
-         */
         fun buildSignatureFast(
             dataVersion: Long,
             capillaries: List<com.tonio.libre2clock.data.model.CapillaryMeasurement>,
@@ -103,25 +94,33 @@ class DashboardMetricsCacheRepository(
             autoAdjust: Boolean = false,
             autoRangeMode: String = "OFF"
         ): String {
+            // OPTIMIZACIÓN: Bucle for explícito para evitar la asignación del iterador de sumOf
             val capSig = if (capillaries.isNotEmpty()) {
-                val hashSum = capillaries.sumOf { it.hashCode().toLong() }
-                "${capillaries.size}-$hashSum-${capillaries.first().timestamp}"
+                var hashSum = 0L
+                for (c in capillaries) {
+                    hashSum += c.hashCode().toLong()
+                }
+                "${capillaries.size}-$hashSum-${capillaries[0].timestamp}"
             } else "no-cap"
 
             val rangeSig = if (ranges.isNotEmpty()) {
-                val sum = ranges.sumOf { it.offset + it.percentage }
+                var sum = 0
+                for (r in ranges) {
+                    sum += r.offset + r.percentage
+                }
                 "${ranges.size}-$sum"
             } else "no-ranges"
 
             val logSig = if (sensorLogs.isNotEmpty()) {
-                val last = sensorLogs.first()
+                val last = sensorLogs[0]
                 "${sensorLogs.size}-${last.serialNumber}-${last.startDate}"
             } else "no-logs"
 
             val timeBucket = System.currentTimeMillis() / HISTORICAL_SIGNATURE_BUCKET_MS
 
-            // Pre-asignación de capacidad (64 chars) para evitar redimensionamientos del StringBuilder
-            return buildString(64) {
+            // OPTIMIZACIÓN: Capacidad aumentada a 128 para garantizar cero redimensionamientos
+            // incluso con timestamps largos o números de serie extensos.
+            return buildString(128) {
                 append("tb=").append(timeBucket)
                 append(";v=").append(dataVersion)
                 append(";cp=").append(capSig)
@@ -136,19 +135,20 @@ class DashboardMetricsCacheRepository(
         fun buildSignature(measurements: List<GlucoseMeasurement>): String {
             if (measurements.isEmpty()) return "empty"
 
-            // OPTIMIZACIÓN: Un solo bucle es más rápido que dos llamadas a sumOf() en listas de 50k elementos
             var rawSum = 0L
             var calibratedSum = 0L
+            
+            // Bucle for explícito para máxima velocidad y cero asignaciones
             for (m in measurements) {
                 rawSum += m.value
                 calibratedSum += m.calibratedValue
             }
 
-            val first = measurements.first()
-            val last = measurements.last()
+            // OPTIMIZACIÓN: Acceso por índice es marginalmente más rápido que .first()/.last()
+            val first = measurements[0]
+            val last = measurements[measurements.size - 1]
 
-            // Pre-asignación de capacidad (48 chars)
-            return buildString(48) {
+            return buildString(64) {
                 append("c=").append(measurements.size)
                 append(";rS=").append(rawSum)
                 append(";cS=").append(calibratedSum)

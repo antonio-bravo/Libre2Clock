@@ -1,6 +1,5 @@
 package com.tonio.libre2clock.ui.dashboard
 
-import android.graphics.Paint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -16,7 +15,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
@@ -34,7 +32,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlin.math.max
 
-private val ORIGINAL_LINE_COLOR = Color.Gray.copy(alpha = 0.5f)
+private val ORIGINAL_LINE_COLOR = Color.Gray.copy(alpha = 0.7f)
 private val CALIBRATED_LINE_COLOR = Color(0xFF00BCD4)
 
 private fun measurementInstant(measurement: GlucoseMeasurement): Instant? {
@@ -43,7 +41,6 @@ private fun measurementInstant(measurement: GlucoseMeasurement): Instant? {
         ?: TimestampParser.parseFlexibleInstant(measurement.factoryTimestamp)
 }
 
-// Clase ligera para mantener el punto pre-calculado normalizado (0.0f a 1.0f)
 private data class NormalizedPoint(
     val relX: Float,
     val relRawY: Float,
@@ -67,8 +64,8 @@ fun InteractiveTrendGraph(
     val scrollState = rememberScrollState()
     var selectedMeasurement by remember { mutableStateOf<GlucoseMeasurement?>(null) }
 
-    // 1. PRE-CÁLCULO PESADO (Solo se ejecuta cuando cambian los datos o el ancho de pantalla)
-    val graphData = remember(measurements, predictedPoints, screenWidth) {
+    // 1. PRE-CÁLCULO EN PÍXELES REALES (Evita distorsión de Stroke por Canvas.scale)
+    val graphData = remember(measurements, predictedPoints, screenWidth, density) {
         val raw = measurements.mapNotNull { m ->
             measurementInstant(m)?.let { it to m }
         }.sortedBy { it.first }
@@ -97,7 +94,16 @@ fun InteractiveTrendGraph(
         
         val totalSeconds = max(1L, lastInstant.epochSecond - firstInstant.epochSecond)
 
-        // Construir Paths normalizados (0.0 a 1.0) para usar Matrix Scale después
+        // Cálculo de dimensiones en píxeles para construir los Paths correctamente
+        // BUGFIX: El ancho debe coincidir con el ancho calculado del Canvas, no solo con el ancho de pantalla
+        val pixelsPerHourPx = (screenWidth.value / 8f) * density.density
+        val totalDurationHours = totalSeconds / 3600.0
+        val totalWidthPx = (totalDurationHours * pixelsPerHourPx).toFloat().coerceAtLeast(screenWidth.value * density.density)
+
+        val totalHeightPx = 220f * density.density
+        val bottomLabelSpacePx = 36f * density.density
+        val plotHeightPx = (totalHeightPx - bottomLabelSpacePx).coerceAtLeast(1f)
+
         val rawPath = Path()
         val calPath = Path()
         val normalizedPoints = ArrayList<NormalizedPoint>(downsampled.size)
@@ -108,37 +114,40 @@ fun InteractiveTrendGraph(
         downsampled.forEach { (instant, measurement) ->
             val currentEpoch = instant.epochSecond
             val relX = ((currentEpoch - firstInstant.epochSecond).toFloat() / totalSeconds).coerceIn(0f, 1f)
+            val x = relX * totalWidthPx
             
             val relRawY = (1f - ((measurement.value - minGlucose) / range)).coerceIn(0f, 1f)
+            val rawY = relRawY * plotHeightPx
+            
             val relCalY = (1f - ((measurement.calibratedValue - minGlucose) / range)).coerceIn(0f, 1f)
+            val calY = relCalY * plotHeightPx
 
             normalizedPoints.add(NormalizedPoint(relX, relRawY, relCalY, currentEpoch, measurement))
 
             val isGap = !isFirstPoint && (currentEpoch - lastProcessedEpoch) > 900
 
             if (isFirstPoint || isGap) {
-                rawPath.moveTo(relX, relRawY)
-                calPath.moveTo(relX, relCalY)
+                rawPath.moveTo(x, rawY)
+                calPath.moveTo(x, calY)
                 isFirstPoint = false
             } else {
-                rawPath.lineTo(relX, relRawY)
-                calPath.lineTo(relX, relCalY)
+                rawPath.lineTo(x, rawY)
+                calPath.lineTo(x, calY)
             }
             lastProcessedEpoch = currentEpoch
         }
 
-        // Path de predicción normalizado
         val predPath = if (predictedPoints.isNotEmpty()) {
             val path = Path()
-            val startPoint = downsampled.last()
-            val startRelX = ((startPoint.first.epochSecond - firstInstant.epochSecond).toFloat() / totalSeconds).coerceIn(0f, 1f)
-            val startRelY = (1f - ((startPoint.second.calibratedValue - minGlucose) / range)).coerceIn(0f, 1f)
-            path.moveTo(startRelX, startRelY)
+            val lastDataPoint = downsampled.last()
+            val startRelX = ((lastDataPoint.first.epochSecond - firstInstant.epochSecond).toFloat() / totalSeconds).coerceIn(0f, 1f)
+            val startRelY = (1f - ((lastDataPoint.second.calibratedValue - minGlucose) / range)).coerceIn(0f, 1f)
+            path.moveTo(startRelX * totalWidthPx, startRelY * plotHeightPx)
 
             predictedPoints.forEach { (instant, value) ->
                 val relX = ((instant.epochSecond - firstInstant.epochSecond).toFloat() / totalSeconds).coerceIn(0f, 1f)
                 val relY = (1f - ((value - minGlucose) / range)).coerceIn(0f, 1f)
-                path.lineTo(relX, relY)
+                path.lineTo(relX * totalWidthPx, relY * plotHeightPx)
             }
             path
         } else null
@@ -148,7 +157,8 @@ fun InteractiveTrendGraph(
 
     if (graphData == null) {
         Card(modifier = modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
-            Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
+            // OPTIMIZACIÓN: Altura consistente de 220.dp para evitar saltos de layout
+            Box(modifier = Modifier.fillMaxWidth().height(220.dp), contentAlignment = Alignment.Center) {
                 Text("No data available", style = MaterialTheme.typography.bodyMedium)
             }
         }
@@ -159,29 +169,27 @@ fun InteractiveTrendGraph(
     val totalDurationHours = graphData.totalSeconds / 3600.0
     val graphWidth = (totalDurationHours * pixelsPerHour.value).dp.coerceAtLeast(screenWidth)
 
-    // Auto-scroll suave al final solo si el usuario no está interactuando activamente
     LaunchedEffect(graphData.normalizedPoints.size) {
         if (!scrollState.isScrollInProgress) {
             scrollState.animateScrollTo(scrollState.maxValue)
         }
     }
 
-    // 2. REUTILIZACIÓN DE OBJETOS GRÁFICOS
     val tickPaint = remember(density) {
-        Paint().apply {
+        android.graphics.Paint().apply {
             color = android.graphics.Color.GRAY
             alpha = 100
             textSize = with(density) { 10.sp.toPx() }
-            textAlign = Paint.Align.LEFT
+            textAlign = android.graphics.Paint.Align.LEFT
             isAntiAlias = true
         }
     }
 
     val labelPaint = remember(density) {
-        Paint().apply {
+        android.graphics.Paint().apply {
             color = android.graphics.Color.GRAY
             textSize = with(density) { 11.sp.toPx() }
-            textAlign = Paint.Align.CENTER
+            textAlign = android.graphics.Paint.Align.CENTER
             isAntiAlias = true
         }
     }
@@ -229,7 +237,7 @@ fun InteractiveTrendGraph(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(220.dp) // Altura fija para evitar saltos de layout
+                    .height(220.dp)
                     .horizontalScroll(scrollState)
             ) {
                 Canvas(
@@ -238,7 +246,6 @@ fun InteractiveTrendGraph(
                         .fillMaxHeight()
                         .pointerInput(graphData) {
                             detectTapGestures { offset ->
-                                // OPTIMIZACIÓN CRÍTICA: Búsqueda O(1) en lugar de minByOrNull O(N)
                                 val tapRatio = (offset.x / size.width).coerceIn(0f, 1f)
                                 val targetIndex = (tapRatio * (graphData.normalizedPoints.size - 1)).toInt().coerceIn(0, graphData.normalizedPoints.size - 1)
                                 selectedMeasurement = graphData.normalizedPoints[targetIndex].measurement
@@ -250,55 +257,54 @@ fun InteractiveTrendGraph(
                     val bottomLabelSpace = with(density) { 36.dp.toPx() }
                     val plotHeight = (height - bottomLabelSpace).coerceAtLeast(1f)
 
-                    // 3. DIBUJO ULTRARRÁPIDO CON MATRIX SCALE
-                    // En lugar de iterar y llamar a lineTo(), escalamos el Path pre-calculado (0..1) al tamaño real.
-                    this.scale(scaleX = width, scaleY = plotHeight, pivot = Offset.Zero) {
-                        // Líneas de referencia (Target Range) también normalizadas (Y: 70 y 180 de 50-350)
-                        // 70 -> 1 - ((70-50)/300) = 0.933f
-                        // 180 -> 1 - ((180-50)/300) = 0.566f
-                        drawLine(
-                            color = Color.Red.copy(alpha = 0.3f),
-                            start = Offset(0f, 0.933f),
-                            end = Offset(1f, 0.933f),
-                            strokeWidth = 1f / width // Compensar el scale para mantener 1dp real
-                        )
-                        drawLine(
-                            color = Color.Green.copy(alpha = 0.3f),
-                            start = Offset(0f, 0.566f),
-                            end = Offset(1f, 0.566f),
-                            strokeWidth = 1f / width
-                        )
+                    // 2. DIBUJO DIRECTO SIN SCALE (Grosor de línea 100% preciso)
+                    val y70 = (1f - ((70f - 50f) / 300f)) * plotHeight
+                    val y180 = (1f - ((180f - 50f) / 300f)) * plotHeight
+                    
+                    drawLine(
+                        color = Color.Red.copy(alpha = 0.3f),
+                        start = Offset(0f, y70),
+                        end = Offset(width, y70),
+                        strokeWidth = 1.dp.toPx()
+                    )
+                    drawLine(
+                        color = Color.Green.copy(alpha = 0.3f),
+                        start = Offset(0f, y180),
+                        end = Offset(width, y180),
+                        strokeWidth = 1.dp.toPx()
+                    )
 
-                        drawPath(
-                            path = graphData.rawPath,
-                            color = ORIGINAL_LINE_COLOR,
-                            style = Stroke(width = 2f / width)
-                        )
-                        drawPath(
-                            path = graphData.calPath,
-                            color = CALIBRATED_LINE_COLOR,
-                            style = Stroke(width = 4f / width)
-                        )
+                    drawPath(
+                        path = graphData.rawPath,
+                        color = ORIGINAL_LINE_COLOR,
+                        style = Stroke(width = 1.5.dp.toPx())
+                    )
+                    drawPath(
+                        path = graphData.calPath,
+                        color = CALIBRATED_LINE_COLOR,
+                        style = Stroke(width = 2.5.dp.toPx())
+                    )
 
-                        if (graphData.predPath != null) {
-                            drawPath(
-                                path = graphData.predPath,
-                                color = CALIBRATED_LINE_COLOR.copy(alpha = 0.6f),
-                                style = Stroke(
-                                    width = 3f / width,
-                                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f / width, 10f / width), 0f)
+                    if (graphData.predPath != null) {
+                        drawPath(
+                            path = graphData.predPath,
+                            color = CALIBRATED_LINE_COLOR.copy(alpha = 0.6f),
+                            style = Stroke(
+                                width = 2.dp.toPx(),
+                                pathEffect = PathEffect.dashPathEffect(
+                                    floatArrayOf(8.dp.toPx(), 8.dp.toPx()), 
+                                    0f
                                 )
                             )
-                        }
+                        )
                     }
 
-                    // 4. ETIQUETAS (Solo se dibujan una vez por eje, no en bucles redundantes)
+                    // 3. ETIQUETAS Y GRID
                     val tickValues = listOf(50, 100, 150, 200, 250, 300, 350)
                     tickValues.forEach { value ->
                         val relY = (1f - ((value - 50f) / 300f)).coerceIn(0f, 1f)
                         val y = relY * plotHeight
                         
-                        // Grid line
                         drawLine(
                             color = Color.Gray.copy(alpha = 0.15f), 
                             start = Offset(0f, y), 
@@ -306,7 +312,6 @@ fun InteractiveTrendGraph(
                             strokeWidth = 0.5.dp.toPx()
                         )
                         
-                        // Etiqueta Y (Solo una vez a la izquierda, no repetida a lo largo del ancho)
                         drawContext.canvas.nativeCanvas.drawText(
                             value.toString(), 
                             4.dp.toPx(), 
@@ -315,8 +320,7 @@ fun InteractiveTrendGraph(
                         )
                     }
 
-                    // Etiquetas de Tiempo (Eje X)
-                    val intervalSeconds = 3L * 60L * 60L // 3 horas
+                    val intervalSeconds = 3L * 60L * 60L
                     val startDateTime = LocalDateTime.ofInstant(graphData.firstInstant, zone)
                     val alignedStartHour = (startDateTime.hour / 3) * 3
                     
@@ -330,7 +334,6 @@ fun InteractiveTrendGraph(
                         val relX = ((cursor.epochSecond - graphData.firstInstant.epochSecond).toFloat() / graphData.totalSeconds).coerceIn(0f, 1f)
                         val x = relX * width
                         
-                        // Línea vertical de grid
                         drawLine(
                             color = Color.Gray.copy(alpha = 0.15f), 
                             start = Offset(x, 0f), 
@@ -359,7 +362,6 @@ fun InteractiveTrendGraph(
     }
 }
 
-// Clase de datos inmutable para agrupar el estado pre-calculado del gráfico
 private data class GraphData(
     val normalizedPoints: List<NormalizedPoint>,
     val rawPath: Path,

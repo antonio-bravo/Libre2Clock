@@ -39,12 +39,8 @@ data class DashboardMetrics(
     val dinnerHypos: CountMetric
 )
 
-enum class MealSlot { BREAKFAST, LUNCH, DINNER }
-
 object DashboardMetricsCalculator {
 
-    // Delegamos a la función principal optimizada. 
-    // Al ser O(N) de paso único, es tan rápida que no vale la pena mantener lógica duplicada.
     fun calculateLive(measurements: List<GlucoseMeasurement>): DashboardMetrics {
         return calculate(measurements)
     }
@@ -75,26 +71,26 @@ object DashboardMetricsCalculator {
         val monthStartDate = startOfMonth.atZone(zone).toLocalDate()
         val a1cStartDate = startOfA1c.atZone(zone).toLocalDate()
 
-        // Único mapa para agrupar estadísticas por día (evita múltiples groupBy)
         val allDailyStats = mutableMapOf<LocalDate, DailyStats>()
         
-        // Contadores específicos para hipos por comida (solo mes)
         var breakfastHypoCal = 0; var breakfastHypoRaw = 0
         var lunchHypoCal = 0; var lunchHypoRaw = 0
         var dinnerHypoCal = 0; var dinnerHypoRaw = 0
 
         // PASO ÚNICO (O(N)): Procesamos cada medición una sola vez
         for (m in measurements) {
-            if (m.value <= 40) continue // Filtrar fallos de sensor
+            if (m.value <= 40) continue
             
             val instant = parseMeasurementInstant(m) ?: continue
-            val date = instant.atZone(zone).toLocalDate()
+            
+            // OPTIMIZACIÓN: Llamamos a atZone una sola vez y reutilizamos el resultado
+            val zdt = instant.atZone(zone)
+            val date = zdt.toLocalDate()
             
             val stats = allDailyStats.getOrPut(date) { DailyStats() }
             val raw = m.value.toDouble()
             val cal = m.calibratedValue.toDouble()
             
-            // Acumular estadísticas diarias
             stats.sumRaw += raw
             stats.sumCal += cal
             stats.count++
@@ -103,70 +99,92 @@ object DashboardMetricsCalculator {
             if (cal > stats.maxCal) stats.maxCal = cal
             if (cal < stats.minCal) stats.minCal = cal
 
-            // Contar hipos por comida (solo si está dentro de la ventana mensual)
             if (!instant.isBefore(startOfMonth)) {
-                val hour = instant.atZone(zone).toLocalTime().hour
+                val hour = zdt.hour
                 val isHypoCal = cal < 70.0
                 val isHypoRaw = raw < 70.0
                 
-                when {
-                    hour in 5..11 -> {
-                        if (isHypoCal) breakfastHypoCal++
-                        if (isHypoRaw) breakfastHypoRaw++
-                    }
-                    hour in 12..16 -> {
-                        if (isHypoCal) lunchHypoCal++
-                        if (isHypoRaw) lunchHypoRaw++
-                    }
-                    hour >= 17 -> {
-                        if (isHypoCal) dinnerHypoCal++
-                        if (isHypoRaw) dinnerHypoRaw++
-                    }
+                // OPTIMIZACIÓN: if-else if plano es más rápido que 'when' para rangos numéricos
+                if (hour in 5..11) {
+                    if (isHypoCal) breakfastHypoCal++
+                    if (isHypoRaw) breakfastHypoRaw++
+                } else if (hour in 12..16) {
+                    if (isHypoCal) lunchHypoCal++
+                    if (isHypoRaw) lunchHypoRaw++
+                } else if (hour >= 17) {
+                    if (isHypoCal) dinnerHypoCal++
+                    if (isHypoRaw) dinnerHypoRaw++
                 }
             }
         }
 
-        // Función helper para calcular métricas a partir de un subconjunto de días
+        // OPTIMIZACIÓN: Cero asignaciones de memoria. Acumulamos en variables primitivas
+        // en lugar de usar filterKeys + map + average + maxOfOrNull + minOfOrNull
         fun buildMetricFromDays(datePredicate: (LocalDate) -> Boolean): DisplayMetric {
-            val matchingDays = allDailyStats.filterKeys { datePredicate(it) }.values
-            if (matchingDays.isEmpty()) return DisplayMetric("--", "")
+            var sumRaw = 0.0
+            var sumCal = 0.0
+            var count = 0
+            var maxRaw = 0.0
+            var minRaw = Double.MAX_VALUE
+            var maxCal = 0.0
+            var minCal = Double.MAX_VALUE
 
-            // Promedio de los promedios diarios (evita sesgo por días con más mediciones)
-            val avgOfDailyAvgsRaw = matchingDays.map { it.sumRaw / it.count }.average()
-            val avgOfDailyAvgsCal = matchingDays.map { it.sumCal / it.count }.average()
-            
-            // Oscilación basada en los extremos globales de los días coincidentes
-            val maxRaw = matchingDays.maxOfOrNull { it.maxRaw } ?: 0.0
-            val minRaw = matchingDays.minOfOrNull { it.minRaw } ?: 0.0
-            val maxCal = matchingDays.maxOfOrNull { it.maxCal } ?: 0.0
-            val minCal = matchingDays.minOfOrNull { it.minCal } ?: 0.0
-            
-            val avgRawInt = avgOfDailyAvgsRaw.roundToInt()
-            val avgCalInt = avgOfDailyAvgsCal.roundToInt()
-            
-            val oscRaw = max(maxRaw.roundToInt() - avgRawInt, avgRawInt - minRaw.roundToInt()).coerceAtLeast(0)
-            val oscCal = max(maxCal.roundToInt() - avgCalInt, avgCalInt - minCal.roundToInt()).coerceAtLeast(0)
+            for ((date, stats) in allDailyStats) {
+                if (datePredicate(date)) {
+                    count++
+                    sumRaw += stats.sumRaw / stats.count
+                    sumCal += stats.sumCal / stats.count
+                    if (stats.maxRaw > maxRaw) maxRaw = stats.maxRaw
+                    if (stats.minRaw < minRaw) minRaw = stats.minRaw
+                    if (stats.maxCal > maxCal) maxCal = stats.maxCal
+                    if (stats.minCal < minCal) minCal = stats.minCal
+                }
+            }
 
-            return DisplayMetric("$avgRawInt ± $oscRaw ($avgCalInt ± $oscCal)", "")
+            if (count == 0) return DisplayMetric("--", "")
+
+            val avgRaw = (sumRaw / count).roundToInt()
+            val avgCal = (sumCal / count).roundToInt()
+            
+            val oscRaw = max(maxRaw.roundToInt() - avgRaw, avgRaw - minRaw.roundToInt()).coerceAtLeast(0)
+            val oscCal = max(maxCal.roundToInt() - avgCal, avgCal - minCal.roundToInt()).coerceAtLeast(0)
+
+            return DisplayMetric("$avgRaw ± $oscRaw ($avgCal ± $oscCal)", "")
         }
 
-        // 1. Cálculo de A1c (requiere lógica específica)
-        val a1cDays = allDailyStats.filterKeys { it >= a1cStartDate }.values
-        val avgRawForA1c = if (a1cDays.isNotEmpty()) a1cDays.map { it.sumRaw / it.count }.average() else 0.0
-        val avgCalForA1c = if (a1cDays.isNotEmpty()) a1cDays.map { it.sumCal / it.count }.average() else 0.0
-        
-        val estimatedA1c = if (avgCalForA1c > 40.0 && a1cDays.sumOf { it.count } > 100) { 
-            val a1cRaw = (avgRawForA1c + 46.7) / 28.7
-            val a1cCalibrated = (avgCalForA1c + 46.7) / 28.7
-            DisplayMetric(
-                primary = String.format(Locale.US, "%.1f%% (%.1f%%)", a1cRaw, a1cCalibrated),
-                secondary = ""
-            )
+        // OPTIMIZACIÓN: Cálculo de A1c en una sola pasada sin colecciones intermedias
+        var a1cSumRaw = 0.0
+        var a1cSumCal = 0.0
+        var a1cDaysCount = 0
+        var a1cTotalMeasurements = 0
+
+        for ((date, stats) in allDailyStats) {
+            if (date >= a1cStartDate) {
+                a1cDaysCount++
+                a1cSumRaw += stats.sumRaw / stats.count
+                a1cSumCal += stats.sumCal / stats.count
+                a1cTotalMeasurements += stats.count
+            }
+        }
+
+        val estimatedA1c = if (a1cDaysCount > 0 && a1cTotalMeasurements > 100) {
+            val avgRawForA1c = a1cSumRaw / a1cDaysCount
+            val avgCalForA1c = a1cSumCal / a1cDaysCount
+            
+            if (avgCalForA1c > 40.0) {
+                val a1cRaw = (avgRawForA1c + 46.7) / 28.7
+                val a1cCalibrated = (avgCalForA1c + 46.7) / 28.7
+                DisplayMetric(
+                    primary = String.format(Locale.US, "%.1f%% (%.1f%%)", a1cRaw, a1cCalibrated),
+                    secondary = ""
+                )
+            } else {
+                DisplayMetric("--", "")
+            }
         } else {
             DisplayMetric("--", "")
         }
 
-        // 2. Construcción del objeto final usando el helper optimizado
         return DashboardMetrics(
             estimatedA1c = estimatedA1c,
             todayAvg = buildMetricFromDays { it == todayDate },
@@ -174,7 +192,7 @@ object DashboardMetricsCalculator {
             weekAvg = buildMetricFromDays { it >= weekStartDate },
             monthAvg = buildMetricFromDays { it >= monthStartDate },
             quarterAvg = buildMetricFromDays { it >= a1cStartDate },
-            breakfastMonthAvg = buildMetricFromDays { it >= monthStartDate }, // Mismo filtro, los datos ya están en el mapa
+            breakfastMonthAvg = buildMetricFromDays { it >= monthStartDate },
             lunchMonthAvg = buildMetricFromDays { it >= monthStartDate },
             dinnerMonthAvg = buildMetricFromDays { it >= monthStartDate },
             breakfastHypos = CountMetric(breakfastHypoCal, breakfastHypoCal - breakfastHypoRaw),
