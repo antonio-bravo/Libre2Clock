@@ -1,5 +1,34 @@
 # Changelog
 
+## bc41467 (Sep 11, 2026 15:11:00)
+more fixes — antonio-bravo
+[detail](#bc41467-details)
+
+<details id='bc41467-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsAdvancedScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 0511821 (Sep 11, 2026 09:24:01)
+Update changelog — github-actions[bot]
+[detail](#0511821-details)
+
+<details id='0511821-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## f67e08d (Sep 11, 2026 11:23:44)
 fix trend graph alignment on Y — antonio-bravo
 [detail](#f67e08d-details)
@@ -676,34 +705,6 @@ Update changelog — github-actions[bot]
 [detail](#e993d19-details)
 
 <details id='e993d19-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 1f4f37d (Sep 09, 2026 00:47:33)
-Authentication Manager — antonio-bravo
-[detail](#1f4f37d-details)
-
-<details id='1f4f37d-details'>
-<summary>Changed files</summary>
-
-- app/proguard-rules.pro [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/sync/AuthManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsDataScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-</details>
-
-
----
-## 2f1c84c (Sep 08, 2026 22:31:01)
-Update changelog — github-actions[bot]
-[detail](#2f1c84c-details)
-
-<details id='2f1c84c-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
