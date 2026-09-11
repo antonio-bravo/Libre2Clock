@@ -290,7 +290,7 @@ fun DashboardScreen(
                     InteractiveTrendGraph(
                         measurements = graphData,
                         predictedPoints = predictedPoints,
-                        modifier = Modifier.fillMaxWidth().height(230.dp)
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }

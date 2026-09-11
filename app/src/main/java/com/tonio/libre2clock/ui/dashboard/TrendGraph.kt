@@ -95,14 +95,14 @@ fun InteractiveTrendGraph(
         val totalSeconds = max(1L, lastInstant.epochSecond - firstInstant.epochSecond)
 
         // Cálculo de dimensiones en píxeles para construir los Paths correctamente
-        // BUGFIX: El ancho debe coincidir con el ancho calculado del Canvas, no solo con el ancho de pantalla
-        val pixelsPerHourPx = (screenWidth.value / 8f) * density.density
+        val pixelsPerHourPx = with(density) { (screenWidth.value / 8f).dp.toPx() }
         val totalDurationHours = totalSeconds / 3600.0
-        val totalWidthPx = (totalDurationHours * pixelsPerHourPx).toFloat().coerceAtLeast(screenWidth.value * density.density)
+        val totalWidthPx = (totalDurationHours * pixelsPerHourPx).toFloat().coerceAtLeast(with(density) { screenWidth.toPx() })
 
-        val totalHeightPx = 220f * density.density
-        val bottomLabelSpacePx = 36f * density.density
-        val plotHeightPx = (totalHeightPx - bottomLabelSpacePx).coerceAtLeast(1f)
+        val totalHeightPx = with(density) { 220.dp.toPx() }
+        val topPaddingPx = with(density) { 16.dp.toPx() }
+        val bottomLabelSpacePx = with(density) { 36.dp.toPx() }
+        val plotHeightPx = (totalHeightPx - bottomLabelSpacePx - topPaddingPx).coerceAtLeast(1f)
 
         val rawPath = Path()
         val calPath = Path()
@@ -117,10 +117,10 @@ fun InteractiveTrendGraph(
             val x = relX * totalWidthPx
             
             val relRawY = (1f - ((measurement.value - minGlucose) / range)).coerceIn(0f, 1f)
-            val rawY = relRawY * plotHeightPx
+            val rawY = topPaddingPx + (relRawY * plotHeightPx)
             
             val relCalY = (1f - ((measurement.calibratedValue - minGlucose) / range)).coerceIn(0f, 1f)
-            val calY = relCalY * plotHeightPx
+            val calY = topPaddingPx + (relCalY * plotHeightPx)
 
             normalizedPoints.add(NormalizedPoint(relX, relRawY, relCalY, currentEpoch, measurement))
 
@@ -142,12 +142,12 @@ fun InteractiveTrendGraph(
             val lastDataPoint = downsampled.last()
             val startRelX = ((lastDataPoint.first.epochSecond - firstInstant.epochSecond).toFloat() / totalSeconds).coerceIn(0f, 1f)
             val startRelY = (1f - ((lastDataPoint.second.calibratedValue - minGlucose) / range)).coerceIn(0f, 1f)
-            path.moveTo(startRelX * totalWidthPx, startRelY * plotHeightPx)
+            path.moveTo(startRelX * totalWidthPx, topPaddingPx + (startRelY * plotHeightPx))
 
             predictedPoints.forEach { (instant, value) ->
                 val relX = ((instant.epochSecond - firstInstant.epochSecond).toFloat() / totalSeconds).coerceIn(0f, 1f)
                 val relY = (1f - ((value - minGlucose) / range)).coerceIn(0f, 1f)
-                path.lineTo(relX * totalWidthPx, relY * plotHeightPx)
+                path.lineTo(relX * totalWidthPx, topPaddingPx + (relY * plotHeightPx))
             }
             path
         } else null
@@ -254,12 +254,13 @@ fun InteractiveTrendGraph(
                 ) {
                     val width = size.width
                     val height = size.height
-                    val bottomLabelSpace = with(density) { 36.dp.toPx() }
-                    val plotHeight = (height - bottomLabelSpace).coerceAtLeast(1f)
+                    val topPadding = 16.dp.toPx()
+                    val bottomLabelSpace = 36.dp.toPx()
+                    val plotHeight = (height - bottomLabelSpace - topPadding).coerceAtLeast(1f)
 
                     // 2. DIBUJO DIRECTO SIN SCALE (Grosor de línea 100% preciso)
-                    val y70 = (1f - ((70f - 50f) / 300f)) * plotHeight
-                    val y180 = (1f - ((180f - 50f) / 300f)) * plotHeight
+                    val y70 = topPadding + (1f - ((70f - 50f) / 300f)) * plotHeight
+                    val y180 = topPadding + (1f - ((180f - 50f) / 300f)) * plotHeight
                     
                     drawLine(
                         color = Color.Red.copy(alpha = 0.3f),
@@ -303,7 +304,7 @@ fun InteractiveTrendGraph(
                     val tickValues = listOf(50, 100, 150, 200, 250, 300, 350)
                     tickValues.forEach { value ->
                         val relY = (1f - ((value - 50f) / 300f)).coerceIn(0f, 1f)
-                        val y = relY * plotHeight
+                        val y = topPadding + (relY * plotHeight)
                         
                         drawLine(
                             color = Color.Gray.copy(alpha = 0.15f), 
@@ -336,8 +337,8 @@ fun InteractiveTrendGraph(
                         
                         drawLine(
                             color = Color.Gray.copy(alpha = 0.15f), 
-                            start = Offset(x, 0f), 
-                            end = Offset(x, plotHeight), 
+                            start = Offset(x, topPadding), 
+                            end = Offset(x, topPadding + plotHeight), 
                             strokeWidth = 0.5.dp.toPx()
                         )
 
@@ -346,12 +347,12 @@ fun InteractiveTrendGraph(
                         
                         if (showDate) {
                             val dateStr = dateFmt.format(java.util.Date.from(cursor))
-                            drawContext.canvas.nativeCanvas.drawText(dateStr, x, plotHeight + 14.dp.toPx(), labelPaint)
+                            drawContext.canvas.nativeCanvas.drawText(dateStr, x, topPadding + plotHeight + 14.dp.toPx(), labelPaint)
                         }
                         drawContext.canvas.nativeCanvas.drawText(
                             hourFormatter.format(localDateTime), 
                             x, 
-                            plotHeight + 28.dp.toPx(), 
+                            topPadding + plotHeight + 28.dp.toPx(), 
                             labelPaint
                         )
                         cursor = cursor.plusSeconds(intervalSeconds)
