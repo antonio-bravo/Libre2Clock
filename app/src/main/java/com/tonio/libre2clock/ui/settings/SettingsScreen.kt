@@ -167,7 +167,7 @@ fun SettingsScreen(
                             com.tonio.libre2clock.BuildConfig.VERSION_NAME,
                             com.tonio.libre2clock.BuildConfig.VERSION_CODE
                         ),
-                        style = MaterialTheme.typography.labelSmall,
+                        style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                     )
                 }
