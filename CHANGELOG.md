@@ -1,5 +1,29 @@
 # Changelog
 
+## ca1c0ca (Sep 11, 2026 10:23:19)
+increase font size for app version — antonio-bravo
+[detail](#ca1c0ca-details)
+
+<details id='ca1c0ca-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
+</details>
+
+
+---
+## 38cdf2d (Sep 10, 2026 20:35:46)
+Update changelog — github-actions[bot]
+[detail](#38cdf2d-details)
+
+<details id='38cdf2d-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 173fd2c (Sep 10, 2026 22:35:32)
 add app version — antonio-bravo
 [detail](#173fd2c-details)
@@ -690,32 +714,6 @@ fix secrets — antonio-bravo
 
 - .github/workflows/build-release.yml [Modified]
 - app/build.gradle.kts [Modified]
-</details>
-
-
----
-## 7b7175f (Sep 08, 2026 21:59:10)
-Update changelog — github-actions[bot]
-[detail](#7b7175f-details)
-
-<details id='7b7175f-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 4cee6a4 (Sep 08, 2026 23:58:58)
-Fix workflow and some commands deprecated — antonio-bravo
-[detail](#4cee6a4-details)
-
-<details id='4cee6a4-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/build-release.yml [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
 </details>
 
 
