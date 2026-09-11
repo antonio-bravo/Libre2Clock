@@ -167,12 +167,12 @@ private fun EventLogItem(
     formatTimestamp: (Long) -> String,
     onClick: () -> Unit
 ) {
-    // OPTIMIZACIÓN: El color se calcula una vez por item
+    // OPTIMIZACIÓN: El color se calcula una vez por item.
+    // Al cubrir todos los casos del enum, 'else' no es necesario.
     val color = when (event.level) {
         LogLevel.ERROR -> MaterialTheme.colorScheme.error
         LogLevel.WARNING -> Color(0xFFFFA500) // Naranja para warnings
         LogLevel.INFO -> MaterialTheme.colorScheme.primary
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
 
     // OPTIMIZACIÓN: Evita formatear la fecha en cada recomposición
