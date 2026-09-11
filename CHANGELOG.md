@@ -1,5 +1,30 @@
 # Changelog
 
+## 362422a (Sep 11, 2026 10:36:14)
+optimize Cloud Sync — antonio-bravo
+[detail](#362422a-details)
+
+<details id='362422a-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/local/GlucoseHistoryDatabaseHelper.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
+</details>
+
+
+---
+## 824e116 (Sep 11, 2026 08:23:41)
+Update changelog — github-actions[bot]
+[detail](#824e116-details)
+
+<details id='824e116-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## ca1c0ca (Sep 11, 2026 10:23:19)
 increase font size for app version — antonio-bravo
 [detail](#ca1c0ca-details)
@@ -689,31 +714,6 @@ fix language — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-</details>
-
-
----
-## a8a3da7 (Sep 08, 2026 22:11:02)
-Update changelog — github-actions[bot]
-[detail](#a8a3da7-details)
-
-<details id='a8a3da7-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 06191e1 (Sep 09, 2026 00:10:45)
-fix secrets — antonio-bravo
-[detail](#06191e1-details)
-
-<details id='06191e1-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/build-release.yml [Modified]
-- app/build.gradle.kts [Modified]
 </details>
 
 
