@@ -1,5 +1,29 @@
 # Changelog
 
+## a75343d (Sep 11, 2026 15:21:48)
+fix SettingsEventLogScreen.kt:175:9 'when' is exhaustive so 'else' is redundant here. — antonio-bravo
+[detail](#a75343d-details)
+
+<details id='a75343d-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEventLogScreen.kt [Modified]
+</details>
+
+
+---
+## a7cb37d (Sep 11, 2026 13:11:12)
+Update changelog — github-actions[bot]
+[detail](#a7cb37d-details)
+
+<details id='a7cb37d-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## bc41467 (Sep 11, 2026 15:11:00)
 more fixes — antonio-bravo
 [detail](#bc41467-details)
@@ -676,35 +700,6 @@ Update changelog — github-actions[bot]
 [detail](#9820d29-details)
 
 <details id='9820d29-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 4c611dd (Sep 09, 2026 11:43:27)
-fix CloudSync — antonio-bravo
-[detail](#4c611dd-details)
-
-<details id='4c611dd-details'>
-<summary>Changed files</summary>
-
-- app/proguard-rules.pro [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/sync/AuthManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsDataScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-</details>
-
-
----
-## e993d19 (Sep 08, 2026 22:47:46)
-Update changelog — github-actions[bot]
-[detail](#e993d19-details)
-
-<details id='e993d19-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
