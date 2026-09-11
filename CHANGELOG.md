@@ -1,5 +1,30 @@
 # Changelog
 
+## f67e08d (Sep 11, 2026 11:23:44)
+fix trend graph alignment on Y — antonio-bravo
+[detail](#f67e08d-details)
+
+<details id='f67e08d-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
+</details>
+
+
+---
+## 5366ddd (Sep 11, 2026 08:36:26)
+Update changelog — github-actions[bot]
+[detail](#5366ddd-details)
+
+<details id='5366ddd-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 362422a (Sep 11, 2026 10:36:14)
 optimize Cloud Sync — antonio-bravo
 [detail](#362422a-details)
@@ -682,38 +707,6 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
-</details>
-
-
----
-## 55316b3 (Sep 09, 2026 00:30:45)
-fix language — antonio-bravo
-[detail](#55316b3-details)
-
-<details id='55316b3-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsDataScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## bb0081e (Sep 09, 2026 00:28:29)
-2 separate accounts for DB and for Data source — antonio-bravo
-[detail](#bb0081e-details)
-
-<details id='bb0081e-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
 </details>
 
 
