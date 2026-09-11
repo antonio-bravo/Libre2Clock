@@ -1,7 +1,9 @@
 package com.tonio.libre2clock.ui.settings
 
+import android.app.Application
+import android.content.Context
 import android.net.Uri
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.tonio.libre2clock.data.api.LibreService
 import com.tonio.libre2clock.data.model.CapillaryMeasurement
@@ -17,6 +19,7 @@ import com.tonio.libre2clock.R
 import com.tonio.libre2clock.di.AppContainer
 import com.tonio.libre2clock.util.LogEvent
 import com.tonio.libre2clock.util.SectionPerfTelemetry
+import com.tonio.libre2clock.data.sync.CloudSyncManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -31,16 +34,20 @@ import java.time.Instant
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
+// 1. Cambiamos ViewModel por AndroidViewModel
 class SettingsViewModel(
+    application: Application, // 2. Recibimos la Application en lugar del Context de la Activity
     private val preferenceManager: PreferenceManager,
     private val repository: GlucoseRepository,
-    private val authManager: com.tonio.libre2clock.data.sync.AuthManager,
-    private val androidContext: android.content.Context
-) : ViewModel() {
+    private val authManager: com.tonio.libre2clock.data.sync.AuthManager
+) : AndroidViewModel(application) {
 
-    private val eventLogManager = AppContainer.provideEventLogManager(androidContext)
-    private val cloudSyncManager = com.tonio.libre2clock.di.AppContainer.provideCloudSyncManager(androidContext)
-    private val settingsCache = SettingsSectionCacheRepository(androidContext)
+    // 3. Guardamos el contexto de la aplicación (es seguro y no genera leaks)
+    private val appContext: Context = getApplication()
+
+    private val eventLogManager = AppContainer.provideEventLogManager(appContext)
+    private val cloudSyncManager = AppContainer.provideCloudSyncManager(appContext)
+    private val settingsCache = SettingsSectionCacheRepository(appContext)
 
     private val _backupStatusMessage = MutableStateFlow<String?>(null)
     val backupStatusMessage = _backupStatusMessage.asStateFlow()
@@ -461,8 +468,8 @@ class SettingsViewModel(
                 repository.syncLocalArchiveFromPreferences()
             }
             _backupStatusMessage.value = result.fold(
-                onSuccess = { androidContext.getString(R.string.restore_success_merge) },
-                onFailure = { error -> error.message ?: androidContext.getString(R.string.restore_failed) }
+                onSuccess = { appContext.getString(R.string.restore_success_merge) },
+                onFailure = { error -> error.message ?: appContext.getString(R.string.restore_failed) }
             )
         }
     }
@@ -496,7 +503,7 @@ class SettingsViewModel(
     }
 
     fun clearCloudSyncDebugOutput() {
-        // Handled by manager when starting new diagnostic, but can add a clear method to manager if needed
+        cloudSyncManager.clearDebugOutput()
     }
 
     fun formatLogTimestamp(timestamp: Long): String = eventLogManager.formatTimestamp(timestamp)
@@ -517,15 +524,15 @@ class SettingsViewModel(
         }
     }
 
-    fun signInWithGoogle(context: android.content.Context) {
+    fun signInWithGoogle(context: Context) {
         viewModelScope.launch {
             try {
-                val resId = androidContext.resources.getIdentifier("default_web_client_id", "string", androidContext.packageName)
+                val resId = appContext.resources.getIdentifier("default_web_client_id", "string", appContext.packageName)
                 if (resId == 0) {
                     _backupStatusMessage.value = "Error: google-services.json not configured."
                     return@launch
                 }
-                val webClientId = androidContext.getString(resId)
+                val webClientId = appContext.getString(resId)
                 val result = authManager.signInWithGoogle(context, webClientId)
                 _backupStatusMessage.value = result.fold(
                     onSuccess = { "Signed in with Google." },
@@ -544,7 +551,7 @@ class SettingsViewModel(
         }
     }
 
-    fun restoreLocalBackup(uri: android.net.Uri, isHardReset: Boolean) {
+    fun restoreLocalBackup(uri: Uri, isHardReset: Boolean) {
         viewModelScope.launch {
             val result = preferenceManager.restoreHistoryBackupFromUri(uri, isHardReset)
             if (result.isSuccess) {
@@ -552,11 +559,11 @@ class SettingsViewModel(
                 repository.syncLocalArchiveFromPreferences()
             }
             _backupStatusMessage.value = result.fold(
-                onSuccess = { 
-                    if (isHardReset) androidContext.getString(R.string.restore_success_hard)
-                    else androidContext.getString(R.string.restore_success_merge)
+                onSuccess = {
+                    if (isHardReset) appContext.getString(R.string.restore_success_hard)
+                    else appContext.getString(R.string.restore_success_merge)
                 },
-                onFailure = { it.message ?: androidContext.getString(R.string.restore_failed) }
+                onFailure = { it.message ?: appContext.getString(R.string.restore_failed) }
             )
         }
     }

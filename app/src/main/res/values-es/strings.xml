@@ -435,4 +435,9 @@
     <string name="restore_success_hard">Copia de seguridad restaurada (Hard Reset).</string>
     <string name="restore_failed">Error al restaurar.</string>
     <string name="app_version">Versión: %1$s (%2$d)</string>
+    <string name="settings_cloud_diagnostic_title">Diagnóstico de Sincronización en la Nube</string>
+    <string name="settings_cloud_diagnostic_desc">Verifica la conectividad con Firestore y el estado de la sincronización.</string>
+    <string name="settings_cloud_diagnostic_run">Ejecutar Prueba de Sincronización en la Nube</string>
+    <string name="settings_copy_log">Copiar registro</string>
+    <string name="settings_log_copied">Registro copiado al portapapeles</string>
 </resources>

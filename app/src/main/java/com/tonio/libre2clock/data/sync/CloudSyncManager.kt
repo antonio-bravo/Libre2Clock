@@ -1,12 +1,15 @@
 package com.tonio.libre2clock.data.sync
 
 import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Build
 import android.util.Log
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.tonio.libre2clock.data.local.GlucoseHistoryDatabaseHelper
@@ -23,6 +26,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.tasks.await
 import java.io.IOException
 
@@ -40,8 +44,8 @@ class CloudSyncManager(
     val cloudSyncDebugOutput: StateFlow<String?> = _cloudSyncDebugOutput.asStateFlow()
 
     private var isListening = false
+    private val syncMutex = Mutex()
 
-    // --- OPTIMIZACIÓN 1: Función de reintento con retroceso exponencial ---
     private suspend fun <T> retryWithBackoff(
         stepName: String,
         times: Int = 3,
@@ -59,13 +63,28 @@ class CloudSyncManager(
                 delay(currentDelay)
                 currentDelay = (currentDelay * factor).toLong().coerceAtMost(maxDelay)
             } catch (e: IOException) {
-                log("[$stepName] Error de red en intento ${attempt + 1}. Reintentando...")
+                log("[$stepName] Error de red (IO) en intento ${attempt + 1}. Reintentando...")
                 delay(currentDelay)
                 currentDelay = (currentDelay * factor).toLong().coerceAtMost(maxDelay)
+            } catch (e: FirebaseFirestoreException) {
+                if (e.code == FirebaseFirestoreException.Code.UNAVAILABLE ||
+                    e.code == FirebaseFirestoreException.Code.DEADLINE_EXCEEDED) {
+                    log("[$stepName] Error de red (Firestore) en intento ${attempt + 1}. Reintentando...")
+                    delay(currentDelay)
+                    currentDelay = (currentDelay * factor).toLong().coerceAtMost(maxDelay)
+                } else {
+                    throw e // Error de permisos o datos, no reintentar
+                }
             }
         }
-        // Último intento (si falla, lanzará la excepción)
         return withTimeout(30000) { block() }
+    }
+
+    private fun isNetworkAvailable(): Boolean {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = cm.activeNetwork ?: return false
+        val capabilities = cm.getNetworkCapabilities(network) ?: return false
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 
     init {
@@ -75,9 +94,7 @@ class CloudSyncManager(
             }.collect { (user, isEnabled) ->
                 if (user != null && isEnabled) {
                     val patientId = preferenceManager.patientId.first()
-                    if (patientId != null) {
-                        startSync(user.uid, patientId)
-                    }
+                    if (patientId != null) startSync(user.uid, patientId)
                 }
             }
         }
@@ -85,11 +102,14 @@ class CloudSyncManager(
         scope.launch {
             preferenceManager.settingsUpdatedAt.collect { updatedAt ->
                 if (updatedAt == null) return@collect
+                if (syncMutex.isLocked) return@collect // Evita colisiones
+
                 val user = authManager.user.value
                 val isEnabled = preferenceManager.isCloudSyncEnabled.first()
                 val patientId = preferenceManager.patientId.first()
-                if (user != null && isEnabled && patientId != null) {
-                    syncSettingsToCloud(user.uid, patientId)
+
+                if (user != null && isEnabled && patientId != null && isNetworkAvailable()) {
+                    startSync(user.uid, patientId)
                 }
             }
         }
@@ -97,7 +117,9 @@ class CloudSyncManager(
 
     private fun log(msg: String) {
         val current = _cloudSyncDebugOutput.value ?: ""
-        _cloudSyncDebugOutput.value = current + msg + "\n"
+        val lines = current.split("\n")
+        val limitedLog = if (lines.size > 150) lines.takeLast(150).joinToString("\n") else current
+        _cloudSyncDebugOutput.value = limitedLog + msg + "\n"
     }
 
     fun clearDebugOutput() {
@@ -143,74 +165,87 @@ class CloudSyncManager(
         scope.launch {
             val user = authManager.user.value
             val patientId = preferenceManager.patientId.first()
-            if (user != null && patientId != null) {
-                startSync(user.uid, patientId)
-            }
+            if (user != null && patientId != null) startSync(user.uid, patientId)
         }
     }
 
     private fun startSync(googleUid: String, patientId: String) {
         scope.launch {
-            var currentStep = "Initializing"
+            if (!syncMutex.tryLock()) {
+                Log.d("CloudSync", "Sync already in progress, skipping.")
+                return@launch
+            }
+
             try {
-                log("=== Starting Cloud Sync ===")
-                val patientDoc = firestore.collection("users").document(googleUid)
-                    .collection("patients").document(patientId)
-
-                currentStep = "Fetching remote settings"
-                log("1. $currentStep...")
-                val remoteSettings = retryWithBackoff(currentStep) {
-                    patientDoc.collection("config").document("settings").get().await()
+                if (!isNetworkAvailable()) {
+                    log("Sync skipped: No network connection.")
+                    return@launch
                 }
-                
-                if (remoteSettings.exists()) {
-                    val remotePayload = remoteSettings.toObject(HistoryBackupPayload::class.java)
-                    val localTimestamp = preferenceManager.settingsUpdatedAt.first() ?: 0L
-                    val remoteTimestamp = remotePayload?.settingsUpdatedAtMs ?: 0L
 
-                    if (remoteTimestamp > localTimestamp) {
-                        remotePayload?.let { payload ->
-                            preferenceManager.restoreFromPayload(payload, isHardReset = false)
-                            log("Settings restored from cloud (remote is newer).")
-                        }
-                    } else {
-                        log("Skipping settings restore (local is newer or equal).")
+                _cloudSyncDebugOutput.value = "" // Resetear log al inicio
+
+                var currentStep = "Initializing"
+                try {
+                    log("=== Starting Cloud Sync ===")
+                    val patientDoc = firestore.collection("users").document(googleUid)
+                        .collection("patients").document(patientId)
+
+                    currentStep = "Fetching remote settings"
+                    log("1. $currentStep...")
+                    val remoteSettings = retryWithBackoff(currentStep) {
+                        patientDoc.collection("config").document("settings").get().await()
                     }
+
+                    if (remoteSettings.exists()) {
+                        val remotePayload = remoteSettings.toObject(HistoryBackupPayload::class.java)
+                        val localTimestamp = preferenceManager.settingsUpdatedAt.first() ?: 0L
+                        val remoteTimestamp = remotePayload?.settingsUpdatedAtMs ?: 0L
+
+                        if (remoteTimestamp > localTimestamp) {
+                            remotePayload?.let { payload ->
+                                preferenceManager.restoreFromPayload(payload, isHardReset = false)
+                                log("Settings restored from cloud (remote is newer).")
+                            }
+                        } else {
+                            log("Skipping settings restore (local is newer or equal).")
+                        }
+                    }
+
+                    currentStep = "Pulling recent history"
+                    log("2. $currentStep...")
+                    pullHistory(googleUid, patientId)
+
+                    currentStep = "Pushing local data"
+                    log("3. Pushing local data (Parallel)...")
+                    coroutineScope {
+                        val settingsJob = launch { syncSettingsToCloud(googleUid, patientId) }
+                        val listsJob = launch { syncDataListsToCloud(googleUid, patientId) }
+                        val historyJob = launch { syncHistory(googleUid, patientId) }
+
+                        settingsJob.join()
+                        listsJob.join()
+                        historyJob.join()
+                    }
+
+                    currentStep = "Activating real-time listeners"
+                    log("4. $currentStep...")
+                    ensureListening(googleUid, patientId)
+
+                    preferenceManager.saveCloudSyncLastSuccessAt(System.currentTimeMillis())
+                    log("=== Sync Completed Successfully ===")
+                } catch (e: TimeoutCancellationException) {
+                    val errorMsg = "Sync timed out during: $currentStep"
+                    Log.e("CloudSync", errorMsg, e)
+                    log("❌ ERROR: $errorMsg")
+                    eventLogger.log(LogLevel.ERROR, "CloudSync", errorMsg, e.stackTraceToString())
+                } catch (e: Exception) {
+                    val errorMsg = "Sync failed during: $currentStep - ${e.message}"
+                    Log.e("CloudSync", "Sync error", e)
+                    log("❌ ERROR: $errorMsg")
+                    eventLogger.log(LogLevel.ERROR, "CloudSync", errorMsg, e.stackTraceToString())
                 }
-
-                currentStep = "Pulling recent history"
-                log("2. $currentStep...")
-                pullHistory(googleUid, patientId)
-
-                // --- OPTIMIZACIÓN 2: Ejecución en Paralelo ---
-                currentStep = "Pushing local data"
-                log("3. Pushing local data (Parallel)...")
-                coroutineScope {
-                    val settingsJob = launch { syncSettingsToCloud(googleUid, patientId) }
-                    val listsJob = launch { syncDataListsToCloud(googleUid, patientId) }
-                    val historyJob = launch { syncHistory(googleUid, patientId) }
-                    
-                    settingsJob.join()
-                    listsJob.join()
-                    historyJob.join()
-                }
-
-                currentStep = "Activating real-time listeners"
-                log("4. $currentStep...")
-                ensureListening(googleUid, patientId)
-
-                preferenceManager.saveCloudSyncLastSuccessAt(System.currentTimeMillis())
-                log("=== Sync Completed Successfully ===")
-            } catch (e: TimeoutCancellationException) {
-                val errorMsg = "Sync timed out during: $currentStep"
-                Log.e("CloudSync", errorMsg, e)
-                log("$errorMsg. Check network and try again.")
-                eventLogger.log(LogLevel.ERROR, "CloudSync", errorMsg, e.stackTraceToString())
-            } catch (e: Exception) {
-                val errorMsg = "Sync failed during: $currentStep - ${e.message}"
-                Log.e("CloudSync", "Sync error", e)
-                log(errorMsg)
-                eventLogger.log(LogLevel.ERROR, "CloudSync", errorMsg, e.stackTraceToString())
+            } finally {
+                syncMutex.unlock()
             }
         }
     }
@@ -229,7 +264,6 @@ class CloudSyncManager(
         val patientDoc = firestore.collection("users").document(googleUid)
             .collection("patients").document(patientId)
 
-        // --- OPTIMIZACIÓN 3: Chunk size reducido a 50 para redes móviles inestables ---
         val insulin = preferenceManager.insulinDoses.first()
         if (insulin.isNotEmpty()) {
             val insulinColl = patientDoc.collection("insulin_doses")
@@ -261,10 +295,8 @@ class CloudSyncManager(
                 .collection("patients").document(patientId)
                 .collection("glucose_history")
 
-            // OPTIMIZACIÓN 4: Si es posible, usa un cursor o timestamp para solo traer lo nuevo.
-            // Por ahora, limitamos a 300 para ser más rápidos y añadimos reintento.
             val snapshot = retryWithBackoff("Pull History") {
-                historyColl.orderBy("__name__", Query.Direction.DESCENDING)
+                historyColl.orderBy(FieldPath.documentId(), Query.Direction.DESCENDING)
                     .limit(300)
                     .get()
                     .await()
@@ -273,13 +305,15 @@ class CloudSyncManager(
             val remote = snapshot.documents.mapNotNull { it.toObject(GlucoseMeasurement::class.java) }
             if (remote.isNotEmpty()) {
                 dbHelper.upsertAll(remote)
+                log("Successfully pulled ${remote.size} history records.")
             }
         } catch (e: TimeoutCancellationException) {
-            Log.w("CloudSync", "Pull history timed out, will retry on next sync")
-            log("Pull history timed out. Will retry next time.")
+            Log.w("CloudSync", "Pull history timed out")
+            log("⚠️ Pull history timed out. Will retry next time.")
         } catch (e: Exception) {
             Log.e("CloudSync", "Error pulling history", e)
-            log("Error pulling history: ${e.message}")
+            log("❌ ERROR pulling history: ${e.message}")
+            eventLogger.log(LogLevel.ERROR, "CloudSync", "Pull history failed", e.stackTraceToString())
         }
     }
 
@@ -302,15 +336,14 @@ class CloudSyncManager(
                         val dose = change.document.toObject(InsulinDose::class.java) ?: continue
                         when (change.type) {
                             DocumentChange.Type.ADDED, DocumentChange.Type.MODIFIED -> {
-                                if (!dose.isDeleted) localDoses[dose.id] = dose
-                                else localDoses.remove(dose.id)
+                                if (!dose.isDeleted) localDoses[dose.id] = dose else localDoses.remove(dose.id)
                             }
                             DocumentChange.Type.REMOVED -> localDoses.remove(dose.id)
                         }
                     }
                     preferenceManager.saveInsulinDoses(localDoses.values.sortedByDescending { it.timestamp })
                 } catch (e: Exception) {
-                    Log.e("CloudSync", "Error processing insulin doses snapshot", e)
+                    Log.e("CloudSync", "Error processing insulin snapshot", e)
                 }
             }
         }
@@ -324,25 +357,21 @@ class CloudSyncManager(
                         val reading = change.document.toObject(CapillaryMeasurement::class.java) ?: continue
                         when (change.type) {
                             DocumentChange.Type.ADDED, DocumentChange.Type.MODIFIED -> {
-                                if (!reading.isDeleted) localReadings[reading.id] = reading
-                                else localReadings.remove(reading.id)
+                                if (!reading.isDeleted) localReadings[reading.id] = reading else localReadings.remove(reading.id)
                             }
                             DocumentChange.Type.REMOVED -> localReadings.remove(reading.id)
                         }
                     }
                     preferenceManager.saveCapillaryReadings(localReadings.values.sortedByDescending { it.timestamp })
                 } catch (e: Exception) {
-                    Log.e("CloudSync", "Error processing capillary readings snapshot", e)
+                    Log.e("CloudSync", "Error processing capillary snapshot", e)
                 }
             }
         }
     }
 
     private suspend fun syncHistory(googleUid: String, patientId: String) {
-        // ⚠️ ADVERTENCIA CRÍTICA: readAllNewestFirst() carga TODA la BD en memoria.
-        // Si tienes miles de registros, esto causará OOM o lentitud extrema ANTES del timeout de red.
-        // RECOMENDACIÓN: Añade un método a tu DBHelper: `readUnsyncedHistory(limit: Int)`
-        val local = dbHelper.readAllNewestFirst().take(200)
+        val local = dbHelper.readRecentHistory(200)
         if (local.isEmpty()) return
 
         val historyColl = firestore.collection("users").document(googleUid)
@@ -362,6 +391,10 @@ class CloudSyncManager(
 
     fun resetCloudData(googleUid: String, patientId: String, onComplete: (Boolean) -> Unit) {
         scope.launch {
+            if (!syncMutex.tryLock()) {
+                onComplete(false)
+                return@launch
+            }
             try {
                 log("Starting cloud data reset...")
                 val patientDoc = firestore.collection("users").document(googleUid)
@@ -397,6 +430,8 @@ class CloudSyncManager(
                 Log.e("CloudSync", "Reset failed", e)
                 log("Reset failed: ${e.message}")
                 withContext(Dispatchers.Main) { onComplete(false) }
+            } finally {
+                syncMutex.unlock()
             }
         }
     }

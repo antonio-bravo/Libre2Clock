@@ -1,28 +1,40 @@
 package com.tonio.libre2clock.ui.navigation
 
+import android.app.Application
+import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.tonio.libre2clock.data.repository.GlucoseRepository
 import com.tonio.libre2clock.data.repository.PreferenceManager
+import com.tonio.libre2clock.di.AppContainer
+import com.tonio.libre2clock.service.GlucoseForegroundService
+import com.tonio.libre2clock.ui.capillary.CapillaryScreen
 import com.tonio.libre2clock.ui.dashboard.DashboardScreen
 import com.tonio.libre2clock.ui.dashboard.DashboardViewModel
-import com.tonio.libre2clock.ui.login.LoginScreen
-import com.tonio.libre2clock.ui.login.LoginViewModel
-import com.tonio.libre2clock.ui.settings.SettingsScreen
-import com.tonio.libre2clock.ui.settings.SettingsViewModel
-import com.tonio.libre2clock.service.GlucoseForegroundService
-import android.content.Intent
-import androidx.compose.ui.platform.LocalContext
-
-import com.tonio.libre2clock.ui.capillary.CapillaryScreen
-import com.tonio.libre2clock.ui.sensor.SensorLogsScreen
 import com.tonio.libre2clock.ui.insulin.InsulinHubScreen
 import com.tonio.libre2clock.ui.insulin.InsulinLogsScreen
+import com.tonio.libre2clock.ui.login.LoginScreen
+import com.tonio.libre2clock.ui.login.LoginViewModel
+import com.tonio.libre2clock.ui.report.ReportScreen
+import com.tonio.libre2clock.ui.report.ReportViewModel
+import com.tonio.libre2clock.ui.sensor.SensorLogsScreen
+import com.tonio.libre2clock.ui.settings.SettingsAdvancedScreen
+import com.tonio.libre2clock.ui.settings.SettingsAlertsScreen
+import com.tonio.libre2clock.ui.settings.SettingsBatteryScreen
+import com.tonio.libre2clock.ui.settings.SettingsCalibrationScreen
+import com.tonio.libre2clock.ui.settings.SettingsCloudScreen
+import com.tonio.libre2clock.ui.settings.SettingsDataScreen
+import com.tonio.libre2clock.ui.settings.SettingsDeviceScreen
 import com.tonio.libre2clock.ui.settings.SettingsEventLogScreen
+import com.tonio.libre2clock.ui.settings.SettingsScreen
+import com.tonio.libre2clock.ui.settings.SettingsViewModel
 import com.tonio.libre2clock.ui.strategy.StrategyScreen
 
 @Composable
@@ -32,24 +44,66 @@ fun NavGraph(
     isLoggedIn: Boolean
 ) {
     val context = LocalContext.current
+    // OPTIMIZACIÓN: Usamos el contexto de la aplicación para evitar memory leaks en los ViewModels
+    val appContext = context.applicationContext as Application
+
     val backStack = rememberNavBackStack(
         if (isLoggedIn) Destination.Dashboard else Destination.Login
     )
-    
-    // Shared ViewModels for persistent state and better performance
-    val settingsViewModel: SettingsViewModel = viewModel {
-        SettingsViewModel(
-            preferenceManager,
-            repository,
-            com.tonio.libre2clock.di.AppContainer.provideAuthManager(context),
-            context.applicationContext
-        )
-    }
-    val dashboardViewModel: DashboardViewModel = viewModel { DashboardViewModel(repository, preferenceManager, context.applicationContext) }
-    val loginViewModel: LoginViewModel = viewModel { LoginViewModel(repository) }
-    val reportViewModel: com.tonio.libre2clock.ui.report.ReportViewModel = viewModel { 
-        com.tonio.libre2clock.ui.report.ReportViewModel(repository, preferenceManager, context.applicationContext) 
-    }
+
+    // Shared ViewModels con Factory explícita, segura y libre de warnings
+    val settingsViewModel: SettingsViewModel = viewModel(
+        factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                if (modelClass.isAssignableFrom(SettingsViewModel::class.java)) {
+                    return SettingsViewModel(
+                        appContext,
+                        preferenceManager,
+                        repository,
+                        AppContainer.provideAuthManager(appContext)
+                    ) as T
+                }
+                throw IllegalArgumentException("Unknown ViewModel class")
+            }
+        }
+    )
+
+    val dashboardViewModel: DashboardViewModel = viewModel(
+        factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                if (modelClass.isAssignableFrom(DashboardViewModel::class.java)) {
+                    return DashboardViewModel(repository, preferenceManager, appContext) as T
+                }
+                throw IllegalArgumentException("Unknown ViewModel class")
+            }
+        }
+    )
+
+    val loginViewModel: LoginViewModel = viewModel(
+        factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                if (modelClass.isAssignableFrom(LoginViewModel::class.java)) {
+                    return LoginViewModel(repository) as T
+                }
+                throw IllegalArgumentException("Unknown ViewModel class")
+            }
+        }
+    )
+
+    val reportViewModel: ReportViewModel = viewModel(
+        factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                if (modelClass.isAssignableFrom(ReportViewModel::class.java)) {
+                    return ReportViewModel(repository, preferenceManager, appContext) as T
+                }
+                throw IllegalArgumentException("Unknown ViewModel class")
+            }
+        }
+    )
 
     // Reacts to logout and to session-expiry (auth cleared after a 401 from LibreLinkUp).
     LaunchedEffect(Unit) {
@@ -82,30 +136,14 @@ fun NavGraph(
             entry<Destination.Dashboard> {
                 DashboardScreen(
                     viewModel = dashboardViewModel,
-                    onNavigateToSettings = {
-                        backStack.add(Destination.Settings)
-                    },
-                    onNavigateToStrategy = {
-                        backStack.add(Destination.Strategy)
-                    },
-                    onNavigateToCapillary = {
-                        backStack.add(Destination.Capillary)
-                    },
-                    onNavigateToSensorLogs = {
-                        backStack.add(Destination.SensorLogs)
-                    },
-                    onNavigateToInsulinHub = {
-                        backStack.add(Destination.InsulinHub)
-                    },
-                    onNavigateToReports = {
-                        backStack.add(Destination.Reports)
-                    },
-                    onNavigateToEventLog = {
-                        backStack.add(Destination.SettingsEventLog)
-                    },
-                    onAddDose = { dose ->
-                        dashboardViewModel.addInsulinDose(dose)
-                    }
+                    onNavigateToSettings = { backStack.add(Destination.Settings) },
+                    onNavigateToStrategy = { backStack.add(Destination.Strategy) },
+                    onNavigateToCapillary = { backStack.add(Destination.Capillary) },
+                    onNavigateToSensorLogs = { backStack.add(Destination.SensorLogs) },
+                    onNavigateToInsulinHub = { backStack.add(Destination.InsulinHub) },
+                    onNavigateToReports = { backStack.add(Destination.Reports) },
+                    onNavigateToEventLog = { backStack.add(Destination.SettingsEventLog) },
+                    onAddDose = { dose -> dashboardViewModel.addInsulinDose(dose) }
                 )
             }
             entry<Destination.Settings> {
@@ -122,13 +160,13 @@ fun NavGraph(
                 )
             }
             entry<Destination.SettingsBattery> {
-                com.tonio.libre2clock.ui.settings.SettingsBatteryScreen(
+                SettingsBatteryScreen(
                     viewModel = settingsViewModel,
                     onBack = { backStack.removeAt(backStack.size - 1) }
                 )
             }
             entry<Destination.SettingsAlerts> {
-                com.tonio.libre2clock.ui.settings.SettingsAlertsScreen(
+                SettingsAlertsScreen(
                     viewModel = settingsViewModel,
                     onBack = { backStack.removeAt(backStack.size - 1) },
                     onTestNotification = {
@@ -140,32 +178,32 @@ fun NavGraph(
                 )
             }
             entry<Destination.SettingsCalibration> {
-                com.tonio.libre2clock.ui.settings.SettingsCalibrationScreen(
+                SettingsCalibrationScreen(
                     viewModel = settingsViewModel,
                     onBack = { backStack.removeAt(backStack.size - 1) }
                 )
             }
             entry<Destination.SettingsDevice> {
-                com.tonio.libre2clock.ui.settings.SettingsDeviceScreen(
+                SettingsDeviceScreen(
                     viewModel = settingsViewModel,
                     onBack = { backStack.removeAt(backStack.size - 1) }
                 )
             }
             entry<Destination.SettingsData> {
-                com.tonio.libre2clock.ui.settings.SettingsDataScreen(
+                SettingsDataScreen(
                     viewModel = settingsViewModel,
                     onBack = { backStack.removeAt(backStack.size - 1) },
                     onNavigateToCloud = { backStack.add(Destination.SettingsCloud) }
                 )
             }
             entry<Destination.SettingsCloud> {
-                com.tonio.libre2clock.ui.settings.SettingsCloudScreen(
+                SettingsCloudScreen(
                     viewModel = settingsViewModel,
                     onBack = { backStack.removeAt(backStack.size - 1) }
                 )
             }
             entry<Destination.SettingsAdvanced> {
-                com.tonio.libre2clock.ui.settings.SettingsAdvancedScreen(
+                SettingsAdvancedScreen(
                     viewModel = settingsViewModel,
                     onBack = { backStack.removeAt(backStack.size - 1) },
                     onNavigateToEventLog = { backStack.add(Destination.SettingsEventLog) }
@@ -208,7 +246,7 @@ fun NavGraph(
                 )
             }
             entry<Destination.Reports> {
-                com.tonio.libre2clock.ui.report.ReportScreen(
+                ReportScreen(
                     viewModel = reportViewModel,
                     onBack = { backStack.removeAt(backStack.size - 1) }
                 )
