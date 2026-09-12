@@ -5,6 +5,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import android.util.Log
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldPath
@@ -224,6 +225,37 @@ class CloudSyncManager(
                     pullHistory(googleUid, patientId)
 
                     // ---------------------------------------------------------------
+                    // DIAGNÓSTICO: refrescar el token de auth por si expiró/está
+                    // inválido, lo cual puede hacer que las escrituras se queden
+                    // "colgadas" en vez de fallar rápido con PERMISSION_DENIED.
+                    // ---------------------------------------------------------------
+                    currentStep = "Refreshing auth token"
+                    log("2a. $currentStep...")
+                    try {
+                        val firebaseUser = authManager.user.value as? FirebaseUser
+                        if (firebaseUser != null) {
+                            retryWithBackoff(currentStep) { firebaseUser.getIdToken(true).await() }
+                            log("  -> Token refrescado OK")
+                        } else {
+                            log("  -> No se pudo castear a FirebaseUser, se omite refresh explícito")
+                        }
+                    } catch (e: Exception) {
+                        // No abortamos el sync por esto, solo lo dejamos registrado.
+                        log("  -> WARNING: fallo al refrescar token: ${e.javaClass.simpleName} - ${e.message}")
+                    }
+
+                    // ---------------------------------------------------------------
+                    // DIAGNÓSTICO: si hay escrituras pendientes de un sync anterior
+                    // que no se confirmaron, Firestore las mantiene en cola local y
+                    // procesa todo en orden. Una escritura atascada ahí bloquearía
+                    // silenciosamente cualquier escritura nueva (como "settings").
+                    // ---------------------------------------------------------------
+                    currentStep = "Waiting for pending writes"
+                    log("2b. $currentStep...")
+                    retryWithBackoff(currentStep) { firestore.waitForPendingWrites().await() }
+                    log("  -> Sin escrituras pendientes atascadas")
+
+                    // ---------------------------------------------------------------
                     // PASO 3 DESGLOSADO: cada sub-paso tiene su propio currentStep,
                     // así el log/exception dice exactamente cuál se atascó, en vez
                     // de agrupar todo bajo "Pushing local data".
@@ -265,6 +297,11 @@ class CloudSyncManager(
 
     private suspend fun syncSettingsToCloud(googleUid: String, patientId: String) {
         val payload = preferenceManager.getSettingsOnlyPayload()
+        // DIAGNÓSTICO: si esto es sospechosamente grande (varias decenas/cientos de KB),
+        // el payload de "settings" probablemente incluye algo que no debería (p.ej.
+        // listas embebidas de historial) y eso explicaría el timeout en una red lenta.
+        val approxSize = payload.toString().toByteArray().size
+        log("  -> Settings payload approx size: $approxSize bytes")
         retryWithBackoff("Sync Settings") {
             firestore.collection("users").document(googleUid)
                 .collection("patients").document(patientId)
