@@ -63,8 +63,6 @@ class CloudSyncManager(
         var currentDelay = initialDelay
         repeat(times - 1) { attempt ->
             try {
-                // Reducido de 30s a 15s. En móviles, si un lote pequeño tarda más de 15s,
-                // es mejor fallar rápido y reintentar en el próximo ciclo que bloquear la app.
                 return withTimeout(15000) { block() }
             } catch (e: TimeoutCancellationException) {
                 log("[$stepName] Timeout en intento ${attempt + 1}. Reintentando en ${currentDelay}ms...")
@@ -77,12 +75,12 @@ class CloudSyncManager(
             } catch (e: FirebaseFirestoreException) {
                 if (e.code == FirebaseFirestoreException.Code.UNAVAILABLE ||
                     e.code == FirebaseFirestoreException.Code.DEADLINE_EXCEEDED ||
-                    e.code == FirebaseFirestoreException.Code.ABORTED) { // Añadido ABORTED por contención
+                    e.code == FirebaseFirestoreException.Code.ABORTED) {
                     log("[$stepName] Error de red (Firestore) en intento ${attempt + 1}. Reintentando...")
                     delay(currentDelay)
                     currentDelay = (currentDelay * factor).toLong().coerceAtMost(maxDelay)
                 } else {
-                    throw e // Error de permisos, índices o datos, no reintentar
+                    throw e
                 }
             }
         }
@@ -221,16 +219,17 @@ class CloudSyncManager(
                     }
 
                     currentStep = "Pulling recent history"
-                    log("2. $currentStep...")
+                    log("2a. $currentStep...")
                     pullHistory(googleUid, patientId)
 
-                    // ---------------------------------------------------------------
-                    // DIAGNÓSTICO: refrescar el token de auth por si expiró/está
-                    // inválido, lo cual puede hacer que las escrituras se queden
-                    // "colgadas" en vez de fallar rápido con PERMISSION_DENIED.
-                    // ---------------------------------------------------------------
+                    // 🆕 NUEVO: Descarga explícita de listas para garantizar sync multi-dispositivo
+                    currentStep = "Pulling data lists from cloud"
+                    log("2b. $currentStep...")
+                    pullDataListsFromCloud(googleUid, patientId)
+
+                    // DIAGNÓSTICO: refrescar el token de auth
                     currentStep = "Refreshing auth token"
-                    log("2a. $currentStep...")
+                    log("2c. $currentStep...")
                     try {
                         val firebaseUser = authManager.user.value as? FirebaseUser
                         if (firebaseUser != null) {
@@ -240,26 +239,15 @@ class CloudSyncManager(
                             log("  -> No se pudo castear a FirebaseUser, se omite refresh explícito")
                         }
                     } catch (e: Exception) {
-                        // No abortamos el sync por esto, solo lo dejamos registrado.
                         log("  -> WARNING: fallo al refrescar token: ${e.javaClass.simpleName} - ${e.message}")
                     }
 
-                    // ---------------------------------------------------------------
-                    // DIAGNÓSTICO: si hay escrituras pendientes de un sync anterior
-                    // que no se confirmaron, Firestore las mantiene en cola local y
-                    // procesa todo en orden. Una escritura atascada ahí bloquearía
-                    // silenciosamente cualquier escritura nueva (como "settings").
-                    // ---------------------------------------------------------------
+                    // DIAGNÓSTICO: esperar escrituras pendientes
                     currentStep = "Waiting for pending writes"
-                    log("2b. $currentStep...")
+                    log("2d. $currentStep...")
                     retryWithBackoff(currentStep) { firestore.waitForPendingWrites().await() }
                     log("  -> Sin escrituras pendientes atascadas")
 
-                    // ---------------------------------------------------------------
-                    // PASO 3 DESGLOSADO: cada sub-paso tiene su propio currentStep,
-                    // así el log/exception dice exactamente cuál se atascó, en vez
-                    // de agrupar todo bajo "Pushing local data".
-                    // ---------------------------------------------------------------
                     currentStep = "Pushing settings"
                     log("3a. $currentStep...")
                     syncSettingsToCloud(googleUid, patientId)
@@ -297,12 +285,17 @@ class CloudSyncManager(
 
     private suspend fun syncSettingsToCloud(googleUid: String, patientId: String) {
         val payload = preferenceManager.getSettingsOnlyPayload()
-        // DIAGNÓSTICO: si esto es sospechosamente grande (varias decenas/cientos de KB),
-        // el payload de "settings" probablemente incluye algo que no debería (p.ej.
-        // listas embebidas de historial) y eso explicaría el timeout en una red lenta.
-        val approxSize = payload.toString().toByteArray().size
-        log("  -> Settings payload approx size: $approxSize bytes")
-        retryWithBackoff("Sync Settings") {
+        
+        val payloadString = payload.toString()
+        val sizeKb = payloadString.toByteArray().size / 1024
+        log("  -> Settings payload size: ~$sizeKb KB")
+        
+        if (sizeKb > 50) {
+            log("  ⚠️ CRITICAL WARNING: Payload is too large (>50KB)!")
+            log("  ⚠️ This is the root cause of the timeout. Check PreferenceManager.getSettingsOnlyPayload()")
+        }
+
+        retryWithBackoff("Sync Settings", times = 3, initialDelay = 2000, maxDelay = 5000) {
             firestore.collection("users").document(googleUid)
                 .collection("patients").document(patientId)
                 .collection("config").document("settings")
@@ -313,14 +306,6 @@ class CloudSyncManager(
     private suspend fun syncDataListsToCloud(googleUid: String, patientId: String) {
         val patientDoc = firestore.collection("users").document(googleUid)
             .collection("patients").document(patientId)
-
-        // ---------------------------------------------------------------
-        // Logging granular por colección: te dice cuántos registros hay
-        // y en qué lote se queda atascado si vuelve a fallar. Si estos
-        // números crecen sin parar en cada sync, la causa raíz es que
-        // se reenvía la lista COMPLETA siempre en vez de solo lo nuevo
-        // (ver recomendación de sync incremental).
-        // ---------------------------------------------------------------
 
         val insulin = preferenceManager.insulinDoses.first()
         log("  -> Insulin: ${insulin.size} registros")
@@ -372,12 +357,8 @@ class CloudSyncManager(
                 .collection("glucose_history")
 
             val snapshot = retryWithBackoff("Pull History") {
-                // CAMBIO CRÍTICO: Ordenar por el campo de tiempo numérico.
-                // Ordenar por FieldPath.documentId() cuando es un String ("1620000-120") causa ordenamiento alfabético
-                // y dispara errores de índice.
-                // ⚠️ Asegúrate de que "sort_epoch_ms" sea el nombre EXACTO del campo en tu modelo GlucoseMeasurement.
                 historyColl.orderBy("sort_epoch_ms", Query.Direction.DESCENDING)
-                    .limit(150) // Reducido de 300 a 150 para aligerar la descarga
+                    .limit(300) // Aumentado de 150 a 300 para mejor sync multi-dispositivo
                     .get()
                     .await()
             }
@@ -397,6 +378,58 @@ class CloudSyncManager(
         }
     }
 
+    // 🆕 NUEVA FUNCIÓN: Descarga explícita de listas para sincronización multi-dispositivo robusta
+    private suspend fun pullDataListsFromCloud(googleUid: String, patientId: String) {
+        val patientDoc = firestore.collection("users").document(googleUid)
+            .collection("patients").document(patientId)
+
+        log("  -> Pulling insulin doses from cloud...")
+        try {
+            val insulinSnapshot = patientDoc.collection("insulin_doses").get().await()
+            val remoteInsulin = insulinSnapshot.documents.mapNotNull { it.toObject(InsulinDose::class.java) }
+            if (remoteInsulin.isNotEmpty()) {
+                val localInsulin = preferenceManager.insulinDoses.first().associateBy { it.id }.toMutableMap()
+                remoteInsulin.forEach { dose -> 
+                    if (!dose.isDeleted) localInsulin[dose.id] = dose else localInsulin.remove(dose.id) 
+                }
+                preferenceManager.saveInsulinDoses(localInsulin.values.sortedByDescending { it.timestamp })
+                log("     ✅ Synced ${remoteInsulin.size} insulin doses.")
+            }
+        } catch (e: Exception) {
+            log("     ⚠️ Failed to pull insulin: ${e.message}")
+        }
+
+        log("  -> Pulling capillary readings from cloud...")
+        try {
+            val capillarySnapshot = patientDoc.collection("capillary_readings").get().await()
+            val remoteCapillary = capillarySnapshot.documents.mapNotNull { it.toObject(CapillaryMeasurement::class.java) }
+            if (remoteCapillary.isNotEmpty()) {
+                val localCapillary = preferenceManager.capillaryReadings.first().associateBy { it.id }.toMutableMap()
+                remoteCapillary.forEach { reading -> 
+                    if (!reading.isDeleted) localCapillary[reading.id] = reading else localCapillary.remove(reading.id) 
+                }
+                preferenceManager.saveCapillaryReadings(localCapillary.values.sortedByDescending { it.timestamp })
+                log("     ✅ Synced ${remoteCapillary.size} capillary readings.")
+            }
+        } catch (e: Exception) {
+            log("     ⚠️ Failed to pull capillary: ${e.message}")
+        }
+
+        log("  -> Pulling sensor logs from cloud...")
+        try {
+            val sensorSnapshot = patientDoc.collection("sensor_logs").get().await()
+            val remoteSensors = sensorSnapshot.documents.mapNotNull { it.toObject(SensorLog::class.java) }
+            if (remoteSensors.isNotEmpty()) {
+                val localSensors = preferenceManager.sensorLogs.first().associateBy { it.serialNumber }.toMutableMap()
+                remoteSensors.forEach { logItem -> localSensors[logItem.serialNumber] = logItem }
+                preferenceManager.saveSensorLogs(localSensors.values.sortedByDescending { it.startDate })
+                log("     ✅ Synced ${remoteSensors.size} sensor logs.")
+            }
+        } catch (e: Exception) {
+            log("     ⚠️ Failed to pull sensor logs: ${e.message}")
+        }
+    }
+
     private fun ensureListening(googleUid: String, patientId: String) {
         if (isListening) return
         isListening = true
@@ -407,7 +440,6 @@ class CloudSyncManager(
         val patientDoc = firestore.collection("users").document(googleUid)
             .collection("patients").document(patientId)
 
-        // Guardamos los listeners para poder eliminarlos después y evitar fugas de memoria
         val reg1 = patientDoc.collection("insulin_doses").addSnapshotListener { snapshots, e ->
             if (e != null || snapshots == null) return@addSnapshotListener
             scope.launch {
@@ -473,7 +505,6 @@ class CloudSyncManager(
         listenerRegistrations.add(reg3)
     }
 
-    // Llama a este método cuando el usuario cierre sesión o la app se destruya
     fun stopListening() {
         listenerRegistrations.forEach { it.remove() }
         listenerRegistrations.clear()
@@ -488,7 +519,6 @@ class CloudSyncManager(
             .collection("patients").document(patientId)
             .collection("glucose_history")
 
-        // Reducido de 50 a 20
         val chunks = local.chunked(20)
         chunks.forEachIndexed { index, chunk ->
             retryWithBackoff("History Batch ${index + 1}/${chunks.size}") {
@@ -518,7 +548,6 @@ class CloudSyncManager(
                     do {
                         val query = retryWithBackoff("Reset Query $coll") {
                             if (lastDoc == null) {
-                                // Reducido de 500 a 300 para queries más rápidas
                                 patientDoc.collection(coll).limit(300).get().await()
                             } else {
                                 patientDoc.collection(coll).orderBy(FieldPath.documentId()).startAfter(lastDoc).limit(300).get().await()
@@ -577,7 +606,6 @@ class CloudSyncManager(
                 log("No settings found in cloud.")
                 withContext(Dispatchers.Main) { onComplete(false) }
             } catch (e: Exception) {
-                // Log detallado para poder distinguir permission-denied, deserialización, timeout, etc.
                 Log.e("CloudSync", "Force pull failed", e)
                 log("Force pull failed: ${e.javaClass.simpleName} - ${e.message}")
                 eventLogger.log(LogLevel.ERROR, "CloudSync", "Force pull settings failed", e.stackTraceToString())

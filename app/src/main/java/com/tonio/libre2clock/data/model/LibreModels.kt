@@ -1,5 +1,6 @@
 package com.tonio.libre2clock.data.model
 
+import com.google.firebase.firestore.PropertyName // ✅ IMPORTANTE: Agregado para Firestore
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import kotlinx.serialization.Serializable
@@ -91,6 +92,7 @@ data class SensorStatus(
     val serialNumber: String
 )
 
+// ✅ CORRECCIÓN CRÍTICA APLICADA AQUÍ:
 @JsonClass(generateAdapter = false)
 @Serializable
 data class GlucoseMeasurement(
@@ -102,5 +104,9 @@ data class GlucoseMeasurement(
     @param:Json(name = "MeasurementColor") val measurementColor: Int? = null,
     @param:Json(name = "Value") val value: Int = 0,
     val calibratedValue: Int = value,
+
+    // ✅ Esta anotación le dice a Firestore que guarde/lea este campo como "sort_epoch_ms"
+    // Esto resuelve el error de "query requires an index" y garantiza el ordenamiento correcto.
+    @PropertyName("sort_epoch_ms")
     val epochSeconds: Long? = null
 )

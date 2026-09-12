@@ -9,13 +9,15 @@ import android.provider.MediaStore
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.tonio.libre2clock.data.model.AlarmSchedule
-import com.tonio.libre2clock.data.model.CapillaryMeasurement
 import com.tonio.libre2clock.data.model.AutoRangeOffsetMode
+import com.tonio.libre2clock.data.model.CapillaryMeasurement
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.GlucoseOffsetRange
 import com.tonio.libre2clock.data.model.HistoryBackupPayload
@@ -55,12 +57,12 @@ class PreferenceManager(private val context: Context) {
         private const val MAX_HISTORY_RETENTION_DAYS = 365
     }
 
-    // --- Keys (sin cambios, omitidos por brevedad pero se mantienen igual) ---
+    // --- Keys ---
     private val TOKEN_KEY = stringPreferencesKey("auth_token")
     private val USER_ID_KEY = stringPreferencesKey("user_id")
     private val PATIENT_ID_KEY = stringPreferencesKey("patient_id")
     private val LIBRE_LINK_UP_EMAIL_KEY = stringPreferencesKey("libre_link_up_email")
-    private val GLUCOSE_OFFSET_KEY = androidx.datastore.preferences.core.intPreferencesKey("glucose_offset")
+    private val GLUCOSE_OFFSET_KEY = intPreferencesKey("glucose_offset")
     private val GLUCOSE_OFFSET_RANGES_KEY = stringPreferencesKey("glucose_offset_ranges")
     private val AUTO_ADJUST_ENABLED_KEY = booleanPreferencesKey("auto_adjust_enabled")
     private val AUTO_RANGE_OFFSETS_ENABLED_KEY = booleanPreferencesKey("auto_range_offsets_enabled")
@@ -68,37 +70,37 @@ class PreferenceManager(private val context: Context) {
     private val CAPILLARY_READINGS_KEY = stringPreferencesKey("capillary_readings")
     private val WATCH_ALERTS_ENABLED_KEY = booleanPreferencesKey("watch_alerts_enabled")
     private val WATCH_NOTIFICATION_MODE_KEY = stringPreferencesKey("watch_notification_mode")
-    private val WATCH_ALERT_INTERVAL_MINUTES_KEY = androidx.datastore.preferences.core.intPreferencesKey("watch_alert_interval_minutes")
-    private val WATCH_ALERT_START_MINUTE_KEY = androidx.datastore.preferences.core.intPreferencesKey("watch_alert_start_minute")
+    private val WATCH_ALERT_INTERVAL_MINUTES_KEY = intPreferencesKey("watch_alert_interval_minutes")
+    private val WATCH_ALERT_START_MINUTE_KEY = intPreferencesKey("watch_alert_start_minute")
     private val LOW_GLUCOSE_ALARM_ENABLED_KEY = booleanPreferencesKey("low_glucose_alarm_enabled")
     private val HIGH_GLUCOSE_ALARM_ENABLED_KEY = booleanPreferencesKey("high_glucose_alarm_enabled")
     private val USE_CALIBRATED_FOR_ALARMS_KEY = booleanPreferencesKey("use_calibrated_for_alarms")
     private val HISTORICAL_GLUCOSE_KEY = stringPreferencesKey("historical_glucose_archive")
-    private val HISTORY_RETENTION_DAYS_KEY = androidx.datastore.preferences.core.intPreferencesKey("history_retention_days")
+    private val HISTORY_RETENTION_DAYS_KEY = intPreferencesKey("history_retention_days")
     private val LAST_HISTORY_BACKUP_REQUEST_AT_KEY = longPreferencesKey("last_history_backup_request_at")
     private val IS_DEMO_MODE_KEY = booleanPreferencesKey("is_demo_mode")
     private val ACTIVE_SENSOR_SN_KEY = stringPreferencesKey("active_sensor_sn")
     private val ACTIVE_SENSOR_START_TIME_KEY = longPreferencesKey("active_sensor_start_time")
-    private val RAPID_DURATION_MINS_KEY = androidx.datastore.preferences.core.intPreferencesKey("rapid_duration_mins")
-    private val SLOW_DURATION_MINS_KEY = androidx.datastore.preferences.core.intPreferencesKey("slow_duration_mins")
-    private val IC_RULE_CONSTANT_KEY = androidx.datastore.preferences.core.intPreferencesKey("ic_rule_constant")
-    private val ISF_RULE_CONSTANT_KEY = androidx.datastore.preferences.core.intPreferencesKey("isf_rule_constant")
-    private val MANUAL_TDI_KEY = androidx.datastore.preferences.core.doublePreferencesKey("manual_tdi")
-    private val MANUAL_ISF_KEY = androidx.datastore.preferences.core.doublePreferencesKey("manual_isf")
-    private val TARGET_GLUCOSE_KEY = androidx.datastore.preferences.core.intPreferencesKey("target_glucose")
+    private val RAPID_DURATION_MINS_KEY = intPreferencesKey("rapid_duration_mins")
+    private val SLOW_DURATION_MINS_KEY = intPreferencesKey("slow_duration_mins")
+    private val IC_RULE_CONSTANT_KEY = intPreferencesKey("ic_rule_constant")
+    private val ISF_RULE_CONSTANT_KEY = intPreferencesKey("isf_rule_constant")
+    private val MANUAL_TDI_KEY = doublePreferencesKey("manual_tdi")
+    private val MANUAL_ISF_KEY = doublePreferencesKey("manual_isf")
+    private val TARGET_GLUCOSE_KEY = intPreferencesKey("target_glucose")
     private val INSULIN_DOSES_KEY = stringPreferencesKey("insulin_doses")
     private val SENSOR_LOGS_KEY = stringPreferencesKey("sensor_logs")
     private val WATCH_NOTIFICATION_SCHEDULES_KEY = stringPreferencesKey("watch_notification_schedules")
     private val GLUCOSE_ALARM_SCHEDULES_KEY = stringPreferencesKey("glucose_alarm_schedules")
-    private val BATTERY_LOW_THRESHOLD_KEY = androidx.datastore.preferences.core.intPreferencesKey("battery_low_threshold")
-    private val BATTERY_CRITICAL_THRESHOLD_KEY = androidx.datastore.preferences.core.intPreferencesKey("battery_critical_threshold")
+    private val BATTERY_LOW_THRESHOLD_KEY = intPreferencesKey("battery_low_threshold")
+    private val BATTERY_CRITICAL_THRESHOLD_KEY = intPreferencesKey("battery_critical_threshold")
     private val DISABLE_FAST_REFRESH_ON_SLOW_CHARGE_KEY = booleanPreferencesKey("disable_fast_refresh_on_slow_charge")
-    private val SENSOR_DURATION_DAYS_KEY = androidx.datastore.preferences.core.intPreferencesKey("sensor_duration_days")
+    private val SENSOR_DURATION_DAYS_KEY = intPreferencesKey("sensor_duration_days")
     private val IS_CLOUD_SYNC_ENABLED_KEY = booleanPreferencesKey("is_cloud_sync_enabled")
     private val CLOUD_SYNC_LAST_SUCCESS_AT_KEY = longPreferencesKey("cloud_sync_last_success_at")
     private val SETTINGS_UPDATED_AT_KEY = longPreferencesKey("settings_updated_at")
 
-    // --- Flows Optimizados ---
+    // --- Flows ---
     val authToken: Flow<String?> = context.dataStore.data.map { it[TOKEN_KEY] }
     val userId: Flow<String?> = context.dataStore.data.map { it[USER_ID_KEY] }
     val patientId: Flow<String?> = context.dataStore.data.map { it[PATIENT_ID_KEY] }
@@ -203,7 +205,6 @@ class PreferenceManager(private val context: Context) {
         GlucoseOffsetRange(200, null, 80)
     )
 
-    // --- Helpers de Optimización ---
     private inline fun <reified T> decodeList(prefs: Preferences, key: Preferences.Key<String>): List<T> {
         val jsonStr = prefs[key] ?: return emptyList()
         return try { json.decodeFromString(jsonStr) } catch (e: Exception) { emptyList() }
@@ -431,7 +432,7 @@ class PreferenceManager(private val context: Context) {
         context.dataStore.edit { it[CLOUD_SYNC_LAST_SUCCESS_AT_KEY] = timestamp }
     }
 
-    // --- Backup y Restauración Optimizados ---
+    // --- Backup y Restauración ---
     private suspend fun updateBackupPayload(timestamp: Long? = null) {
         context.dataStore.edit { it[SETTINGS_UPDATED_AT_KEY] = timestamp ?: System.currentTimeMillis() }
         val payload = buildCurrentHistoryBackupPayload()
@@ -506,7 +507,6 @@ class PreferenceManager(private val context: Context) {
         }
     }
 
-    // OPTIMIZACIÓN: Lee DataStore UNA SOLA VEZ en lugar de 4 llamadas a .first()
     suspend fun restorePartialHistoryFromBackup(
         includeHistoricalGlucose: Boolean,
         includeCapillaryReadings: Boolean,
@@ -514,7 +514,7 @@ class PreferenceManager(private val context: Context) {
         includeSensorLogs: Boolean = true
     ): Boolean {
         val payload = loadHistoryBackupPayload() ?: return false
-        val currentPrefs = context.dataStore.data.first() // 1 sola suspensión
+        val currentPrefs = context.dataStore.data.first()
         
         val restoredHistorical = if (includeHistoricalGlucose) {
             mergeHistoricalMeasurements(decodeList(currentPrefs, HISTORICAL_GLUCOSE_KEY), payload.historicalGlucoseArchive)
@@ -557,7 +557,7 @@ class PreferenceManager(private val context: Context) {
                 ?: throw IOException("Could not read selected backup file.")
 
             val payload = json.decodeFromString<HistoryBackupPayload>(payloadText)
-            val currentPrefs = if (!isHardReset) context.dataStore.data.first() else null // 1 sola suspensión
+            val currentPrefs = if (!isHardReset) context.dataStore.data.first() else null
 
             val historicalToSave = if (isHardReset) payload.historicalGlucoseArchive else {
                 mergeHistoricalMeasurements(decodeList(currentPrefs!!, HISTORICAL_GLUCOSE_KEY), payload.historicalGlucoseArchive)
@@ -610,9 +610,67 @@ class PreferenceManager(private val context: Context) {
 
     suspend fun getCurrentBackupPayload(): HistoryBackupPayload = buildCurrentHistoryBackupPayload()
 
+    // ========================================================================
+    // 🚀 OPTIMIZACIÓN CRÍTICA: Construye el payload de settings SIN deserializar 
+    // las listas grandes. Esto evita el timeout de 15s causado por parsear 
+    // miles de registros de glucosa en memoria.
+    // ========================================================================
     suspend fun getSettingsOnlyPayload(): HistoryBackupPayload {
-        val full = buildCurrentHistoryBackupPayload()
-        return full.copy(historicalGlucoseArchive = emptyList(), capillaryReadings = emptyList(), insulinDoses = emptyList(), sensorLogs = emptyList())
+        val prefs = context.dataStore.data.first()
+        
+        val glucoseOffsetRanges = try {
+            prefs[GLUCOSE_OFFSET_RANGES_KEY]?.let { json.decodeFromString<List<GlucoseOffsetRange>>(it) } ?: getDefaultRanges()
+        } catch (e: Exception) { getDefaultRanges() }
+
+        val autoRangeOffsetModeStr = prefs[AUTO_RANGE_OFFSET_MODE_KEY]
+        val autoRangeOffsetMode = if (!autoRangeOffsetModeStr.isNullOrBlank()) {
+            AutoRangeOffsetMode.entries.firstOrNull { it.name == autoRangeOffsetModeStr } ?: AutoRangeOffsetMode.OFF
+        } else {
+            if (prefs[AUTO_RANGE_OFFSETS_ENABLED_KEY] == true) AutoRangeOffsetMode.BY_RANGE else AutoRangeOffsetMode.OFF
+        }
+
+        val watchNotificationModeStr = prefs[WATCH_NOTIFICATION_MODE_KEY]
+        val watchNotificationMode = if (!watchNotificationModeStr.isNullOrBlank()) {
+            WatchNotificationMode.entries.firstOrNull { it.name == watchNotificationModeStr } ?: WatchNotificationMode.OFF
+        } else {
+            if (prefs[WATCH_ALERTS_ENABLED_KEY] == true) WatchNotificationMode.PERIODIC_AND_SCHEDULES else WatchNotificationMode.OFF
+        }
+
+        return HistoryBackupPayload(
+            // Forzamos listas vacías desde el inicio para evitar cualquier deserialización costosa
+            historicalGlucoseArchive = emptyList(),
+            capillaryReadings = emptyList(),
+            insulinDoses = emptyList(),
+            sensorLogs = emptyList(),
+            watchNotificationSchedules = emptyList(),
+            glucoseAlarmSchedules = emptyList(),
+            
+            settingsUpdatedAtMs = prefs[SETTINGS_UPDATED_AT_KEY],
+            glucoseOffset = prefs[GLUCOSE_OFFSET_KEY] ?: 0,
+            glucoseOffsetRanges = glucoseOffsetRanges,
+            autoAdjustEnabled = prefs[AUTO_ADJUST_ENABLED_KEY] ?: false,
+            autoRangeOffsetsEnabled = autoRangeOffsetMode != AutoRangeOffsetMode.OFF,
+            autoRangeOffsetMode = autoRangeOffsetMode,
+            rapidDurationMins = prefs[RAPID_DURATION_MINS_KEY] ?: 240,
+            slowDurationMins = prefs[SLOW_DURATION_MINS_KEY] ?: 1440,
+            icRuleConstant = prefs[IC_RULE_CONSTANT_KEY] ?: 450,
+            isfRuleConstant = prefs[ISF_RULE_CONSTANT_KEY] ?: 1800,
+            manualTdi = prefs[MANUAL_TDI_KEY],
+            manualIsf = prefs[MANUAL_ISF_KEY],
+            targetGlucose = prefs[TARGET_GLUCOSE_KEY] ?: 80,
+            watchAlertsEnabled = prefs[WATCH_ALERTS_ENABLED_KEY] ?: false,
+            watchNotificationMode = watchNotificationMode,
+            watchAlertIntervalMinutes = (prefs[WATCH_ALERT_INTERVAL_MINUTES_KEY] ?: 60).coerceIn(5, 180),
+            watchAlertStartMinute = (prefs[WATCH_ALERT_START_MINUTE_KEY] ?: 0).coerceIn(0, 59),
+            lowGlucoseAlarmEnabled = prefs[LOW_GLUCOSE_ALARM_ENABLED_KEY] ?: false,
+            highGlucoseAlarmEnabled = prefs[HIGH_GLUCOSE_ALARM_ENABLED_KEY] ?: false,
+            useCalibratedForAlarms = prefs[USE_CALIBRATED_FOR_ALARMS_KEY] ?: true,
+            historyRetentionDays = (prefs[HISTORY_RETENTION_DAYS_KEY] ?: DEFAULT_HISTORY_RETENTION_DAYS).coerceIn(MIN_HISTORY_RETENTION_DAYS, MAX_HISTORY_RETENTION_DAYS),
+            batteryLowThreshold = prefs[BATTERY_LOW_THRESHOLD_KEY] ?: 15,
+            batteryCriticalThreshold = prefs[BATTERY_CRITICAL_THRESHOLD_KEY] ?: 5,
+            disableFastRefreshOnSlowCharge = prefs[DISABLE_FAST_REFRESH_ON_SLOW_CHARGE_KEY] ?: true,
+            sensorDurationDays = prefs[SENSOR_DURATION_DAYS_KEY] ?: 15
+        )
     }
 
     suspend fun getCloudDataPayload(): HistoryBackupPayload {
@@ -622,7 +680,7 @@ class PreferenceManager(private val context: Context) {
 
     suspend fun restoreFromPayload(payload: HistoryBackupPayload, isHardReset: Boolean = false): Boolean {
         return try {
-            val currentPrefs = if (!isHardReset) context.dataStore.data.first() else null // 1 sola suspensión
+            val currentPrefs = if (!isHardReset) context.dataStore.data.first() else null
 
             val historicalToSave = if (isHardReset) payload.historicalGlucoseArchive else {
                 mergeHistoricalMeasurements(decodeList(currentPrefs!!, HISTORICAL_GLUCOSE_KEY), payload.historicalGlucoseArchive)
@@ -655,7 +713,6 @@ class PreferenceManager(private val context: Context) {
         }
     }
 
-    // OPTIMIZACIÓN CRÍTICA: Lee DataStore UNA SOLA VEZ en lugar de 20+ llamadas a .first()
     private suspend fun buildCurrentHistoryBackupPayload(): HistoryBackupPayload {
         val prefs = context.dataStore.data.first()
         
@@ -712,7 +769,6 @@ class PreferenceManager(private val context: Context) {
         )
     }
 
-    // Helper para evitar duplicar 20 líneas de código en los métodos de restauración
     private fun applyPayloadToPreferences(preferences: androidx.datastore.preferences.core.MutablePreferences, payload: HistoryBackupPayload) {
         payload.glucoseOffset?.let { preferences[GLUCOSE_OFFSET_KEY] = it }
         payload.glucoseOffsetRanges?.let { preferences[GLUCOSE_OFFSET_RANGES_KEY] = json.encodeToString(it) }
@@ -756,7 +812,7 @@ class PreferenceManager(private val context: Context) {
         }
     }
 
-    // --- Funciones de Fusión Optimizadas (Zero Redundant Parsing) ---
+    // --- Funciones de Fusión Optimizadas ---
     private fun mergeHistoricalMeasurements(local: List<GlucoseMeasurement>, backup: List<GlucoseMeasurement>): List<GlucoseMeasurement> {
         val mergedMap = LinkedHashMap<String, Pair<Instant?, GlucoseMeasurement>>()
         val processList = { list: List<GlucoseMeasurement> ->
@@ -765,7 +821,6 @@ class PreferenceManager(private val context: Context) {
                 val key = instant?.toEpochMilli()?.toString() ?: m.timestamp
                 mergedMap[key] = instant to m
             }
-22
         }
         processList(local)
         processList(backup)
