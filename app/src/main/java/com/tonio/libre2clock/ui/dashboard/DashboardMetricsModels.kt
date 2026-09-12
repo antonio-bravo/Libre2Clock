@@ -149,7 +149,10 @@ object DashboardMetricsCalculator {
             val oscRaw = max(maxRaw.roundToInt() - avgRaw, avgRaw - minRaw.roundToInt()).coerceAtLeast(0)
             val oscCal = max(maxCal.roundToInt() - avgCal, avgCal - minCal.roundToInt()).coerceAtLeast(0)
 
-            return DisplayMetric("$avgRaw ± $oscRaw ($avgCal ± $oscCal)", "")
+            return DisplayMetric(
+                primary = "$avgRaw ± $oscRaw",
+                secondary = "($avgCal ± $oscCal)"
+            )
         }
 
         // OPTIMIZACIÓN: Cálculo de A1c en una sola pasada sin colecciones intermedias
@@ -175,8 +178,8 @@ object DashboardMetricsCalculator {
                 val a1cRaw = (avgRawForA1c + 46.7) / 28.7
                 val a1cCalibrated = (avgCalForA1c + 46.7) / 28.7
                 DisplayMetric(
-                    primary = String.format(Locale.US, "%.1f%% (%.1f%%)", a1cRaw, a1cCalibrated),
-                    secondary = ""
+                    primary = String.format(Locale.US, "%.1f%%", a1cRaw),
+                    secondary = String.format(Locale.US, "(%.1f%%)", a1cCalibrated)
                 )
             } else {
                 DisplayMetric("--", "")

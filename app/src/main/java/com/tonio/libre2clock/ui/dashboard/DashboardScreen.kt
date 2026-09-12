@@ -822,15 +822,14 @@ private fun CornerMetric(
         Text(
             text = title,
             style = MaterialTheme.typography.labelSmall,
-            color = contentColor.copy(alpha = 0.7f),
-            maxLines = 1
+            color = contentColor.copy(alpha = 0.7f)
         )
         AnimatedContent(targetState = primary, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "corner_primary_anim") { text ->
-            Text(text = text, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = contentColor, maxLines = 1)
+            Text(text = text, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = contentColor)
         }
         if (secondary.isNotEmpty()) {
             AnimatedContent(targetState = secondary, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "corner_secondary_anim") { text ->
-                Text(text = text, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Medium, color = contentColor.copy(alpha = 0.85f), maxLines = 1)
+                Text(text = text, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Medium, color = contentColor.copy(alpha = 0.85f))
             }
         }
     }
