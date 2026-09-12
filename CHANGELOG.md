@@ -1,5 +1,29 @@
 # Changelog
 
+## 568449f (Sep 12, 2026 15:52:07)
+granularity on cloud sync — antonio-bravo
+[detail](#568449f-details)
+
+<details id='568449f-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
+</details>
+
+
+---
+## 6131bd0 (Sep 12, 2026 13:26:05)
+Update changelog — github-actions[bot]
+[detail](#6131bd0-details)
+
+<details id='6131bd0-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 58edef0 (Sep 12, 2026 15:25:54)
 fix cloudSync — antonio-bravo
 [detail](#58edef0-details)
@@ -678,30 +702,6 @@ Update changelog — github-actions[bot]
 [detail](#c63d0eb-details)
 
 <details id='c63d0eb-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 59f479a (Sep 09, 2026 13:02:46)
-Test cloud sync — antonio-bravo
-[detail](#59f479a-details)
-
-<details id='59f479a-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-</details>
-
-
----
-## 6ea30c5 (Sep 09, 2026 10:43:48)
-Update changelog — github-actions[bot]
-[detail](#6ea30c5-details)
-
-<details id='6ea30c5-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
