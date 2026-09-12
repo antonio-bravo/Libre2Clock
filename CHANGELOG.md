@@ -1,5 +1,33 @@
 # Changelog
 
+## 6ac039e (Sep 12, 2026 21:51:37)
+Sync other stuff — antonio-bravo
+[detail](#6ac039e-details)
+
+<details id='6ac039e-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+</details>
+
+
+---
+## 991796f (Sep 12, 2026 18:23:41)
+Update changelog — github-actions[bot]
+[detail](#991796f-details)
+
+<details id='991796f-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## b1e1137 (Sep 12, 2026 20:23:24)
 Avg in 2 lines — antonio-bravo
 [detail](#b1e1137-details)
@@ -659,33 +687,6 @@ Update changelog — github-actions[bot]
 [detail](#8604c0f-details)
 
 <details id='8604c0f-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## fba2130 (Sep 09, 2026 16:55:12)
-fix wait for app — antonio-bravo
-[detail](#fba2130-details)
-
-<details id='fba2130-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/local/GlucoseHistoryDatabaseHelper.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEventLogScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/EventLogManager.kt [Modified]
-</details>
-
-
----
-## ab3bb2c (Sep 09, 2026 14:28:20)
-Update changelog — github-actions[bot]
-[detail](#ab3bb2c-details)
-
-<details id='ab3bb2c-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
