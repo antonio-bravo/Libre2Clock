@@ -1,5 +1,31 @@
 # Changelog
 
+## 9d778ef (Sep 12, 2026 17:54:00)
+update cloud sync — antonio-bravo
+[detail](#9d778ef-details)
+
+<details id='9d778ef-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/model/LibreModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
+</details>
+
+
+---
+## b86508c (Sep 12, 2026 15:21:22)
+Update changelog — github-actions[bot]
+[detail](#b86508c-details)
+
+<details id='b86508c-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 537fa03 (Sep 12, 2026 17:21:08)
 logs CloudSync — antonio-bravo
 [detail](#537fa03-details)
@@ -672,34 +698,6 @@ Update changelog — github-actions[bot]
 [detail](#3a81060-details)
 
 <details id='3a81060-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 89a3f2b (Sep 09, 2026 14:46:24)
-cloud sync — antonio-bravo
-[detail](#89a3f2b-details)
-
-<details id='89a3f2b-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 91b8218 (Sep 09, 2026 11:16:37)
-Update changelog — github-actions[bot]
-[detail](#91b8218-details)
-
-<details id='91b8218-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
