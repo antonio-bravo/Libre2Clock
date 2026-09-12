@@ -378,55 +378,123 @@ class CloudSyncManager(
         }
     }
 
-    // 🆕 NUEVA FUNCIÓN: Descarga explícita de listas para sincronización multi-dispositivo robusta
+    // 🆕 VERSIÓN MEJORADA Y CON LOGS DETALLADOS PARA DIAGNÓSTICO
     private suspend fun pullDataListsFromCloud(googleUid: String, patientId: String) {
         val patientDoc = firestore.collection("users").document(googleUid)
             .collection("patients").document(patientId)
 
+        // ---------------------------------------------------------
+        // 1. INSULIN DOSES
+        // ---------------------------------------------------------
         log("  -> Pulling insulin doses from cloud...")
         try {
             val insulinSnapshot = patientDoc.collection("insulin_doses").get().await()
-            val remoteInsulin = insulinSnapshot.documents.mapNotNull { it.toObject(InsulinDose::class.java) }
+            log("     📥 Found ${insulinSnapshot.documents.size} remote insulin documents.")
+            
+            val remoteInsulin = insulinSnapshot.documents.mapNotNull { doc ->
+                val dose = doc.toObject(InsulinDose::class.java)
+                if (dose == null) log("     ⚠️ Failed to parse insulin doc ID: ${doc.id}")
+                dose
+            }
+            
             if (remoteInsulin.isNotEmpty()) {
                 val localInsulin = preferenceManager.insulinDoses.first().associateBy { it.id }.toMutableMap()
-                remoteInsulin.forEach { dose -> 
-                    if (!dose.isDeleted) localInsulin[dose.id] = dose else localInsulin.remove(dose.id) 
+                
+                remoteInsulin.forEach { dose ->
+                    // NOTA: Si tu modelo InsulinDose NO tiene la propiedad 'isDeleted', 
+                    // elimina la condición "if (!dose.isDeleted)" y deja solo: localInsulin[dose.id] = dose
+                    val isDeleted = try { 
+                        dose.javaClass.getDeclaredField("isDeleted").apply { isAccessible = true }.get(dose) as? Boolean ?: false 
+                    } catch (e: Exception) { false } // Si no existe el campo, asumimos que no está borrado
+
+                    if (!isDeleted) {
+                        localInsulin[dose.id] = dose
+                    } else {
+                        localInsulin.remove(dose.id)
+                    }
                 }
-                preferenceManager.saveInsulinDoses(localInsulin.values.sortedByDescending { it.timestamp })
-                log("     ✅ Synced ${remoteInsulin.size} insulin doses.")
+                
+                val finalList = localInsulin.values.sortedByDescending { it.timestamp }
+                preferenceManager.saveInsulinDoses(finalList)
+                log("     ✅ Successfully merged and saved ${finalList.size} insulin doses locally.")
+            } else {
+                log("     ℹ️ No remote insulin doses found in cloud.")
             }
         } catch (e: Exception) {
-            log("     ⚠️ Failed to pull insulin: ${e.message}")
+            log("     ❌ CRITICAL ERROR pulling insulin: ${e.javaClass.simpleName} - ${e.message}")
+            e.printStackTrace()
         }
 
+        // ---------------------------------------------------------
+        // 2. CAPILLARY READINGS
+        // ---------------------------------------------------------
         log("  -> Pulling capillary readings from cloud...")
         try {
             val capillarySnapshot = patientDoc.collection("capillary_readings").get().await()
-            val remoteCapillary = capillarySnapshot.documents.mapNotNull { it.toObject(CapillaryMeasurement::class.java) }
+            log("     📥 Found ${capillarySnapshot.documents.size} remote capillary documents.")
+            
+            val remoteCapillary = capillarySnapshot.documents.mapNotNull { doc ->
+                val reading = doc.toObject(CapillaryMeasurement::class.java)
+                if (reading == null) log("     ⚠️ Failed to parse capillary doc ID: ${doc.id}")
+                reading
+            }
+            
             if (remoteCapillary.isNotEmpty()) {
                 val localCapillary = preferenceManager.capillaryReadings.first().associateBy { it.id }.toMutableMap()
-                remoteCapillary.forEach { reading -> 
-                    if (!reading.isDeleted) localCapillary[reading.id] = reading else localCapillary.remove(reading.id) 
+                
+                remoteCapillary.forEach { reading ->
+                    val isDeleted = try { 
+                        reading.javaClass.getDeclaredField("isDeleted").apply { isAccessible = true }.get(reading) as? Boolean ?: false 
+                    } catch (e: Exception) { false }
+
+                    if (!isDeleted) {
+                        localCapillary[reading.id] = reading
+                    } else {
+                        localCapillary.remove(reading.id)
+                    }
                 }
-                preferenceManager.saveCapillaryReadings(localCapillary.values.sortedByDescending { it.timestamp })
-                log("     ✅ Synced ${remoteCapillary.size} capillary readings.")
+                
+                val finalList = localCapillary.values.sortedByDescending { it.timestamp }
+                preferenceManager.saveCapillaryReadings(finalList)
+                log("     ✅ Successfully merged and saved ${finalList.size} capillary readings locally.")
+            } else {
+                log("     ℹ️ No remote capillary readings found in cloud.")
             }
         } catch (e: Exception) {
-            log("     ⚠️ Failed to pull capillary: ${e.message}")
+            log("     ❌ CRITICAL ERROR pulling capillary: ${e.javaClass.simpleName} - ${e.message}")
+            e.printStackTrace()
         }
 
+        // ---------------------------------------------------------
+        // 3. SENSOR LOGS
+        // ---------------------------------------------------------
         log("  -> Pulling sensor logs from cloud...")
         try {
             val sensorSnapshot = patientDoc.collection("sensor_logs").get().await()
-            val remoteSensors = sensorSnapshot.documents.mapNotNull { it.toObject(SensorLog::class.java) }
+            log("     📥 Found ${sensorSnapshot.documents.size} remote sensor log documents.")
+            
+            val remoteSensors = sensorSnapshot.documents.mapNotNull { doc ->
+                val logItem = doc.toObject(SensorLog::class.java)
+                if (logItem == null) log("     ⚠️ Failed to parse sensor log doc ID: ${doc.id}")
+                logItem
+            }
+            
             if (remoteSensors.isNotEmpty()) {
                 val localSensors = preferenceManager.sensorLogs.first().associateBy { it.serialNumber }.toMutableMap()
-                remoteSensors.forEach { logItem -> localSensors[logItem.serialNumber] = logItem }
-                preferenceManager.saveSensorLogs(localSensors.values.sortedByDescending { it.startDate })
-                log("     ✅ Synced ${remoteSensors.size} sensor logs.")
+                
+                remoteSensors.forEach { logItem ->
+                    localSensors[logItem.serialNumber] = logItem
+                }
+                
+                val finalList = localSensors.values.sortedByDescending { it.startDate }
+                preferenceManager.saveSensorLogs(finalList)
+                log("     ✅ Successfully merged and saved ${finalList.size} sensor logs locally.")
+            } else {
+                log("     ℹ️ No remote sensor logs found in cloud.")
             }
         } catch (e: Exception) {
-            log("     ⚠️ Failed to pull sensor logs: ${e.message}")
+            log("     ❌ CRITICAL ERROR pulling sensor logs: ${e.javaClass.simpleName} - ${e.message}")
+            e.printStackTrace()
         }
     }
 
@@ -580,13 +648,16 @@ class CloudSyncManager(
 
     fun pullSettingsOnly(googleUid: String, patientId: String, onComplete: (Boolean) -> Unit) {
         scope.launch {
+            log("🔄 [Force Pull] Intentando adquirir el bloqueo de sincronización...")
+            
             if (!syncMutex.tryLock()) {
-                log("Force pull skipped: another sync is already in progress.")
-                onComplete(false)
+                log("❌ [Force Pull] Cancelado: Otra sincronización ya está en progreso (mutex bloqueado).")
+                withContext(Dispatchers.Main) { onComplete(false) }
                 return@launch
             }
+            
             try {
-                log("Force pulling settings from cloud...")
+                log("🔄 [Force Pull] Bloqueo adquirido. Buscando configuración remota...")
                 val patientDoc = firestore.collection("users").document(googleUid)
                     .collection("patients").document(patientId)
 
@@ -595,23 +666,41 @@ class CloudSyncManager(
                 }
 
                 if (remoteSettings.exists()) {
+                    log("✅ [Force Pull] Documento remoto encontrado. Deserializando...")
                     val remotePayload = remoteSettings.toObject(HistoryBackupPayload::class.java)
-                    remotePayload?.let { payload ->
-                        preferenceManager.restoreFromPayload(payload, isHardReset = false)
-                        log("Settings force-restored from cloud.")
-                        withContext(Dispatchers.Main) { onComplete(true) }
+                    
+                    if (remotePayload != null) {
+                        log("✅ [Force Pull] Deserialización exitosa. Guardando en DataStore local...")
+                        
+                        // restoreFromPayload devuelve Boolean, lo capturamos para verificar
+                        val success = preferenceManager.restoreFromPayload(remotePayload, isHardReset = false)
+                        
+                        if (success) {
+                            log("🎉 [Force Pull] ¡Configuración restaurada desde la nube con éxito!")
+                            withContext(Dispatchers.Main) { onComplete(true) }
+                        } else {
+                            log("❌ [Force Pull] restoreFromPayload devolvió false (fallo al guardar en DataStore).")
+                            withContext(Dispatchers.Main) { onComplete(false) }
+                        }
+                        return@launch
+                    } else {
+                        log("⚠️ [Force Pull] La deserialización devolvió null (el documento en la nube está vacío o corrupto).")
+                        withContext(Dispatchers.Main) { onComplete(false) }
                         return@launch
                     }
                 }
-                log("No settings found in cloud.")
+                
+                log("⚠️ [Force Pull] No se encontró ningún documento de configuración en la nube.")
                 withContext(Dispatchers.Main) { onComplete(false) }
+                
             } catch (e: Exception) {
                 Log.e("CloudSync", "Force pull failed", e)
-                log("Force pull failed: ${e.javaClass.simpleName} - ${e.message}")
+                log("❌ [Force Pull] ERROR CRÍTICO: ${e.javaClass.simpleName} - ${e.message}")
                 eventLogger.log(LogLevel.ERROR, "CloudSync", "Force pull settings failed", e.stackTraceToString())
                 withContext(Dispatchers.Main) { onComplete(false) }
             } finally {
                 syncMutex.unlock()
+                log("🔓 [Force Pull] Bloqueo de sincronización liberado.")
             }
         }
     }

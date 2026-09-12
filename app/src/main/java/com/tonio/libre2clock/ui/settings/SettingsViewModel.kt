@@ -3,6 +3,7 @@ package com.tonio.libre2clock.ui.settings
 import android.app.Application
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.tonio.libre2clock.data.api.LibreService
@@ -392,16 +393,16 @@ class SettingsViewModel(
     }
 
     fun pullCloudSettings(onComplete: (Boolean) -> Unit) {
-        val user = authManager.user.value
         viewModelScope.launch {
-            // OPTIMIZACIÓN 4: .value en lugar de .first()
-            val patientId = patientId.value 
+            val user = authManager.user.value
+            // ⚠️ IMPORTANTE: .first() es una función suspend, debe estar dentro de viewModelScope.launch
+            val patientId = preferenceManager.patientId.first() 
+            
             if (user != null && patientId != null) {
-                cloudSyncManager.pullSettingsOnly(user.uid, patientId) { success ->
-                    if (success) viewModelScope.launch { settingsCache.clearAllCache() }
-                    onComplete(success)
-                }
+                Log.d("SettingsViewModel", "Iniciando force pull para user: ${user.uid}, patient: $patientId")
+                cloudSyncManager.pullSettingsOnly(user.uid, patientId, onComplete)
             } else {
+                Log.w("SettingsViewModel", "No se puede hacer pull: User o PatientId es nulo")
                 onComplete(false)
             }
         }
