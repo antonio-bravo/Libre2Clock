@@ -47,7 +47,7 @@ class CloudSyncManager(
 
     private var isListening = false
     private val syncMutex = Mutex()
-    
+
     // Para evitar fugas de memoria con los listeners
     private val listenerRegistrations = mutableListOf<ListenerRegistration>()
 
@@ -62,7 +62,7 @@ class CloudSyncManager(
         var currentDelay = initialDelay
         repeat(times - 1) { attempt ->
             try {
-                // Reducido de 30s a 15s. En móviles, si un lote pequeño tarda más de 15s, 
+                // Reducido de 30s a 15s. En móviles, si un lote pequeño tarda más de 15s,
                 // es mejor fallar rápido y reintentar en el próximo ciclo que bloquear la app.
                 return withTimeout(15000) { block() }
             } catch (e: TimeoutCancellationException) {
@@ -190,7 +190,7 @@ class CloudSyncManager(
                     return@launch
                 }
 
-                _cloudSyncDebugOutput.value = "" 
+                _cloudSyncDebugOutput.value = ""
 
                 var currentStep = "Initializing"
                 try {
@@ -223,11 +223,21 @@ class CloudSyncManager(
                     log("2. $currentStep...")
                     pullHistory(googleUid, patientId)
 
-                    currentStep = "Pushing local data"
-                    log("3. Pushing local data (Sequential to avoid network saturation)...")
-                    // SECUENCIAL: Evita saturar la red móvil y reduce drásticamente los timeouts
+                    // ---------------------------------------------------------------
+                    // PASO 3 DESGLOSADO: cada sub-paso tiene su propio currentStep,
+                    // así el log/exception dice exactamente cuál se atascó, en vez
+                    // de agrupar todo bajo "Pushing local data".
+                    // ---------------------------------------------------------------
+                    currentStep = "Pushing settings"
+                    log("3a. $currentStep...")
                     syncSettingsToCloud(googleUid, patientId)
+
+                    currentStep = "Pushing data lists"
+                    log("3b. $currentStep...")
                     syncDataListsToCloud(googleUid, patientId)
+
+                    currentStep = "Pushing history"
+                    log("3c. $currentStep...")
                     syncHistory(googleUid, patientId)
 
                     currentStep = "Activating real-time listeners"
@@ -267,12 +277,21 @@ class CloudSyncManager(
         val patientDoc = firestore.collection("users").document(googleUid)
             .collection("patients").document(patientId)
 
+        // ---------------------------------------------------------------
+        // Logging granular por colección: te dice cuántos registros hay
+        // y en qué lote se queda atascado si vuelve a fallar. Si estos
+        // números crecen sin parar en cada sync, la causa raíz es que
+        // se reenvía la lista COMPLETA siempre en vez de solo lo nuevo
+        // (ver recomendación de sync incremental).
+        // ---------------------------------------------------------------
+
         val insulin = preferenceManager.insulinDoses.first()
+        log("  -> Insulin: ${insulin.size} registros")
         if (insulin.isNotEmpty()) {
             val insulinColl = patientDoc.collection("insulin_doses")
-            // Reducido de 50 a 20 para lotes más rápidos y menos propensos a timeouts
-            insulin.chunked(20).forEachIndexed { index, chunk ->
-                retryWithBackoff("Insulin Batch ${index + 1}") {
+            val chunks = insulin.chunked(20)
+            chunks.forEachIndexed { index, chunk ->
+                retryWithBackoff("Insulin Batch ${index + 1}/${chunks.size}") {
                     val batch = firestore.batch()
                     chunk.forEach { dose -> batch.set(insulinColl.document(dose.id), dose, SetOptions.merge()) }
                     batch.commit().await()
@@ -281,10 +300,12 @@ class CloudSyncManager(
         }
 
         val capillary = preferenceManager.capillaryReadings.first()
+        log("  -> Capillary: ${capillary.size} registros")
         if (capillary.isNotEmpty()) {
             val capillaryColl = patientDoc.collection("capillary_readings")
-            capillary.chunked(20).forEachIndexed { index, chunk ->
-                retryWithBackoff("Capillary Batch ${index + 1}") {
+            val chunks = capillary.chunked(20)
+            chunks.forEachIndexed { index, chunk ->
+                retryWithBackoff("Capillary Batch ${index + 1}/${chunks.size}") {
                     val batch = firestore.batch()
                     chunk.forEach { r -> batch.set(capillaryColl.document(r.id), r, SetOptions.merge()) }
                     batch.commit().await()
@@ -293,10 +314,12 @@ class CloudSyncManager(
         }
 
         val sensorLogs = preferenceManager.sensorLogs.first()
+        log("  -> SensorLogs: ${sensorLogs.size} registros")
         if (sensorLogs.isNotEmpty()) {
             val sensorLogsColl = patientDoc.collection("sensor_logs")
-            sensorLogs.chunked(20).forEachIndexed { index, chunk ->
-                retryWithBackoff("SensorLogs Batch ${index + 1}") {
+            val chunks = sensorLogs.chunked(20)
+            chunks.forEachIndexed { index, chunk ->
+                retryWithBackoff("SensorLogs Batch ${index + 1}/${chunks.size}") {
                     val batch = firestore.batch()
                     chunk.forEach { log -> batch.set(sensorLogsColl.document(log.serialNumber), log, SetOptions.merge()) }
                     batch.commit().await()
@@ -314,7 +337,7 @@ class CloudSyncManager(
             val snapshot = retryWithBackoff("Pull History") {
                 // CAMBIO CRÍTICO: Ordenar por el campo de tiempo numérico.
                 // Ordenar por FieldPath.documentId() cuando es un String ("1620000-120") causa ordenamiento alfabético
-                // y dispara errores de índice. 
+                // y dispara errores de índice.
                 // ⚠️ Asegúrate de que "sort_epoch_ms" sea el nombre EXACTO del campo en tu modelo GlucoseMeasurement.
                 historyColl.orderBy("sort_epoch_ms", Query.Direction.DESCENDING)
                     .limit(150) // Reducido de 300 a 150 para aligerar la descarga
@@ -429,8 +452,9 @@ class CloudSyncManager(
             .collection("glucose_history")
 
         // Reducido de 50 a 20
-        local.chunked(20).forEachIndexed { index, chunk ->
-            retryWithBackoff("History Batch ${index + 1}") {
+        val chunks = local.chunked(20)
+        chunks.forEachIndexed { index, chunk ->
+            retryWithBackoff("History Batch ${index + 1}/${chunks.size}") {
                 val batch = firestore.batch()
                 chunk.forEach { m ->
                     batch.set(historyColl.document("${m.epochSeconds}-${m.value}"), m, SetOptions.merge())
@@ -491,6 +515,7 @@ class CloudSyncManager(
     fun pullSettingsOnly(googleUid: String, patientId: String, onComplete: (Boolean) -> Unit) {
         scope.launch {
             if (!syncMutex.tryLock()) {
+                log("Force pull skipped: another sync is already in progress.")
                 onComplete(false)
                 return@launch
             }
@@ -515,7 +540,10 @@ class CloudSyncManager(
                 log("No settings found in cloud.")
                 withContext(Dispatchers.Main) { onComplete(false) }
             } catch (e: Exception) {
-                log("Force pull failed: ${e.message}")
+                // Log detallado para poder distinguir permission-denied, deserialización, timeout, etc.
+                Log.e("CloudSync", "Force pull failed", e)
+                log("Force pull failed: ${e.javaClass.simpleName} - ${e.message}")
+                eventLogger.log(LogLevel.ERROR, "CloudSync", "Force pull settings failed", e.stackTraceToString())
                 withContext(Dispatchers.Main) { onComplete(false) }
             } finally {
                 syncMutex.unlock()
