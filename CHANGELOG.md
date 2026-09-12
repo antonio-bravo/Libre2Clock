@@ -1,5 +1,34 @@
 # Changelog
 
+## 58edef0 (Sep 12, 2026 15:25:54)
+fix cloudSync — antonio-bravo
+[detail](#58edef0-details)
+
+<details id='58edef0-details'>
+<summary>Changed files</summary>
+
+- .idea/misc.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## c58c1db (Sep 11, 2026 13:22:09)
+Update changelog — github-actions[bot]
+[detail](#c58c1db-details)
+
+<details id='c58c1db-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## a75343d (Sep 11, 2026 15:21:48)
 fix SettingsEventLogScreen.kt:175:9 'when' is exhaustive so 'else' is redundant here. — antonio-bravo
 [detail](#a75343d-details)
@@ -673,33 +702,6 @@ Update changelog — github-actions[bot]
 [detail](#6ea30c5-details)
 
 <details id='6ea30c5-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 7d9c11a (Sep 09, 2026 12:43:35)
-Sync on cloud in smaller packages — antonio-bravo
-[detail](#7d9c11a-details)
-
-<details id='7d9c11a-details'>
-<summary>Changed files</summary>
-
-- .idea/misc.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 9820d29 (Sep 09, 2026 09:43:40)
-Update changelog — github-actions[bot]
-[detail](#9820d29-details)
-
-<details id='9820d29-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
