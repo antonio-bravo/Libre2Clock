@@ -637,7 +637,6 @@ class PreferenceManager(private val context: Context) {
         }
 
         return HistoryBackupPayload(
-            // Forzamos listas vacías desde el inicio para evitar cualquier deserialización costosa
             historicalGlucoseArchive = emptyList(),
             capillaryReadings = emptyList(),
             insulinDoses = emptyList(),
@@ -829,37 +828,49 @@ class PreferenceManager(private val context: Context) {
     }
 
     private fun mergeCapillaryMeasurements(local: List<CapillaryMeasurement>, backup: List<CapillaryMeasurement>): List<CapillaryMeasurement> {
-        val mergedMap = LinkedHashMap<String, Pair<Instant?, CapillaryMeasurement>>()
-        val processList = { list: List<CapillaryMeasurement> ->
-            for (r in list) {
-                val instant = parseFlexibleInstant(r.timestamp)
-                val key = instant?.toEpochMilli()?.toString() ?: r.timestamp
-                mergedMap[key] = instant to r
+        val mergedMap = local.associateBy { it.id }.toMutableMap()
+        
+        for (r in backup) {
+            val existing = mergedMap[r.id]
+            if (existing == null || r.updatedAtMs > existing.updatedAtMs) {
+                if (r.isDeleted) {
+                    mergedMap.remove(r.id) // Elimina físicamente el registro si fue borrado en la nube
+                } else {
+                    mergedMap[r.id] = r
+                }
             }
         }
-        processList(local)
-        processList(backup)
-        return mergedMap.values.filter { it.first != null }.sortedByDescending { it.first!!.toEpochMilli() }.map { it.second }
+        
+        return mergedMap.values.sortedByDescending { it.timestamp }
     }
 
     private fun mergeInsulinDoses(local: List<InsulinDose>, backup: List<InsulinDose>): List<InsulinDose> {
-        val mergedMap = LinkedHashMap<String, Pair<Instant?, InsulinDose>>()
-        val processList = { list: List<InsulinDose> ->
-            for (d in list) {
-                val instant = parseFlexibleInstant(d.timestamp)
-                val key = if (instant != null) "${instant.toEpochMilli()}-${d.type}" else "${d.timestamp}-${d.type}"
-                mergedMap[key] = instant to d
+        val mergedMap = local.associateBy { it.id }.toMutableMap()
+        
+        for (d in backup) {
+            val existing = mergedMap[d.id]
+            if (existing == null || d.updatedAtMs > existing.updatedAtMs) {
+                if (d.isDeleted) {
+                    mergedMap.remove(d.id) // Elimina físicamente el registro si fue borrado en la nube
+                } else {
+                    mergedMap[d.id] = d
+                }
             }
         }
-        processList(local)
-        processList(backup)
-        return mergedMap.values.filter { it.first != null }.sortedByDescending { it.first!!.toEpochMilli() }.map { it.second }
+        
+        return mergedMap.values.sortedByDescending { it.timestamp }
     }
 
     private fun mergeSensorLogs(local: List<SensorLog>, backup: List<SensorLog>): List<SensorLog> {
-        val mergedMap = LinkedHashMap<String, SensorLog>()
-        for (log in local) mergedMap[log.serialNumber] = log
-        for (log in backup) mergedMap[log.serialNumber] = log
+        val mergedMap = local.associateBy { it.serialNumber }.toMutableMap()
+        
+        for (log in backup) {
+            val existing = mergedMap[log.serialNumber]
+            if (existing == null || log.updatedAtMs > existing.updatedAtMs) {
+                mergedMap[log.serialNumber] = log
+            }
+        }
+        
         return mergedMap.values.sortedByDescending { it.startDate }
     }
 

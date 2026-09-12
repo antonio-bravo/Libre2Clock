@@ -222,12 +222,10 @@ class CloudSyncManager(
                     log("2a. $currentStep...")
                     pullHistory(googleUid, patientId)
 
-                    // 🆕 NUEVO: Descarga explícita de listas para garantizar sync multi-dispositivo
                     currentStep = "Pulling data lists from cloud"
                     log("2b. $currentStep...")
                     pullDataListsFromCloud(googleUid, patientId)
 
-                    // DIAGNÓSTICO: refrescar el token de auth
                     currentStep = "Refreshing auth token"
                     log("2c. $currentStep...")
                     try {
@@ -242,7 +240,6 @@ class CloudSyncManager(
                         log("  -> WARNING: fallo al refrescar token: ${e.javaClass.simpleName} - ${e.message}")
                     }
 
-                    // DIAGNÓSTICO: esperar escrituras pendientes
                     currentStep = "Waiting for pending writes"
                     log("2d. $currentStep...")
                     retryWithBackoff(currentStep) { firestore.waitForPendingWrites().await() }
@@ -343,7 +340,7 @@ class CloudSyncManager(
             chunks.forEachIndexed { index, chunk ->
                 retryWithBackoff("SensorLogs Batch ${index + 1}/${chunks.size}") {
                     val batch = firestore.batch()
-                    chunk.forEach { log -> batch.set(sensorLogsColl.document(log.serialNumber), log, SetOptions.merge()) }
+                    chunk.forEach { logItem -> batch.set(sensorLogsColl.document(logItem.serialNumber), logItem, SetOptions.merge()) }
                     batch.commit().await()
                 }
             }
@@ -358,7 +355,7 @@ class CloudSyncManager(
 
             val snapshot = retryWithBackoff("Pull History") {
                 historyColl.orderBy("sort_epoch_ms", Query.Direction.DESCENDING)
-                    .limit(300) // Aumentado de 150 a 300 para mejor sync multi-dispositivo
+                    .limit(300)
                     .get()
                     .await()
             }
@@ -378,123 +375,76 @@ class CloudSyncManager(
         }
     }
 
-    // 🆕 VERSIÓN MEJORADA Y CON LOGS DETALLADOS PARA DIAGNÓSTICO
     private suspend fun pullDataListsFromCloud(googleUid: String, patientId: String) {
         val patientDoc = firestore.collection("users").document(googleUid)
             .collection("patients").document(patientId)
 
-        // ---------------------------------------------------------
         // 1. INSULIN DOSES
-        // ---------------------------------------------------------
         log("  -> Pulling insulin doses from cloud...")
         try {
-            val insulinSnapshot = patientDoc.collection("insulin_doses").get().await()
-            log("     📥 Found ${insulinSnapshot.documents.size} remote insulin documents.")
-            
-            val remoteInsulin = insulinSnapshot.documents.mapNotNull { doc ->
-                val dose = doc.toObject(InsulinDose::class.java)
-                if (dose == null) log("     ⚠️ Failed to parse insulin doc ID: ${doc.id}")
-                dose
-            }
-            
-            if (remoteInsulin.isNotEmpty()) {
-                val localInsulin = preferenceManager.insulinDoses.first().associateBy { it.id }.toMutableMap()
-                
-                remoteInsulin.forEach { dose ->
-                    // NOTA: Si tu modelo InsulinDose NO tiene la propiedad 'isDeleted', 
-                    // elimina la condición "if (!dose.isDeleted)" y deja solo: localInsulin[dose.id] = dose
-                    val isDeleted = try { 
-                        dose.javaClass.getDeclaredField("isDeleted").apply { isAccessible = true }.get(dose) as? Boolean ?: false 
-                    } catch (e: Exception) { false } // Si no existe el campo, asumimos que no está borrado
-
-                    if (!isDeleted) {
-                        localInsulin[dose.id] = dose
-                    } else {
-                        localInsulin.remove(dose.id)
+            val snapshot = patientDoc.collection("insulin_doses").get().await()
+            val remote = snapshot.documents.mapNotNull { it.toObject(InsulinDose::class.java) }
+            if (remote.isNotEmpty()) {
+                val local = preferenceManager.insulinDoses.first().associateBy { it.id }.toMutableMap()
+                remote.forEach { dose ->
+                    val existing = local[dose.id]
+                    if (existing == null || dose.updatedAtMs > existing.updatedAtMs) {
+                        if (dose.isDeleted) {
+                            local.remove(dose.id)
+                        } else {
+                            local[dose.id] = dose
+                        }
                     }
                 }
-                
-                val finalList = localInsulin.values.sortedByDescending { it.timestamp }
-                preferenceManager.saveInsulinDoses(finalList)
-                log("     ✅ Successfully merged and saved ${finalList.size} insulin doses locally.")
-            } else {
-                log("     ℹ️ No remote insulin doses found in cloud.")
+                preferenceManager.saveInsulinDoses(local.values.sortedByDescending { it.timestamp })
+                log("     ✅ Merged ${remote.size} insulin doses.")
             }
         } catch (e: Exception) {
-            log("     ❌ CRITICAL ERROR pulling insulin: ${e.javaClass.simpleName} - ${e.message}")
-            e.printStackTrace()
+            log("     ❌ Error pulling insulin: ${e.message}")
         }
 
-        // ---------------------------------------------------------
         // 2. CAPILLARY READINGS
-        // ---------------------------------------------------------
         log("  -> Pulling capillary readings from cloud...")
         try {
-            val capillarySnapshot = patientDoc.collection("capillary_readings").get().await()
-            log("     📥 Found ${capillarySnapshot.documents.size} remote capillary documents.")
-            
-            val remoteCapillary = capillarySnapshot.documents.mapNotNull { doc ->
-                val reading = doc.toObject(CapillaryMeasurement::class.java)
-                if (reading == null) log("     ⚠️ Failed to parse capillary doc ID: ${doc.id}")
-                reading
-            }
-            
-            if (remoteCapillary.isNotEmpty()) {
-                val localCapillary = preferenceManager.capillaryReadings.first().associateBy { it.id }.toMutableMap()
-                
-                remoteCapillary.forEach { reading ->
-                    val isDeleted = try { 
-                        reading.javaClass.getDeclaredField("isDeleted").apply { isAccessible = true }.get(reading) as? Boolean ?: false 
-                    } catch (e: Exception) { false }
-
-                    if (!isDeleted) {
-                        localCapillary[reading.id] = reading
-                    } else {
-                        localCapillary.remove(reading.id)
+            val snapshot = patientDoc.collection("capillary_readings").get().await()
+            val remote = snapshot.documents.mapNotNull { it.toObject(CapillaryMeasurement::class.java) }
+            if (remote.isNotEmpty()) {
+                val local = preferenceManager.capillaryReadings.first().associateBy { it.id }.toMutableMap()
+                remote.forEach { r ->
+                    val existing = local[r.id]
+                    if (existing == null || r.updatedAtMs > existing.updatedAtMs) {
+                        if (r.isDeleted) {
+                            local.remove(r.id)
+                        } else {
+                            local[r.id] = r
+                        }
                     }
                 }
-                
-                val finalList = localCapillary.values.sortedByDescending { it.timestamp }
-                preferenceManager.saveCapillaryReadings(finalList)
-                log("     ✅ Successfully merged and saved ${finalList.size} capillary readings locally.")
-            } else {
-                log("     ℹ️ No remote capillary readings found in cloud.")
+                preferenceManager.saveCapillaryReadings(local.values.sortedByDescending { it.timestamp })
+                log("     ✅ Merged ${remote.size} capillary readings.")
             }
         } catch (e: Exception) {
-            log("     ❌ CRITICAL ERROR pulling capillary: ${e.javaClass.simpleName} - ${e.message}")
-            e.printStackTrace()
+            log("     ❌ Error pulling capillary: ${e.message}")
         }
 
-        // ---------------------------------------------------------
         // 3. SENSOR LOGS
-        // ---------------------------------------------------------
         log("  -> Pulling sensor logs from cloud...")
         try {
-            val sensorSnapshot = patientDoc.collection("sensor_logs").get().await()
-            log("     📥 Found ${sensorSnapshot.documents.size} remote sensor log documents.")
-            
-            val remoteSensors = sensorSnapshot.documents.mapNotNull { doc ->
-                val logItem = doc.toObject(SensorLog::class.java)
-                if (logItem == null) log("     ⚠️ Failed to parse sensor log doc ID: ${doc.id}")
-                logItem
-            }
-            
-            if (remoteSensors.isNotEmpty()) {
-                val localSensors = preferenceManager.sensorLogs.first().associateBy { it.serialNumber }.toMutableMap()
-                
-                remoteSensors.forEach { logItem ->
-                    localSensors[logItem.serialNumber] = logItem
+            val snapshot = patientDoc.collection("sensor_logs").get().await()
+            val remote = snapshot.documents.mapNotNull { it.toObject(SensorLog::class.java) }
+            if (remote.isNotEmpty()) {
+                val local = preferenceManager.sensorLogs.first().associateBy { it.serialNumber }.toMutableMap()
+                remote.forEach { logItem ->
+                    val existing = local[logItem.serialNumber]
+                    if (existing == null || logItem.updatedAtMs > existing.updatedAtMs) {
+                        local[logItem.serialNumber] = logItem
+                    }
                 }
-                
-                val finalList = localSensors.values.sortedByDescending { it.startDate }
-                preferenceManager.saveSensorLogs(finalList)
-                log("     ✅ Successfully merged and saved ${finalList.size} sensor logs locally.")
-            } else {
-                log("     ℹ️ No remote sensor logs found in cloud.")
+                preferenceManager.saveSensorLogs(local.values.sortedByDescending { it.startDate })
+                log("     ✅ Merged ${remote.size} sensor logs.")
             }
         } catch (e: Exception) {
-            log("     ❌ CRITICAL ERROR pulling sensor logs: ${e.javaClass.simpleName} - ${e.message}")
-            e.printStackTrace()
+            log("     ❌ Error pulling sensor logs: ${e.message}")
         }
     }
 
@@ -508,21 +458,37 @@ class CloudSyncManager(
         val patientDoc = firestore.collection("users").document(googleUid)
             .collection("patients").document(patientId)
 
+        // 1. INSULIN DOSES LISTENER
         val reg1 = patientDoc.collection("insulin_doses").addSnapshotListener { snapshots, e ->
             if (e != null || snapshots == null) return@addSnapshotListener
             scope.launch {
                 try {
                     val localDoses = preferenceManager.insulinDoses.first().associateBy { it.id }.toMutableMap()
+                    var hasChanges = false
+                    
                     for (change in snapshots.documentChanges) {
-                        val dose = change.document.toObject(InsulinDose::class.java) ?: continue
                         when (change.type) {
                             DocumentChange.Type.ADDED, DocumentChange.Type.MODIFIED -> {
-                                if (!dose.isDeleted) localDoses[dose.id] = dose else localDoses.remove(dose.id)
+                                val dose = change.document.toObject(InsulinDose::class.java) ?: continue
+                                val existing = localDoses[dose.id]
+                                if (existing == null || dose.updatedAtMs > existing.updatedAtMs) {
+                                    if (dose.isDeleted) {
+                                        localDoses.remove(dose.id)
+                                    } else {
+                                        localDoses[dose.id] = dose
+                                    }
+                                    hasChanges = true
+                                }
                             }
-                            DocumentChange.Type.REMOVED -> localDoses.remove(dose.id)
+                            DocumentChange.Type.REMOVED -> {
+                                localDoses.remove(change.document.id)
+                                hasChanges = true
+                            }
                         }
                     }
-                    preferenceManager.saveInsulinDoses(localDoses.values.sortedByDescending { it.timestamp })
+                    if (hasChanges) {
+                        preferenceManager.saveInsulinDoses(localDoses.values.sortedByDescending { it.timestamp })
+                    }
                 } catch (e: Exception) {
                     Log.e("CloudSync", "Error processing insulin snapshot", e)
                 }
@@ -530,21 +496,37 @@ class CloudSyncManager(
         }
         listenerRegistrations.add(reg1)
 
+        // 2. CAPILLARY READINGS LISTENER
         val reg2 = patientDoc.collection("capillary_readings").addSnapshotListener { snapshots, e ->
             if (e != null || snapshots == null) return@addSnapshotListener
             scope.launch {
                 try {
                     val localReadings = preferenceManager.capillaryReadings.first().associateBy { it.id }.toMutableMap()
+                    var hasChanges = false
+                    
                     for (change in snapshots.documentChanges) {
-                        val reading = change.document.toObject(CapillaryMeasurement::class.java) ?: continue
                         when (change.type) {
                             DocumentChange.Type.ADDED, DocumentChange.Type.MODIFIED -> {
-                                if (!reading.isDeleted) localReadings[reading.id] = reading else localReadings.remove(reading.id)
+                                val reading = change.document.toObject(CapillaryMeasurement::class.java) ?: continue
+                                val existing = localReadings[reading.id]
+                                if (existing == null || reading.updatedAtMs > existing.updatedAtMs) {
+                                    if (reading.isDeleted) {
+                                        localReadings.remove(reading.id)
+                                    } else {
+                                        localReadings[reading.id] = reading
+                                    }
+                                    hasChanges = true
+                                }
                             }
-                            DocumentChange.Type.REMOVED -> localReadings.remove(reading.id)
+                            DocumentChange.Type.REMOVED -> {
+                                localReadings.remove(change.document.id)
+                                hasChanges = true
+                            }
                         }
                     }
-                    preferenceManager.saveCapillaryReadings(localReadings.values.sortedByDescending { it.timestamp })
+                    if (hasChanges) {
+                        preferenceManager.saveCapillaryReadings(localReadings.values.sortedByDescending { it.timestamp })
+                    }
                 } catch (e: Exception) {
                     Log.e("CloudSync", "Error processing capillary snapshot", e)
                 }
@@ -552,19 +534,35 @@ class CloudSyncManager(
         }
         listenerRegistrations.add(reg2)
 
+        // 3. SENSOR LOGS LISTENER
         val reg3 = patientDoc.collection("sensor_logs").addSnapshotListener { snapshots, e ->
             if (e != null || snapshots == null) return@addSnapshotListener
             scope.launch {
                 try {
                     val localLogs = preferenceManager.sensorLogs.first().associateBy { it.serialNumber }.toMutableMap()
+                    var hasChanges = false
+                    
                     for (change in snapshots.documentChanges) {
-                        val log = change.document.toObject(SensorLog::class.java) ?: continue
                         when (change.type) {
-                            DocumentChange.Type.ADDED, DocumentChange.Type.MODIFIED -> localLogs[log.serialNumber] = log
-                            DocumentChange.Type.REMOVED -> localLogs.remove(log.serialNumber)
+                            DocumentChange.Type.ADDED, DocumentChange.Type.MODIFIED -> {
+                                val logItem = change.document.toObject(SensorLog::class.java) ?: continue
+                                val existing = localLogs[logItem.serialNumber]
+                                // Nota: Asumimos que SensorLog también tiene updatedAtMs. Si no, quita esa condición.
+                                if (existing == null || logItem.updatedAtMs > existing.updatedAtMs) {
+                                    localLogs[logItem.serialNumber] = logItem
+                                    hasChanges = true
+                                }
+                            }
+                            DocumentChange.Type.REMOVED -> {
+                                // El ID del documento en Firestore es el serialNumber
+                                localLogs.remove(change.document.id)
+                                hasChanges = true
+                            }
                         }
                     }
-                    preferenceManager.saveSensorLogs(localLogs.values.sortedByDescending { it.startDate })
+                    if (hasChanges) {
+                        preferenceManager.saveSensorLogs(localLogs.values.sortedByDescending { it.startDate })
+                    }
                 } catch (e: Exception) {
                     Log.e("CloudSync", "Error processing sensor logs snapshot", e)
                 }
@@ -672,7 +670,6 @@ class CloudSyncManager(
                     if (remotePayload != null) {
                         log("✅ [Force Pull] Deserialización exitosa. Guardando en DataStore local...")
                         
-                        // restoreFromPayload devuelve Boolean, lo capturamos para verificar
                         val success = preferenceManager.restoreFromPayload(remotePayload, isHardReset = false)
                         
                         if (success) {

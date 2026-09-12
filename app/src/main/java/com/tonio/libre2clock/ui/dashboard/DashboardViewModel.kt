@@ -18,7 +18,7 @@ import com.tonio.libre2clock.data.repository.PreferenceManager
 import com.tonio.libre2clock.util.SensorErrorSummary
 import com.tonio.libre2clock.util.buildSensorErrorSummary
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi // <-- 1. AÑADIR ESTE IMPORT
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.Duration
@@ -37,9 +38,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import kotlin.math.max
 
-// <-- 2. AÑADIR ESTA ANOTACIÓN A LA CLASE
 @OptIn(ExperimentalCoroutinesApi::class)
 class DashboardViewModel(
     private val repository: GlucoseRepository,
@@ -47,9 +46,7 @@ class DashboardViewModel(
     private val androidContext: android.content.Context
 ) : ViewModel() {
 
-    // OPTIMIZACIÓN: Constante para reducir boilerplate y tamaño de bytecode
     private val subscribedSharing = SharingStarted.WhileSubscribed(5000)
-
     private val dashboardMetricsCache = DashboardMetricsCacheRepository(androidContext)
 
     private val _isHistoryRefreshing = MutableStateFlow(false)
@@ -74,13 +71,17 @@ class DashboardViewModel(
         },
         preferenceManager.capillaryReadings,
         preferenceManager.sensorLogs
-    ) { inputs, capillaries, logs ->
+    ) { inputs, rawCapillaries, rawLogs ->
+        // OPTIMIZACIÓN: Filtramos una sola vez para usar en el contexto y el procesamiento
+        val activeCapillaries = rawCapillaries.filter { !it.isDeleted }
+        val activeLogs = rawLogs.filter { !it.isDeleted }
+        
         inputs.current?.let {
             val calcContext = GlucoseProcessor.buildContext(
                 autoRangeOffsetMode = inputs.autoRangeMode,
                 userRanges = inputs.ranges,
-                capillaryReadings = capillaries,
-                sensorLogs = logs
+                capillaryReadings = activeCapillaries,
+                sensorLogs = activeLogs
             )
             GlucoseProcessor.process(
                 measurement = it,
@@ -88,7 +89,7 @@ class DashboardViewModel(
                 userRanges = inputs.ranges,
                 autoAdjustEnabled = inputs.autoAdjust,
                 autoRangeOffsetMode = inputs.autoRangeMode,
-                capillaryReadings = capillaries,
+                capillaryReadings = activeCapillaries,
                 context = calcContext
             )
         }
@@ -131,7 +132,10 @@ class DashboardViewModel(
         preferenceManager.sensorLogs,
         _graphWindowDays,
         repository.dataVersion
-    ) { config, capillaries, logs, days, _ ->
+    ) { config, rawCapillaries, rawLogs, days, _ ->
+        val activeCapillaries = rawCapillaries.filter { !it.isDeleted }
+        val activeLogs = rawLogs.filter { !it.isDeleted }
+        
         val nowMs = System.currentTimeMillis()
         val roundedEndMs = (nowMs / 30000) * 30000
         val roundedStartMs = roundedEndMs - Duration.ofDays(days.toLong()).toMillis()
@@ -155,8 +159,8 @@ class DashboardViewModel(
         val calcContext = GlucoseProcessor.buildContext(
             autoRangeOffsetMode = config.autoRangeMode,
             userRanges = config.ranges,
-            capillaryReadings = capillaries,
-            sensorLogs = logs
+            capillaryReadings = activeCapillaries,
+            sensorLogs = activeLogs
         )
 
         sampled.map {
@@ -166,7 +170,7 @@ class DashboardViewModel(
                 userRanges = config.ranges,
                 autoAdjustEnabled = config.autoAdjust,
                 autoRangeOffsetMode = config.autoRangeMode,
-                capillaryReadings = capillaries,
+                capillaryReadings = activeCapillaries,
                 context = calcContext
             )
         }
@@ -175,7 +179,7 @@ class DashboardViewModel(
         .flowOn(Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    // --- 4. Dashboard Metrics (100% Type-Safe, Zero Unchecked Casts) ---
+    // --- 4. Dashboard Metrics ---
     private data class MetricsConfigPart1(
         val retentionDays: Int,
         val dataVersion: Long,
@@ -207,8 +211,13 @@ class DashboardViewModel(
             repository.dataVersion,
             preferenceManager.capillaryReadings,
             preferenceManager.sensorLogs
-        ) { retention, version, caps, logs ->
-            MetricsConfigPart1(retention, version, caps, logs)
+        ) { retention, version, rawCaps, rawLogs ->
+            MetricsConfigPart1(
+                retention, 
+                version, 
+                rawCaps.filter { !it.isDeleted }, 
+                rawLogs.filter { !it.isDeleted }
+            )
         },
         combine(
             preferenceManager.glucoseOffset,
@@ -279,7 +288,10 @@ class DashboardViewModel(
     )
 
     // --- 5. Insulin & Preferences ---
+    // OPTIMIZACIÓN: distinctUntilChanged() evita recomposiciones si la lista de activos no cambia
     val insulinDoses: StateFlow<List<InsulinDose>> = preferenceManager.insulinDoses
+        .map { list -> list.filter { !it.isDeleted } }
+        .distinctUntilChanged()
         .stateIn(viewModelScope, subscribedSharing, emptyList())
 
     val manualTdi: StateFlow<Double?> = preferenceManager.manualTdi
@@ -301,9 +313,10 @@ class DashboardViewModel(
     val currentSensorError: StateFlow<SensorErrorSummary?> = combine(
         preferenceManager.activeSensorSerialNumber,
         preferenceManager.capillaryReadings
-    ) { serial, capillaries ->
+    ) { serial, rawCapillaries ->
         if (serial.isNullOrBlank()) return@combine null
-        val sensorCapillaries = capillaries.filter { it.sensorSerialNumber == serial }
+        // OPTIMIZACIÓN: Un solo filtro en lugar de dos encadenados
+        val sensorCapillaries = rawCapillaries.filter { !it.isDeleted && it.sensorSerialNumber == serial }
         buildSensorErrorSummary(emptyList(), sensorCapillaries).firstOrNull()
     }.stateIn(viewModelScope, subscribedSharing, null)
 
@@ -361,24 +374,68 @@ class DashboardViewModel(
 
     fun addInsulinDose(dose: InsulinDose) {
         viewModelScope.launch {
-            val current = insulinDoses.value.toMutableList()
-            current.add(dose)
-            current.sortByDescending { it.timestamp }
-            preferenceManager.saveInsulinDoses(current)
+            // OPTIMIZACIÓN: Limpiamos cualquier registro "zombi" (isDeleted=true) antes de guardar
+            // para evitar que el DataStore crezca infinitamente con basura local.
+            val activeDoses = preferenceManager.insulinDoses.first().filter { !it.isDeleted }.toMutableList()
+            
+            activeDoses.add(dose.copy(updatedAtMs = System.currentTimeMillis()))
+            activeDoses.sortByDescending { it.timestamp }
+            
+            preferenceManager.saveInsulinDoses(activeDoses)
         }
     }
 
     fun addCapillaryReading(reading: CapillaryMeasurement) {
         viewModelScope.launch {
-            val currentReadings = preferenceManager.capillaryReadings.first().toMutableList()
             val activeSerial = preferenceManager.activeSensorSerialNumber.first()
             
+            // OPTIMIZACIÓN: Limpiamos registros "zombi" antes de guardar
+            val activeReadings = preferenceManager.capillaryReadings.first()
+                .filter { !it.isDeleted }
+                .toMutableList()
+            
             val withSensor = reading.copy(
-                sensorSerialNumber = reading.sensorSerialNumber ?: activeSerial
+                sensorSerialNumber = reading.sensorSerialNumber ?: activeSerial,
+                updatedAtMs = System.currentTimeMillis()
             )
-            currentReadings.add(withSensor)
-            currentReadings.sortByDescending { it.timestamp }
-            preferenceManager.saveCapillaryReadings(currentReadings)
+            
+            activeReadings.add(withSensor)
+            activeReadings.sortByDescending { it.timestamp }
+            
+            preferenceManager.saveCapillaryReadings(activeReadings)
+        }
+    }
+
+    // 🚨 CRÍTICO: Funciones de borrado usando Soft Delete
+    // NUNCA uses .remove() aquí. Debemos marcar como borrado para que el CloudSyncManager
+    // pueda propagar la eliminación a los otros dispositivos.
+    fun deleteInsulinDose(doseId: String) {
+        viewModelScope.launch {
+            val allDoses = preferenceManager.insulinDoses.first().toMutableList()
+            val index = allDoses.indexOfFirst { it.id == doseId }
+            
+            if (index != -1) {
+                allDoses[index] = allDoses[index].copy(
+                    isDeleted = true,
+                    updatedAtMs = System.currentTimeMillis()
+                )
+                preferenceManager.saveInsulinDoses(allDoses)
+            }
+        }
+    }
+
+    fun deleteCapillaryReading(readingId: String) {
+        viewModelScope.launch {
+            val allReadings = preferenceManager.capillaryReadings.first().toMutableList()
+            val index = allReadings.indexOfFirst { it.id == readingId }
+            
+            if (index != -1) {
+                allReadings[index] = allReadings[index].copy(
+                    isDeleted = true,
+                    updatedAtMs = System.currentTimeMillis()
+                )
+                preferenceManager.saveCapillaryReadings(allReadings)
+            }
         }
     }
 

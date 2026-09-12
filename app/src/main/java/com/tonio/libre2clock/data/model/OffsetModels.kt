@@ -81,7 +81,9 @@ data class SensorLog(
     val actualDaysUsed: Double? = null,
     val hasFailed: Boolean = false,
     val errorCode: String? = null,
-    val notes: String? = null
+    val notes: String? = null,
+    val updatedAtMs: Long = System.currentTimeMillis(),
+    val isDeleted: Boolean = false
 )
 
 @Serializable

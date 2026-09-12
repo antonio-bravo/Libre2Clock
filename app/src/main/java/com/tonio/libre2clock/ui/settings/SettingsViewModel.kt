@@ -7,20 +7,23 @@ import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.tonio.libre2clock.data.api.LibreService
-import com.tonio.libre2clock.data.model.CapillaryMeasurement
+import com.tonio.libre2clock.data.model.AlarmSchedule
 import com.tonio.libre2clock.data.model.AutoRangeOffsetMode
-import com.tonio.libre2clock.data.model.GlucoseOffsetRange
+import com.tonio.libre2clock.data.model.CapillaryMeasurement
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
+import com.tonio.libre2clock.data.model.GlucoseOffsetRange
+import com.tonio.libre2clock.data.model.InsulinDose
 import com.tonio.libre2clock.data.model.RangeOffsetInsight
+import com.tonio.libre2clock.data.model.SensorLog
 import com.tonio.libre2clock.data.model.WatchNotificationMode
+import com.tonio.libre2clock.data.repository.GlucoseProcessor
 import com.tonio.libre2clock.data.repository.GlucoseRepository
 import com.tonio.libre2clock.data.repository.PreferenceManager
-import com.tonio.libre2clock.data.repository.GlucoseProcessor
-import com.tonio.libre2clock.R
+import com.tonio.libre2clock.data.sync.CloudSyncManager
 import com.tonio.libre2clock.di.AppContainer
+import com.tonio.libre2clock.R
 import com.tonio.libre2clock.util.LogEvent
 import com.tonio.libre2clock.util.SectionPerfTelemetry
-import com.tonio.libre2clock.data.sync.CloudSyncManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -28,9 +31,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.Instant
 import kotlin.math.abs
@@ -44,10 +47,8 @@ class SettingsViewModel(
 
     private val appContext: Context = getApplication()
     
-    // OPTIMIZACIÓN 1: Constante para reducir boilerplate y tamaño de bytecode
     private val sharingStrategy = SharingStarted.WhileSubscribed(5000)
     
-    // OPTIMIZACIÓN 2: Extensión privada para limpiar la declaración de StateFlows
     private fun <T> Flow<T>.stateInDefault(defaultValue: T): StateFlow<T> = 
         stateIn(viewModelScope, sharingStrategy, defaultValue)
 
@@ -73,7 +74,7 @@ class SettingsViewModel(
     private val _sectionPerfStats = MutableStateFlow<List<SectionPerfTelemetry.Snapshot>>(emptyList())
     val sectionPerfStats: StateFlow<List<SectionPerfTelemetry.Snapshot>> = _sectionPerfStats.asStateFlow()
 
-    // --- StateFlows optimizados con la extensión ---
+    // --- StateFlows optimizados ---
     val firebaseUser = authManager.user.stateInDefault(null)
     val patientId = preferenceManager.patientId.stateInDefault(null)
     val libreLinkUpEmail = preferenceManager.libreLinkUpEmail.stateInDefault(null)
@@ -84,7 +85,13 @@ class SettingsViewModel(
     val glucoseOffsetRanges = preferenceManager.glucoseOffsetRanges.stateInDefault(emptyList())
     val autoAdjustEnabled = preferenceManager.autoAdjustEnabled.stateInDefault(false)
     val autoRangeOffsetMode = preferenceManager.autoRangeOffsetMode.stateInDefault(AutoRangeOffsetMode.OFF)
-    val capillaryReadings = preferenceManager.capillaryReadings.stateInDefault(emptyList())
+    
+    // OPTIMIZACIÓN: Filtramos los borrados a nivel de ViewModel para que toda la UI los ignore
+    val capillaryReadings = preferenceManager.capillaryReadings
+        .map { list -> list.filter { !it.isDeleted } }
+        .distinctUntilChanged()
+        .stateInDefault(emptyList())
+        
     val watchAlertsEnabled = preferenceManager.watchAlertsEnabled.stateInDefault(false)
     val watchNotificationMode = preferenceManager.watchNotificationMode.stateInDefault(WatchNotificationMode.OFF)
     val watchAlertIntervalMinutes = preferenceManager.watchAlertIntervalMinutes.stateInDefault(60)
@@ -102,8 +109,17 @@ class SettingsViewModel(
     val manualTdi = preferenceManager.manualTdi.stateInDefault(null)
     val manualIsf = preferenceManager.manualIsf.stateInDefault(null)
     val targetGlucose = preferenceManager.targetGlucose.stateInDefault(100)
-    val insulinDoses = preferenceManager.insulinDoses.stateInDefault(emptyList())
-    val sensorLogs = preferenceManager.sensorLogs.stateInDefault(emptyList())
+    
+    val insulinDoses = preferenceManager.insulinDoses
+        .map { list -> list.filter { !it.isDeleted } }
+        .distinctUntilChanged()
+        .stateInDefault(emptyList())
+        
+    val sensorLogs = preferenceManager.sensorLogs
+        .map { list -> list.filter { !it.isDeleted } }
+        .distinctUntilChanged()
+        .stateInDefault(emptyList())
+        
     val activeSensorSerialNumber = preferenceManager.activeSensorSerialNumber.stateInDefault(null)
     val watchNotificationSchedules = preferenceManager.watchNotificationSchedules.stateInDefault(emptyList())
     val glucoseAlarmSchedules = preferenceManager.glucoseAlarmSchedules.stateInDefault(emptyList())
@@ -112,6 +128,7 @@ class SettingsViewModel(
     val disableFastRefreshOnSlowCharge = preferenceManager.disableFastRefreshOnSlowCharge.stateInDefault(true)
     val sensorDurationDays = preferenceManager.sensorDurationDays.stateInDefault(15)
 
+    // MEJORA: Usamos 'this.capillaryReadings' (que ya está filtrado) en lugar del raw de preferenceManager
     val currentGlucose: StateFlow<GlucoseMeasurement?> = combine(
         combine(
             repository.currentGlucose,
@@ -122,7 +139,7 @@ class SettingsViewModel(
         ) { current, manualOffset, ranges, autoAdjust, autoRangeMode ->
             CurrentGlucoseInputs(current, manualOffset, ranges, autoAdjust, autoRangeMode)
         },
-        preferenceManager.capillaryReadings
+        this.capillaryReadings // <-- CAMBIO CLAVE: Usa el flow filtrado
     ) { inputs, capillaries ->
         inputs.current?.let {
             GlucoseProcessor.process(
@@ -136,10 +153,10 @@ class SettingsViewModel(
         }
     }.stateIn(viewModelScope, sharingStrategy, null)
 
-    // OPTIMIZACIÓN 3: Cálculo de métricas en UNA SOLA PASADA (Zero-Allocation)
+    // MEJORA: Usamos 'this.capillaryReadings' aquí también para evitar procesar datos borrados
     val rangeOffsetInsights: StateFlow<List<RangeOffsetInsight>> = combine(
         preferenceManager.glucoseOffsetRanges,
-        preferenceManager.capillaryReadings,
+        this.capillaryReadings, // <-- CAMBIO CLAVE: Usa el flow filtrado
         preferenceManager.historyRetentionDays
     ) { ranges, capillaries, retentionDays ->
         Triple(ranges, capillaries, retentionDays)
@@ -162,7 +179,6 @@ class SettingsViewModel(
                 
                 if (points.isEmpty()) return@mapNotNull null
 
-                // Single-pass accumulation: O(N) en lugar de O(7N) y cero listas intermedias
                 var sumSensor = 0.0
                 var sumCapillary = 0.0
                 var sumAbsDiff = 0.0
@@ -220,7 +236,7 @@ class SettingsViewModel(
         }
     }.distinctUntilChanged().stateIn(viewModelScope, sharingStrategy, emptyList())
 
-    // --- Acciones de Guardado (Simplificadas) ---
+    // --- Acciones de Guardado ---
     fun updateOffset(offset: Int) = launchSave { preferenceManager.saveGlucoseOffset(offset) }
     fun updateAutoAdjustEnabled(enabled: Boolean) = launchSave { preferenceManager.saveAutoAdjustEnabled(enabled) }
     fun updateAutoRangeOffsetMode(mode: AutoRangeOffsetMode) = launchSave { preferenceManager.saveAutoRangeOffsetMode(mode) }
@@ -241,7 +257,6 @@ class SettingsViewModel(
     fun updateDisableFastRefreshOnSlowCharge(disabled: Boolean) = launchSave { preferenceManager.saveDisableFastRefreshOnSlowCharge(disabled) }
     fun updateSensorDurationDays(days: Int) = launchSave { preferenceManager.saveSensorDurationDays(days) }
 
-    // Helper para reducir boilerplate de viewModelScope.launch
     private fun launchSave(block: suspend () -> Unit) {
         viewModelScope.launch { block() }
     }
@@ -266,23 +281,34 @@ class SettingsViewModel(
         }
     }
 
+    // MEJORA: Limpia elementos borrados antes de guardar para evitar que el DataStore crezca infinitamente
     fun addCapillaryReading(reading: CapillaryMeasurement) {
         viewModelScope.launch {
-            val currentReadings = capillaryReadings.value.toMutableList()
-            // OPTIMIZACIÓN 4: .value es síncrono e instantáneo para StateFlow, evita suspensión innecesaria de .first()
             val activeSerial = activeSensorSerialNumber.value
             
-            val withSensor = reading.copy(sensorSerialNumber = reading.sensorSerialNumber ?: activeSerial)
-            currentReadings.add(withSensor)
-            currentReadings.sortByDescending { it.timestamp }
-            preferenceManager.saveCapillaryReadings(currentReadings)
+            val activeReadings = preferenceManager.capillaryReadings.first()
+                .filter { !it.isDeleted }
+                .toMutableList()
+            
+            val withSensor = reading.copy(
+                sensorSerialNumber = reading.sensorSerialNumber ?: activeSerial,
+                updatedAtMs = System.currentTimeMillis() // <-- AÑADIDO
+            )
+            activeReadings.add(withSensor)
+            activeReadings.sortByDescending { it.timestamp }
+            preferenceManager.saveCapillaryReadings(activeReadings)
         }
     }
 
+    // CORRECTO: Usa la lista completa (.first()) para encontrar el elemento y marcarlo como borrado
     fun removeCapillaryReading(reading: CapillaryMeasurement) {
         viewModelScope.launch {
-            val currentReadings = capillaryReadings.value.toMutableList().apply { remove(reading) }
-            preferenceManager.saveCapillaryReadings(currentReadings)
+            val allReadings = preferenceManager.capillaryReadings.first().toMutableList()
+            val index = allReadings.indexOfFirst { it.id == reading.id }
+            if (index != -1) {
+                allReadings[index] = reading.copy(isDeleted = true, updatedAtMs = System.currentTimeMillis())
+                preferenceManager.saveCapillaryReadings(allReadings)
+            }
         }
     }
 
@@ -395,7 +421,6 @@ class SettingsViewModel(
     fun pullCloudSettings(onComplete: (Boolean) -> Unit) {
         viewModelScope.launch {
             val user = authManager.user.value
-            // ⚠️ IMPORTANTE: .first() es una función suspend, debe estar dentro de viewModelScope.launch
             val patientId = preferenceManager.patientId.first() 
             
             if (user != null && patientId != null) {
@@ -429,9 +454,9 @@ class SettingsViewModel(
     fun resetCloudData(onComplete: (Boolean) -> Unit) {
         val user = authManager.user.value
         viewModelScope.launch {
-            val patientId = patientId.value
-            if (user != null && patientId != null) {
-                cloudSyncManager.resetCloudData(user.uid, patientId, onComplete)
+            val currentPatientId = patientId.value
+            if (user != null && currentPatientId != null) {
+                cloudSyncManager.resetCloudData(user.uid, currentPatientId, onComplete)
             } else {
                 onComplete(false)
             }
@@ -637,62 +662,74 @@ class SettingsViewModel(
         val autoRangeMode: AutoRangeOffsetMode
     )
 
-    // --- Funciones de Insulina y Alarmas (Optimizadas con .apply) ---
-    fun addInsulinDose(dose: com.tonio.libre2clock.data.model.InsulinDose) {
+    // --- Funciones de Insulina y Sensores ---
+    
+    // MEJORA: Limpia elementos borrados antes de guardar
+    fun addInsulinDose(dose: InsulinDose) {
         viewModelScope.launch {
-            val current = insulinDoses.value.toMutableList().apply { 
-                add(dose)
-                sortByDescending { it.timestamp } 
-            }
-            preferenceManager.saveInsulinDoses(current)
+            val activeDoses = preferenceManager.insulinDoses.first()
+                .filter { !it.isDeleted }
+                .toMutableList()
+                
+            activeDoses.add(dose.copy(updatedAtMs = System.currentTimeMillis()))
+            activeDoses.sortByDescending { it.timestamp }
+            preferenceManager.saveInsulinDoses(activeDoses)
         }
     }
 
-    fun removeInsulinDose(dose: com.tonio.libre2clock.data.model.InsulinDose) {
+    fun removeInsulinDose(dose: InsulinDose) {
         viewModelScope.launch {
-            val current = insulinDoses.value.toMutableList().apply { remove(dose) }
-            preferenceManager.saveInsulinDoses(current)
-        }
-    }
-
-    fun updateInsulinDose(oldDose: com.tonio.libre2clock.data.model.InsulinDose, newDose: com.tonio.libre2clock.data.model.InsulinDose) {
-        viewModelScope.launch {
-            val current = insulinDoses.value.toMutableList()
-            val index = current.indexOf(oldDose)
+            val allDoses = preferenceManager.insulinDoses.first().toMutableList()
+            val index = allDoses.indexOfFirst { it.id == dose.id }
             if (index != -1) {
-                current[index] = newDose
-                current.sortByDescending { it.timestamp }
-                preferenceManager.saveInsulinDoses(current)
+                allDoses[index] = dose.copy(isDeleted = true, updatedAtMs = System.currentTimeMillis())
+                preferenceManager.saveInsulinDoses(allDoses)
             }
         }
     }
 
-    fun updateSensorLog(log: com.tonio.libre2clock.data.model.SensorLog) {
+    fun updateInsulinDose(oldDose: InsulinDose, newDose: InsulinDose) {
         viewModelScope.launch {
-            val current = sensorLogs.value.toMutableList()
-            val index = current.indexOfFirst { it.serialNumber == log.serialNumber }
+            val allDoses = preferenceManager.insulinDoses.first().toMutableList()
+            val index = allDoses.indexOfFirst { it.id == oldDose.id }
             if (index != -1) {
-                current[index] = log
-                preferenceManager.saveSensorLogs(current)
+                allDoses[index] = newDose.copy(updatedAtMs = System.currentTimeMillis())
+                allDoses.sortByDescending { it.timestamp }
+                preferenceManager.saveInsulinDoses(allDoses)
             }
         }
     }
 
-    fun removeSensorLog(log: com.tonio.libre2clock.data.model.SensorLog) {
+    fun updateSensorLog(log: SensorLog) {
         viewModelScope.launch {
-            val current = sensorLogs.value.toMutableList().apply { removeIf { it.serialNumber == log.serialNumber } }
-            preferenceManager.saveSensorLogs(current)
+            val allLogs = preferenceManager.sensorLogs.first().toMutableList()
+            val index = allLogs.indexOfFirst { it.serialNumber == log.serialNumber }
+            if (index != -1) {
+                allLogs[index] = log.copy(updatedAtMs = System.currentTimeMillis())
+                preferenceManager.saveSensorLogs(allLogs)
+            }
         }
     }
 
-    fun addWatchSchedule(schedule: com.tonio.libre2clock.data.model.AlarmSchedule) {
+    fun removeSensorLog(log: SensorLog) {
+        viewModelScope.launch {
+            val allLogs = preferenceManager.sensorLogs.first().toMutableList()
+            val index = allLogs.indexOfFirst { it.serialNumber == log.serialNumber }
+            if (index != -1) {
+                allLogs[index] = log.copy(isDeleted = true, updatedAtMs = System.currentTimeMillis())
+                preferenceManager.saveSensorLogs(allLogs)
+            }
+        }
+    }
+
+    fun addWatchSchedule(schedule: AlarmSchedule) {
         viewModelScope.launch {
             val current = watchNotificationSchedules.value.toMutableList().apply { add(schedule) }
             preferenceManager.saveWatchNotificationSchedules(current)
         }
     }
 
-    fun updateWatchSchedule(schedule: com.tonio.libre2clock.data.model.AlarmSchedule) {
+    fun updateWatchSchedule(schedule: AlarmSchedule) {
         viewModelScope.launch {
             val current = watchNotificationSchedules.value.toMutableList()
             val index = current.indexOfFirst { it.id == schedule.id }
@@ -703,21 +740,21 @@ class SettingsViewModel(
         }
     }
 
-    fun removeWatchSchedule(schedule: com.tonio.libre2clock.data.model.AlarmSchedule) {
+    fun removeWatchSchedule(schedule: AlarmSchedule) {
         viewModelScope.launch {
             val current = watchNotificationSchedules.value.toMutableList().apply { removeIf { it.id == schedule.id } }
             preferenceManager.saveWatchNotificationSchedules(current)
         }
     }
 
-    fun addAlarmSchedule(schedule: com.tonio.libre2clock.data.model.AlarmSchedule) {
+    fun addAlarmSchedule(schedule: AlarmSchedule) {
         viewModelScope.launch {
             val current = glucoseAlarmSchedules.value.toMutableList().apply { add(schedule) }
             preferenceManager.saveGlucoseAlarmSchedules(current)
         }
     }
 
-    fun updateAlarmSchedule(schedule: com.tonio.libre2clock.data.model.AlarmSchedule) {
+    fun updateAlarmSchedule(schedule: AlarmSchedule) {
         viewModelScope.launch {
             val current = glucoseAlarmSchedules.value.toMutableList()
             val index = current.indexOfFirst { it.id == schedule.id }
@@ -728,7 +765,7 @@ class SettingsViewModel(
         }
     }
 
-    fun removeAlarmSchedule(schedule: com.tonio.libre2clock.data.model.AlarmSchedule) {
+    fun removeAlarmSchedule(schedule: AlarmSchedule) {
         viewModelScope.launch {
             val current = glucoseAlarmSchedules.value.toMutableList().apply { removeIf { it.id == schedule.id } }
             preferenceManager.saveGlucoseAlarmSchedules(current)
