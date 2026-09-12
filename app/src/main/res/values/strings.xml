@@ -387,6 +387,9 @@
     <string name="cloud_privacy_note">Your data is securely stored in your personal Google Firebase account. Only you have access to it.</string>
     <string name="cloud_configure_button">Configure Sync</string>
     <string name="cloud_sync_now">Sync Now</string>
+    <string name="cloud_pull_settings">Pull settings from cloud</string>
+    <string name="cloud_pull_settings_success">Settings restored from cloud</string>
+    <string name="cloud_pull_settings_error">Failed to pull settings from cloud</string>
     <string name="cloud_diag_title">Diagnostic Tools</string>
     <string name="cloud_diag_run">Run Sync Test</string>
     <string name="cloud_diag_log_title">Sync Log</string>

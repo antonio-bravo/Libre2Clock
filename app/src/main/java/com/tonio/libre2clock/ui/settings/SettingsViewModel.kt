@@ -20,30 +20,35 @@ import com.tonio.libre2clock.di.AppContainer
 import com.tonio.libre2clock.util.LogEvent
 import com.tonio.libre2clock.util.SectionPerfTelemetry
 import com.tonio.libre2clock.data.sync.CloudSyncManager
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.Instant
 import kotlin.math.abs
-import kotlin.math.roundToInt
 
-// 1. Cambiamos ViewModel por AndroidViewModel
 class SettingsViewModel(
-    application: Application, // 2. Recibimos la Application en lugar del Context de la Activity
+    application: Application,
     private val preferenceManager: PreferenceManager,
     private val repository: GlucoseRepository,
     private val authManager: com.tonio.libre2clock.data.sync.AuthManager
 ) : AndroidViewModel(application) {
 
-    // 3. Guardamos el contexto de la aplicación (es seguro y no genera leaks)
     private val appContext: Context = getApplication()
+    
+    // OPTIMIZACIÓN 1: Constante para reducir boilerplate y tamaño de bytecode
+    private val sharingStrategy = SharingStarted.WhileSubscribed(5000)
+    
+    // OPTIMIZACIÓN 2: Extensión privada para limpiar la declaración de StateFlows
+    private fun <T> Flow<T>.stateInDefault(defaultValue: T): StateFlow<T> = 
+        stateIn(viewModelScope, sharingStrategy, defaultValue)
 
     private val eventLogManager = AppContainer.provideEventLogManager(appContext)
     private val cloudSyncManager = AppContainer.provideCloudSyncManager(appContext)
@@ -64,117 +69,47 @@ class SettingsViewModel(
     val isCloudSyncDebugLoading: StateFlow<Boolean> = _isCloudSyncDebugLoading.asStateFlow()
 
     val eventLogs: StateFlow<List<LogEvent>> = eventLogManager.events
-
     private val _sectionPerfStats = MutableStateFlow<List<SectionPerfTelemetry.Snapshot>>(emptyList())
     val sectionPerfStats: StateFlow<List<SectionPerfTelemetry.Snapshot>> = _sectionPerfStats.asStateFlow()
 
-    val firebaseUser = authManager.user
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
-
-    val libreLinkUpEmail: StateFlow<String?> = preferenceManager.libreLinkUpEmail
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
-
-    val isCloudSyncEnabled: StateFlow<Boolean> = preferenceManager.isCloudSyncEnabled
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
-
-    val cloudSyncLastSuccessAt: StateFlow<Long?> = preferenceManager.cloudSyncLastSuccessAt
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
-
-    val settingsUpdatedAt: StateFlow<Long?> = preferenceManager.settingsUpdatedAt
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
-
-    val glucoseOffset: StateFlow<Int> = preferenceManager.glucoseOffset
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
-
-    val glucoseOffsetRanges: StateFlow<List<GlucoseOffsetRange>> = preferenceManager.glucoseOffsetRanges
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    val autoAdjustEnabled: StateFlow<Boolean> = preferenceManager.autoAdjustEnabled
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
-
-    val autoRangeOffsetMode: StateFlow<AutoRangeOffsetMode> = preferenceManager.autoRangeOffsetMode
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), AutoRangeOffsetMode.OFF)
-
-    val capillaryReadings: StateFlow<List<CapillaryMeasurement>> = preferenceManager.capillaryReadings
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    val watchAlertsEnabled: StateFlow<Boolean> = preferenceManager.watchAlertsEnabled
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
-
-    val watchNotificationMode: StateFlow<WatchNotificationMode> = preferenceManager.watchNotificationMode
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), WatchNotificationMode.OFF)
-
-    val watchAlertIntervalMinutes: StateFlow<Int> = preferenceManager.watchAlertIntervalMinutes
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 60)
-
-    val watchAlertStartMinute: StateFlow<Int> = preferenceManager.watchAlertStartMinute
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
-
-    val lowGlucoseAlarmEnabled: StateFlow<Boolean> = preferenceManager.lowGlucoseAlarmEnabled
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
-
-    val highGlucoseAlarmEnabled: StateFlow<Boolean> = preferenceManager.highGlucoseAlarmEnabled
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
-
-    val useCalibratedForAlarms: StateFlow<Boolean> = preferenceManager.useCalibratedForAlarms
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
-
-    val lastHistoryBackupRequestAt: StateFlow<Long?> = preferenceManager.lastHistoryBackupRequestAt
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
-
-    val historyRetentionDays: StateFlow<Int> = preferenceManager.historyRetentionDays
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 90)
-
-    val isDemoMode: StateFlow<Boolean> = preferenceManager.isDemoMode
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
-
-    val rapidDurationMins: StateFlow<Int> = preferenceManager.rapidDurationMins
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 240)
-
-    val slowDurationMins: StateFlow<Int> = preferenceManager.slowDurationMins
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 1440)
-
-    val icRuleConstant: StateFlow<Int> = preferenceManager.icRuleConstant
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 450)
-
-    val isfRuleConstant: StateFlow<Int> = preferenceManager.isfRuleConstant
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 1800)
-
-    val manualTdi: StateFlow<Double?> = preferenceManager.manualTdi
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
-
-    val manualIsf: StateFlow<Double?> = preferenceManager.manualIsf
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
-
-    val targetGlucose: StateFlow<Int> = preferenceManager.targetGlucose
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 100)
-
-    val insulinDoses: StateFlow<List<com.tonio.libre2clock.data.model.InsulinDose>> = preferenceManager.insulinDoses
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    val sensorLogs: StateFlow<List<com.tonio.libre2clock.data.model.SensorLog>> = preferenceManager.sensorLogs
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    val activeSensorSerialNumber: StateFlow<String?> = preferenceManager.activeSensorSerialNumber
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
-
-    val watchNotificationSchedules: StateFlow<List<com.tonio.libre2clock.data.model.AlarmSchedule>> = preferenceManager.watchNotificationSchedules
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    val glucoseAlarmSchedules: StateFlow<List<com.tonio.libre2clock.data.model.AlarmSchedule>> = preferenceManager.glucoseAlarmSchedules
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    val batteryLowThreshold: StateFlow<Int> = preferenceManager.batteryLowThreshold
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 15)
-
-    val batteryCriticalThreshold: StateFlow<Int> = preferenceManager.batteryCriticalThreshold
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 5)
-
-    val disableFastRefreshOnSlowCharge: StateFlow<Boolean> = preferenceManager.disableFastRefreshOnSlowCharge
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
-
-    val sensorDurationDays: StateFlow<Int> = preferenceManager.sensorDurationDays
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 15)
+    // --- StateFlows optimizados con la extensión ---
+    val firebaseUser = authManager.user.stateInDefault(null)
+    val patientId = preferenceManager.patientId.stateInDefault(null)
+    val libreLinkUpEmail = preferenceManager.libreLinkUpEmail.stateInDefault(null)
+    val isCloudSyncEnabled = preferenceManager.isCloudSyncEnabled.stateInDefault(false)
+    val cloudSyncLastSuccessAt = preferenceManager.cloudSyncLastSuccessAt.stateInDefault(null)
+    val settingsUpdatedAt = preferenceManager.settingsUpdatedAt.stateInDefault(null)
+    val glucoseOffset = preferenceManager.glucoseOffset.stateInDefault(0)
+    val glucoseOffsetRanges = preferenceManager.glucoseOffsetRanges.stateInDefault(emptyList())
+    val autoAdjustEnabled = preferenceManager.autoAdjustEnabled.stateInDefault(false)
+    val autoRangeOffsetMode = preferenceManager.autoRangeOffsetMode.stateInDefault(AutoRangeOffsetMode.OFF)
+    val capillaryReadings = preferenceManager.capillaryReadings.stateInDefault(emptyList())
+    val watchAlertsEnabled = preferenceManager.watchAlertsEnabled.stateInDefault(false)
+    val watchNotificationMode = preferenceManager.watchNotificationMode.stateInDefault(WatchNotificationMode.OFF)
+    val watchAlertIntervalMinutes = preferenceManager.watchAlertIntervalMinutes.stateInDefault(60)
+    val watchAlertStartMinute = preferenceManager.watchAlertStartMinute.stateInDefault(0)
+    val lowGlucoseAlarmEnabled = preferenceManager.lowGlucoseAlarmEnabled.stateInDefault(false)
+    val highGlucoseAlarmEnabled = preferenceManager.highGlucoseAlarmEnabled.stateInDefault(false)
+    val useCalibratedForAlarms = preferenceManager.useCalibratedForAlarms.stateInDefault(true)
+    val lastHistoryBackupRequestAt = preferenceManager.lastHistoryBackupRequestAt.stateInDefault(null)
+    val historyRetentionDays = preferenceManager.historyRetentionDays.stateInDefault(90)
+    val isDemoMode = preferenceManager.isDemoMode.stateInDefault(false)
+    val rapidDurationMins = preferenceManager.rapidDurationMins.stateInDefault(240)
+    val slowDurationMins = preferenceManager.slowDurationMins.stateInDefault(1440)
+    val icRuleConstant = preferenceManager.icRuleConstant.stateInDefault(450)
+    val isfRuleConstant = preferenceManager.isfRuleConstant.stateInDefault(1800)
+    val manualTdi = preferenceManager.manualTdi.stateInDefault(null)
+    val manualIsf = preferenceManager.manualIsf.stateInDefault(null)
+    val targetGlucose = preferenceManager.targetGlucose.stateInDefault(100)
+    val insulinDoses = preferenceManager.insulinDoses.stateInDefault(emptyList())
+    val sensorLogs = preferenceManager.sensorLogs.stateInDefault(emptyList())
+    val activeSensorSerialNumber = preferenceManager.activeSensorSerialNumber.stateInDefault(null)
+    val watchNotificationSchedules = preferenceManager.watchNotificationSchedules.stateInDefault(emptyList())
+    val glucoseAlarmSchedules = preferenceManager.glucoseAlarmSchedules.stateInDefault(emptyList())
+    val batteryLowThreshold = preferenceManager.batteryLowThreshold.stateInDefault(15)
+    val batteryCriticalThreshold = preferenceManager.batteryCriticalThreshold.stateInDefault(5)
+    val disableFastRefreshOnSlowCharge = preferenceManager.disableFastRefreshOnSlowCharge.stateInDefault(true)
+    val sensorDurationDays = preferenceManager.sensorDurationDays.stateInDefault(15)
 
     val currentGlucose: StateFlow<GlucoseMeasurement?> = combine(
         combine(
@@ -198,8 +133,9 @@ class SettingsViewModel(
                 capillaryReadings = capillaries
             )
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+    }.stateIn(viewModelScope, sharingStrategy, null)
 
+    // OPTIMIZACIÓN 3: Cálculo de métricas en UNA SOLA PASADA (Zero-Allocation)
     val rangeOffsetInsights: StateFlow<List<RangeOffsetInsight>> = combine(
         preferenceManager.glucoseOffsetRanges,
         preferenceManager.capillaryReadings,
@@ -214,6 +150,7 @@ class SettingsViewModel(
         ) {
             ranges.mapNotNull { range ->
                 val estimate = GlucoseProcessor.estimateOffsetsForRange(range, capillaries) ?: return@mapNotNull null
+                
                 val points = capillaries.mapNotNull { reading ->
                     val sensor = reading.sensorValue ?: return@mapNotNull null
                     if (sensor == 0) return@mapNotNull null
@@ -221,35 +158,47 @@ class SettingsViewModel(
                     if (range.max != null && sensor >= range.max) return@mapNotNull null
                     sensor to reading.value
                 }
+                
                 if (points.isEmpty()) return@mapNotNull null
 
-                val avgSensor = points.map { it.first.toDouble() }.average()
-                val avgCapillary = points.map { it.second.toDouble() }.average()
+                // Single-pass accumulation: O(N) en lugar de O(7N) y cero listas intermedias
+                var sumSensor = 0.0
+                var sumCapillary = 0.0
+                var sumAbsDiff = 0.0
+                var sumCurrentDevPct = 0.0
+                var sumSignedRawBias = 0.0
+                var sumSignedCalError = 0.0
+                var sumSuggestedMae = 0.0
+                var sumSuggestedDev = 0.0
+                
+                val count = points.size.toDouble()
+                val calibOffset = range.offset
+                val calibPct = range.percentage / 100.0
+                val estOffset = estimate.offset
+                val estPct = estimate.percentage / 100.0
 
-                val currentMae = points.map { (sensor, capillary) ->
-                    abs(sensor - capillary).toDouble()
-                }.average()
+                for ((sensor, capillary) in points) {
+                    val s = sensor.toDouble()
+                    val c = capillary.toDouble()
+                    
+                    sumSensor += s
+                    sumCapillary += c
+                    val absDiff = abs(s - c)
+                    sumAbsDiff += absDiff
 
-                val currentDeviationPct = points.map { (sensor, capillary) ->
-                    if (capillary <= 0) 0.0 else (abs(sensor - capillary).toDouble() / capillary) * 100.0
-                }.average()
+                    if (c > 0) {
+                        sumCurrentDevPct += (absDiff / c) * 100.0
+                        sumSignedRawBias += ((s - c) / c) * 100.0
+                        
+                        val calibrated = s + calibOffset + (s * calibPct)
+                        sumSignedCalError += ((calibrated - c) / c) * 100.0
 
-                val signedRawBias = points.map { (sensor, capillary) ->
-                    if (capillary <= 0) 0.0 else ((sensor - capillary).toDouble() / capillary) * 100.0
-                }.average()
-
-                val signedCalibratedError = points.map { (sensor, capillary) ->
-                    val calibrated = sensor + range.offset + (sensor * (range.percentage / 100.0))
-                    if (capillary <= 0) 0.0 else ((calibrated - capillary) / capillary) * 100.0
-                }.average()
-
-                val suggestedMae = points.map { (sensor, capillary) ->
-                    val predicted = sensor + estimate.offset + (sensor * (estimate.percentage / 100.0))
-                    abs(predicted - capillary)
-                }.average()
-                val suggestedDeviationPct = points.map { (sensor, capillary) ->
-                    if (capillary <= 0) 0.0 else (abs((sensor + estimate.offset + (sensor * (estimate.percentage / 100.0))) - capillary) / capillary) * 100.0
-                }.average()
+                        val predicted = s + estOffset + (s * estPct)
+                        val predAbsDiff = abs(predicted - c)
+                        sumSuggestedMae += predAbsDiff
+                        sumSuggestedDev += (predAbsDiff / c) * 100.0
+                    }
+                }
 
                 RangeOffsetInsight(
                     min = range.min,
@@ -257,45 +206,72 @@ class SettingsViewModel(
                     sampleCount = estimate.sampleCount,
                     suggestedOffset = estimate.offset,
                     suggestedPercentage = estimate.percentage,
-                    currentMae = currentMae,
-                    suggestedMae = suggestedMae,
-                    currentDeviationPct = currentDeviationPct,
-                    suggestedDeviationPct = suggestedDeviationPct,
-                    avgSensorValue = avgSensor,
-                    avgCapillaryValue = avgCapillary,
-                    signedCalibratedDeviationPct = signedCalibratedError,
-                    signedRawDeviationPct = signedRawBias
+                    currentMae = sumAbsDiff / count,
+                    suggestedMae = sumSuggestedMae / count,
+                    currentDeviationPct = sumCurrentDevPct / count,
+                    suggestedDeviationPct = sumSuggestedDev / count,
+                    avgSensorValue = sumSensor / count,
+                    avgCapillaryValue = sumCapillary / count,
+                    signedCalibratedDeviationPct = sumSignedCalError / count,
+                    signedRawDeviationPct = sumSignedRawBias / count
                 )
             }.sortedBy { it.min }
         }
-    }
-        .distinctUntilChanged()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    }.distinctUntilChanged().stateIn(viewModelScope, sharingStrategy, emptyList())
 
-    fun updateOffset(offset: Int) {
+    // --- Acciones de Guardado (Simplificadas) ---
+    fun updateOffset(offset: Int) = launchSave { preferenceManager.saveGlucoseOffset(offset) }
+    fun updateAutoAdjustEnabled(enabled: Boolean) = launchSave { preferenceManager.saveAutoAdjustEnabled(enabled) }
+    fun updateAutoRangeOffsetMode(mode: AutoRangeOffsetMode) = launchSave { preferenceManager.saveAutoRangeOffsetMode(mode) }
+    fun updateWatchAlertIntervalMinutes(minutes: Int) = launchSave { preferenceManager.saveWatchAlertIntervalMinutes(minutes) }
+    fun updateWatchAlertStartMinute(minute: Int) = launchSave { preferenceManager.saveWatchAlertStartMinute(minute) }
+    fun updateLowGlucoseAlarmEnabled(enabled: Boolean) = launchSave { preferenceManager.saveLowGlucoseAlarmEnabled(enabled) }
+    fun updateHighGlucoseAlarmEnabled(enabled: Boolean) = launchSave { preferenceManager.saveHighGlucoseAlarmEnabled(enabled) }
+    fun updateUseCalibratedForAlarms(enabled: Boolean) = launchSave { preferenceManager.saveUseCalibratedForAlarms(enabled) }
+    fun updateRapidDuration(minutes: Int) = launchSave { preferenceManager.saveRapidDurationMins(minutes) }
+    fun updateSlowDuration(minutes: Int) = launchSave { preferenceManager.saveSlowDurationMins(minutes) }
+    fun updateIcRuleConstant(constant: Int) = launchSave { preferenceManager.saveIcRuleConstant(constant) }
+    fun updateIsfRuleConstant(constant: Int) = launchSave { preferenceManager.saveIsfRuleConstant(constant) }
+    fun updateManualTdi(tdi: Double?) = launchSave { preferenceManager.saveManualTdi(tdi) }
+    fun updateManualIsf(isf: Double?) = launchSave { preferenceManager.saveManualIsf(isf) }
+    fun updateTargetGlucose(target: Int) = launchSave { preferenceManager.saveTargetGlucose(target) }
+    fun updateBatteryLowThreshold(threshold: Int) = launchSave { preferenceManager.saveBatteryLowThreshold(threshold) }
+    fun updateBatteryCriticalThreshold(threshold: Int) = launchSave { preferenceManager.saveBatteryCriticalThreshold(threshold) }
+    fun updateDisableFastRefreshOnSlowCharge(disabled: Boolean) = launchSave { preferenceManager.saveDisableFastRefreshOnSlowCharge(disabled) }
+    fun updateSensorDurationDays(days: Int) = launchSave { preferenceManager.saveSensorDurationDays(days) }
+
+    // Helper para reducir boilerplate de viewModelScope.launch
+    private fun launchSave(block: suspend () -> Unit) {
+        viewModelScope.launch { block() }
+    }
+
+    fun updateWatchAlertsEnabled(enabled: Boolean) {
         viewModelScope.launch {
-            preferenceManager.saveGlucoseOffset(offset)
+            if (enabled) preferenceManager.initializeWatchAlertStartMinuteIfMissing()
+            preferenceManager.saveWatchAlertsEnabled(enabled)
         }
     }
 
-    fun updateAutoAdjustEnabled(enabled: Boolean) {
+    fun updateWatchNotificationMode(mode: WatchNotificationMode) {
         viewModelScope.launch {
-            preferenceManager.saveAutoAdjustEnabled(enabled)
+            if (mode != WatchNotificationMode.OFF) preferenceManager.initializeWatchAlertStartMinuteIfMissing()
+            preferenceManager.saveWatchNotificationMode(mode)
         }
     }
 
-    fun updateAutoRangeOffsetMode(mode: AutoRangeOffsetMode) {
+    fun updateDemoMode(enabled: Boolean) {
         viewModelScope.launch {
-            preferenceManager.saveAutoRangeOffsetMode(mode)
+            if (enabled) repository.enableDemoMode() else repository.disableDemoMode()
         }
     }
 
     fun addCapillaryReading(reading: CapillaryMeasurement) {
         viewModelScope.launch {
             val currentReadings = capillaryReadings.value.toMutableList()
-            val withSensor = reading.copy(
-                sensorSerialNumber = reading.sensorSerialNumber ?: preferenceManager.activeSensorSerialNumber.first()
-            )
+            // OPTIMIZACIÓN 4: .value es síncrono e instantáneo para StateFlow, evita suspensión innecesaria de .first()
+            val activeSerial = activeSensorSerialNumber.value
+            
+            val withSensor = reading.copy(sensorSerialNumber = reading.sensorSerialNumber ?: activeSerial)
             currentReadings.add(withSensor)
             currentReadings.sortByDescending { it.timestamp }
             preferenceManager.saveCapillaryReadings(currentReadings)
@@ -304,68 +280,15 @@ class SettingsViewModel(
 
     fun removeCapillaryReading(reading: CapillaryMeasurement) {
         viewModelScope.launch {
-            val currentReadings = capillaryReadings.value.toMutableList()
-            currentReadings.remove(reading)
+            val currentReadings = capillaryReadings.value.toMutableList().apply { remove(reading) }
             preferenceManager.saveCapillaryReadings(currentReadings)
-        }
-    }
-
-    fun updateWatchAlertsEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            if (enabled) {
-                preferenceManager.initializeWatchAlertStartMinuteIfMissing()
-            }
-            preferenceManager.saveWatchAlertsEnabled(enabled)
-        }
-    }
-
-    fun updateWatchNotificationMode(mode: WatchNotificationMode) {
-        viewModelScope.launch {
-            if (mode != WatchNotificationMode.OFF) {
-                preferenceManager.initializeWatchAlertStartMinuteIfMissing()
-            }
-            preferenceManager.saveWatchNotificationMode(mode)
-        }
-    }
-
-    fun updateWatchAlertIntervalMinutes(minutes: Int) {
-        viewModelScope.launch {
-            preferenceManager.saveWatchAlertIntervalMinutes(minutes)
-        }
-    }
-
-    fun updateWatchAlertStartMinute(minute: Int) {
-        viewModelScope.launch {
-            preferenceManager.saveWatchAlertStartMinute(minute)
-        }
-    }
-
-    fun updateLowGlucoseAlarmEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            preferenceManager.saveLowGlucoseAlarmEnabled(enabled)
-        }
-    }
-
-    fun updateHighGlucoseAlarmEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            preferenceManager.saveHighGlucoseAlarmEnabled(enabled)
-        }
-    }
-
-    fun updateUseCalibratedForAlarms(enabled: Boolean) {
-        viewModelScope.launch {
-            preferenceManager.saveUseCalibratedForAlarms(enabled)
         }
     }
 
     fun requestHistoryBackupNow() {
         viewModelScope.launch {
             val requested = preferenceManager.requestHistoryCloudBackupIfDue(force = true)
-            _backupStatusMessage.value = if (requested) {
-                "Google backup requested."
-            } else {
-                "No Google backup request was sent."
-            }
+            _backupStatusMessage.value = if (requested) "Google backup requested." else "No Google backup request was sent."
         }
     }
 
@@ -394,16 +317,6 @@ class SettingsViewModel(
         _sectionPerfStats.value = emptyList()
     }
 
-    fun updateDemoMode(enabled: Boolean) {
-        viewModelScope.launch {
-            if (enabled) {
-                repository.enableDemoMode()
-            } else {
-                repository.disableDemoMode()
-            }
-        }
-    }
-
     fun requestPartialHistoryBackup(
         includeHistoricalGlucose: Boolean,
         includeCapillaryReadings: Boolean,
@@ -412,16 +325,9 @@ class SettingsViewModel(
     ) {
         viewModelScope.launch {
             val requested = preferenceManager.requestPartialHistoryCloudBackup(
-                includeHistoricalGlucose = includeHistoricalGlucose,
-                includeCapillaryReadings = includeCapillaryReadings,
-                includeInsulinDoses = includeInsulinDoses,
-                includeSensorLogs = includeSensorLogs
+                includeHistoricalGlucose, includeCapillaryReadings, includeInsulinDoses, includeSensorLogs
             )
-            _backupStatusMessage.value = if (requested) {
-                "Partial Google backup requested."
-            } else {
-                "Partial Google backup request failed."
-            }
+            _backupStatusMessage.value = if (requested) "Partial Google backup requested." else "Partial Google backup request failed."
         }
     }
 
@@ -433,20 +339,13 @@ class SettingsViewModel(
     ) {
         viewModelScope.launch {
             val restored = preferenceManager.restorePartialHistoryFromBackup(
-                includeHistoricalGlucose = includeHistoricalGlucose,
-                includeCapillaryReadings = includeCapillaryReadings,
-                includeInsulinDoses = includeInsulinDoses,
-                includeSensorLogs = includeSensorLogs
+                includeHistoricalGlucose, includeCapillaryReadings, includeInsulinDoses, includeSensorLogs
             )
             if (restored) {
                 settingsCache.clearAllCache()
                 repository.syncLocalArchiveFromPreferences()
             }
-            _backupStatusMessage.value = if (restored) {
-                "Partial restore completed."
-            } else {
-                "Partial restore failed or no backup data was found."
-            }
+            _backupStatusMessage.value = if (restored) "Partial restore completed." else "Partial restore failed or no backup data was found."
         }
     }
 
@@ -481,9 +380,7 @@ class SettingsViewModel(
     fun updateCloudSyncEnabled(enabled: Boolean) {
         viewModelScope.launch {
             preferenceManager.saveCloudSyncEnabled(enabled)
-            if (enabled) {
-                cloudSyncManager.triggerManualSync()
-            }
+            if (enabled) cloudSyncManager.triggerManualSync()
         }
     }
 
@@ -491,6 +388,22 @@ class SettingsViewModel(
         viewModelScope.launch {
             cloudSyncManager.triggerManualSync()
             _backupStatusMessage.value = "Manual sync triggered."
+        }
+    }
+
+    fun pullCloudSettings(onComplete: (Boolean) -> Unit) {
+        val user = authManager.user.value
+        viewModelScope.launch {
+            // OPTIMIZACIÓN 4: .value en lugar de .first()
+            val patientId = patientId.value 
+            if (user != null && patientId != null) {
+                cloudSyncManager.pullSettingsOnly(user.uid, patientId) { success ->
+                    if (success) viewModelScope.launch { settingsCache.clearAllCache() }
+                    onComplete(success)
+                }
+            } else {
+                onComplete(false)
+            }
         }
     }
 
@@ -515,7 +428,7 @@ class SettingsViewModel(
     fun resetCloudData(onComplete: (Boolean) -> Unit) {
         val user = authManager.user.value
         viewModelScope.launch {
-            val patientId = preferenceManager.patientId.first()
+            val patientId = patientId.value
             if (user != null && patientId != null) {
                 cloudSyncManager.resetCloudData(user.uid, patientId, onComplete)
             } else {
@@ -559,10 +472,7 @@ class SettingsViewModel(
                 repository.syncLocalArchiveFromPreferences()
             }
             _backupStatusMessage.value = result.fold(
-                onSuccess = {
-                    if (isHardReset) appContext.getString(R.string.restore_success_hard)
-                    else appContext.getString(R.string.restore_success_merge)
-                },
+                onSuccess = { if (isHardReset) appContext.getString(R.string.restore_success_hard) else appContext.getString(R.string.restore_success_merge) },
                 onFailure = { it.message ?: appContext.getString(R.string.restore_failed) }
             )
         }
@@ -577,9 +487,7 @@ class SettingsViewModel(
     }
 
     fun logout() {
-        viewModelScope.launch {
-            repository.logout()
-        }
+        viewModelScope.launch { repository.logout() }
     }
 
     fun runDirectApiDiagnostic() {
@@ -592,89 +500,72 @@ class SettingsViewModel(
                     appendLine("=== LibreLinkUp API Diagnostic ===")
                     appendLine("Started at: $startedAt")
 
-                    try {
-                        val token = preferenceManager.authToken.first()
-                        val userId = preferenceManager.userId.first()
-                        val storedPatientId = preferenceManager.patientId.first()
-                        val demoEnabled = preferenceManager.isDemoMode.first()
+                    val token = preferenceManager.authToken.first()
+                    val userId = preferenceManager.userId.first()
+                    val storedPatientId = preferenceManager.patientId.first()
+                    val demoEnabled = preferenceManager.isDemoMode.first()
 
-                        appendLine("Demo mode: $demoEnabled")
-                        appendLine("Has token: ${!token.isNullOrBlank()}")
-                        appendLine("Has userId: ${!userId.isNullOrBlank()}")
-                        appendLine("Stored patientId: ${storedPatientId ?: "<none>"}")
+                    appendLine("Demo mode: $demoEnabled")
+                    appendLine("Has token: ${!token.isNullOrBlank()}")
+                    appendLine("Has userId: ${!userId.isNullOrBlank()}")
+                    appendLine("Stored patientId: ${storedPatientId ?: "<none>"}")
 
-                        if (token.isNullOrBlank() || userId.isNullOrBlank()) {
-                            appendLine()
-                            appendLine("Result: FAIL")
-                            appendLine("Reason: Missing credentials. Please login again.")
-                        } else {
-                            LibreService.setAuth(token, userId)
+                    if (token.isNullOrBlank() || userId.isNullOrBlank()) {
+                        appendLine("\nResult: FAIL\nReason: Missing credentials. Please login again.")
+                        return@buildString
+                    }
 
-                            val connectionsResponse = LibreService.api.getConnections()
-                            val connections = connectionsResponse.data ?: emptyList()
-                            val firstConnectionPatientId = connections.firstOrNull()?.patientId
+                    LibreService.setAuth(token, userId)
+                    val connectionsResponse = LibreService.api.getConnections()
+                    val connections = connectionsResponse.data ?: emptyList()
+                    val firstConnectionPatientId = connections.firstOrNull()?.patientId
 
-                            appendLine()
-                            appendLine("GET /llu/connections")
-                            appendLine("status: ${connectionsResponse.status}")
-                            appendLine("connectionsCount: ${connections.size}")
-                            appendLine("firstConnectionPatientId: ${firstConnectionPatientId ?: "<none>"}")
+                    appendLine("\nGET /llu/connections")
+                    appendLine("status: ${connectionsResponse.status}")
+                    appendLine("connectionsCount: ${connections.size}")
+                    appendLine("firstConnectionPatientId: ${firstConnectionPatientId ?: "<none>"}")
 
-                            val patientId = storedPatientId ?: firstConnectionPatientId
-                            if (patientId.isNullOrBlank()) {
-                                appendLine()
-                                appendLine("Result: FAIL")
-                                appendLine("Reason: No patientId available from stored settings or connections endpoint.")
-                                appendLine("Raw connections object: $connectionsResponse")
-                            } else {
-                                val graphResponse = LibreService.api.getGlucoseGraph(patientId)
-                                val measurement = graphResponse.data?.connection?.glucoseMeasurement
-                                val graphData = graphResponse.data?.graphData ?: emptyList()
-                                val latestFromGraph = graphData.lastOrNull()
+                    val patientId = storedPatientId ?: firstConnectionPatientId
+                    if (patientId.isNullOrBlank()) {
+                        appendLine("\nResult: FAIL\nReason: No patientId available.\nRaw connections: $connectionsResponse")
+                        return@buildString
+                    }
 
-                                appendLine()
-                                appendLine("GET /llu/connections/{patientId}/graph")
-                                appendLine("patientId used: $patientId")
-                                appendLine("status: ${graphResponse.status}")
-                                appendLine("graphDataCount: ${graphData.size}")
+                    val graphResponse = LibreService.api.getGlucoseGraph(patientId)
+                    val measurement = graphResponse.data?.connection?.glucoseMeasurement
+                    val graphData = graphResponse.data?.graphData ?: emptyList()
+                    val latestFromGraph = graphData.lastOrNull()
 
-                                appendLine()
-                                appendLine("connection.glucoseMeasurement (raw object):")
-                                appendLine(measurement?.toString() ?: "<null>")
+                    appendLine("\nGET /llu/connections/{patientId}/graph")
+                    appendLine("patientId used: $patientId")
+                    appendLine("status: ${graphResponse.status}")
+                    appendLine("graphDataCount: ${graphData.size}")
+                    appendLine("\nconnection.glucoseMeasurement: ${measurement ?: "<null>"}")
+                    appendLine("latest graphData item: ${latestFromGraph ?: "<null>"}")
 
-                                appendLine()
-                                appendLine("latest graphData item (raw object):")
-                                appendLine(latestFromGraph?.toString() ?: "<null>")
-
-                                val effective = measurement ?: latestFromGraph
-                                appendLine()
-                                appendLine("effective value used by app:")
-                                if (effective != null) {
-                                    appendLine("Value: ${effective.value}")
-                                    appendLine("ValueInMgPerDl: ${effective.valueInMgPerDl}")
-                                    appendLine("TrendArrow: ${effective.trendArrow}")
-                                    appendLine("FactoryTimestamp: ${effective.factoryTimestamp}")
-                                    appendLine("Timestamp: ${effective.timestamp}")
-                                    appendLine("Result: OK")
-                                } else {
-                                    appendLine("<null>")
-                                    appendLine("Result: FAIL")
-                                    appendLine("Reason: API returned no glucoseMeasurement and empty graphData.")
-                                }
-                            }
-                        }
-                    } catch (e: Exception) {
-                        appendLine()
-                        appendLine("Result: FAIL")
-                        appendLine("Exception: ${e::class.java.simpleName}")
-                        appendLine("Message: ${e.message ?: "<no message>"}")
-                        val stack = e.stackTrace.take(8).joinToString("\n") { "  at $it" }
-                        appendLine("Stack (top 8):")
-                        appendLine(stack)
+                    val effective = measurement ?: latestFromGraph
+                    appendLine("\neffective value used by app:")
+                    if (effective != null) {
+                        appendLine("Value: ${effective.value}")
+                        appendLine("ValueInMgPerDl: ${effective.valueInMgPerDl}")
+                        appendLine("TrendArrow: ${effective.trendArrow}")
+                        appendLine("FactoryTimestamp: ${effective.factoryTimestamp}")
+                        appendLine("Timestamp: ${effective.timestamp}")
+                        appendLine("Result: OK")
+                    } else {
+                        appendLine("<null>\nResult: FAIL\nReason: API returned no glucoseMeasurement and empty graphData.")
                     }
                 }
-
                 _apiDebugOutput.value = report
+            } catch (e: Exception) {
+                _apiDebugOutput.value = buildString {
+                    appendLine("=== LibreLinkUp API Diagnostic ===")
+                    appendLine("Result: FAIL")
+                    appendLine("Exception: ${e::class.java.simpleName}")
+                    appendLine("Message: ${e.message ?: "<no message>"}")
+                    appendLine("Stack (top 8):")
+                    e.stackTrace.take(8).forEach { appendLine("  at $it") }
+                }
             } finally {
                 _isApiDebugLoading.value = false
             }
@@ -683,27 +574,27 @@ class SettingsViewModel(
 
     fun addRange(range: GlucoseOffsetRange) {
         viewModelScope.launch {
-            val currentRanges = glucoseOffsetRanges.value.toMutableList()
-            currentRanges.add(range)
-            currentRanges.sortBy { it.min }
+            val currentRanges = glucoseOffsetRanges.value.toMutableList().apply { 
+                add(range)
+                sortBy { it.min } 
+            }
             preferenceManager.saveGlucoseOffsetRanges(currentRanges)
         }
     }
 
     fun addDefaultRange() {
         viewModelScope.launch {
-            val currentRanges = glucoseOffsetRanges.value.toMutableList()
-            val newRange = GlucoseOffsetRange(0, 0, 0)
-            currentRanges.add(newRange)
-            currentRanges.sortBy { it.min }
+            val currentRanges = glucoseOffsetRanges.value.toMutableList().apply { 
+                add(GlucoseOffsetRange(0, 0, 0))
+                sortBy { it.min } 
+            }
             preferenceManager.saveGlucoseOffsetRanges(currentRanges)
         }
     }
 
     fun removeRange(range: GlucoseOffsetRange) {
         viewModelScope.launch {
-            val currentRanges = glucoseOffsetRanges.value.toMutableList()
-            currentRanges.remove(range)
+            val currentRanges = glucoseOffsetRanges.value.toMutableList().apply { remove(range) }
             preferenceManager.saveGlucoseOffsetRanges(currentRanges)
         }
     }
@@ -727,15 +618,9 @@ class SettingsViewModel(
                 .associateBy { insightKey(it.min, it.max) }
 
             val updated = glucoseOffsetRanges.value.map { range ->
-                val insight = insightsByKey[insightKey(range.min, range.max)]
-                if (insight != null) {
-                    range.copy(
-                        offset = insight.suggestedOffset,
-                        percentage = insight.suggestedPercentage
-                    )
-                } else {
-                    range
-                }
+                insightsByKey[insightKey(range.min, range.max)]?.let { insight ->
+                    range.copy(offset = insight.suggestedOffset, percentage = insight.suggestedPercentage)
+                } ?: range
             }
             preferenceManager.saveGlucoseOffsetRanges(updated)
         }
@@ -751,48 +636,33 @@ class SettingsViewModel(
         val autoRangeMode: AutoRangeOffsetMode
     )
 
-    fun updateRapidDuration(minutes: Int) {
-        viewModelScope.launch { preferenceManager.saveRapidDurationMins(minutes) }
-    }
-
-    fun updateSlowDuration(minutes: Int) {
-        viewModelScope.launch { preferenceManager.saveSlowDurationMins(minutes) }
-    }
-
-    fun updateIcRuleConstant(constant: Int) {
-        viewModelScope.launch { preferenceManager.saveIcRuleConstant(constant) }
-    }
-
-    fun updateIsfRuleConstant(constant: Int) {
-        viewModelScope.launch { preferenceManager.saveIsfRuleConstant(constant) }
-    }
-
-    fun updateManualTdi(tdi: Double?) {
-        viewModelScope.launch { preferenceManager.saveManualTdi(tdi) }
-    }
-
-    fun updateManualIsf(isf: Double?) {
-        viewModelScope.launch { preferenceManager.saveManualIsf(isf) }
-    }
-
-    fun updateTargetGlucose(target: Int) {
-        viewModelScope.launch { preferenceManager.saveTargetGlucose(target) }
-    }
-
+    // --- Funciones de Insulina y Alarmas (Optimizadas con .apply) ---
     fun addInsulinDose(dose: com.tonio.libre2clock.data.model.InsulinDose) {
         viewModelScope.launch {
-            val current = insulinDoses.value.toMutableList()
-            current.add(dose)
-            current.sortByDescending { it.timestamp }
+            val current = insulinDoses.value.toMutableList().apply { 
+                add(dose)
+                sortByDescending { it.timestamp } 
+            }
             preferenceManager.saveInsulinDoses(current)
         }
     }
 
     fun removeInsulinDose(dose: com.tonio.libre2clock.data.model.InsulinDose) {
         viewModelScope.launch {
-            val current = insulinDoses.value.toMutableList()
-            current.remove(dose)
+            val current = insulinDoses.value.toMutableList().apply { remove(dose) }
             preferenceManager.saveInsulinDoses(current)
+        }
+    }
+
+    fun updateInsulinDose(oldDose: com.tonio.libre2clock.data.model.InsulinDose, newDose: com.tonio.libre2clock.data.model.InsulinDose) {
+        viewModelScope.launch {
+            val current = insulinDoses.value.toMutableList()
+            val index = current.indexOf(oldDose)
+            if (index != -1) {
+                current[index] = newDose
+                current.sortByDescending { it.timestamp }
+                preferenceManager.saveInsulinDoses(current)
+            }
         }
     }
 
@@ -809,28 +679,14 @@ class SettingsViewModel(
 
     fun removeSensorLog(log: com.tonio.libre2clock.data.model.SensorLog) {
         viewModelScope.launch {
-            val current = sensorLogs.value.toMutableList()
-            current.removeIf { it.serialNumber == log.serialNumber }
+            val current = sensorLogs.value.toMutableList().apply { removeIf { it.serialNumber == log.serialNumber } }
             preferenceManager.saveSensorLogs(current)
-        }
-    }
-
-    fun updateInsulinDose(oldDose: com.tonio.libre2clock.data.model.InsulinDose, newDose: com.tonio.libre2clock.data.model.InsulinDose) {
-        viewModelScope.launch {
-            val current = insulinDoses.value.toMutableList()
-            val index = current.indexOf(oldDose)
-            if (index != -1) {
-                current[index] = newDose
-                current.sortByDescending { it.timestamp }
-                preferenceManager.saveInsulinDoses(current)
-            }
         }
     }
 
     fun addWatchSchedule(schedule: com.tonio.libre2clock.data.model.AlarmSchedule) {
         viewModelScope.launch {
-            val current = watchNotificationSchedules.value.toMutableList()
-            current.add(schedule)
+            val current = watchNotificationSchedules.value.toMutableList().apply { add(schedule) }
             preferenceManager.saveWatchNotificationSchedules(current)
         }
     }
@@ -848,16 +704,14 @@ class SettingsViewModel(
 
     fun removeWatchSchedule(schedule: com.tonio.libre2clock.data.model.AlarmSchedule) {
         viewModelScope.launch {
-            val current = watchNotificationSchedules.value.toMutableList()
-            current.removeIf { it.id == schedule.id }
+            val current = watchNotificationSchedules.value.toMutableList().apply { removeIf { it.id == schedule.id } }
             preferenceManager.saveWatchNotificationSchedules(current)
         }
     }
 
     fun addAlarmSchedule(schedule: com.tonio.libre2clock.data.model.AlarmSchedule) {
         viewModelScope.launch {
-            val current = glucoseAlarmSchedules.value.toMutableList()
-            current.add(schedule)
+            val current = glucoseAlarmSchedules.value.toMutableList().apply { add(schedule) }
             preferenceManager.saveGlucoseAlarmSchedules(current)
         }
     }
@@ -875,25 +729,8 @@ class SettingsViewModel(
 
     fun removeAlarmSchedule(schedule: com.tonio.libre2clock.data.model.AlarmSchedule) {
         viewModelScope.launch {
-            val current = glucoseAlarmSchedules.value.toMutableList()
-            current.removeIf { it.id == schedule.id }
+            val current = glucoseAlarmSchedules.value.toMutableList().apply { removeIf { it.id == schedule.id } }
             preferenceManager.saveGlucoseAlarmSchedules(current)
         }
-    }
-
-    fun updateBatteryLowThreshold(threshold: Int) {
-        viewModelScope.launch { preferenceManager.saveBatteryLowThreshold(threshold) }
-    }
-
-    fun updateBatteryCriticalThreshold(threshold: Int) {
-        viewModelScope.launch { preferenceManager.saveBatteryCriticalThreshold(threshold) }
-    }
-
-    fun updateDisableFastRefreshOnSlowCharge(disabled: Boolean) {
-        viewModelScope.launch { preferenceManager.saveDisableFastRefreshOnSlowCharge(disabled) }
-    }
-
-    fun updateSensorDurationDays(days: Int) {
-        viewModelScope.launch { preferenceManager.saveSensorDurationDays(days) }
     }
 }

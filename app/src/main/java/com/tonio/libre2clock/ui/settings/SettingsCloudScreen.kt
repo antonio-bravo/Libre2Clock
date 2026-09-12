@@ -3,6 +3,9 @@ package com.tonio.libre2clock.ui.settings
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Login
@@ -22,8 +25,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tonio.libre2clock.R
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,7 +69,6 @@ fun SettingsCloudScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // OPTIMIZACIÓN: Cada sección es un 'item' independiente con 'key' para aislar recomposiciones
             item(key = "account_section") {
                 AccountSection(
                     firebaseUser = firebaseUser,
@@ -76,12 +79,22 @@ fun SettingsCloudScreen(
 
             if (firebaseUser != null) {
                 item(key = "sync_options_section") {
+                    val successMsg = stringResource(R.string.cloud_pull_settings_success)
+                    val errorMsg = stringResource(R.string.cloud_pull_settings_error)
+                    
                     SyncOptionsSection(
                         isEnabled = isEnabled,
                         lastSuccess = lastSuccess,
                         settingsUpdated = settingsUpdated,
                         onToggleSync = viewModel::updateCloudSyncEnabled,
-                        onSyncNow = viewModel::triggerCloudSync
+                        onSyncNow = viewModel::triggerCloudSync,
+                        onPullSettings = {
+                            viewModel.pullCloudSettings { success ->
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(if (success) successMsg else errorMsg)
+                                }
+                            }
+                        }
                     )
                 }
             }
@@ -213,8 +226,13 @@ private fun SyncOptionsSection(
     lastSuccess: Long?,
     settingsUpdated: Long?,
     onToggleSync: (Boolean) -> Unit,
-    onSyncNow: () -> Unit
+    onSyncNow: () -> Unit,
+    onPullSettings: () -> Unit
 ) {
+    // OPTIMIZACIÓN: Memoizar el formateo de fechas para evitar recálculos en cada recomposición
+    val formattedSettingsUpdated = remember(settingsUpdated) { settingsUpdated?.let { formatTimestamp(it) } }
+    val formattedLastSuccess = remember(lastSuccess) { lastSuccess?.let { formatTimestamp(it) } }
+
     SettingsSection(title = stringResource(R.string.cloud_options_section)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -238,10 +256,11 @@ private fun SyncOptionsSection(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // CORRECCIÓN i18n: Se usa stringResource en lugar de strings hardcodeados
+        // ✅ CORRECCIÓN: Usar ?.let para garantizar que 'it' sea String (no nulo) 
+        // y pasarlo directamente como argumento vararg a stringResource
         Text(
-            text = settingsUpdated?.let { 
-                stringResource(R.string.cloud_settings_modified_at, formatTimestamp(it)) 
+            text = formattedSettingsUpdated?.let { 
+                stringResource(R.string.cloud_settings_modified_at, it) 
             } ?: stringResource(R.string.cloud_settings_default),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -251,21 +270,36 @@ private fun SyncOptionsSection(
         HorizontalDivider()
         Spacer(modifier = Modifier.height(8.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                lastSuccess?.let { stringResource(R.string.cloud_last_sync, formatTimestamp(it)) } ?: stringResource(R.string.cloud_sync_pending),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.weight(1f).padding(end = 8.dp)
-            )
-            TextButton(onClick = onSyncNow) {
-                Icon(Icons.Default.Sync, contentDescription = null, modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(stringResource(R.string.cloud_sync_now), style = MaterialTheme.typography.labelMedium)
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // ✅ CORRECCIÓN: Misma lógica segura para el último éxito de sincronización
+                Text(
+                    text = formattedLastSuccess?.let { 
+                        stringResource(R.string.cloud_last_sync, it) 
+                    } ?: stringResource(R.string.cloud_sync_pending),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.weight(1f).padding(end = 8.dp)
+                )
+                TextButton(onClick = onSyncNow) {
+                    Icon(Icons.Default.Sync, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(stringResource(R.string.cloud_sync_now), style = MaterialTheme.typography.labelMedium)
+                }
+            }
+            
+            OutlinedButton(
+                onClick = onPullSettings,
+                modifier = Modifier.fillMaxWidth(),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+            ) {
+                Icon(Icons.Default.Sync, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(stringResource(R.string.cloud_pull_settings))
             }
         }
     }
@@ -317,12 +351,28 @@ private fun DiagnosticSection(
                                 Text(stringResource(R.string.cloud_diag_close))
                             }
                         }
-                        Text(
-                            debugOutput,
-                            style = MaterialTheme.typography.bodySmall,
-                            fontFamily = FontFamily.Monospace,
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
+                        
+                        // OPTIMIZACIÓN: Scroll interno y altura máxima para logs grandes, evitando bloqueos de UI
+                        Surface(
+                            color = MaterialTheme.colorScheme.surface,
+                            shape = MaterialTheme.shapes.small,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 250.dp)
+                                .padding(top = 8.dp)
+                        ) {
+                            SelectionContainer {
+                                Text(
+                                    text = debugOutput.trim(),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontFamily = FontFamily.Monospace,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .verticalScroll(rememberScrollState())
+                                        .padding(12.dp)
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -336,11 +386,11 @@ private fun DangerZoneSection(
     onResetClick: () -> Unit
 ) {
     Column {
-        Spacer(modifier = Modifier.height(16.dp))
-        HorizontalDivider()
+        // OPTIMIZACIÓN: Eliminado el Spacer superior redundante, ya que LazyColumn usa spacedBy(16.dp)
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+            modifier = Modifier.padding(bottom = 8.dp)
         ) {
             Icon(
                 Icons.Default.Warning,
@@ -390,17 +440,13 @@ private fun DangerZoneSection(
                 }
             }
         }
-        Spacer(modifier = Modifier.height(32.dp))
     }
 }
 
-// OPTIMIZACIÓN: SimpleDateFormat cacheado como propiedad estática para evitar recreación
-private object TimestampFormatter {
-    private val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-    
-    fun format(timestamp: Long): String = synchronized(this) {
-        formatter.format(Date(timestamp))
-    }
-}
+// OPTIMIZACIÓN: DateTimeFormatter es thread-safe por diseño, eliminando la necesidad de 'synchronized'
+private val timestampFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+    .withZone(ZoneId.systemDefault())
 
-private fun formatTimestamp(timestamp: Long): String = TimestampFormatter.format(timestamp)
+private fun formatTimestamp(timestamp: Long): String {
+    return timestampFormatter.format(Instant.ofEpochMilli(timestamp))
+}

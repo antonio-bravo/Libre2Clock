@@ -383,6 +383,9 @@
     <string name="cloud_privacy_note">Tus datos se guardan de forma segura en tu cuenta personal de Google Firebase. Solo tú tienes acceso a ellos.</string>
     <string name="cloud_configure_button">Configurar Sincronización</string>
     <string name="cloud_sync_now">Sincronizar ahora</string>
+    <string name="cloud_pull_settings">Traer configuración de la nube</string>
+    <string name="cloud_pull_settings_success">Configuración restaurada desde la nube</string>
+    <string name="cloud_pull_settings_error">Error al traer la configuración de la nube</string>
     <string name="cloud_diag_title">Herramientas de Diagnóstico</string>
     <string name="cloud_diag_run">Ejecutar Test de Sincronización</string>
     <string name="cloud_diag_log_title">Log de Sincronización</string>
