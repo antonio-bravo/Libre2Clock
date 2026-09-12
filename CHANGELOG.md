@@ -1,5 +1,30 @@
 # Changelog
 
+## b1e1137 (Sep 12, 2026 20:23:24)
+Avg in 2 lines — antonio-bravo
+[detail](#b1e1137-details)
+
+<details id='b1e1137-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+</details>
+
+
+---
+## 30685cc (Sep 12, 2026 16:47:02)
+Update changelog — github-actions[bot]
+[detail](#30685cc-details)
+
+<details id='30685cc-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 1a548b7 (Sep 12, 2026 18:46:51)
 More logs — antonio-bravo
 [detail](#1a548b7-details)
@@ -661,44 +686,6 @@ Update changelog — github-actions[bot]
 [detail](#ab3bb2c-details)
 
 <details id='ab3bb2c-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 0f86c19 (Sep 09, 2026 16:27:51)
-Error Log + continue if crash — antonio-bravo
-[detail](#0f86c19-details)
-
-<details id='0f86c19-details'>
-<summary>Changed files</summary>
-
-- app/proguard-rules.pro [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/model/AlarmSchedule.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/model/LibreModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/di/AppContainer.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/navigation/Destinations.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsAdvancedScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEventLogScreen.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/EventLogManager.kt [Deleted]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 862e53c (Sep 09, 2026 13:15:17)
-Update changelog — github-actions[bot]
-[detail](#862e53c-details)
-
-<details id='862e53c-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
