@@ -1,5 +1,34 @@
 # Changelog
 
+## 5a3132e (Sep 13, 2026 14:46:17)
+fix lost connectivity — antonio-bravo
+[detail](#5a3132e-details)
+
+<details id='5a3132e-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## b851035 (Sep 12, 2026 19:51:49)
+Update changelog — github-actions[bot]
+[detail](#b851035-details)
+
+<details id='b851035-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 6ac039e (Sep 12, 2026 21:51:37)
 Sync other stuff — antonio-bravo
 [detail](#6ac039e-details)
@@ -661,32 +690,6 @@ Update changelog — github-actions[bot]
 [detail](#7eb4400-details)
 
 <details id='7eb4400-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## c501d14 (Sep 09, 2026 17:11:56)
-Add EventLog — antonio-bravo
-[detail](#c501d14-details)
-
-<details id='c501d14-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsAdvancedScreen.kt [Modified]
-</details>
-
-
----
-## 8604c0f (Sep 09, 2026 14:55:29)
-Update changelog — github-actions[bot]
-[detail](#8604c0f-details)
-
-<details id='8604c0f-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
