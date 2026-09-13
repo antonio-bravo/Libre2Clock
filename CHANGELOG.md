@@ -1,5 +1,33 @@
 # Changelog
 
+## 403ed79 (Sep 13, 2026 16:08:05)
+fix graph time — antonio-bravo
+[detail](#403ed79-details)
+
+<details id='403ed79-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
+- app/src/test/java/com/tonio/libre2clock/TimestampPriorityTest.kt [Deleted]
+</details>
+
+
+---
+## 223c8a2 (Sep 13, 2026 12:46:27)
+Update changelog — github-actions[bot]
+[detail](#223c8a2-details)
+
+<details id='223c8a2-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 5a3132e (Sep 13, 2026 14:46:17)
 fix lost connectivity — antonio-bravo
 [detail](#5a3132e-details)
@@ -666,30 +694,6 @@ Update changelog — github-actions[bot]
 [detail](#ca29135-details)
 
 <details id='ca29135-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 49ce3d9 (Sep 09, 2026 17:45:21)
-fix datetime HH MM — antonio-bravo
-[detail](#49ce3d9-details)
-
-<details id='49ce3d9-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
-</details>
-
-
----
-## 7eb4400 (Sep 09, 2026 15:12:12)
-Update changelog — github-actions[bot]
-[detail](#7eb4400-details)
-
-<details id='7eb4400-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
