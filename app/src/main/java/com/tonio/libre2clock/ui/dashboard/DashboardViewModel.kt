@@ -1,5 +1,7 @@
 package com.tonio.libre2clock.ui.dashboard
 
+import android.content.Context
+import android.os.PowerManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tonio.libre2clock.R
@@ -54,6 +56,9 @@ class DashboardViewModel(
 
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
+    private val _isBatteryOptimized = MutableStateFlow(false)
+    val isBatteryOptimized: StateFlow<Boolean> = _isBatteryOptimized.asStateFlow()
 
     private val _graphWindowDays = MutableStateFlow(1)
     val graphWindowDays: StateFlow<Int> = _graphWindowDays.asStateFlow()
@@ -337,6 +342,7 @@ class DashboardViewModel(
 
     // --- 8. Background Sync ---
     init {
+        checkBatteryOptimization()
         viewModelScope.launch {
             while (true) {
                 runCatching { repository.fetchLatestGlucose() }
@@ -359,6 +365,11 @@ class DashboardViewModel(
 
     fun setGraphWindow(days: Int) {
         _graphWindowDays.value = days
+    }
+
+    fun checkBatteryOptimization() {
+        val powerManager = androidContext.getSystemService(Context.POWER_SERVICE) as PowerManager
+        _isBatteryOptimized.value = !powerManager.isIgnoringBatteryOptimizations(androidContext.packageName)
     }
 
     fun refreshHistoryWindow() {

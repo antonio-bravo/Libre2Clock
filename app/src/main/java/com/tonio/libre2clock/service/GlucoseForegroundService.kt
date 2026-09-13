@@ -31,6 +31,8 @@ import com.tonio.libre2clock.data.repository.GlucoseRepository
 import com.tonio.libre2clock.data.repository.GlucoseRepositoryImpl
 import com.tonio.libre2clock.data.repository.PreferenceManager
 import com.tonio.libre2clock.di.AppContainer
+import com.tonio.libre2clock.util.EventLogManager
+import com.tonio.libre2clock.util.LogLevel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -55,6 +57,7 @@ class GlucoseForegroundService : Service() {
     private lateinit var repository: GlucoseRepository
     private lateinit var repositoryImpl: GlucoseRepositoryImpl
     private lateinit var preferenceManager: PreferenceManager
+    private lateinit var eventLogger: EventLogManager
     
     private var syncJob: Job? = null
     private var lastWatchAlertEpochMinute: Long = -1L
@@ -111,6 +114,7 @@ class GlucoseForegroundService : Service() {
         super.onCreate()
         preferenceManager = AppContainer.providePreferenceManager(applicationContext)
         repositoryImpl = AppContainer.provideGlucoseRepository(applicationContext)
+        eventLogger = AppContainer.provideEventLogManager(applicationContext)
         repository = repositoryImpl
         createNotificationChannel()
         initializeConfigState()
@@ -261,6 +265,15 @@ class GlucoseForegroundService : Service() {
                         val processed = processMeasurement(measurement, config)
                         maybeSendWatchAlert(processed, config)
                         maybeSendGlucoseAlarms(processed, config)
+                    } else {
+                        val error = fetchResult.exceptionOrNull()
+                        if (error != null) {
+                            eventLogger.log(
+                                LogLevel.WARNING,
+                                "ServiceSync",
+                                "Fetch failed: ${error.message}"
+                            )
+                        }
                     }
 
                     val batteryState = getDetailedBatteryStatus(config)

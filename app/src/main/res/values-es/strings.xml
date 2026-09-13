@@ -443,4 +443,7 @@
     <string name="settings_cloud_diagnostic_run">Ejecutar Prueba de Sincronización en la Nube</string>
     <string name="settings_copy_log">Copiar registro</string>
     <string name="settings_log_copied">Registro copiado al portapapeles</string>
+
+    <string name="battery_optimization_warning_title">Restricciones en segundo plano</string>
+    <string name="battery_optimization_warning_desc">Android puede detener la sincronización para ahorrar batería. Toca para permitir actividad sin restricciones.</string>
 </resources>

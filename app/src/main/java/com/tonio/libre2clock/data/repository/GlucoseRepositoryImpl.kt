@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import retrofit2.HttpException
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -249,14 +250,24 @@ class GlucoseRepositoryImpl(
                 Result.failure(Exception("No glucose data found in response"))
             }
         } catch (e: Exception) {
-            e.printStackTrace()
-            if (e is retrofit2.HttpException && e.code() == 401) {
+            if (e is HttpException && e.code() == 401) {
                 // Session expired: try a silent re-login with the stored credentials before giving up.
                 val credentials = if (allowReauth) credentialStore.getCredentials() else null
-                if (credentials != null && login(credentials.first, credentials.second).isSuccess) {
-                    return fetchLatestGlucoseInternal(persistArchive, allowReauth = false)
+                if (credentials != null) {
+                    val loginResult = login(credentials.first, credentials.second)
+                    if (loginResult.isSuccess) {
+                        return fetchLatestGlucoseInternal(persistArchive, allowReauth = false)
+                    } else {
+                        val loginError = loginResult.exceptionOrNull()
+                        // Solo hacemos logout si es un error de credenciales explícito (401)
+                        // Si es error de red (IOException), NO hacemos logout para evitar perder la sesión de noche.
+                        if (loginError is HttpException && loginError.code() == 401) {
+                            logout()
+                        }
+                    }
+                } else {
+                    logout()
                 }
-                logout()
             }
             Result.failure(e)
         }
