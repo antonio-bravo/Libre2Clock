@@ -757,8 +757,10 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
     val measurementInstant = remember(measurement) {
         measurement?.let { m ->
             m.epochSeconds?.let { Instant.ofEpochSecond(it) }
-                ?: TimestampParser.parseFlexibleInstant(m.timestamp)
+                // FactoryTimestamp is always UTC (ends in Z), while Timestamp might be local or ambiguous.
+                // We prioritize FactoryTimestamp for accurate timeline alignment.
                 ?: TimestampParser.parseFlexibleInstant(m.factoryTimestamp)
+                ?: TimestampParser.parseFlexibleInstant(m.timestamp)
         }
     }
     
