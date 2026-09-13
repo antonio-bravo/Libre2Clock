@@ -446,4 +446,5 @@
 
     <string name="battery_optimization_warning_title">Restricciones en segundo plano</string>
     <string name="battery_optimization_warning_desc">Android puede detener la sincronización para ahorrar batería. Toca para permitir actividad sin restricciones.</string>
+    <string name="night">Noche</string>
 </resources>

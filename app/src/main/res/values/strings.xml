@@ -450,4 +450,5 @@
 
     <string name="battery_optimization_warning_title">Background Restrictions Active</string>
     <string name="battery_optimization_warning_desc">Android may kill the data sync to save battery. Tap to allow unrestricted background activity.</string>
+    <string name="night">Night</string>
 </resources>

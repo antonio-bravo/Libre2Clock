@@ -14,7 +14,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -59,7 +58,6 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import kotlin.math.roundToInt
 
 // OPTIMIZACIÓN: Constantes de nivel superior para evitar recreación en cada recomposición
 private val SyncDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault())
@@ -249,11 +247,8 @@ fun DashboardScreen(
                 if (isBatteryOptimized) {
                     item {
                         Card(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.errorContainer
-                            ),
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
                             onClick = {
                                 val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
                                     data = Uri.parse("package:${context.packageName}")
@@ -471,8 +466,6 @@ fun InsulinHealthCard(
     val totalIOB = remember(doses, nowTick) { InsulinProcessor.calculateTotalIOB(doses) }
     val rapidIOB = remember(rapidDoses, nowTick) { InsulinProcessor.calculateTotalIOB(rapidDoses) }
     val slowIOB = remember(slowDoses, nowTick) { InsulinProcessor.calculateTotalIOB(slowDoses) }
-    
-    val activeThreads = remember(doses, nowTick) { doses.count { InsulinProcessor.calculateIOB(it) > 0 } }
     
     val weekAvg = remember(doses) { InsulinProcessor.calculateAverageDailySplit(doses, 7) }
     val monthAvg = remember(doses) { InsulinProcessor.calculateAverageDailySplit(doses, 30) }
@@ -757,20 +750,25 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
     val measurementInstant = remember(measurement) {
         measurement?.let { m ->
             m.epochSeconds?.let { Instant.ofEpochSecond(it) }
-                // FactoryTimestamp is always UTC (ends in Z), while Timestamp might be local or ambiguous.
-                // We prioritize FactoryTimestamp for accurate timeline alignment.
                 ?: TimestampParser.parseFlexibleInstant(m.factoryTimestamp)
                 ?: TimestampParser.parseFlexibleInstant(m.timestamp)
         }
     }
     
-    // OPTIMIZACIÓN: Cacheamos Instant.now() para evitar múltiples llamadas al reloj del sistema
-    val now = remember { Instant.now() }
+    // CORRECCIÓN CRÍTICA: Estado reactivo para el tiempo, se actualiza cada minuto.
+    // Evita que la alerta de "Señal perdida" se quede congelada si la app está en segundo plano.
+    var currentTime by remember { mutableStateOf(Instant.now()) }
+    LaunchedEffect(Unit) {
+        while (isActive) {
+            delay(60_000)
+            currentTime = Instant.now()
+        }
+    }
+
     val isStale = measurementInstant?.let { instant ->
-        java.time.Duration.between(instant, now).toMinutes() > 15
+        java.time.Duration.between(instant, currentTime).toMinutes() > 15
     } ?: false
 
-    // OPTIMIZACIÓN: Usar DateTimeFormatter de nivel superior
     val lastSyncText = remember(measurementInstant) {
         measurementInstant?.let { instant ->
             SyncDateFormatter.format(instant)
@@ -908,15 +906,15 @@ private fun DashboardSlidesCard(
     onRefresh: () -> Unit
 ) {
     val pagerState = rememberPagerState(pageCount = { 3 })
-    // OPTIMIZACIÓN: Usar stringResource para i18n
     val pageTitle = when (pagerState.currentPage) {
         0 -> stringResource(R.string.avg_glucose)
         1 -> stringResource(R.string.avg_glucose_last_month)
         else -> stringResource(R.string.hypos_last_month)
     }
 
+    // Altura aumentada a 210.dp para acomodar perfectamente el layout 2x2 de 4 elementos
     Card(
-        modifier = Modifier.fillMaxWidth().height(190.dp),
+        modifier = Modifier.fillMaxWidth().height(210.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
         shape = RoundedCornerShape(18.dp)
     ) {
@@ -934,7 +932,6 @@ private fun DashboardSlidesCard(
                             Box(
                                 modifier = Modifier
                                     .size(8.dp)
-                                    // OPTIMIZACIÓN: Usar constantes de color de nivel superior
                                     .background(
                                         color = if (active) ColorPagerActive else ColorPagerInactive,
                                         shape = RoundedCornerShape(50)
@@ -965,18 +962,25 @@ private fun DashboardSlidesCard(
                         secondLabel = stringResource(R.string.week),
                         thirdLabel = stringResource(R.string.month)
                     )
-                    1 -> MetricsRow(
+                    1 -> FourItemMetricsLayout(
                         first = metrics.breakfastMonthAvg,
                         second = metrics.lunchMonthAvg,
                         third = metrics.dinnerMonthAvg,
+                        fourth = metrics.nightMonthAvg,
                         firstLabel = stringResource(R.string.breakfast),
                         secondLabel = stringResource(R.string.lunch),
-                        thirdLabel = stringResource(R.string.dinner)
+                        thirdLabel = stringResource(R.string.dinner),
+                        fourthLabel = stringResource(R.string.night)
                     )
-                    else -> HyposRow(
-                        breakfast = metrics.breakfastHypos,
-                        lunch = metrics.lunchHypos,
-                        dinner = metrics.dinnerHypos
+                    2 -> FourItemHyposLayout(
+                        first = metrics.breakfastHypos,
+                        second = metrics.lunchHypos,
+                        third = metrics.dinnerHypos,
+                        fourth = metrics.nightHypos,
+                        firstLabel = stringResource(R.string.breakfast),
+                        secondLabel = stringResource(R.string.lunch),
+                        thirdLabel = stringResource(R.string.dinner),
+                        fourthLabel = stringResource(R.string.night)
                     )
                 }
             }
@@ -1001,15 +1005,42 @@ private fun MetricsRow(
 }
 
 @Composable
-private fun HyposRow(
-    breakfast: CountMetric,
-    lunch: CountMetric,
-    dinner: CountMetric
+private fun FourItemMetricsLayout(
+    first: DisplayMetric, firstLabel: String,
+    second: DisplayMetric, secondLabel: String,
+    third: DisplayMetric, thirdLabel: String,
+    fourth: DisplayMetric, fourthLabel: String
 ) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        HypoCell(metric = breakfast, label = stringResource(R.string.breakfast), modifier = Modifier.weight(1f))
-        HypoCell(metric = lunch, label = stringResource(R.string.lunch), modifier = Modifier.weight(1f))
-        HypoCell(metric = dinner, label = stringResource(R.string.dinner), modifier = Modifier.weight(1f))
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            MetricCell(metric = first, label = firstLabel, modifier = Modifier.weight(1f))
+            MetricCell(metric = second, label = secondLabel, modifier = Modifier.weight(1f))
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            MetricCell(metric = third, label = thirdLabel, modifier = Modifier.weight(1f))
+            MetricCell(metric = fourth, label = fourthLabel, modifier = Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+private fun FourItemHyposLayout(
+    first: CountMetric, firstLabel: String,
+    second: CountMetric, secondLabel: String,
+    third: CountMetric, thirdLabel: String,
+    fourth: CountMetric, fourthLabel: String
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            HypoCell(metric = first, label = firstLabel, modifier = Modifier.weight(1f))
+            HypoCell(metric = second, label = secondLabel, modifier = Modifier.weight(1f))
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            HypoCell(metric = third, label = thirdLabel, modifier = Modifier.weight(1f))
+            HypoCell(metric = fourth, label = fourthLabel, modifier = Modifier.weight(1f))
+        }
     }
 }
 
@@ -1032,17 +1063,18 @@ private fun MetricCell(metric: DisplayMetric, label: String, modifier: Modifier 
 @Composable
 private fun HypoCell(metric: CountMetric, label: String, modifier: Modifier = Modifier) {
     val rawCount = metric.count - metric.offset
-    val displayValue = "$rawCount(${metric.count})"
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        AnimatedContent(targetState = displayValue, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "hypo_anim") { text ->
+        AnimatedContent(targetState = rawCount.toString(), transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "hypo_raw_anim") { text ->
             Text(text = text, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
         }
-        Spacer(modifier = Modifier.height(20.dp))
+        AnimatedContent(targetState = "(${metric.count})", transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "hypo_offset_anim") { text ->
+            Text(text = text, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), textAlign = TextAlign.Center)
+        }
+        Spacer(modifier = Modifier.height(4.dp))
         Text(text = label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
     }
 }
 
-// OPTIMIZACIÓN: Acceso directo a array en lugar de when statement
 @Composable
 fun TrendIcon(trend: Int?) {
     val symbol = GlucoseProcessor.getTrendArrowSymbol(trend)
