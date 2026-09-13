@@ -1,5 +1,33 @@
 # Changelog
 
+## 8812099 (Sep 13, 2026 21:25:23)
+Hypo count in 4 ranges — antonio-bravo
+[detail](#8812099-details)
+
+<details id='8812099-details'>
+<summary>Changed files</summary>
+
+- .idea/misc.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 5df7a92 (Sep 13, 2026 14:08:15)
+Update changelog — github-actions[bot]
+[detail](#5df7a92-details)
+
+<details id='5df7a92-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 403ed79 (Sep 13, 2026 16:08:05)
 fix graph time — antonio-bravo
 [detail](#403ed79-details)
@@ -664,36 +692,6 @@ Update changelog — github-actions[bot]
 [detail](#ebb64fe-details)
 
 <details id='ebb64fe-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## e733210 (Sep 09, 2026 21:50:40)
-Cloud Sync + Hard Reset — antonio-bravo
-[detail](#e733210-details)
-
-<details id='e733210-details'>
-<summary>Changed files</summary>
-
-- .idea/misc.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/sync/AuthManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-</details>
-
-
----
-## ca29135 (Sep 09, 2026 15:45:35)
-Update changelog — github-actions[bot]
-[detail](#ca29135-details)
-
-<details id='ca29135-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
