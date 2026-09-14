@@ -248,17 +248,24 @@ class CloudSyncManager(
                         log("  -> WARNING: fallo al refrescar token: ${e.javaClass.simpleName} - ${e.message}")
                     }
 
-                    // Este paso es solo informativo: si tarda o falla, NO debe impedir
-                    // que se ejecuten los pasos de push (3a-3c) ni la activación de los
-                    // listeners (4). Por eso usa un timeout corto propio y su propio
-                    // try/catch, sin retryWithBackoff (que puede tardar hasta 3x15s).
+                    // Este paso es informativo y de auto-reparación: si la cola local está obstruida por escrituras previas masivas,
+                    // limpiamos el caché de persistencia local para desatascar las nuevas operaciones delta optimizadas.
                     currentStep = "Waiting for pending writes"
                     log("2d. $currentStep...")
                     try {
                         withTimeout(5000) { firestore.waitForPendingWrites().await() }
                         log("  -> Sin escrituras pendientes atascadas")
                     } catch (e: Exception) {
-                        log("  -> WARNING: pending writes no confirmado a tiempo (${e.javaClass.simpleName}). El SDK de Firestore seguirá sincronizando en segundo plano. Continuando sync...")
+                        log("  -> ⚠️ La cola de escrituras local está atascada (${e.javaClass.simpleName}). Ejecutando auto-reparación de caché local...")
+                        try {
+                            stopListening()
+                            firestore.terminate().await()
+                            firestore.clearPersistence().await()
+                            firestore.enableNetwork().await()
+                            log("  -> ✨ Cola local obstruida de Firestore limpiada con éxito. Continuando sync limpio...")
+                        } catch (repairEx: Exception) {
+                            log("  -> ❌ Falló la auto-reparación automática: ${repairEx.message}. Se intentará continuar...")
+                        }
                     }
 
                     // A partir de aquí cada paso tiene su propio try/catch: si uno falla,
