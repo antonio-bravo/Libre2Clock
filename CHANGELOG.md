@@ -1,5 +1,31 @@
 # Changelog
 
+## 048a7dc (Sep 14, 2026 13:07:58)
+fix — antonio-bravo
+[detail](#048a7dc-details)
+
+<details id='048a7dc-details'>
+<summary>Changed files</summary>
+
+- .idea/misc.xml [Modified]
+- app/src/main/AndroidManifest.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
+</details>
+
+
+---
+## ac5592b (Sep 14, 2026 10:54:48)
+Update changelog — github-actions[bot]
+[detail](#ac5592b-details)
+
+<details id='ac5592b-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## da07f3a (Sep 14, 2026 12:54:37)
 fix foreground service — antonio-bravo
 [detail](#da07f3a-details)
@@ -657,39 +683,6 @@ Update changelog — github-actions[bot]
 [detail](#bcc85e5-details)
 
 <details id='bcc85e5-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## cd3dfee (Sep 09, 2026 23:18:16)
-fix — antonio-bravo
-[detail](#cd3dfee-details)
-
-<details id='cd3dfee-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepository.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsCacheRepository.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCalibrationScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 3315f38 (Sep 09, 2026 20:31:03)
-Update changelog — github-actions[bot]
-[detail](#3315f38-details)
-
-<details id='3315f38-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
