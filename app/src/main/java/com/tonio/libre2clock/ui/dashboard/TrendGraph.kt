@@ -30,6 +30,7 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Date
 import kotlin.math.max
 
 private val ORIGINAL_LINE_COLOR = Color.Gray.copy(alpha = 0.7f)
@@ -328,7 +329,12 @@ fun InteractiveTrendGraph(
                     val alignedStartHour = (startDateTime.hour / 3) * 3
                     
                     var cursor = startDateTime.withHour(alignedStartHour).withMinute(0).withSecond(0).withNano(0).atZone(zone).toInstant()
-                    while (cursor.isBefore(graphData.firstInstant)) {
+                    
+                    // Aseguramos que el cursor comience alineado con la hora local de forma correcta respecto al primer instante
+                    while (cursor.isAfter(graphData.firstInstant)) {
+                        cursor = cursor.minusSeconds(intervalSeconds)
+                    }
+                    while (cursor.plusSeconds(intervalSeconds).isBefore(graphData.firstInstant)) {
                         cursor = cursor.plusSeconds(intervalSeconds)
                     }
 
@@ -337,26 +343,29 @@ fun InteractiveTrendGraph(
                         val relX = ((cursor.epochSecond - graphData.firstInstant.epochSecond).toFloat() / graphData.totalSeconds).coerceIn(0f, 1f)
                         val x = relX * width
                         
-                        drawLine(
-                            color = Color.Gray.copy(alpha = 0.15f), 
-                            start = Offset(x, topPadding), 
-                            end = Offset(x, topPadding + plotHeight), 
-                            strokeWidth = 0.5.dp.toPx()
-                        )
+                        // Solo dibujamos la línea y las etiquetas si cae dentro de los límites visuales del gráfico
+                        if (cursor.isAfter(graphData.firstInstant) || cursor == graphData.firstInstant) {
+                            drawLine(
+                                color = Color.Gray.copy(alpha = 0.15f), 
+                                start = Offset(x, topPadding), 
+                                end = Offset(x, topPadding + plotHeight), 
+                                strokeWidth = 0.5.dp.toPx()
+                            )
 
-                        val localDateTime = LocalDateTime.ofInstant(cursor, zone)
-                        val showDate = cursor == graphData.firstInstant || localDateTime.hour == 0
-                        
-                        if (showDate) {
-                            val dateStr = dateFmt.format(java.util.Date.from(cursor))
-                            drawContext.canvas.nativeCanvas.drawText(dateStr, x, topPadding + plotHeight + 14.dp.toPx(), labelPaint)
+                            val localDateTime = LocalDateTime.ofInstant(cursor, zone)
+                            val showDate = cursor == graphData.firstInstant || localDateTime.hour == 0
+                            
+                            if (showDate) {
+                                val dateStr = dateFmt.format(Date.from(cursor))
+                                drawContext.canvas.nativeCanvas.drawText(dateStr, x, topPadding + plotHeight + 14.dp.toPx(), labelPaint)
+                            }
+                            drawContext.canvas.nativeCanvas.drawText(
+                                hourFormatter.format(localDateTime), 
+                                x, 
+                                topPadding + plotHeight + 28.dp.toPx(), 
+                                labelPaint
+                            )
                         }
-                        drawContext.canvas.nativeCanvas.drawText(
-                            hourFormatter.format(localDateTime), 
-                            x, 
-                            topPadding + plotHeight + 28.dp.toPx(), 
-                            labelPaint
-                        )
                         cursor = cursor.plusSeconds(intervalSeconds)
                     }
                 }
