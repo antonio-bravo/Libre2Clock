@@ -1,5 +1,29 @@
 # Changelog
 
+## 02a9430 (Sep 14, 2026 16:23:29)
+fix not update glucose — antonio-bravo
+[detail](#02a9430-details)
+
+<details id='02a9430-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/util/TimestampParser.kt [Modified]
+</details>
+
+
+---
+## 4caedc3 (Sep 14, 2026 13:11:01)
+Update changelog — github-actions[bot]
+[detail](#4caedc3-details)
+
+<details id='4caedc3-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 1c93915 (Sep 14, 2026 15:10:46)
 cloud sync — antonio-bravo
 [detail](#1c93915-details)
@@ -623,30 +647,6 @@ Update changelog — github-actions[bot]
 [detail](#308e363-details)
 
 <details id='308e363-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 5209775 (Sep 10, 2026 20:22:19)
-fix display HbA1c raw(calibrated) — antonio-bravo
-[detail](#5209775-details)
-
-<details id='5209775-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
-</details>
-
-
----
-## f20de2b (Sep 10, 2026 18:05:46)
-Update changelog — github-actions[bot]
-[detail](#f20de2b-details)
-
-<details id='f20de2b-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
