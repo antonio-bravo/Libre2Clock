@@ -1,5 +1,31 @@
 # Changelog
 
+## 96e277e (Sep 14, 2026 11:57:50)
+fix utc time with local time — antonio-bravo
+[detail](#96e277e-details)
+
+<details id='96e277e-details'>
+<summary>Changed files</summary>
+
+- .idea/misc.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/TimestampParser.kt [Modified]
+</details>
+
+
+---
+## cb46140 (Sep 13, 2026 19:25:37)
+Update changelog — github-actions[bot]
+[detail](#cb46140-details)
+
+<details id='cb46140-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 8812099 (Sep 13, 2026 21:25:23)
 Hypo count in 4 ranges — antonio-bravo
 [detail](#8812099-details)
@@ -663,35 +689,6 @@ Update changelog — github-actions[bot]
 [detail](#ec5ef82-details)
 
 <details id='ec5ef82-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## b7d34ab (Sep 09, 2026 22:08:58)
-Fix and adjust datetime on main screen — antonio-bravo
-[detail](#b7d34ab-details)
-
-<details id='b7d34ab-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/sensor/SensorLogsScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-</details>
-
-
----
-## ebb64fe (Sep 09, 2026 19:50:54)
-Update changelog — github-actions[bot]
-[detail](#ebb64fe-details)
-
-<details id='ebb64fe-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
