@@ -1,5 +1,29 @@
 # Changelog
 
+## b40e8ec (Sep 14, 2026 14:17:21)
+fix sync — antonio-bravo
+[detail](#b40e8ec-details)
+
+<details id='b40e8ec-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
+</details>
+
+
+---
+## 2feba70 (Sep 14, 2026 11:08:09)
+Update changelog — github-actions[bot]
+[detail](#2feba70-details)
+
+<details id='2feba70-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 048a7dc (Sep 14, 2026 13:07:58)
 fix — antonio-bravo
 [detail](#048a7dc-details)
@@ -654,35 +678,6 @@ Update changelog — github-actions[bot]
 [detail](#31eee24-details)
 
 <details id='31eee24-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## ad9a1cf (Sep 10, 2026 00:15:51)
-more fixes — antonio-bravo
-[detail](#ad9a1cf-details)
-
-<details id='ad9a1cf-details'>
-<summary>Changed files</summary>
-
-- .idea/deploymentTargetSelector.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsAlertsScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsDataScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsDeviceScreen.kt [Modified]
-</details>
-
-
----
-## bcc85e5 (Sep 09, 2026 21:18:29)
-Update changelog — github-actions[bot]
-[detail](#bcc85e5-details)
-
-<details id='bcc85e5-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
