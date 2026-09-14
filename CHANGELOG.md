@@ -1,5 +1,30 @@
 # Changelog
 
+## f359058 (Sep 14, 2026 16:40:25)
+undo changes — antonio-bravo
+[detail](#f359058-details)
+
+<details id='f359058-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/TimestampParser.kt [Modified]
+</details>
+
+
+---
+## 3d797af (Sep 14, 2026 14:23:41)
+Update changelog — github-actions[bot]
+[detail](#3d797af-details)
+
+<details id='3d797af-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 02a9430 (Sep 14, 2026 16:23:29)
 fix not update glucose — antonio-bravo
 [detail](#02a9430-details)
@@ -612,41 +637,6 @@ Update changelog — github-actions[bot]
 [detail](#0bc226c-details)
 
 <details id='0bc226c-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## a9d229c (Sep 10, 2026 22:11:42)
-optimization — antonio-bravo
-[detail](#a9d229c-details)
-
-<details id='a9d229c-details'>
-<summary>Changed files</summary>
-
-- .idea/misc.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsCacheRepository.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/report/ReportScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/report/ReportSectionCacheRepository.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/LocalDateSerializer.kt [Deleted]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 308e363 (Sep 10, 2026 18:22:34)
-Update changelog — github-actions[bot]
-[detail](#308e363-details)
-
-<details id='308e363-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
