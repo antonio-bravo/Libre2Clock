@@ -6,7 +6,10 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" /> <!-- Solo si cumples los requisitos de excepciones (ej. alarma médica) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" /> <!-- O DATA_SYNC -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -22,6 +25,12 @@
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+
+        <receiver
+            android:name=".service.GlucoseAlarmReceiver"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="health" /> <!-- CRÍTICO para el onTimeout -->
 
         <activity
             android:name=".MainActivity"

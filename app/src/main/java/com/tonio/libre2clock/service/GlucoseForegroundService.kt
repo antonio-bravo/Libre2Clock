@@ -1,5 +1,6 @@
 package com.tonio.libre2clock.service
 
+import android.app.AlarmManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -8,6 +9,7 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.ServiceInfo
 import android.graphics.Typeface
 import android.os.BatteryManager
 import android.os.Build
@@ -19,7 +21,6 @@ import android.text.style.StyleSpan
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.tonio.libre2clock.MainActivity
-import com.tonio.libre2clock.R
 import com.tonio.libre2clock.data.model.AlarmSchedule
 import com.tonio.libre2clock.data.model.AutoRangeOffsetMode
 import com.tonio.libre2clock.data.model.CapillaryMeasurement
@@ -38,13 +39,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalTime
@@ -64,8 +63,10 @@ class GlucoseForegroundService : Service() {
     private var lastLowAlarmAtMillis: Long = 0L
     private var lastHighAlarmAtMillis: Long = 0L
     private var lastForegroundNotificationContent: String? = null
+    
+    // ✅ CORRECCIÓN: Bandera para garantizar que initialize() se llame solo una vez
+    private var isRepositoryInitialized = false
 
-    // --- OPTIMIZACIÓN 1: Estado consolidado en una sola data class ---
     private data class ParsedSchedule(
         val original: AlarmSchedule,
         val start: LocalTime,
@@ -100,9 +101,15 @@ class GlucoseForegroundService : Service() {
     private lateinit var configState: StateFlow<ServiceConfig>
 
     companion object {
+        const val ACTION_POLL_GLUCOSE = "com.tonio.libre2clock.ACTION_POLL_GLUCOSE"
         const val CHANNEL_ID = "glucose_monitoring_channel"
         const val ALERT_CHANNEL_ID = "glucose_alerts_v2"
+        
         const val NOTIFICATION_ID = 1
+        const val WATCH_ALERT_NOTIFICATION_ID = 2
+        const val GLUCOSE_ALARM_NOTIFICATION_ID = 3
+        const val TEST_NOTIFICATION_ID = 999
+        
         const val TEST_ALERT_TIMEOUT_MS = 15 * 60 * 1000L
         const val WATCH_ALERT_TIMEOUT_MS = 10 * 60 * 1000L
         const val GLUCOSE_ALARM_COOLDOWN_MS = 15 * 60 * 1000L
@@ -116,13 +123,14 @@ class GlucoseForegroundService : Service() {
         repositoryImpl = AppContainer.provideGlucoseRepository(applicationContext)
         eventLogger = AppContainer.provideEventLogManager(applicationContext)
         repository = repositoryImpl
+        
+        // ✅ CORRECCIÓN: Se eliminó repositoryImpl.initialize() de aquí porque no es un contexto suspend
+        
         createNotificationChannel()
         initializeConfigState()
     }
 
     private fun initializeConfigState() {
-        // 1. Alert Config: Anidamos combines para mantener la seguridad de tipos (Type Safety)
-        // y evitar el warning de "Unchecked cast" con Array<Any?>
         val alertConfigFlow = combine(
             combine(
                 preferenceManager.watchAlertsEnabled,
@@ -151,7 +159,6 @@ class GlucoseForegroundService : Service() {
             )
         }
 
-        // 2. Schedule Config (2 flujos: ya es type-safe)
         val scheduleConfigFlow = combine(
             preferenceManager.watchNotificationSchedules,
             preferenceManager.glucoseAlarmSchedules
@@ -159,7 +166,6 @@ class GlucoseForegroundService : Service() {
             ScheduleConfig(parseSchedules(watch), parseSchedules(alarm)) 
         }
 
-        // 3. Battery Config (3 flujos: ya es type-safe)
         val batteryConfigFlow = combine(
             preferenceManager.batteryLowThreshold,
             preferenceManager.batteryCriticalThreshold,
@@ -168,7 +174,6 @@ class GlucoseForegroundService : Service() {
             BatteryConfig(low, crit, disable) 
         }
 
-        // 4. Glucose Config: Usamos los parámetros tipados directamente (hasta 5 flujos es 100% seguro)
         val glucoseConfigFlow = combine(
             preferenceManager.glucoseOffset,
             preferenceManager.glucoseOffsetRanges,
@@ -185,7 +190,6 @@ class GlucoseForegroundService : Service() {
             ) 
         }
 
-        // 5. Estado final combinado
         configState = combine(
             alertConfigFlow, scheduleConfigFlow, batteryConfigFlow, glucoseConfigFlow
         ) { alert, schedule, battery, glucose ->
@@ -215,7 +219,6 @@ class GlucoseForegroundService : Service() {
         ))
     }
 
-    // --- OPTIMIZACIÓN 3: Parsing de horarios una sola vez ---
     private fun parseSchedules(schedules: List<AlarmSchedule>): List<ParsedSchedule> {
         return schedules.filter { it.isEnabled }.mapNotNull { schedule ->
             try {
@@ -225,7 +228,7 @@ class GlucoseForegroundService : Service() {
                     end = LocalTime.parse(schedule.endTime)
                 )
             } catch (e: Exception) {
-                null // Ignorar horarios con formato inválido
+                null
             }
         }
     }
@@ -236,67 +239,118 @@ class GlucoseForegroundService : Service() {
             return START_NOT_STICKY
         }
 
-        startForeground(NOTIFICATION_ID, createNotification("Starting glucose monitoring..."))
+        val notification = createNotification("Monitorizando glucosa...")
         
-        syncJob?.cancel()
-        syncJob = serviceScope.launch {
-            repositoryImpl.initialize()
-            
-            // Tarea A: Actualizar notificación en tiempo real cuando la BD local cambia
-            launch {
-                repository.currentGlucose.collect { measurement ->
-                    measurement?.let {
-                        val config = configState.value
-                        val processed = processMeasurement(it, config)
-                        updateNotification(processed)
-                    }
-                }
-            }
-
-            // Tarea B: Bucle de sondeo (Polling) para obtener nuevos datos y evaluar alarmas
-            launch {
-                var firstPoll = true
-                while (isActive) {
-                    val config = configState.value
-                    val fetchResult = repository.fetchLatestGlucose()
-                    val measurement = fetchResult.getOrNull()
-                    
-                    if (measurement != null) {
-                        val processed = processMeasurement(measurement, config)
-                        maybeSendWatchAlert(processed, config)
-                        maybeSendGlucoseAlarms(processed, config)
-                    } else {
-                        val error = fetchResult.exceptionOrNull()
-                        if (error != null) {
-                            eventLogger.log(
-                                LogLevel.WARNING,
-                                "ServiceSync",
-                                "Fetch failed: ${error.message}"
-                            )
-                        }
-                    }
-
-                    val batteryState = getDetailedBatteryStatus(config)
-                    val pollingIntervalMs = calculatePollingInterval(firstPoll, batteryState, config)
-                    
-                    firstPoll = false
-                    delay(pollingIntervalMs)
-                }
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(
+                NOTIFICATION_ID,
+                notification,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH
+            )
+        } else {
+            startForeground(NOTIFICATION_ID, notification)
         }
+        
+        val isPollAction = intent?.action == ACTION_POLL_GLUCOSE
+        triggerSinglePoll(isFirstPoll = !isPollAction)
 
         return START_STICKY
+    }
+
+    override fun onTimeout(startId: Int, fgsType: Int) {
+        eventLogger.log(
+            LogLevel.WARNING,
+            "ServiceSync",
+            "Foreground service timeout reached for type $fgsType. Stopping service safely to avoid crash."
+        )
+        stopSelf(startId)
+    }
+
+    private fun triggerSinglePoll(isFirstPoll: Boolean) {
+        syncJob?.cancel()
+        syncJob = serviceScope.launch {
+            // ✅ CORRECCIÓN: Inicialización segura dentro del contexto suspend, ejecutada solo una vez
+            if (!isRepositoryInitialized) {
+                repositoryImpl.initialize()
+                isRepositoryInitialized = true
+            }
+            
+            val config = configState.value
+            val fetchResult = repository.fetchLatestGlucose()
+            val measurement = fetchResult.getOrNull()
+            
+            if (measurement != null) {
+                val processed = processMeasurement(measurement, config)
+                updateNotification(processed)
+                maybeSendWatchAlert(processed, config)
+                maybeSendGlucoseAlarms(processed, config)
+            } else {
+                fetchResult.exceptionOrNull()?.let { error ->
+                    eventLogger.log(LogLevel.WARNING, "ServiceSync", "Fetch failed: ${error.message}")
+                }
+            }
+
+            val batteryState = getDetailedBatteryStatus(config)
+            val pollingIntervalMs = calculatePollingInterval(isFirstPoll, batteryState, config)
+            
+            scheduleNextAlarm(pollingIntervalMs)
+        }
+    }
+
+    private fun scheduleNextAlarm(delayMs: Long) {
+        val alarmManager = getSystemService(ALARM_SERVICE) as? AlarmManager ?: return
+        val intent = Intent(this, GlucoseAlarmReceiver::class.java).apply {
+            action = ACTION_POLL_GLUCOSE
+        }
+        val pendingIntent = PendingIntent.getBroadcast(
+            this,
+            0,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        
+        val triggerAtMillis = System.currentTimeMillis() + delayMs
+        
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerAtMillis,
+                    pendingIntent
+                )
+            } else {
+                alarmManager.setExact(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerAtMillis,
+                    pendingIntent
+                )
+            }
+        } catch (e: SecurityException) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerAtMillis,
+                    pendingIntent
+                )
+            } else {
+                alarmManager.set(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerAtMillis,
+                    pendingIntent
+                )
+            }
+        }
     }
 
     private fun calculatePollingInterval(firstPoll: Boolean, batteryState: BatteryState, config: ServiceConfig): Long {
         return when {
             firstPoll -> 60_000L
-            batteryState == BatteryState.CRITICAL -> 900_000L // 15 min obligatorio
-            batteryState == BatteryState.LOW && config.hasActiveAlerts -> 300_000L // 5 min máximo
-            batteryState == BatteryState.LOW -> 900_000L // 15 min
-            batteryState == BatteryState.SLOW_CHARGING && config.disableFastOnSlowCharge -> 300_000L // 5 min para cargar
-            config.hasActiveAlerts -> 60_000L // Refresco rápido normal
-            else -> 300_000L // Línea base normal
+            batteryState == BatteryState.CRITICAL -> 900_000L
+            batteryState == BatteryState.LOW && config.hasActiveAlerts -> 300_000L
+            batteryState == BatteryState.LOW -> 900_000L
+            batteryState == BatteryState.SLOW_CHARGING && config.disableFastOnSlowCharge -> 300_000L
+            config.hasActiveAlerts -> 60_000L
+            else -> 300_000L
         }
     }
 
@@ -353,7 +407,6 @@ class GlucoseForegroundService : Service() {
         notificationManager.notify(NOTIFICATION_ID, createNotification(content))
     }
 
-    // --- OPTIMIZACIÓN 2: Receptor de batería compatible con Android 14+ ---
     private fun getDetailedBatteryStatus(config: ServiceConfig): BatteryState {
         val batteryIntent = ContextCompat.registerReceiver(
             this,
@@ -393,7 +446,6 @@ class GlucoseForegroundService : Service() {
 
     private fun triggerTestNotification() {
         serviceScope.launch {
-            repositoryImpl.initialize()
             val fetchResult = repository.fetchLatestGlucose()
             val measurement = fetchResult.getOrNull()
                 ?: repository.currentGlucose.first()
@@ -401,7 +453,6 @@ class GlucoseForegroundService : Service() {
             
             val fetchErrorMessage = fetchResult.exceptionOrNull()?.message?.trim()?.takeIf { it.isNotEmpty() }
             val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-            val testNotificationId = (System.currentTimeMillis() % Int.MAX_VALUE).toInt()
 
             val notification = if (measurement != null) {
                 val config = configState.value
@@ -440,7 +491,7 @@ class GlucoseForegroundService : Service() {
                     .build()
             }
 
-            notificationManager.notify(testNotificationId, notification)
+            notificationManager.notify(TEST_NOTIFICATION_ID, notification)
         }
     }
 
@@ -487,7 +538,6 @@ class GlucoseForegroundService : Service() {
         val styledTitle = buildWatchStyledTitle(plainTitle, dualValue)
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
-        val watchNotificationId = (System.currentTimeMillis() % Int.MAX_VALUE).toInt()
         val notification = NotificationCompat.Builder(this, ALERT_CHANNEL_ID)
             .setContentTitle(styledTitle)
             .setContentText(plainTitle)
@@ -496,12 +546,12 @@ class GlucoseForegroundService : Service() {
             .setCategory(NotificationCompat.CATEGORY_STATUS)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setStyle(NotificationCompat.BigTextStyle().setBigContentTitle(styledTitle).bigText(styledTitle))
-            .setOngoing(true)
+            .setOngoing(false)
             .setAutoCancel(false)
             .setTimeoutAfter(WATCH_ALERT_TIMEOUT_MS)
             .build()
 
-        notificationManager.notify(watchNotificationId, notification)
+        notificationManager.notify(WATCH_ALERT_NOTIFICATION_ID, notification)
     }
 
     private fun maybeSendGlucoseAlarms(measurement: GlucoseMeasurement, config: ServiceConfig) {
@@ -532,7 +582,6 @@ class GlucoseForegroundService : Service() {
         val alarmText = if (isLow) "Low glucose alarm" else "High glucose alarm"
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
-        val alarmNotificationId = (System.currentTimeMillis() % Int.MAX_VALUE).toInt()
         val notification = NotificationCompat.Builder(this, ALERT_CHANNEL_ID)
             .setContentTitle(styledTitle)
             .setContentText(alarmText)
@@ -548,7 +597,7 @@ class GlucoseForegroundService : Service() {
             .setTimeoutAfter(TEST_ALERT_TIMEOUT_MS)
             .build()
 
-        notificationManager.notify(alarmNotificationId, notification)
+        notificationManager.notify(GLUCOSE_ALARM_NOTIFICATION_ID, notification)
     }
 
     private fun buildWatchPlainTitle(measurement: GlucoseMeasurement): String {
@@ -559,9 +608,11 @@ class GlucoseForegroundService : Service() {
 
     private fun buildWatchStyledTitle(title: String, dualValue: String): CharSequence {
         return SpannableString(title).apply {
-            setSpan(RelativeSizeSpan(1.8f), 0, title.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            setSpan(RelativeSizeSpan(2.0f), 0, dualValue.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            setSpan(StyleSpan(Typeface.BOLD), 0, dualValue.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            val dualValueLength = dualValue.length
+            if (dualValueLength > 0 && dualValueLength <= title.length) {
+                setSpan(RelativeSizeSpan(1.5f), 0, dualValueLength, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                setSpan(StyleSpan(Typeface.BOLD), 0, dualValueLength, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
         }
     }
 
@@ -572,23 +623,21 @@ class GlucoseForegroundService : Service() {
     }
 
     private fun isCurrentTimeInSchedule(schedule: ParsedSchedule, now: ZonedDateTime): Boolean {
-        val dayOfWeek = now.dayOfWeek.value // 1 to 7
+        val dayOfWeek = now.dayOfWeek.value
         if (dayOfWeek !in schedule.original.daysOfWeek) return false
 
         val currentTime = now.toLocalTime()
         return if (schedule.start.isBefore(schedule.end)) {
             currentTime >= schedule.start && currentTime < schedule.end
         } else {
-            // Spans midnight (e.g. 22:00 to 06:00)
             currentTime >= schedule.start || currentTime < schedule.end
         }
     }
 
-    // Clases auxiliares para el combine anidado (mejora la legibilidad y evita casts de Array<Any>)
     private data class AlertConfigPart1(val enabled: Boolean, val mode: WatchNotificationMode, val interval: Int, val startMinute: Int)
     private data class AlertConfigPart2(val low: Boolean, val high: Boolean, val cal: Boolean)
-    
     private data class AlertConfig(val enabled: Boolean, val mode: WatchNotificationMode, val interval: Int, val startMinute: Int, val lowEnabled: Boolean, val highEnabled: Boolean, val useCalibrated: Boolean)
     private data class ScheduleConfig(val watch: List<ParsedSchedule>, val alarm: List<ParsedSchedule>)
     private data class BatteryConfig(val low: Int, val critical: Int, val disableFast: Boolean)
-    private data class GlucoseConfig(val offset: Int, val ranges: List<GlucoseOffsetRange>, val autoAdjust: Boolean, val autoMode: AutoRangeOffsetMode, val capillaries: List<CapillaryMeasurement>)}
+    private data class GlucoseConfig(val offset: Int, val ranges: List<GlucoseOffsetRange>, val autoAdjust: Boolean, val autoMode: AutoRangeOffsetMode, val capillaries: List<CapillaryMeasurement>)
+}
