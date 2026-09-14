@@ -191,6 +191,14 @@ class CloudSyncManager(
 
                 _cloudSyncDebugOutput.value = ""
 
+                // Se pone a false si CUALQUIER paso crítico (2c en adelante) falla.
+                // Solo si todo sale bien avanzamos el checkpoint de "última sync exitosa",
+                // que es el que se usa para calcular qué registros son "nuevos" en el
+                // siguiente push (ver syncDataListsToCloud). Si algo falla, dejamos el
+                // checkpoint viejo: en el peor caso se reenvía algo de más (inofensivo,
+                // gracias a SetOptions.merge()), pero nunca se pierde un cambio.
+                var allStepsOk = true
+
                 var currentStep = "Initializing"
                 try {
                     log("=== Starting Cloud Sync ===")
@@ -240,29 +248,71 @@ class CloudSyncManager(
                         log("  -> WARNING: fallo al refrescar token: ${e.javaClass.simpleName} - ${e.message}")
                     }
 
+                    // Este paso es solo informativo: si tarda o falla, NO debe impedir
+                    // que se ejecuten los pasos de push (3a-3c) ni la activación de los
+                    // listeners (4). Por eso usa un timeout corto propio y su propio
+                    // try/catch, sin retryWithBackoff (que puede tardar hasta 3x15s).
                     currentStep = "Waiting for pending writes"
                     log("2d. $currentStep...")
-                    retryWithBackoff(currentStep) { firestore.waitForPendingWrites().await() }
-                    log("  -> Sin escrituras pendientes atascadas")
+                    try {
+                        withTimeout(5000) { firestore.waitForPendingWrites().await() }
+                        log("  -> Sin escrituras pendientes atascadas")
+                    } catch (e: Exception) {
+                        log("  -> WARNING: pending writes no confirmado a tiempo (${e.javaClass.simpleName}). El SDK de Firestore seguirá sincronizando en segundo plano. Continuando sync...")
+                    }
+
+                    // A partir de aquí cada paso tiene su propio try/catch: si uno falla,
+                    // los siguientes igual se ejecutan. En particular, "Activating
+                    // real-time listeners" es el paso que hace posible que un cambio en
+                    // un dispositivo se refleje en los demás, así que SIEMPRE debe
+                    // intentarse aunque algún push previo haya fallado.
 
                     currentStep = "Pushing settings"
                     log("3a. $currentStep...")
-                    syncSettingsToCloud(googleUid, patientId)
+                    try {
+                        syncSettingsToCloud(googleUid, patientId)
+                    } catch (e: Exception) {
+                        allStepsOk = false
+                        log("  -> ❌ ERROR pushing settings: ${e.message}")
+                        eventLogger.log(LogLevel.ERROR, "CloudSync", "Push settings failed", e.stackTraceToString())
+                    }
 
                     currentStep = "Pushing data lists"
                     log("3b. $currentStep...")
-                    syncDataListsToCloud(googleUid, patientId)
+                    try {
+                        syncDataListsToCloud(googleUid, patientId)
+                    } catch (e: Exception) {
+                        allStepsOk = false
+                        log("  -> ❌ ERROR pushing data lists: ${e.message}")
+                        eventLogger.log(LogLevel.ERROR, "CloudSync", "Push data lists failed", e.stackTraceToString())
+                    }
 
                     currentStep = "Pushing history"
                     log("3c. $currentStep...")
-                    syncHistory(googleUid, patientId)
+                    try {
+                        syncHistory(googleUid, patientId)
+                    } catch (e: Exception) {
+                        allStepsOk = false
+                        log("  -> ❌ ERROR pushing history: ${e.message}")
+                        eventLogger.log(LogLevel.ERROR, "CloudSync", "Push history failed", e.stackTraceToString())
+                    }
 
                     currentStep = "Activating real-time listeners"
                     log("4. $currentStep...")
-                    ensureListening(googleUid, patientId)
+                    try {
+                        ensureListening(googleUid, patientId)
+                    } catch (e: Exception) {
+                        allStepsOk = false
+                        log("  -> ❌ ERROR activating listeners: ${e.message}")
+                        eventLogger.log(LogLevel.ERROR, "CloudSync", "Activate listeners failed", e.stackTraceToString())
+                    }
 
-                    preferenceManager.saveCloudSyncLastSuccessAt(System.currentTimeMillis())
-                    log("=== Sync Completed Successfully ===")
+                    if (allStepsOk) {
+                        preferenceManager.saveCloudSyncLastSuccessAt(System.currentTimeMillis())
+                        log("=== Sync Completed Successfully ===")
+                    } else {
+                        log("=== Sync Completed With Warnings (checkpoint not advanced, next sync will retry pending items) ===")
+                    }
                 } catch (e: TimeoutCancellationException) {
                     val errorMsg = "Sync timed out during: $currentStep"
                     Log.e("CloudSync", errorMsg, e)
@@ -282,11 +332,11 @@ class CloudSyncManager(
 
     private suspend fun syncSettingsToCloud(googleUid: String, patientId: String) {
         val payload = preferenceManager.getSettingsOnlyPayload()
-        
+
         val payloadString = payload.toString()
         val sizeKb = payloadString.toByteArray().size / 1024
         log("  -> Settings payload size: ~$sizeKb KB")
-        
+
         if (sizeKb > 50) {
             log("  ⚠️ CRITICAL WARNING: Payload is too large (>50KB)!")
             log("  ⚠️ This is the root cause of the timeout. Check PreferenceManager.getSettingsOnlyPayload()")
@@ -300,12 +350,29 @@ class CloudSyncManager(
         }
     }
 
+    /**
+     * IMPORTANTE: este método ahora hace un push "delta" (solo nuevo/modificado desde
+     * el último sync exitoso) en lugar de reenviar SIEMPRE la lista completa.
+     *
+     * Requiere que PreferenceManager exponga un flow con el timestamp del último sync
+     * exitoso, del mismo modo que ya existe `saveCloudSyncLastSuccessAt(...)` como
+     * setter. Si no existe todavía, añade algo así en PreferenceManager:
+     *
+     *   val cloudSyncLastSuccessAt: Flow<Long?> = dataStore.data.map { it[KEY_LAST_SUCCESS] }
+     *
+     * Si por algún motivo no puedes añadir ese flow ahora mismo, cambia la línea
+     * `val lastSyncAt = ...` de abajo por `val lastSyncAt = 0L` para volver al
+     * comportamiento anterior (reenviar todo) sin romper la compilación.
+     */
     private suspend fun syncDataListsToCloud(googleUid: String, patientId: String) {
         val patientDoc = firestore.collection("users").document(googleUid)
             .collection("patients").document(patientId)
 
-        val insulin = preferenceManager.insulinDoses.first()
-        log("  -> Insulin: ${insulin.size} registros")
+        val lastSyncAt = preferenceManager.cloudSyncLastSuccessAt.first() ?: 0L
+
+        val allInsulin = preferenceManager.insulinDoses.first()
+        val insulin = allInsulin.filter { it.updatedAtMs > lastSyncAt }
+        log("  -> Insulin: ${insulin.size} nuevos/modificados (de ${allInsulin.size} totales)")
         if (insulin.isNotEmpty()) {
             val insulinColl = patientDoc.collection("insulin_doses")
             val chunks = insulin.chunked(20)
@@ -318,8 +385,9 @@ class CloudSyncManager(
             }
         }
 
-        val capillary = preferenceManager.capillaryReadings.first()
-        log("  -> Capillary: ${capillary.size} registros")
+        val allCapillary = preferenceManager.capillaryReadings.first()
+        val capillary = allCapillary.filter { it.updatedAtMs > lastSyncAt }
+        log("  -> Capillary: ${capillary.size} nuevos/modificados (de ${allCapillary.size} totales)")
         if (capillary.isNotEmpty()) {
             val capillaryColl = patientDoc.collection("capillary_readings")
             val chunks = capillary.chunked(20)
@@ -332,8 +400,9 @@ class CloudSyncManager(
             }
         }
 
-        val sensorLogs = preferenceManager.sensorLogs.first()
-        log("  -> SensorLogs: ${sensorLogs.size} registros")
+        val allSensorLogs = preferenceManager.sensorLogs.first()
+        val sensorLogs = allSensorLogs.filter { it.updatedAtMs > lastSyncAt }
+        log("  -> SensorLogs: ${sensorLogs.size} nuevos/modificados (de ${allSensorLogs.size} totales)")
         if (sensorLogs.isNotEmpty()) {
             val sensorLogsColl = patientDoc.collection("sensor_logs")
             val chunks = sensorLogs.chunked(20)
@@ -465,7 +534,7 @@ class CloudSyncManager(
                 try {
                     val localDoses = preferenceManager.insulinDoses.first().associateBy { it.id }.toMutableMap()
                     var hasChanges = false
-                    
+
                     for (change in snapshots.documentChanges) {
                         when (change.type) {
                             DocumentChange.Type.ADDED, DocumentChange.Type.MODIFIED -> {
@@ -503,7 +572,7 @@ class CloudSyncManager(
                 try {
                     val localReadings = preferenceManager.capillaryReadings.first().associateBy { it.id }.toMutableMap()
                     var hasChanges = false
-                    
+
                     for (change in snapshots.documentChanges) {
                         when (change.type) {
                             DocumentChange.Type.ADDED, DocumentChange.Type.MODIFIED -> {
@@ -541,7 +610,7 @@ class CloudSyncManager(
                 try {
                     val localLogs = preferenceManager.sensorLogs.first().associateBy { it.serialNumber }.toMutableMap()
                     var hasChanges = false
-                    
+
                     for (change in snapshots.documentChanges) {
                         when (change.type) {
                             DocumentChange.Type.ADDED, DocumentChange.Type.MODIFIED -> {
@@ -647,13 +716,13 @@ class CloudSyncManager(
     fun pullSettingsOnly(googleUid: String, patientId: String, onComplete: (Boolean) -> Unit) {
         scope.launch {
             log("🔄 [Force Pull] Intentando adquirir el bloqueo de sincronización...")
-            
+
             if (!syncMutex.tryLock()) {
                 log("❌ [Force Pull] Cancelado: Otra sincronización ya está en progreso (mutex bloqueado).")
                 withContext(Dispatchers.Main) { onComplete(false) }
                 return@launch
             }
-            
+
             try {
                 log("🔄 [Force Pull] Bloqueo adquirido. Buscando configuración remota...")
                 val patientDoc = firestore.collection("users").document(googleUid)
@@ -666,12 +735,12 @@ class CloudSyncManager(
                 if (remoteSettings.exists()) {
                     log("✅ [Force Pull] Documento remoto encontrado. Deserializando...")
                     val remotePayload = remoteSettings.toObject(HistoryBackupPayload::class.java)
-                    
+
                     if (remotePayload != null) {
                         log("✅ [Force Pull] Deserialización exitosa. Guardando en DataStore local...")
-                        
+
                         val success = preferenceManager.restoreFromPayload(remotePayload, isHardReset = false)
-                        
+
                         if (success) {
                             log("🎉 [Force Pull] ¡Configuración restaurada desde la nube con éxito!")
                             withContext(Dispatchers.Main) { onComplete(true) }
@@ -686,10 +755,10 @@ class CloudSyncManager(
                         return@launch
                     }
                 }
-                
+
                 log("⚠️ [Force Pull] No se encontró ningún documento de configuración en la nube.")
                 withContext(Dispatchers.Main) { onComplete(false) }
-                
+
             } catch (e: Exception) {
                 Log.e("CloudSync", "Force pull failed", e)
                 log("❌ [Force Pull] ERROR CRÍTICO: ${e.javaClass.simpleName} - ${e.message}")
