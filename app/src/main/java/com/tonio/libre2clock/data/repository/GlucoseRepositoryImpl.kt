@@ -238,12 +238,23 @@ class GlucoseRepositoryImpl(
                     historyDb.replaceAll(mergedHistory)
                 }
                 historicalWindowCache.clear()
+                // Garantizar que notificamos el cambio inyectando la lista completa ordenada a la UI
                 historicalState.value = mergedHistory
                 _dataVersion.value++
                 mirrorSnapshotIfNeeded(mergedHistory)
             }
 
-            val resultMeasurement = measurement ?: mergedHistory.firstOrNull()
+            // REPARACIÓN MAESTRA DE CONMUTACIÓN DE FLUJO:
+            // Aseguramos que si la UI lee `currentGlucose` (que toma `.firstOrNull()` de `historicalState`), 
+            // este objeto contenga un `epochSeconds` perfectamente calculado y poblado. Si el servidor de Abbott 
+            // devuelve un objeto `measurement` puro (que suele venir sin epochSeconds poblado de origen en su red),
+            // lo extraemos directamente desde la lista ya procesada y validada `mergedHistory` para mantener la sincronía.
+            val resultMeasurement = mergedHistory.firstOrNull { 
+                val instant = parseMeasurementInstant(it)
+                val targetInstant = measurement?.let { m -> parseMeasurementInstant(m) }
+                instant != null && instant == targetInstant
+            } ?: measurement ?: mergedHistory.firstOrNull()
+
             if (resultMeasurement != null) {
                 Result.success(resultMeasurement)
             } else {
@@ -378,7 +389,20 @@ class GlucoseRepositoryImpl(
     }
 
     private fun parseMeasurementInstant(measurement: GlucoseMeasurement): Instant? {
-        return TimestampParser.parseMeasurementInstant(measurement)
+        // FactoryTimestamp is always UTC (ends in Z), while Timestamp might be local or ambiguous.
+        // We prioritize FactoryTimestamp for accurate timeline alignment.
+        return parseFlexibleInstant(measurement.factoryTimestamp)
+            ?: parseFlexibleInstant(measurement.timestamp)
+    }
+
+    private fun parseFlexibleInstant(timestamp: String, zoneId: ZoneId = ZoneId.systemDefault()): Instant? {
+        // Si el timestamp contiene una 'Z' o un offset de zona, lo parseamos estrictamente como UTC.
+        // Si es una fecha local plana, le inyectamos la zona horaria del sistema para evitar desfases de horas.
+        val cleaned = timestamp.trim()
+        if (cleaned.contains("Z") || cleaned.contains("+") || (cleaned.contains("-") && cleaned.indexOf("-") != cleaned.lastIndexOf("-") && cleaned.contains(":"))) {
+            return TimestampParser.parseFlexibleInstant(cleaned, ZoneId.of("UTC"))
+        }
+        return TimestampParser.parseFlexibleInstant(cleaned, zoneId)
     }
 
     companion object {

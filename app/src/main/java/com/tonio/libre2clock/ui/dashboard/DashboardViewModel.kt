@@ -101,7 +101,7 @@ class DashboardViewModel(
     }
         .distinctUntilChanged()
         .flowOn(Dispatchers.Default)
-        .stateIn(viewModelScope, SharingStarted.Lazily, null)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     // --- 2. Sensor Status ---
     private val ticker = flow {
@@ -182,7 +182,7 @@ class DashboardViewModel(
     }
         .distinctUntilChanged()
         .flowOn(Dispatchers.Default)
-        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // --- 4. Dashboard Metrics ---
     private data class MetricsConfigPart1(
@@ -288,7 +288,7 @@ class DashboardViewModel(
         }.flowOn(Dispatchers.Default)
     }.stateIn(
         viewModelScope, 
-        SharingStarted.Lazily, 
+        SharingStarted.WhileSubscribed(5000), 
         DashboardMetricsCalculator.calculate(emptyList())
     )
 
@@ -356,6 +356,9 @@ class DashboardViewModel(
         viewModelScope.launch {
             _isRefreshing.value = true
             try {
+                // ✅ REPARACIÓN MÁXIMA: Limpiamos las cachés internas del repositorio y de ventanas temporales
+                // para obligar al sistema a hacer un bypass total de cualquier dato estancado en base de datos.
+                repository.clearCache()
                 repository.fetchLatestGlucose()
             } finally {
                 _isRefreshing.value = false
