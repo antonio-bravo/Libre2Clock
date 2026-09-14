@@ -18,9 +18,6 @@ object TimestampParser {
     // Regex precompilada para evitar recompilación en cada llamada
     private val msAjaxDateRegex = Regex("^/Date\\((-?\\d+)(?:[+-]\\d{4})?\\)/$")
 
-    // Zona UTC cacheada
-    private val UTC_ZONE = ZoneId.of("UTC")
-
     // Formatters construidos con secciones opcionales para reducir el número total
     private val isoDateTimeFormat: DateTimeFormatter = DateTimeFormatterBuilder()
         .appendPattern("yyyy-MM-dd")
@@ -65,7 +62,7 @@ object TimestampParser {
         // Intentar formatos locales personalizados
         localDateTimeFormats.forEach { formatter ->
             tryParseLocalDateTime(raw, formatter)?.let { 
-                return it.atZone(UTC_ZONE).toInstant() 
+                return it.atZone(zoneId).toInstant() 
             }
         }
 
