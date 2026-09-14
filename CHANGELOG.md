@@ -1,5 +1,31 @@
 # Changelog
 
+## da07f3a (Sep 14, 2026 12:54:37)
+fix foreground service — antonio-bravo
+[detail](#da07f3a-details)
+
+<details id='da07f3a-details'>
+<summary>Changed files</summary>
+
+- app/src/main/AndroidManifest.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/service/GlucoseAlarmReceiver.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
+</details>
+
+
+---
+## df9a82d (Sep 14, 2026 09:58:05)
+Update changelog — github-actions[bot]
+[detail](#df9a82d-details)
+
+<details id='df9a82d-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 96e277e (Sep 14, 2026 11:57:50)
 fix utc time with local time — antonio-bravo
 [detail](#96e277e-details)
@@ -664,31 +690,6 @@ Update changelog — github-actions[bot]
 [detail](#3315f38-details)
 
 <details id='3315f38-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 1822291 (Sep 09, 2026 22:30:50)
-fix HbA1c after restore — antonio-bravo
-[detail](#1822291-details)
-
-<details id='1822291-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-</details>
-
-
----
-## ec5ef82 (Sep 09, 2026 20:09:11)
-Update changelog — github-actions[bot]
-[detail](#ec5ef82-details)
-
-<details id='ec5ef82-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
