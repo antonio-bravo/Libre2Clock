@@ -1,5 +1,29 @@
 # Changelog
 
+## 1c93915 (Sep 14, 2026 15:10:46)
+cloud sync — antonio-bravo
+[detail](#1c93915-details)
+
+<details id='1c93915-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
+</details>
+
+
+---
+## e6184a2 (Sep 14, 2026 12:18:54)
+Update changelog — github-actions[bot]
+[detail](#e6184a2-details)
+
+<details id='e6184a2-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 12ba1a6 (Sep 14, 2026 14:18:40)
 build on push — antonio-bravo
 [detail](#12ba1a6-details)
@@ -623,30 +647,6 @@ Update changelog — github-actions[bot]
 [detail](#f20de2b-details)
 
 <details id='f20de2b-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 68e912f (Sep 10, 2026 20:05:33)
-add all functions to burger menu — antonio-bravo
-[detail](#68e912f-details)
-
-<details id='68e912f-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-</details>
-
-
----
-## e1c45a6 (Sep 10, 2026 16:35:01)
-Update changelog — github-actions[bot]
-[detail](#e1c45a6-details)
-
-<details id='e1c45a6-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
