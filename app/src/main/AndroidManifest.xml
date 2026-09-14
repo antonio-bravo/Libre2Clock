@@ -29,8 +29,7 @@
         <receiver
             android:name=".service.GlucoseAlarmReceiver"
             android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="health" /> <!-- CRÍTICO para el onTimeout -->
+            android:exported="false" />
 
         <activity
             android:name=".MainActivity"
