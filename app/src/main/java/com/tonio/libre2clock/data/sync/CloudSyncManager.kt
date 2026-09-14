@@ -1,5 +1,6 @@
 package com.tonio.libre2clock.data.sync
 
+
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
