@@ -65,18 +65,19 @@ object TimestampParser {
         usDateTime24Format
     )
 
-    fun parseMeasurementInstant(measurement: GlucoseMeasurement): Instant? {
-        measurement.epochSeconds?.let { return Instant.ofEpochSecond(it) }
-
-        // FactoryTimestamp en LibreLinkUp es UTC (aunque no traiga 'Z' explícita)
-        if (measurement.factoryTimestamp.isNotBlank()) {
-            parseFlexibleInstant(measurement.factoryTimestamp, ZoneOffset.UTC)?.let { return it }
-        }
-
-        // Timestamp reporta en la hora local del dispositivo/sensor
+    fun parseMeasurementInstant(measurement: GlucoseMeasurement, zoneId: ZoneId = ZoneId.systemDefault()): Instant? {
+        // Priorizar 'timestamp' que contiene la fecha y hora en el horario local del dispositivo
         if (measurement.timestamp.isNotBlank()) {
-            parseFlexibleInstant(measurement.timestamp, ZoneId.systemDefault())?.let { return it }
+            parseFlexibleInstant(measurement.timestamp, zoneId)?.let { return it }
         }
+
+        // Si 'timestamp' no está disponible, parsear 'factoryTimestamp' en el horario local del dispositivo
+        if (measurement.factoryTimestamp.isNotBlank()) {
+            parseFlexibleInstant(measurement.factoryTimestamp, zoneId)?.let { return it }
+        }
+
+        // Fallback a epochSeconds si ya existe
+        measurement.epochSeconds?.let { return Instant.ofEpochSecond(it) }
 
         return null
     }
