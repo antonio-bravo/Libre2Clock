@@ -1,5 +1,29 @@
 # Changelog
 
+## c99784b (Sep 15, 2026 09:44:43)
+fix workflow — antonio-bravo
+[detail](#c99784b-details)
+
+<details id='c99784b-details'>
+<summary>Changed files</summary>
+
+- .github/workflows/build-release.yml [Modified]
+</details>
+
+
+---
+## b301c4d (Sep 15, 2026 07:28:49)
+Update changelog — github-actions[bot]
+[detail](#b301c4d-details)
+
+<details id='b301c4d-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## a895d42 (Sep 15, 2026 09:27:43)
 delta glucose — antonio-bravo
 [detail](#a895d42-details)
@@ -629,31 +653,6 @@ Update changelog — github-actions[bot]
 [detail](#5366ddd-details)
 
 <details id='5366ddd-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 362422a (Sep 11, 2026 10:36:14)
-optimize Cloud Sync — antonio-bravo
-[detail](#362422a-details)
-
-<details id='362422a-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/local/GlucoseHistoryDatabaseHelper.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
-</details>
-
-
----
-## 824e116 (Sep 11, 2026 08:23:41)
-Update changelog — github-actions[bot]
-[detail](#824e116-details)
-
-<details id='824e116-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
