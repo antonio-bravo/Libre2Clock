@@ -245,9 +245,7 @@ object DashboardMetricsCalculator {
     )
 
     private fun parseMeasurementInstant(measurement: GlucoseMeasurement): Instant? {
-        return measurement.epochSeconds?.let { Instant.ofEpochSecond(it) }
-            ?: TimestampParser.parseFlexibleInstant(measurement.factoryTimestamp)
-            ?: TimestampParser.parseFlexibleInstant(measurement.timestamp)
+        return TimestampParser.parseMeasurementInstant(measurement)
     }
 }
 

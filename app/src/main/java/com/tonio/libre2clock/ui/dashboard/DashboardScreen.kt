@@ -748,11 +748,7 @@ fun SensorHealthCard(
 @Composable
 private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetrics) {
     val measurementInstant = remember(measurement) {
-        measurement?.let { m ->
-            m.epochSeconds?.let { Instant.ofEpochSecond(it) }
-                ?: TimestampParser.parseFlexibleInstant(m.factoryTimestamp)
-                ?: TimestampParser.parseFlexibleInstant(m.timestamp)
-        }
+        measurement?.let { m -> TimestampParser.parseMeasurementInstant(m) }
     }
     
     // CORRECCIÓN CRÍTICA: Estado reactivo para el tiempo, se actualiza cada minuto.

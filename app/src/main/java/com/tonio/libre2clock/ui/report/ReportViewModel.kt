@@ -138,8 +138,7 @@ class ReportViewModel(
 
             // OPTIMIZACIÓN CRÍTICA: Procesar la glucosa UNA SOLA VEZ
             val processedGlucose = input.glucose.mapNotNull { m ->
-                val instant = TimestampParser.parseFlexibleInstant(m.factoryTimestamp) 
-                    ?: TimestampParser.parseFlexibleInstant(m.timestamp) ?: return@mapNotNull null
+                val instant = TimestampParser.parseMeasurementInstant(m) ?: return@mapNotNull null
                 
                 val processed = GlucoseProcessor.process(
                     measurement = m, manualOffset = input.offset, userRanges = input.ranges,

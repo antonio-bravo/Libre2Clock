@@ -37,11 +37,7 @@ private val ORIGINAL_LINE_COLOR = Color.Gray.copy(alpha = 0.7f)
 private val CALIBRATED_LINE_COLOR = Color(0xFF00BCD4)
 
 private fun measurementInstant(measurement: GlucoseMeasurement): Instant? {
-    measurement.epochSeconds?.let { return Instant.ofEpochSecond(it) }
-    // FactoryTimestamp is always UTC (ends in Z), while Timestamp might be local or ambiguous.
-    // We prioritize FactoryTimestamp for accurate timeline alignment.
-    return TimestampParser.parseFlexibleInstant(measurement.factoryTimestamp)
-        ?: TimestampParser.parseFlexibleInstant(measurement.timestamp)
+    return TimestampParser.parseMeasurementInstant(measurement)
 }
 
 private data class NormalizedPoint(

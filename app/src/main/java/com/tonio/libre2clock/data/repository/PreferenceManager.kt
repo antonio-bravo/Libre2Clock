@@ -816,7 +816,7 @@ class PreferenceManager(private val context: Context) {
         val mergedMap = LinkedHashMap<String, Pair<Instant?, GlucoseMeasurement>>()
         val processList = { list: List<GlucoseMeasurement> ->
             for (m in list) {
-                val instant = parseFlexibleInstant(m.factoryTimestamp) ?: parseFlexibleInstant(m.timestamp)
+                val instant = TimestampParser.parseMeasurementInstant(m)
                 val key = instant?.toEpochMilli()?.toString() ?: m.timestamp
                 mergedMap[key] = instant to m
             }
