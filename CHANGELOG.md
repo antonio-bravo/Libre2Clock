@@ -1,5 +1,42 @@
 # Changelog
 
+## a895d42 (Sep 15, 2026 09:27:43)
+delta glucose — antonio-bravo
+[detail](#a895d42-details)
+
+<details id='a895d42-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
+</details>
+
+
+---
+## 284e296 (Sep 15, 2026 09:26:56)
+intento de fix — antonio-bravo
+[detail](#284e296-details)
+
+<details id='284e296-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+</details>
+
+
+---
+## af2ed8b (Sep 15, 2026 07:23:50)
+Update changelog — github-actions[bot]
+[detail](#af2ed8b-details)
+
+<details id='af2ed8b-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## c36411d (Sep 15, 2026 09:23:37)
 Merge pull request #2 from antonio-bravo/gemini
 
@@ -620,45 +657,6 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
-</details>
-
-
----
-## ca1c0ca (Sep 11, 2026 10:23:19)
-increase font size for app version — antonio-bravo
-[detail](#ca1c0ca-details)
-
-<details id='ca1c0ca-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
-</details>
-
-
----
-## 38cdf2d (Sep 10, 2026 20:35:46)
-Update changelog — github-actions[bot]
-[detail](#38cdf2d-details)
-
-<details id='38cdf2d-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 173fd2c (Sep 10, 2026 22:35:32)
-add app version — antonio-bravo
-[detail](#173fd2c-details)
-
-<details id='173fd2c-details'>
-<summary>Changed files</summary>
-
-- app/build.gradle.kts [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
 </details>
 
 
