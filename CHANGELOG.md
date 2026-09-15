@@ -1,5 +1,29 @@
 # Changelog
 
+## 634bed2 (Sep 15, 2026 09:51:17)
+fix accept android SDL Licenses — antonio-bravo
+[detail](#634bed2-details)
+
+<details id='634bed2-details'>
+<summary>Changed files</summary>
+
+- .github/workflows/build-release.yml [Modified]
+</details>
+
+
+---
+## 3a1c3b3 (Sep 15, 2026 07:45:00)
+Update changelog — github-actions[bot]
+[detail](#3a1c3b3-details)
+
+<details id='3a1c3b3-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## c99784b (Sep 15, 2026 09:44:43)
 fix workflow — antonio-bravo
 [detail](#c99784b-details)
@@ -628,31 +652,6 @@ Update changelog — github-actions[bot]
 [detail](#0511821-details)
 
 <details id='0511821-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## f67e08d (Sep 11, 2026 11:23:44)
-fix trend graph alignment on Y — antonio-bravo
-[detail](#f67e08d-details)
-
-<details id='f67e08d-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
-</details>
-
-
----
-## 5366ddd (Sep 11, 2026 08:36:26)
-Update changelog — github-actions[bot]
-[detail](#5366ddd-details)
-
-<details id='5366ddd-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
