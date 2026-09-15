@@ -1,5 +1,61 @@
 # Changelog
 
+## c36411d (Sep 15, 2026 09:23:37)
+Merge pull request #2 from antonio-bravo/gemini
+
+gemini — antonio-bravo
+[detail](#c36411d-details)
+
+<details id='c36411d-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/local/GlucoseHistoryDatabaseHelper.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseProcessor.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/TimestampParser.kt [Modified]
+- app/src/test/java/com/tonio/libre2clock/TimestampPriorityTest.kt [Modified]
+</details>
+
+
+---
+## e9c5eac (Sep 15, 2026 09:18:33)
+gemini — antonio-bravo
+[detail](#e9c5eac-details)
+
+<details id='e9c5eac-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/local/GlucoseHistoryDatabaseHelper.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseProcessor.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/TimestampParser.kt [Modified]
+- app/src/test/java/com/tonio/libre2clock/TimestampPriorityTest.kt [Modified]
+</details>
+
+
+---
+## 3f34ac5 (Sep 14, 2026 14:40:40)
+Update changelog — github-actions[bot]
+[detail](#3f34ac5-details)
+
+<details id='3f34ac5-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## f359058 (Sep 14, 2026 16:40:25)
 undo changes — antonio-bravo
 [detail](#f359058-details)
@@ -603,43 +659,6 @@ add app version — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
 - app/src/main/res/values-es/strings.xml [Modified]
 - app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## c996052 (Sep 10, 2026 20:29:48)
-Update changelog — github-actions[bot]
-[detail](#c996052-details)
-
-<details id='c996052-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 4f0027c (Sep 10, 2026 22:29:32)
-fix ranges — antonio-bravo
-[detail](#4f0027c-details)
-
-<details id='4f0027c-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
-</details>
-
-
----
-## 0bc226c (Sep 10, 2026 20:11:58)
-Update changelog — github-actions[bot]
-[detail](#0bc226c-details)
-
-<details id='0bc226c-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
 </details>
 
 
