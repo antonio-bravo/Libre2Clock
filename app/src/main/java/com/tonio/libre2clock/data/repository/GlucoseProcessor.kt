@@ -25,9 +25,7 @@ object GlucoseProcessor {
         capillaryReadings: List<CapillaryMeasurement> = emptyList(),
         context: CalculationContext? = null
     ): GlucoseMeasurement {
-        val measurementInstant = measurement.epochSeconds?.let { Instant.ofEpochSecond(it) }
-            ?: TimestampParser.parseFlexibleInstant(measurement.factoryTimestamp)
-            ?: TimestampParser.parseFlexibleInstant(measurement.timestamp)
+        val measurementInstant = TimestampParser.parseMeasurementInstant(measurement)
 
         val calibratedValue = getCalibratedValue(
             rawValue = measurement.value,

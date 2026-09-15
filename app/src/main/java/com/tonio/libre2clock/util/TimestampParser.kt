@@ -1,11 +1,13 @@
 package com.tonio.libre2clock.util
 
+import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
@@ -19,10 +21,12 @@ object TimestampParser {
     // Regex precompilada para evitar recompilación en cada llamada
     private val msAjaxDateRegex = Regex("^/Date\\((-?\\d+)(?:[+-]\\d{4})?\\)/$")
 
-    // Formatters construidos con secciones opcionales para reducir el número total
+    // Formatters construidos con secciones opcionales
     private val isoDateTimeFormat: DateTimeFormatter = DateTimeFormatterBuilder()
         .appendPattern("yyyy-MM-dd")
         .appendOptional(DateTimeFormatter.ofPattern("['T'][ ]HH:mm[:ss][.SSS]", Locale.US))
+        .parseDefaulting(ChronoField.SECOND_OF_MINUTE, 0)
+        .parseDefaulting(ChronoField.NANO_OF_SECOND, 0)
         .toFormatter(Locale.US)
 
     private val isoDateTimeWithZoneFormat: DateTimeFormatter = DateTimeFormatterBuilder()
@@ -30,12 +34,24 @@ object TimestampParser {
         .appendOffsetId()
         .toFormatter(Locale.US)
 
-    private val usDateFormat: DateTimeFormatter = DateTimeFormatterBuilder()
+    // Formato 12 horas con AM/PM (p. ej. "5/21/2022 1:38:50 PM")
+    private val usDateTime12Format: DateTimeFormatter = DateTimeFormatterBuilder()
+        .parseCaseInsensitive()
         .appendPattern("[M][MM]/[d][dd]/yyyy")
-        .appendPattern(" [H][h]:mm[:ss][.SSS]")
+        .appendPattern(" [h][hh]:mm")
+        .appendOptional(DateTimeFormatter.ofPattern("[:ss][.SSS]", Locale.US))
         .parseDefaulting(ChronoField.SECOND_OF_MINUTE, 0)
         .parseDefaulting(ChronoField.NANO_OF_SECOND, 0)
-        .appendOptional(DateTimeFormatter.ofPattern(" a", Locale.US))
+        .appendPattern(" a")
+        .toFormatter(Locale.US)
+
+    // Formato 24 horas sin AM/PM (p. ej. "5/21/2022 13:38:50")
+    private val usDateTime24Format: DateTimeFormatter = DateTimeFormatterBuilder()
+        .appendPattern("[M][MM]/[d][dd]/yyyy")
+        .appendPattern(" [H][HH]:mm")
+        .appendOptional(DateTimeFormatter.ofPattern("[:ss][.SSS]", Locale.US))
+        .parseDefaulting(ChronoField.SECOND_OF_MINUTE, 0)
+        .parseDefaulting(ChronoField.NANO_OF_SECOND, 0)
         .toFormatter(Locale.US)
 
     private val localTimeFormat: DateTimeFormatter = DateTimeFormatterBuilder()
@@ -45,8 +61,25 @@ object TimestampParser {
     private val localDateTimeFormats = listOf(
         isoDateTimeFormat,
         isoDateTimeWithZoneFormat,
-        usDateFormat
+        usDateTime12Format,
+        usDateTime24Format
     )
+
+    fun parseMeasurementInstant(measurement: GlucoseMeasurement): Instant? {
+        measurement.epochSeconds?.let { return Instant.ofEpochSecond(it) }
+
+        // FactoryTimestamp en LibreLinkUp es UTC (aunque no traiga 'Z' explícita)
+        if (measurement.factoryTimestamp.isNotBlank()) {
+            parseFlexibleInstant(measurement.factoryTimestamp, ZoneOffset.UTC)?.let { return it }
+        }
+
+        // Timestamp reporta en la hora local del dispositivo/sensor
+        if (measurement.timestamp.isNotBlank()) {
+            parseFlexibleInstant(measurement.timestamp, ZoneId.systemDefault())?.let { return it }
+        }
+
+        return null
+    }
 
     fun parseFlexibleInstant(timestamp: String, zoneId: ZoneId = ZoneId.systemDefault()): Instant? {
         val raw = timestamp.trim()

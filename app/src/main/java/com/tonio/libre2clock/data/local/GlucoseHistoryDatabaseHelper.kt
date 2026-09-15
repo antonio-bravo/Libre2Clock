@@ -230,6 +230,7 @@ class GlucoseHistoryDatabaseHelper(context: Context) :
     // --- Métodos Privados de Optimización ---
 
     private fun mapCursorToMeasurement(cursor: android.database.Cursor): GlucoseMeasurement {
+        val epochMs = cursor.getLong(8)
         return GlucoseMeasurement(
             factoryTimestamp = cursor.getString(0),
             timestamp = cursor.getString(1),
@@ -239,13 +240,12 @@ class GlucoseHistoryDatabaseHelper(context: Context) :
             measurementColor = if (cursor.isNull(5)) null else cursor.getInt(5),
             value = cursor.getInt(6),
             calibratedValue = cursor.getInt(7),
-            epochSeconds = cursor.getLong(8) / 1000L
+            epochSeconds = if (epochMs > 0L) epochMs / 1000L else null
         )
     }
 
     private fun bindAndExecute(statement: SQLiteStatement, measurement: GlucoseMeasurement) {
-        val instant = TimestampParser.parseFlexibleInstant(measurement.factoryTimestamp)
-            ?: TimestampParser.parseFlexibleInstant(measurement.timestamp)
+        val instant = TimestampParser.parseMeasurementInstant(measurement)
         val sortEpoch = instant?.toEpochMilli() ?: 0L
 
         val measurementId = if (instant != null) {

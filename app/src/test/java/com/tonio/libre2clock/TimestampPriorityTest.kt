@@ -45,4 +45,46 @@ class TimestampPriorityTest {
         val expectedInstant = Instant.parse(plainTs)
         assertEquals("Should fallback to Timestamp if Factory is empty", expectedInstant, parsedInstant)
     }
+
+    @Test
+    fun parse12HourPmTimestampCorrectly() {
+        val ts = "5/21/2022 1:38:50 PM"
+        val instant = TimestampParser.parseFlexibleInstant(ts, java.time.ZoneOffset.UTC)
+        org.junit.Assert.assertNotNull("PM timestamp should parse successfully", instant)
+        assertEquals("Should parse to 13:38:50 UTC", Instant.parse("2022-05-21T13:38:50Z"), instant)
+    }
+
+    @Test
+    fun parse12HourAmTimestampCorrectly() {
+        val ts = "5/21/2022 10:15:30 AM"
+        val instant = TimestampParser.parseFlexibleInstant(ts, java.time.ZoneOffset.UTC)
+        org.junit.Assert.assertNotNull("AM timestamp should parse successfully", instant)
+        assertEquals("Should parse to 10:15:30 UTC", Instant.parse("2022-05-21T10:15:30Z"), instant)
+    }
+
+    @Test
+    fun parseMeasurementInstantResolvesFactoryAsUtc() {
+        // FactoryTimestamp: 1:38:50 PM UTC
+        val measurement = GlucoseMeasurement(
+            factoryTimestamp = "5/21/2022 1:38:50 PM",
+            timestamp = "5/21/2022 3:38:50 PM",
+            value = 110
+        )
+        val instant = TimestampParser.parseMeasurementInstant(measurement)
+        org.junit.Assert.assertNotNull("Measurement instant should not be null", instant)
+        assertEquals(Instant.parse("2022-05-21T13:38:50Z"), instant)
+    }
+
+    @Test
+    fun parseMeasurementInstantUsesEpochSecondsIfPresent() {
+        val expectedEpoch = 1700000000L
+        val measurement = GlucoseMeasurement(
+            factoryTimestamp = "invalid_string",
+            timestamp = "invalid_string",
+            epochSeconds = expectedEpoch,
+            value = 120
+        )
+        val instant = TimestampParser.parseMeasurementInstant(measurement)
+        assertEquals(Instant.ofEpochSecond(expectedEpoch), instant)
+    }
 }
