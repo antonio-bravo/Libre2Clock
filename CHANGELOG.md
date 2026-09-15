@@ -1,5 +1,29 @@
 # Changelog
 
+## 557a2e8 (Sep 15, 2026 10:36:32)
+parseMeasurementInstant — antonio-bravo
+[detail](#557a2e8-details)
+
+<details id='557a2e8-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/util/TimestampParser.kt [Modified]
+</details>
+
+
+---
+## b16d494 (Sep 15, 2026 07:51:28)
+Update changelog — github-actions[bot]
+[detail](#b16d494-details)
+
+<details id='b16d494-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 634bed2 (Sep 15, 2026 09:51:17)
 fix accept android SDL Licenses — antonio-bravo
 [detail](#634bed2-details)
@@ -623,35 +647,6 @@ Update changelog — github-actions[bot]
 [detail](#a7cb37d-details)
 
 <details id='a7cb37d-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## bc41467 (Sep 11, 2026 15:11:00)
-more fixes — antonio-bravo
-[detail](#bc41467-details)
-
-<details id='bc41467-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsAdvancedScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 0511821 (Sep 11, 2026 09:24:01)
-Update changelog — github-actions[bot]
-[detail](#0511821-details)
-
-<details id='0511821-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
