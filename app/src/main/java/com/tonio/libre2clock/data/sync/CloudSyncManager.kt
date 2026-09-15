@@ -441,6 +441,15 @@ class CloudSyncManager(
             if (remote.isNotEmpty()) {
                 dbHelper.upsertAll(remote)
                 log("Successfully pulled ${remote.size} history records.")
+
+                // NOTIFICACIÓN CRÍTICA A LA UI: Forzamos al repositorio central de glucosa a recargar
+                // los datos recién descargados de la nube desde SQLite hacia el estado reactivo en memoria.
+                try {
+                    AppContainer.provideGlucoseRepository(context).syncLocalArchiveFromPreferences()
+                    log("  -> State in memory synchronized with SQLite successfully.")
+                } catch (repoEx: Exception) {
+                    Log.e("CloudSync", "Failed to refresh repository memory state", repoEx)
+                }
             }
         } catch (e: TimeoutCancellationException) {
             Log.w("CloudSync", "Pull history timed out")
