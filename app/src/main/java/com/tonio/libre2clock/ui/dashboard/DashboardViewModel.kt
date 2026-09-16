@@ -314,6 +314,12 @@ class DashboardViewModel(
     val targetGlucose: StateFlow<Int> = preferenceManager.targetGlucose
         .stateIn(viewModelScope, subscribedSharing, 80)
 
+    val targetGlucoseLow: StateFlow<Int> = preferenceManager.targetGlucoseLow
+        .stateIn(viewModelScope, subscribedSharing, 70)
+
+    val targetGlucoseHigh: StateFlow<Int> = preferenceManager.targetGlucoseHigh
+        .stateIn(viewModelScope, subscribedSharing, 180)
+
     // --- 6. Sensor Error ---
     val currentSensorError: StateFlow<SensorErrorSummary?> = combine(
         preferenceManager.activeSensorSerialNumber,

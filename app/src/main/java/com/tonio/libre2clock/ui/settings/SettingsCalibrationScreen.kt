@@ -34,6 +34,8 @@ fun SettingsCalibrationScreen(
     val ranges by viewModel.glucoseOffsetRanges.collectAsStateWithLifecycle()
     val autoAdjustEnabled by viewModel.autoAdjustEnabled.collectAsStateWithLifecycle()
     val autoRangeOffsetMode by viewModel.autoRangeOffsetMode.collectAsStateWithLifecycle()
+    val targetGlucoseLow by viewModel.targetGlucoseLow.collectAsStateWithLifecycle()
+    val targetGlucoseHigh by viewModel.targetGlucoseHigh.collectAsStateWithLifecycle()
     val rangeInsights by viewModel.rangeOffsetInsights.collectAsStateWithLifecycle()
     val sectionPerfStats by viewModel.sectionPerfStats.collectAsStateWithLifecycle()
 
@@ -69,6 +71,15 @@ fun SettingsCalibrationScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // OPTIMIZACIÓN: Cada sección es un 'item' independiente para aislar recomposiciones
+            item {
+                HealthyTargetRangeSection(
+                    targetLow = targetGlucoseLow,
+                    targetHigh = targetGlucoseHigh,
+                    onLowChange = viewModel::updateTargetGlucoseLow,
+                    onHighChange = viewModel::updateTargetGlucoseHigh
+                )
+            }
+
             item {
                 GlobalOffsetSection(
                     offset = offset,
@@ -291,6 +302,43 @@ private fun AutoRangeSection(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(stringResource(R.string.settings_apply_intelligent_suggestions, applicable))
+            }
+        }
+    }
+}
+
+@Composable
+private fun HealthyTargetRangeSection(
+    targetLow: Int,
+    targetHigh: Int,
+    onLowChange: (Int) -> Unit,
+    onHighChange: (Int) -> Unit
+) {
+    SettingsSection(title = stringResource(R.string.settings_healthy_target_range)) {
+        Text(
+            text = stringResource(R.string.settings_healthy_target_range_desc),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Box(modifier = Modifier.weight(1f)) {
+                DebouncedOffsetField(
+                    initialValue = targetLow,
+                    onValueChange = onLowChange,
+                    label = stringResource(R.string.settings_target_low_label)
+                )
+            }
+            Box(modifier = Modifier.weight(1f)) {
+                DebouncedOffsetField(
+                    initialValue = targetHigh,
+                    onValueChange = onHighChange,
+                    label = stringResource(R.string.settings_target_high_label)
+                )
             }
         }
     }

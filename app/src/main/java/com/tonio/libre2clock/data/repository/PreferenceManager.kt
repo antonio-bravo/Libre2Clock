@@ -26,6 +26,7 @@ import com.tonio.libre2clock.data.model.SensorLog
 import com.tonio.libre2clock.data.model.WatchNotificationMode
 import com.tonio.libre2clock.util.TimestampParser
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.decodeFromString
@@ -88,6 +89,8 @@ class PreferenceManager(private val context: Context) {
     private val MANUAL_TDI_KEY = doublePreferencesKey("manual_tdi")
     private val MANUAL_ISF_KEY = doublePreferencesKey("manual_isf")
     private val TARGET_GLUCOSE_KEY = intPreferencesKey("target_glucose")
+    private val TARGET_GLUCOSE_LOW_KEY = intPreferencesKey("target_glucose_low")
+    private val TARGET_GLUCOSE_HIGH_KEY = intPreferencesKey("target_glucose_high")
     private val INSULIN_DOSES_KEY = stringPreferencesKey("insulin_doses")
     private val SENSOR_LOGS_KEY = stringPreferencesKey("sensor_logs")
     private val WATCH_NOTIFICATION_SCHEDULES_KEY = stringPreferencesKey("watch_notification_schedules")
@@ -101,19 +104,22 @@ class PreferenceManager(private val context: Context) {
     private val SETTINGS_UPDATED_AT_KEY = longPreferencesKey("settings_updated_at")
 
     // --- Flows ---
-    val authToken: Flow<String?> = context.dataStore.data.map { it[TOKEN_KEY] }
-    val userId: Flow<String?> = context.dataStore.data.map { it[USER_ID_KEY] }
-    val patientId: Flow<String?> = context.dataStore.data.map { it[PATIENT_ID_KEY] }
-    val libreLinkUpEmail: Flow<String?> = context.dataStore.data.map { it[LIBRE_LINK_UP_EMAIL_KEY] }
-    val glucoseOffset: Flow<Int> = context.dataStore.data.map { it[GLUCOSE_OFFSET_KEY] ?: 0 }
+    val authToken: Flow<String?> = context.dataStore.data.map { it[TOKEN_KEY] }.distinctUntilChanged()
+    val userId: Flow<String?> = context.dataStore.data.map { it[USER_ID_KEY] }.distinctUntilChanged()
+    val patientId: Flow<String?> = context.dataStore.data.map { it[PATIENT_ID_KEY] }.distinctUntilChanged()
+    val libreLinkUpEmail: Flow<String?> = context.dataStore.data.map { it[LIBRE_LINK_UP_EMAIL_KEY] }.distinctUntilChanged()
+    val glucoseOffset: Flow<Int> = context.dataStore.data.map { it[GLUCOSE_OFFSET_KEY] ?: 0 }.distinctUntilChanged()
     
-    val glucoseOffsetRanges: Flow<List<GlucoseOffsetRange>> = context.dataStore.data.map { prefs ->
-        try {
-            prefs[GLUCOSE_OFFSET_RANGES_KEY]?.let { json.decodeFromString<List<GlucoseOffsetRange>>(it) } ?: getDefaultRanges()
-        } catch (e: Exception) { getDefaultRanges() }
-    }
+    val glucoseOffsetRanges: Flow<List<GlucoseOffsetRange>> = context.dataStore.data
+        .map { it[GLUCOSE_OFFSET_RANGES_KEY] }
+        .distinctUntilChanged()
+        .map { jsonStr ->
+            try {
+                jsonStr?.let { json.decodeFromString<List<GlucoseOffsetRange>>(it) } ?: getDefaultRanges()
+            } catch (e: Exception) { getDefaultRanges() }
+        }
 
-    val autoAdjustEnabled: Flow<Boolean> = context.dataStore.data.map { it[AUTO_ADJUST_ENABLED_KEY] ?: false }
+    val autoAdjustEnabled: Flow<Boolean> = context.dataStore.data.map { it[AUTO_ADJUST_ENABLED_KEY] ?: false }.distinctUntilChanged()
 
     val autoRangeOffsetMode: Flow<AutoRangeOffsetMode> = context.dataStore.data.map { prefs ->
         val persisted = prefs[AUTO_RANGE_OFFSET_MODE_KEY]
@@ -123,7 +129,7 @@ class PreferenceManager(private val context: Context) {
         } else {
             if (prefs[AUTO_RANGE_OFFSETS_ENABLED_KEY] == true) AutoRangeOffsetMode.BY_RANGE else AutoRangeOffsetMode.OFF
         }
-    }
+    }.distinctUntilChanged()
 
     val autoRangeOffsetsEnabled: Flow<Boolean> = context.dataStore.data.map { prefs ->
         val persisted = prefs[AUTO_RANGE_OFFSET_MODE_KEY]
@@ -133,13 +139,16 @@ class PreferenceManager(private val context: Context) {
         } else {
             prefs[AUTO_RANGE_OFFSETS_ENABLED_KEY] ?: false
         }
-    }
+    }.distinctUntilChanged()
 
-    val capillaryReadings: Flow<List<CapillaryMeasurement>> = context.dataStore.data.map { prefs ->
-        try { prefs[CAPILLARY_READINGS_KEY]?.let { json.decodeFromString<List<CapillaryMeasurement>>(it) } ?: emptyList() } catch (e: Exception) { emptyList() }
-    }
+    val capillaryReadings: Flow<List<CapillaryMeasurement>> = context.dataStore.data
+        .map { it[CAPILLARY_READINGS_KEY] }
+        .distinctUntilChanged()
+        .map { jsonStr ->
+            try { jsonStr?.let { json.decodeFromString<List<CapillaryMeasurement>>(it) } ?: emptyList() } catch (e: Exception) { emptyList() }
+        }
 
-    val watchAlertsEnabled: Flow<Boolean> = context.dataStore.data.map { it[WATCH_ALERTS_ENABLED_KEY] ?: false }
+    val watchAlertsEnabled: Flow<Boolean> = context.dataStore.data.map { it[WATCH_ALERTS_ENABLED_KEY] ?: false }.distinctUntilChanged()
 
     val watchNotificationMode: Flow<WatchNotificationMode> = context.dataStore.data.map { prefs ->
         val persisted = prefs[WATCH_NOTIFICATION_MODE_KEY]
@@ -148,54 +157,71 @@ class PreferenceManager(private val context: Context) {
         } else {
             if (prefs[WATCH_ALERTS_ENABLED_KEY] == true) WatchNotificationMode.PERIODIC_AND_SCHEDULES else WatchNotificationMode.OFF
         }
-    }
+    }.distinctUntilChanged()
 
-    val watchAlertIntervalMinutes: Flow<Int> = context.dataStore.data.map { (it[WATCH_ALERT_INTERVAL_MINUTES_KEY] ?: 60).coerceIn(5, 180) }
-    val watchAlertStartMinute: Flow<Int> = context.dataStore.data.map { (it[WATCH_ALERT_START_MINUTE_KEY] ?: 0).coerceIn(0, 59) }
-    val lowGlucoseAlarmEnabled: Flow<Boolean> = context.dataStore.data.map { it[LOW_GLUCOSE_ALARM_ENABLED_KEY] ?: false }
-    val highGlucoseAlarmEnabled: Flow<Boolean> = context.dataStore.data.map { it[HIGH_GLUCOSE_ALARM_ENABLED_KEY] ?: false }
-    val useCalibratedForAlarms: Flow<Boolean> = context.dataStore.data.map { it[USE_CALIBRATED_FOR_ALARMS_KEY] ?: true }
+    val watchAlertIntervalMinutes: Flow<Int> = context.dataStore.data.map { (it[WATCH_ALERT_INTERVAL_MINUTES_KEY] ?: 60).coerceIn(5, 180) }.distinctUntilChanged()
+    val watchAlertStartMinute: Flow<Int> = context.dataStore.data.map { (it[WATCH_ALERT_START_MINUTE_KEY] ?: 0).coerceIn(0, 59) }.distinctUntilChanged()
+    val lowGlucoseAlarmEnabled: Flow<Boolean> = context.dataStore.data.map { it[LOW_GLUCOSE_ALARM_ENABLED_KEY] ?: false }.distinctUntilChanged()
+    val highGlucoseAlarmEnabled: Flow<Boolean> = context.dataStore.data.map { it[HIGH_GLUCOSE_ALARM_ENABLED_KEY] ?: false }.distinctUntilChanged()
+    val useCalibratedForAlarms: Flow<Boolean> = context.dataStore.data.map { it[USE_CALIBRATED_FOR_ALARMS_KEY] ?: true }.distinctUntilChanged()
 
-    val historicalGlucoseArchive: Flow<List<GlucoseMeasurement>> = context.dataStore.data.map { prefs ->
-        try { prefs[HISTORICAL_GLUCOSE_KEY]?.let { json.decodeFromString<List<GlucoseMeasurement>>(it) } ?: emptyList() } catch (e: Exception) { emptyList() }
-    }
+    val historicalGlucoseArchive: Flow<List<GlucoseMeasurement>> = context.dataStore.data
+        .map { it[HISTORICAL_GLUCOSE_KEY] }
+        .distinctUntilChanged()
+        .map { jsonStr ->
+            try { jsonStr?.let { json.decodeFromString<List<GlucoseMeasurement>>(it) } ?: emptyList() } catch (e: Exception) { emptyList() }
+        }
 
-    val historyRetentionDays: Flow<Int> = context.dataStore.data.map { (it[HISTORY_RETENTION_DAYS_KEY] ?: DEFAULT_HISTORY_RETENTION_DAYS).coerceIn(MIN_HISTORY_RETENTION_DAYS, MAX_HISTORY_RETENTION_DAYS) }
-    val lastHistoryBackupRequestAt: Flow<Long?> = context.dataStore.data.map { it[LAST_HISTORY_BACKUP_REQUEST_AT_KEY] }
-    val isDemoMode: Flow<Boolean> = context.dataStore.data.map { it[IS_DEMO_MODE_KEY] ?: false }
-    val activeSensorSerialNumber: Flow<String?> = context.dataStore.data.map { it[ACTIVE_SENSOR_SN_KEY] }
-    val activeSensorStartTime: Flow<Long?> = context.dataStore.data.map { it[ACTIVE_SENSOR_START_TIME_KEY] }
-    val rapidDurationMins: Flow<Int> = context.dataStore.data.map { it[RAPID_DURATION_MINS_KEY] ?: 240 }
-    val slowDurationMins: Flow<Int> = context.dataStore.data.map { it[SLOW_DURATION_MINS_KEY] ?: 1440 }
-    val icRuleConstant: Flow<Int> = context.dataStore.data.map { it[IC_RULE_CONSTANT_KEY] ?: 450 }
-    val isfRuleConstant: Flow<Int> = context.dataStore.data.map { it[ISF_RULE_CONSTANT_KEY] ?: 1800 }
-    val manualTdi: Flow<Double?> = context.dataStore.data.map { it[MANUAL_TDI_KEY] }
-    val manualIsf: Flow<Double?> = context.dataStore.data.map { it[MANUAL_ISF_KEY] }
-    val targetGlucose: Flow<Int> = context.dataStore.data.map { it[TARGET_GLUCOSE_KEY] ?: 80 }
+    val historyRetentionDays: Flow<Int> = context.dataStore.data.map { (it[HISTORY_RETENTION_DAYS_KEY] ?: DEFAULT_HISTORY_RETENTION_DAYS).coerceIn(MIN_HISTORY_RETENTION_DAYS, MAX_HISTORY_RETENTION_DAYS) }.distinctUntilChanged()
+    val lastHistoryBackupRequestAt: Flow<Long?> = context.dataStore.data.map { it[LAST_HISTORY_BACKUP_REQUEST_AT_KEY] }.distinctUntilChanged()
+    val isDemoMode: Flow<Boolean> = context.dataStore.data.map { it[IS_DEMO_MODE_KEY] ?: false }.distinctUntilChanged()
+    val activeSensorSerialNumber: Flow<String?> = context.dataStore.data.map { it[ACTIVE_SENSOR_SN_KEY] }.distinctUntilChanged()
+    val activeSensorStartTime: Flow<Long?> = context.dataStore.data.map { it[ACTIVE_SENSOR_START_TIME_KEY] }.distinctUntilChanged()
+    val rapidDurationMins: Flow<Int> = context.dataStore.data.map { it[RAPID_DURATION_MINS_KEY] ?: 240 }.distinctUntilChanged()
+    val slowDurationMins: Flow<Int> = context.dataStore.data.map { it[SLOW_DURATION_MINS_KEY] ?: 1440 }.distinctUntilChanged()
+    val icRuleConstant: Flow<Int> = context.dataStore.data.map { it[IC_RULE_CONSTANT_KEY] ?: 450 }.distinctUntilChanged()
+    val isfRuleConstant: Flow<Int> = context.dataStore.data.map { it[ISF_RULE_CONSTANT_KEY] ?: 1800 }.distinctUntilChanged()
+    val manualTdi: Flow<Double?> = context.dataStore.data.map { it[MANUAL_TDI_KEY] }.distinctUntilChanged()
+    val manualIsf: Flow<Double?> = context.dataStore.data.map { it[MANUAL_ISF_KEY] }.distinctUntilChanged()
+    val targetGlucose: Flow<Int> = context.dataStore.data.map { it[TARGET_GLUCOSE_KEY] ?: 80 }.distinctUntilChanged()
+    val targetGlucoseLow: Flow<Int> = context.dataStore.data.map { (it[TARGET_GLUCOSE_LOW_KEY] ?: 70).coerceIn(50, 120) }.distinctUntilChanged()
+    val targetGlucoseHigh: Flow<Int> = context.dataStore.data.map { (it[TARGET_GLUCOSE_HIGH_KEY] ?: 180).coerceIn(120, 300) }.distinctUntilChanged()
 
-    val insulinDoses: Flow<List<InsulinDose>> = context.dataStore.data.map { prefs ->
-        try { prefs[INSULIN_DOSES_KEY]?.let { json.decodeFromString<List<InsulinDose>>(it) } ?: emptyList() } catch (e: Exception) { emptyList() }
-    }
+    val insulinDoses: Flow<List<InsulinDose>> = context.dataStore.data
+        .map { it[INSULIN_DOSES_KEY] }
+        .distinctUntilChanged()
+        .map { jsonStr ->
+            try { jsonStr?.let { json.decodeFromString<List<InsulinDose>>(it) } ?: emptyList() } catch (e: Exception) { emptyList() }
+        }
 
-    val sensorLogs: Flow<List<SensorLog>> = context.dataStore.data.map { prefs ->
-        try { prefs[SENSOR_LOGS_KEY]?.let { json.decodeFromString<List<SensorLog>>(it) } ?: emptyList() } catch (e: Exception) { emptyList() }
-    }
+    val sensorLogs: Flow<List<SensorLog>> = context.dataStore.data
+        .map { it[SENSOR_LOGS_KEY] }
+        .distinctUntilChanged()
+        .map { jsonStr ->
+            try { jsonStr?.let { json.decodeFromString<List<SensorLog>>(it) } ?: emptyList() } catch (e: Exception) { emptyList() }
+        }
 
-    val watchNotificationSchedules: Flow<List<AlarmSchedule>> = context.dataStore.data.map { prefs ->
-        try { prefs[WATCH_NOTIFICATION_SCHEDULES_KEY]?.let { json.decodeFromString<List<AlarmSchedule>>(it) } ?: emptyList() } catch (e: Exception) { emptyList() }
-    }
+    val watchNotificationSchedules: Flow<List<AlarmSchedule>> = context.dataStore.data
+        .map { it[WATCH_NOTIFICATION_SCHEDULES_KEY] }
+        .distinctUntilChanged()
+        .map { jsonStr ->
+            try { jsonStr?.let { json.decodeFromString<List<AlarmSchedule>>(it) } ?: emptyList() } catch (e: Exception) { emptyList() }
+        }
 
-    val glucoseAlarmSchedules: Flow<List<AlarmSchedule>> = context.dataStore.data.map { prefs ->
-        try { prefs[GLUCOSE_ALARM_SCHEDULES_KEY]?.let { json.decodeFromString<List<AlarmSchedule>>(it) } ?: emptyList() } catch (e: Exception) { emptyList() }
-    }
+    val glucoseAlarmSchedules: Flow<List<AlarmSchedule>> = context.dataStore.data
+        .map { it[GLUCOSE_ALARM_SCHEDULES_KEY] }
+        .distinctUntilChanged()
+        .map { jsonStr ->
+            try { jsonStr?.let { json.decodeFromString<List<AlarmSchedule>>(it) } ?: emptyList() } catch (e: Exception) { emptyList() }
+        }
 
-    val batteryLowThreshold: Flow<Int> = context.dataStore.data.map { it[BATTERY_LOW_THRESHOLD_KEY] ?: 15 }
-    val batteryCriticalThreshold: Flow<Int> = context.dataStore.data.map { it[BATTERY_CRITICAL_THRESHOLD_KEY] ?: 5 }
-    val disableFastRefreshOnSlowCharge: Flow<Boolean> = context.dataStore.data.map { it[DISABLE_FAST_REFRESH_ON_SLOW_CHARGE_KEY] ?: true }
-    val sensorDurationDays: Flow<Int> = context.dataStore.data.map { it[SENSOR_DURATION_DAYS_KEY] ?: 15 }
-    val isCloudSyncEnabled: Flow<Boolean> = context.dataStore.data.map { it[IS_CLOUD_SYNC_ENABLED_KEY] ?: false }
-    val cloudSyncLastSuccessAt: Flow<Long?> = context.dataStore.data.map { it[CLOUD_SYNC_LAST_SUCCESS_AT_KEY] }
-    val settingsUpdatedAt: Flow<Long?> = context.dataStore.data.map { it[SETTINGS_UPDATED_AT_KEY] }
+    val batteryLowThreshold: Flow<Int> = context.dataStore.data.map { it[BATTERY_LOW_THRESHOLD_KEY] ?: 15 }.distinctUntilChanged()
+    val batteryCriticalThreshold: Flow<Int> = context.dataStore.data.map { it[BATTERY_CRITICAL_THRESHOLD_KEY] ?: 5 }.distinctUntilChanged()
+    val disableFastRefreshOnSlowCharge: Flow<Boolean> = context.dataStore.data.map { it[DISABLE_FAST_REFRESH_ON_SLOW_CHARGE_KEY] ?: true }.distinctUntilChanged()
+    val sensorDurationDays: Flow<Int> = context.dataStore.data.map { it[SENSOR_DURATION_DAYS_KEY] ?: 15 }.distinctUntilChanged()
+    val isCloudSyncEnabled: Flow<Boolean> = context.dataStore.data.map { it[IS_CLOUD_SYNC_ENABLED_KEY] ?: false }.distinctUntilChanged()
+    val cloudSyncLastSuccessAt: Flow<Long?> = context.dataStore.data.map { it[CLOUD_SYNC_LAST_SUCCESS_AT_KEY] }.distinctUntilChanged()
+    val settingsUpdatedAt: Flow<Long?> = context.dataStore.data.map { it[SETTINGS_UPDATED_AT_KEY] }.distinctUntilChanged()
 
     private fun getDefaultRanges() = listOf(
         GlucoseOffsetRange(0, 70, 20),
@@ -381,6 +407,16 @@ class PreferenceManager(private val context: Context) {
 
     suspend fun saveTargetGlucose(target: Int) {
         context.dataStore.edit { it[TARGET_GLUCOSE_KEY] = target }
+        updateBackupPayload()
+    }
+
+    suspend fun saveTargetGlucoseLow(value: Int) {
+        context.dataStore.edit { it[TARGET_GLUCOSE_LOW_KEY] = value.coerceIn(50, 120) }
+        updateBackupPayload()
+    }
+
+    suspend fun saveTargetGlucoseHigh(value: Int) {
+        context.dataStore.edit { it[TARGET_GLUCOSE_HIGH_KEY] = value.coerceIn(120, 300) }
         updateBackupPayload()
     }
 

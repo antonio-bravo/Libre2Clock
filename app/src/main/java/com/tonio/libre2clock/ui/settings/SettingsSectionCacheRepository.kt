@@ -80,7 +80,7 @@ class SettingsSectionCacheRepository(
     }
 
     companion object {
-        private const val RANGE_INSIGHTS_SECTION_KEY = "settings_range_insights_v1"
+        private const val RANGE_INSIGHTS_SECTION_KEY = "settings_range_insights_v2"
         private const val PURGE_INTERVAL_MS = 12L * 60L * 60L * 1000L // 12 horas
         private const val DAY_MS = 24L * 60L * 60L * 1000L
         private const val MIN_RETENTION_DAYS = 30
@@ -95,7 +95,8 @@ class SettingsSectionCacheRepository(
 
         fun buildRangeInsightsSignature(
             ranges: List<GlucoseOffsetRange>,
-            capillaries: List<CapillaryMeasurement>
+            capillaries: List<CapillaryMeasurement>,
+            activeSensorSn: String? = null
         ): String {
             val rangeEdge = ranges.joinToString("|") { "${it.min}:${it.max ?: -1}:${it.offset}:${it.percentage}" }
             
@@ -106,7 +107,7 @@ class SettingsSectionCacheRepository(
                 capHash = 31 * capHash + capillaries[i].hashCode()
             }
             
-            return "ranges=${ranges.size};edge=$rangeEdge;caps=${capillaries.size};capsHash=$capHash"
+            return "ranges=${ranges.size};edge=$rangeEdge;caps=${capillaries.size};capsHash=$capHash;sn=$activeSensorSn"
         }
     }
 }

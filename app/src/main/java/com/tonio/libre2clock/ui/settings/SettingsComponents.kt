@@ -29,6 +29,7 @@ import com.tonio.libre2clock.util.SectionPerfTelemetry
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -361,15 +362,30 @@ fun RangeItem(
                     style = MaterialTheme.typography.bodyMedium
                 )
                 if (insight != null) {
+                    val currentSensorText = insight.currentSensorRawDeviationPct?.let { 
+                        "${if (it >= 0) "+" else ""}${String.format(Locale.US, "%.1f", it)}%"
+                    } ?: "--"
+
+                    val totalText = "${if (insight.signedRawDeviationPct >= 0) "+" else ""}${String.format(
+                        Locale.US, "%.1f", insight.signedRawDeviationPct)}%"
+
+                    val samplesText = if (insight.currentSensorSampleCount > 0) {
+                        "${insight.currentSensorSampleCount}/${insight.sampleCount}"
+                    } else {
+                        "${insight.sampleCount}"
+                    }
+
+                    val hasHighError = abs(insight.currentSensorRawDeviationPct ?: insight.signedRawDeviationPct) > 15.0
+
                     Text(
                         text = stringResource(
                             R.string.settings_range_sensor_audit,
-                            if (insight.signedRawDeviationPct >= 0) "+" else "",
-                            insight.signedRawDeviationPct,
-                            insight.sampleCount
+                            currentSensorText,
+                            totalText,
+                            samplesText
                         ),
                         style = MaterialTheme.typography.labelSmall,
-                        color = if (abs(insight.signedRawDeviationPct) > 15.0) 
+                        color = if (hasHighError) 
                             MaterialTheme.colorScheme.error 
                         else 
                             MaterialTheme.colorScheme.primary,

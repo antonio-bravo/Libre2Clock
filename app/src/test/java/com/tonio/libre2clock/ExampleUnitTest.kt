@@ -85,4 +85,16 @@ class ExampleUnitTest {
         assertEquals(25.0, first.avgAbsoluteDeviationPct, 0.1)
         assertEquals(25.0, first.avgSignedDeviationPct, 0.1)
     }
+
+    @Test
+    fun rangeEstimateForSpecificRangeIsCorrect() {
+        val range = GlucoseOffsetRange(min = 80, max = 130)
+        val capillaryReadings = listOf(
+            CapillaryMeasurement(value = 110, timestamp = "2024-01-01T10:00", sensorValue = 100, sensorSerialNumber = "SN-001"),
+            CapillaryMeasurement(value = 120, timestamp = "2024-01-01T11:00", sensorValue = 100, sensorSerialNumber = "SN-002")
+        )
+
+        val estimate = GlucoseProcessor.estimateOffsetsForRange(range, capillaryReadings)
+        assertEquals(2, estimate?.sampleCount)
+    }
 }

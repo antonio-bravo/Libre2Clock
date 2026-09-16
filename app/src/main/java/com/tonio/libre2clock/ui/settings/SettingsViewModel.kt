@@ -109,6 +109,8 @@ class SettingsViewModel(
     val manualTdi = preferenceManager.manualTdi.stateInDefault(null)
     val manualIsf = preferenceManager.manualIsf.stateInDefault(null)
     val targetGlucose = preferenceManager.targetGlucose.stateInDefault(100)
+    val targetGlucoseLow = preferenceManager.targetGlucoseLow.stateInDefault(70)
+    val targetGlucoseHigh = preferenceManager.targetGlucoseHigh.stateInDefault(180)
     
     val insulinDoses = preferenceManager.insulinDoses
         .map { list -> list.filter { !it.isDeleted } }
@@ -153,15 +155,28 @@ class SettingsViewModel(
         }
     }.stateIn(viewModelScope, sharingStrategy, null)
 
-    // MEJORA: Usamos 'this.capillaryReadings' aquí también para evitar procesar datos borrados
+    private data class RangeInsightsInput(
+        val ranges: List<GlucoseOffsetRange>,
+        val capillaries: List<CapillaryMeasurement>,
+        val activeSensorSn: String?,
+        val retentionDays: Int
+    )
+
+    private data class RangePoint(
+        val sensor: Int,
+        val capillary: Int,
+        val sensorSn: String?
+    )
+
     val rangeOffsetInsights: StateFlow<List<RangeOffsetInsight>> = combine(
         preferenceManager.glucoseOffsetRanges,
-        this.capillaryReadings, // <-- CAMBIO CLAVE: Usa el flow filtrado
+        this.capillaryReadings,
+        preferenceManager.activeSensorSerialNumber,
         preferenceManager.historyRetentionDays
-    ) { ranges, capillaries, retentionDays ->
-        Triple(ranges, capillaries, retentionDays)
-    }.map { (ranges, capillaries, retentionDays) ->
-        val signature = SettingsSectionCacheRepository.buildRangeInsightsSignature(ranges, capillaries)
+    ) { ranges, capillaries, activeSensorSn, retentionDays ->
+        RangeInsightsInput(ranges, capillaries, activeSensorSn, retentionDays)
+    }.map { (ranges, capillaries, activeSensorSn, retentionDays) ->
+        val signature = SettingsSectionCacheRepository.buildRangeInsightsSignature(ranges, capillaries, activeSensorSn)
         settingsCache.getOrComputeRangeInsights(
             signature = signature,
             retentionDays = retentionDays
@@ -174,7 +189,7 @@ class SettingsViewModel(
                     if (sensor == 0) return@mapNotNull null
                     if (sensor < range.min) return@mapNotNull null
                     if (range.max != null && sensor >= range.max) return@mapNotNull null
-                    sensor to reading.value
+                    RangePoint(sensor, reading.value, reading.sensorSerialNumber)
                 }
                 
                 if (points.isEmpty()) return@mapNotNull null
@@ -187,6 +202,9 @@ class SettingsViewModel(
                 var sumSignedCalError = 0.0
                 var sumSuggestedMae = 0.0
                 var sumSuggestedDev = 0.0
+
+                var currentSensorSignedRawBias = 0.0
+                var currentSensorCount = 0
                 
                 val count = points.size.toDouble()
                 val calibOffset = range.offset
@@ -194,9 +212,9 @@ class SettingsViewModel(
                 val estOffset = estimate.offset
                 val estPct = estimate.percentage / 100.0
 
-                for ((sensor, capillary) in points) {
-                    val s = sensor.toDouble()
-                    val c = capillary.toDouble()
+                for (pt in points) {
+                    val s = pt.sensor.toDouble()
+                    val c = pt.capillary.toDouble()
                     
                     sumSensor += s
                     sumCapillary += c
@@ -206,6 +224,11 @@ class SettingsViewModel(
                     if (c > 0) {
                         sumCurrentDevPct += (absDiff / c) * 100.0
                         sumSignedRawBias += ((s - c) / c) * 100.0
+
+                        if (activeSensorSn != null && pt.sensorSn == activeSensorSn) {
+                            currentSensorSignedRawBias += ((s - c) / c) * 100.0
+                            currentSensorCount++
+                        }
                         
                         val calibrated = s + calibOffset + (s * calibPct)
                         sumSignedCalError += ((calibrated - c) / c) * 100.0
@@ -216,6 +239,8 @@ class SettingsViewModel(
                         sumSuggestedDev += (predAbsDiff / c) * 100.0
                     }
                 }
+
+                val currentSensorRawDev = if (currentSensorCount > 0) currentSensorSignedRawBias / currentSensorCount else null
 
                 RangeOffsetInsight(
                     min = range.min,
@@ -230,7 +255,9 @@ class SettingsViewModel(
                     avgSensorValue = sumSensor / count,
                     avgCapillaryValue = sumCapillary / count,
                     signedCalibratedDeviationPct = sumSignedCalError / count,
-                    signedRawDeviationPct = sumSignedRawBias / count
+                    signedRawDeviationPct = sumSignedRawBias / count,
+                    currentSensorRawDeviationPct = currentSensorRawDev,
+                    currentSensorSampleCount = currentSensorCount
                 )
             }.sortedBy { it.min }
         }
@@ -252,6 +279,8 @@ class SettingsViewModel(
     fun updateManualTdi(tdi: Double?) = launchSave { preferenceManager.saveManualTdi(tdi) }
     fun updateManualIsf(isf: Double?) = launchSave { preferenceManager.saveManualIsf(isf) }
     fun updateTargetGlucose(target: Int) = launchSave { preferenceManager.saveTargetGlucose(target) }
+    fun updateTargetGlucoseLow(value: Int) = launchSave { preferenceManager.saveTargetGlucoseLow(value) }
+    fun updateTargetGlucoseHigh(value: Int) = launchSave { preferenceManager.saveTargetGlucoseHigh(value) }
     fun updateBatteryLowThreshold(threshold: Int) = launchSave { preferenceManager.saveBatteryLowThreshold(threshold) }
     fun updateBatteryCriticalThreshold(threshold: Int) = launchSave { preferenceManager.saveBatteryCriticalThreshold(threshold) }
     fun updateDisableFastRefreshOnSlowCharge(disabled: Boolean) = launchSave { preferenceManager.saveDisableFastRefreshOnSlowCharge(disabled) }

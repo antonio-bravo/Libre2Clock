@@ -29,6 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
@@ -93,6 +94,8 @@ fun DashboardScreen(
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val icRuleConstant by viewModel.icRuleConstant.collectAsStateWithLifecycle()
     val targetGlucose by viewModel.targetGlucose.collectAsStateWithLifecycle()
+    val targetGlucoseLow by viewModel.targetGlucoseLow.collectAsStateWithLifecycle()
+    val targetGlucoseHigh by viewModel.targetGlucoseHigh.collectAsStateWithLifecycle()
     val predictedPoints by viewModel.predictedGlucose.collectAsStateWithLifecycle()
     val isBatteryOptimized by viewModel.isBatteryOptimized.collectAsStateWithLifecycle()
 
@@ -349,6 +352,8 @@ fun DashboardScreen(
                     InteractiveTrendGraph(
                         measurements = graphData,
                         predictedPoints = predictedPoints,
+                        targetLow = targetGlucoseLow,
+                        targetHigh = targetGlucoseHigh,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -751,8 +756,6 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
         measurement?.let { m -> TimestampParser.parseMeasurementInstant(m) }
     }
     
-    // CORRECCIÓN CRÍTICA: Estado reactivo para el tiempo, se actualiza cada minuto.
-    // Evita que la alerta de "Señal perdida" se quede congelada si la app está en segundo plano.
     var currentTime by remember { mutableStateOf(Instant.now()) }
     LaunchedEffect(Unit) {
         while (isActive) {
@@ -775,11 +778,12 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
         modifier = Modifier.fillMaxWidth().height(220.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isStale) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.primaryContainer
-        )
+        ),
+        shape = RoundedCornerShape(20.dp)
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.fillMaxSize().padding(12.dp)) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(12.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top
             ) {
@@ -808,7 +812,11 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
             ) {
                 if (measurement != null) {
                     if (isStale) {
-                        Surface(color = MaterialTheme.colorScheme.error, shape = RoundedCornerShape(4.dp), modifier = Modifier.padding(bottom = 8.dp)) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.error,
+                            shape = RoundedCornerShape(4.dp),
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        ) {
                             Text(
                                 text = stringResource(R.string.signal_lost_stale),
                                 style = MaterialTheme.typography.labelSmall,
@@ -831,7 +839,8 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
                                 } else {
                                     (slideInVertically { height -> -height } + fadeIn()).togetherWith(slideOutVertically { height -> height } + fadeOut())
                                 }.using(SizeTransform(clip = false))
-                            }, label = "glucose_animation"
+                            },
+                            label = "glucose_animation"
                         ) { targetText ->
                             Text(
                                 text = targetText,
@@ -853,6 +862,8 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
                             if (!isStale) TrendIcon(measurement.trendArrow)
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = stringResource(R.string.last_sync, lastSyncText),
                         style = MaterialTheme.typography.bodySmall,
@@ -860,7 +871,12 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
                     )
                 } else {
                     CircularProgressIndicator()
-                    Text(stringResource(R.string.fetching_data))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        stringResource(R.string.fetching_data),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         }
@@ -1072,9 +1088,14 @@ private fun HypoCell(metric: CountMetric, label: String, modifier: Modifier = Mo
 }
 
 @Composable
-fun TrendIcon(trend: Int?) {
+fun TrendIcon(trend: Int?, fontSize: TextUnit = 36.sp) {
     val symbol = GlucoseProcessor.getTrendArrowSymbol(trend)
     val colorIndex = trend?.coerceIn(0, 6) ?: 0
     val color = TrendColors[colorIndex]
-    Text(text = symbol, color = color, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold)
+    Text(
+        text = symbol,
+        color = color,
+        fontSize = fontSize,
+        fontWeight = FontWeight.ExtraBold
+    )
 }

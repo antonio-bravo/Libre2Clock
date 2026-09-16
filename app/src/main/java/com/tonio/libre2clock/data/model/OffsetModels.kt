@@ -40,7 +40,9 @@ data class RangeOffsetInsight(
     val avgCapillaryValue: Double = 0.0,
     val avgSensorValue: Double = 0.0,
     val signedCalibratedDeviationPct: Double = 0.0,
-    val signedRawDeviationPct: Double = 0.0
+    val signedRawDeviationPct: Double = 0.0,
+    val currentSensorRawDeviationPct: Double? = null,
+    val currentSensorSampleCount: Int = 0
 )
 
 @Serializable
