@@ -1,5 +1,42 @@
 # Changelog
 
+## 171d02b (Sep 17, 2026 00:36:56)
+Improvements — antonio-bravo
+[detail](#171d02b-details)
+
+<details id='171d02b-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsAlertsScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCalibrationScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsComponents.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsSectionCacheRepository.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+- app/src/test/java/com/tonio/libre2clock/ExampleUnitTest.kt [Modified]
+</details>
+
+
+---
+## b5ecfa1 (Sep 15, 2026 08:36:45)
+Update changelog — github-actions[bot]
+[detail](#b5ecfa1-details)
+
+<details id='b5ecfa1-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 557a2e8 (Sep 15, 2026 10:36:32)
 parseMeasurementInstant — antonio-bravo
 [detail](#557a2e8-details)
@@ -623,30 +660,6 @@ Update changelog — github-actions[bot]
 [detail](#c58c1db-details)
 
 <details id='c58c1db-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## a75343d (Sep 11, 2026 15:21:48)
-fix SettingsEventLogScreen.kt:175:9 'when' is exhaustive so 'else' is redundant here. — antonio-bravo
-[detail](#a75343d-details)
-
-<details id='a75343d-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEventLogScreen.kt [Modified]
-</details>
-
-
----
-## a7cb37d (Sep 11, 2026 13:11:12)
-Update changelog — github-actions[bot]
-[detail](#a7cb37d-details)
-
-<details id='a7cb37d-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
