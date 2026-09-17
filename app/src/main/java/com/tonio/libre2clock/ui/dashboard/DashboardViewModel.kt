@@ -38,7 +38,7 @@ import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
 import java.util.Locale
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -487,8 +487,20 @@ class DashboardViewModel(
             else -> androidContext.getString(R.string.sensor_remaining_minutes, minutes)
         }
 
-        val startDateStr = displayFormatter.format(Instant.ofEpochSecond(info.activationTimestamp))
-        val expiryDateStr = displayFormatter.format(Instant.ofEpochSecond(expiryTime))
+        val formatSensorDate = { epochSeconds: Long ->
+            val instant = Instant.ofEpochSecond(epochSeconds)
+            val zdt = instant.atZone(ZoneId.systemDefault())
+            val day = zdt.dayOfMonth
+            val rawMonth = zdt.month.getDisplayName(TextStyle.SHORT, Locale.getDefault())
+            val month = rawMonth.replace(".", "").take(3)
+            val year = zdt.year
+            val hour = String.format(Locale.US, "%02d", zdt.hour)
+            val minute = String.format(Locale.US, "%02d", zdt.minute)
+            "$day $month $year, $hour:$minute"
+        }
+
+        val startDateStr = formatSensorDate(info.activationTimestamp)
+        val expiryDateStr = formatSensorDate(expiryTime)
 
         return SensorStatus(
             daysRemaining = remainingStr,
@@ -513,9 +525,4 @@ class DashboardViewModel(
         val autoAdjust: Boolean,
         val autoRangeMode: AutoRangeOffsetMode
     )
-
-    companion object {
-        private val displayFormatter = DateTimeFormatter.ofPattern("EEE, d MMM yyyy, HH:mm", Locale.getDefault())
-            .withZone(ZoneId.systemDefault())
-    }
 }
