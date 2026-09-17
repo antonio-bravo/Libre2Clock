@@ -1,5 +1,33 @@
 # Changelog
 
+## 1fdbc94 (Sep 17, 2026 10:50:25)
+report used by endocrine — antonio-bravo
+[detail](#1fdbc94-details)
+
+<details id='1fdbc94-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/PdfReportGenerator.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 4e35867 (Sep 17, 2026 08:26:10)
+Update changelog — github-actions[bot]
+[detail](#4e35867-details)
+
+<details id='4e35867-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 8f155e0 (Sep 17, 2026 10:25:57)
 fix date format in SensorLogsScreen — antonio-bravo
 [detail](#8f155e0-details)
@@ -632,30 +660,6 @@ Update changelog — github-actions[bot]
 [detail](#84c5e59-details)
 
 <details id='84c5e59-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 568449f (Sep 12, 2026 15:52:07)
-granularity on cloud sync — antonio-bravo
-[detail](#568449f-details)
-
-<details id='568449f-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
-</details>
-
-
----
-## 6131bd0 (Sep 12, 2026 13:26:05)
-Update changelog — github-actions[bot]
-[detail](#6131bd0-details)
-
-<details id='6131bd0-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
