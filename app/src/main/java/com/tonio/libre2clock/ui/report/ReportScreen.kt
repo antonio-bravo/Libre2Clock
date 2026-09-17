@@ -56,11 +56,14 @@ fun ReportScreen(
     val endDate by viewModel.endDate.collectAsStateWithLifecycle()
     val useOffset by viewModel.useOffsetValues.collectAsStateWithLifecycle()
     val metrics by viewModel.reportMetrics.collectAsStateWithLifecycle()
+    val rawMetrics by viewModel.rawReportMetrics.collectAsStateWithLifecycle()
     val agpData by viewModel.agpData.collectAsStateWithLifecycle()
+    val rawAgpData by viewModel.rawAgpData.collectAsStateWithLifecycle()
     val dailySummaries by viewModel.dailySummaries.collectAsStateWithLifecycle()
     val isGenerating by viewModel.isGenerating.collectAsStateWithLifecycle()
     
     var selectedLayout by remember { mutableStateOf(ReportLayout.FULL) }
+    var compareRawAndCalibrated by remember { mutableStateOf(true) }
     var showDatePicker by remember { mutableStateOf<DatePickerType?>(null) }
 
     val reportFailedMsg = stringResource(R.string.report_failed_generate)
@@ -87,12 +90,15 @@ fun ReportScreen(
                                     PdfReportGenerator.generateFullReport(
                                         context = context,
                                         metrics = m,
+                                        rawMetrics = rawMetrics,
                                         agpData = agpData,
+                                        rawAgpData = rawAgpData,
                                         dailySummaries = dailySummaries,
                                         startDate = startDate,
                                         endDate = endDate,
                                         useOffset = useOffset,
-                                        layout = selectedLayout
+                                        layout = selectedLayout,
+                                        compareRawAndCalibrated = compareRawAndCalibrated
                                     )
                                 }
                                 
@@ -150,6 +156,29 @@ fun ReportScreen(
                 ) {
                     Text(text = if (useOffset) stringResource(R.string.report_using_calibrated) else stringResource(R.string.report_using_raw))
                     Switch(checked = useOffset, onCheckedChange = viewModel::setUseOffsetValues)
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                        Text(
+                            text = stringResource(R.string.report_compare_raw_calibrated),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = stringResource(R.string.report_compare_raw_calibrated_summary),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = compareRawAndCalibrated,
+                        onCheckedChange = { compareRawAndCalibrated = it }
+                    )
                 }
 
                 LayoutSelector(selected = selectedLayout, onSelect = { selectedLayout = it })

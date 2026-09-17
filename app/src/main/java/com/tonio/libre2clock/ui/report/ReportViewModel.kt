@@ -49,7 +49,9 @@ data class DailySummary(
 @Serializable
 data class FullReportData(
     val metrics: ReportMetrics,
+    val rawMetrics: ReportMetrics? = null,
     val agp: List<AgpPoint>,
+    val rawAgp: List<AgpPoint>? = null,
     val dailySummaries: List<DailySummary>
 )
 
@@ -151,8 +153,10 @@ class ReportViewModel(
             val daysCount = (ChronoUnit.DAYS.between(params.start, params.end) + 1).toInt()
 
             FullReportData(
-                metrics = calculateMetricsOptimized(processedGlucose, input.doses, daysCount, params.useOffset),
-                agp = calculateAgpOptimized(processedGlucose, zone, params.useOffset),
+                metrics = calculateMetricsOptimized(processedGlucose, input.doses, daysCount, useOffset = true),
+                rawMetrics = calculateMetricsOptimized(processedGlucose, input.doses, daysCount, useOffset = false),
+                agp = calculateAgpOptimized(processedGlucose, zone, useOffset = true),
+                rawAgp = calculateAgpOptimized(processedGlucose, zone, useOffset = false),
                 dailySummaries = calculateDailySummariesOptimized(processedGlucose, input.doses, zone)
             )
         }
@@ -160,7 +164,9 @@ class ReportViewModel(
 
     // Exponemos los datos individuales para que la UI no tenga que cambiar mucho
     val reportMetrics: StateFlow<ReportMetrics?> = reportData.map { it?.metrics }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+    val rawReportMetrics: StateFlow<ReportMetrics?> = reportData.map { it?.rawMetrics }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
     val agpData: StateFlow<List<AgpPoint>> = reportData.map { it?.agp ?: emptyList() }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val rawAgpData: StateFlow<List<AgpPoint>> = reportData.map { it?.rawAgp ?: emptyList() }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val dailySummaries: StateFlow<List<DailySummary>> = reportData.map { it?.dailySummaries ?: emptyList() }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun setRange(range: ReportRange) {
@@ -316,10 +322,16 @@ class ReportViewModel(
         var totalInsulin = 0.0; var totalCarbs = 0.0; var basal = 0.0; var bolus = 0.0
 
         fun addGlucose(pg: ProcessedGlucose) {
-            // Reconstruimos una versión ligera para la UI, o guardamos el original si es necesario
-            // Para este ejemplo, asumimos que GlucoseMeasurement se puede mapear o usamos el original
-            // Si necesitas el objeto original, deberías guardarlo en ProcessedGlucose.
-            // Aquí simplificamos asumiendo que la UI solo necesita los valores procesados.
+            glucoseList.add(
+                GlucoseMeasurement(
+                    factoryTimestamp = pg.instant.toString(),
+                    timestamp = pg.instant.toString(),
+                    value = pg.rawValue.toInt(),
+                    valueInMgPerDl = pg.rawValue.toInt(),
+                    calibratedValue = pg.calibratedValue.toInt(),
+                    epochSeconds = pg.instant.epochSecond
+                )
+            )
         }
         
         fun addDose(d: InsulinDose) {
@@ -329,7 +341,14 @@ class ReportViewModel(
         }
 
         fun build(): DailySummary {
-            return DailySummary(date, emptyList(), totalInsulin, totalCarbs, basal, bolus)
+            return DailySummary(
+                date = date,
+                glucose = glucoseList.sortedBy { it.epochSeconds ?: 0L },
+                insulin = totalInsulin,
+                carbs = totalCarbs,
+                basal = basal,
+                bolus = bolus
+            )
         }
     }
 }

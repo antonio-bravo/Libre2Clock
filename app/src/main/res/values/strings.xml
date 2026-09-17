@@ -209,6 +209,8 @@
     <string name="report_start_date">Start Date</string>
     <string name="report_end_date">End Date</string>
     <string name="report_presets_label">Quick Presets</string>
+    <string name="report_compare_raw_calibrated">Compare Raw &amp; Calibrated in PDF</string>
+    <string name="report_compare_raw_calibrated_summary">Includes both raw and calibrated glucose curves and stats in the same report for direct comparison</string>
 
     <string name="login_welcome">Sign in with your LibreLinkUp account</string>
     <string name="login_email_label">Email</string>
