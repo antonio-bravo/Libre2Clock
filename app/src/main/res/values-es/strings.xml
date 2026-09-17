@@ -226,7 +226,8 @@
     <string name="settings_global_manual_offset">Offset Manual Global</string>
     <string name="settings_global_offset_desc">Se aplica a TODAS las lecturas además de los offsets por rango.</string>
     <string name="settings_manual_offset_label">Offset Manual (mg/dL)</string>
-    <string name="settings_auto_adjust_capillary">Auto-ajustar usando mediciones capilares guardadas</string>
+    <string name="settings_auto_adjust_capillary">Ajuste dinámico por capilar reciente</string>
+    <string name="settings_auto_adjust_capillary_desc">Aplica la desviación de tu última prueba capilar (últimas 6 horas) a la glucosa actual.</string>
     <string name="settings_watch_notifications">Notificaciones del reloj</string>
     <string name="settings_watch_notifications_desc">Envía notificaciones de glucosa y tendencia a tu smartwatch.</string>
     <string name="settings_tab_watch">⌚ Reloj Smartwatch</string>
@@ -379,10 +380,12 @@
     <string name="settings_fixed_offset_label">Offset fijo (mg/dL)</string>
     <string name="settings_percentage_offset_label">Offset porcentual (%)</string>
 
-    <string name="settings_auto_range_label">Auto aplicado a tus rangos</string>
-    <string name="settings_auto_range_off_desc">Usa exactamente tus offsets manuales actuales.</string>
-    <string name="settings_auto_range_global_desc">Calcula offsets inteligentes y los aplica a tus rangos.</string>
-    <string name="settings_auto_range_by_range_desc">Calcula offsets inteligentes independientes para cada rango basado en el promedio de los valores capilares para ese rango.</string>
+    <string name="settings_auto_range_label">Offsets automáticos inteligentes por rango</string>
+    <string name="settings_auto_range_off_desc">Desactivado: Usa exactamente los offsets manuales configurados por ti para cada rango.</string>
+    <string name="settings_auto_range_global_desc">Offset global inteligente: Calcula un único ajuste general a partir de las capilares y lo aplica a todos los rangos.</string>
+    <string name="settings_auto_range_by_range_desc">Offsets inteligentes por rango: Utiliza las mediciones capilares de tu sensor actual para cada rango. Si no hay mediciones de este sensor en un rango, aplica el promedio histórico de mediciones para ese rango.</string>
+    <string name="settings_range_smart_sensor">Smart: Sensor actual (%1$d pruebas)</string>
+    <string name="settings_range_smart_fallback">Smart: Promedio histórico del rango (%1$d pruebas)</string>
     <string name="settings_apply_intelligent_suggestions">Aplicar sugerencias inteligentes (%1$d rangos)</string>
     <string name="settings_real_deviation_label">Desvío real de este rango: %1$.1f%%</string>
     <string name="settings_smart_estimated_deviation_label">Desvío estimado smart: %1$.1f%%</string>

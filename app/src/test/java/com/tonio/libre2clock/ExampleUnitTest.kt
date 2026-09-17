@@ -96,5 +96,34 @@ class ExampleUnitTest {
 
         val estimate = GlucoseProcessor.estimateOffsetsForRange(range, capillaryReadings)
         assertEquals(2, estimate?.sampleCount)
+        assertEquals(false, estimate?.isSensorSpecific)
+    }
+
+    @Test
+    fun rangeEstimatePrioritizesActiveSensorWhenAvailable() {
+        val range = GlucoseOffsetRange(min = 80, max = 130)
+        val capillaryReadings = listOf(
+            CapillaryMeasurement(value = 110, timestamp = "2024-01-01T10:00", sensorValue = 100, sensorSerialNumber = "SN-001"), // delta +10
+            CapillaryMeasurement(value = 130, timestamp = "2024-01-01T11:00", sensorValue = 100, sensorSerialNumber = "SN-002")  // delta +30
+        )
+
+        val estimateActive = GlucoseProcessor.estimateOffsetsForRange(range, capillaryReadings, activeSensorSn = "SN-002")
+        assertEquals(1, estimateActive?.sampleCount)
+        assertEquals(true, estimateActive?.isSensorSpecific)
+        assertEquals(30, estimateActive?.offset)
+    }
+
+    @Test
+    fun rangeEstimateFallsBackToRangeAverageWhenActiveSensorHasNoData() {
+        val range = GlucoseOffsetRange(min = 80, max = 130)
+        val capillaryReadings = listOf(
+            CapillaryMeasurement(value = 110, timestamp = "2024-01-01T10:00", sensorValue = 100, sensorSerialNumber = "SN-001"),
+            CapillaryMeasurement(value = 130, timestamp = "2024-01-01T11:00", sensorValue = 100, sensorSerialNumber = "SN-002")
+        )
+
+        val estimateFallback = GlucoseProcessor.estimateOffsetsForRange(range, capillaryReadings, activeSensorSn = "SN-003")
+        assertEquals(2, estimateFallback?.sampleCount)
+        assertEquals(false, estimateFallback?.isSensorSpecific)
+        assertEquals(20, estimateFallback?.offset)
     }
 }

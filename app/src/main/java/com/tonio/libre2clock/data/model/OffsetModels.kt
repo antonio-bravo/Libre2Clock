@@ -42,7 +42,8 @@ data class RangeOffsetInsight(
     val signedCalibratedDeviationPct: Double = 0.0,
     val signedRawDeviationPct: Double = 0.0,
     val currentSensorRawDeviationPct: Double? = null,
-    val currentSensorSampleCount: Int = 0
+    val currentSensorSampleCount: Int = 0,
+    val isSensorSpecific: Boolean = false
 )
 
 @Serializable

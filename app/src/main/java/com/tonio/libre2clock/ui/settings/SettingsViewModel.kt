@@ -182,7 +182,7 @@ class SettingsViewModel(
             retentionDays = retentionDays
         ) {
             ranges.mapNotNull { range ->
-                val estimate = GlucoseProcessor.estimateOffsetsForRange(range, capillaries) ?: return@mapNotNull null
+                val estimate = GlucoseProcessor.estimateOffsetsForRange(range, capillaries, activeSensorSn) ?: return@mapNotNull null
                 
                 val points = capillaries.mapNotNull { reading ->
                     val sensor = reading.sensorValue ?: return@mapNotNull null
@@ -257,7 +257,8 @@ class SettingsViewModel(
                     signedCalibratedDeviationPct = sumSignedCalError / count,
                     signedRawDeviationPct = sumSignedRawBias / count,
                     currentSensorRawDeviationPct = currentSensorRawDev,
-                    currentSensorSampleCount = currentSensorCount
+                    currentSensorSampleCount = currentSensorCount,
+                    isSensorSpecific = estimate.isSensorSpecific
                 )
             }.sortedBy { it.min }
         }

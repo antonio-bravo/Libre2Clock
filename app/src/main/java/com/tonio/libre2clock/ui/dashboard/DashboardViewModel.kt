@@ -75,8 +75,9 @@ class DashboardViewModel(
             DashboardInputs(current, manualOffset, ranges, autoAdjust, autoRangeMode)
         },
         preferenceManager.capillaryReadings,
-        preferenceManager.sensorLogs
-    ) { inputs, rawCapillaries, rawLogs ->
+        preferenceManager.sensorLogs,
+        preferenceManager.activeSensorSerialNumber
+    ) { inputs, rawCapillaries, rawLogs, activeSn ->
         // OPTIMIZACIÓN: Filtramos una sola vez para usar en el contexto y el procesamiento
         val activeCapillaries = rawCapillaries.filter { !it.isDeleted }
         val activeLogs = rawLogs.filter { !it.isDeleted }
@@ -86,7 +87,8 @@ class DashboardViewModel(
                 autoRangeOffsetMode = inputs.autoRangeMode,
                 userRanges = inputs.ranges,
                 capillaryReadings = activeCapillaries,
-                sensorLogs = activeLogs
+                sensorLogs = activeLogs,
+                activeSensorSn = activeSn
             )
             GlucoseProcessor.process(
                 measurement = it,
@@ -95,7 +97,8 @@ class DashboardViewModel(
                 autoAdjustEnabled = inputs.autoAdjust,
                 autoRangeOffsetMode = inputs.autoRangeMode,
                 capillaryReadings = activeCapillaries,
-                context = calcContext
+                context = calcContext,
+                activeSensorSn = activeSn
             )
         }
     }
@@ -129,9 +132,10 @@ class DashboardViewModel(
             preferenceManager.glucoseOffset,
             preferenceManager.glucoseOffsetRanges,
             preferenceManager.autoAdjustEnabled,
-            preferenceManager.autoRangeOffsetMode
-        ) { manualOffset, ranges, autoAdjust, autoRangeMode ->
-            HistoricalInputs(emptyList(), manualOffset, ranges, autoAdjust, autoRangeMode)
+            preferenceManager.autoRangeOffsetMode,
+            preferenceManager.activeSensorSerialNumber
+        ) { manualOffset, ranges, autoAdjust, autoRangeMode, activeSn ->
+            HistoricalInputs(emptyList(), manualOffset, ranges, autoAdjust, autoRangeMode, activeSn)
         },
         preferenceManager.capillaryReadings,
         preferenceManager.sensorLogs,
@@ -165,7 +169,8 @@ class DashboardViewModel(
             autoRangeOffsetMode = config.autoRangeMode,
             userRanges = config.ranges,
             capillaryReadings = activeCapillaries,
-            sensorLogs = activeLogs
+            sensorLogs = activeLogs,
+            activeSensorSn = config.activeSensorSn
         )
 
         sampled.map {
@@ -176,7 +181,8 @@ class DashboardViewModel(
                 autoAdjustEnabled = config.autoAdjust,
                 autoRangeOffsetMode = config.autoRangeMode,
                 capillaryReadings = activeCapillaries,
-                context = calcContext
+                context = calcContext,
+                activeSensorSn = config.activeSensorSn
             )
         }
     }
@@ -196,7 +202,8 @@ class DashboardViewModel(
         val manualOffset: Int,
         val ranges: List<GlucoseOffsetRange>,
         val autoAdjust: Boolean,
-        val autoRangeMode: AutoRangeOffsetMode
+        val autoRangeMode: AutoRangeOffsetMode,
+        val activeSensorSn: String? = null
     )
 
     private data class MetricsInputs(
@@ -207,7 +214,8 @@ class DashboardViewModel(
         val ranges: List<GlucoseOffsetRange>,
         val autoAdjust: Boolean,
         val autoRangeMode: AutoRangeOffsetMode,
-        val sensorLogs: List<SensorLog>
+        val sensorLogs: List<SensorLog>,
+        val activeSensorSn: String? = null
     )
 
     val dashboardMetrics: StateFlow<DashboardMetrics> = combine(
@@ -228,9 +236,10 @@ class DashboardViewModel(
             preferenceManager.glucoseOffset,
             preferenceManager.glucoseOffsetRanges,
             preferenceManager.autoAdjustEnabled,
-            preferenceManager.autoRangeOffsetMode
-        ) { offset, ranges, auto, mode ->
-            MetricsConfigPart2(offset, ranges, auto, mode)
+            preferenceManager.autoRangeOffsetMode,
+            preferenceManager.activeSensorSerialNumber
+        ) { offset, ranges, auto, mode, activeSn ->
+            MetricsConfigPart2(offset, ranges, auto, mode, activeSn)
         }
     ) { part1, part2 ->
         MetricsInputs(
@@ -241,7 +250,8 @@ class DashboardViewModel(
             ranges = part2.ranges,
             autoAdjust = part2.autoAdjust,
             autoRangeMode = part2.autoRangeMode,
-            sensorLogs = part1.sensorLogs
+            sensorLogs = part1.sensorLogs,
+            activeSensorSn = part2.activeSensorSn
         )
     }.flatMapLatest { inputs -> 
         flow {
@@ -267,7 +277,8 @@ class DashboardViewModel(
                     autoRangeOffsetMode = inputs.autoRangeMode,
                     userRanges = inputs.ranges,
                     capillaryReadings = inputs.capillaries,
-                    sensorLogs = inputs.sensorLogs
+                    sensorLogs = inputs.sensorLogs,
+                    activeSensorSn = inputs.activeSensorSn
                 )
                 
                 val processed = rawHistorical.map {
@@ -278,7 +289,8 @@ class DashboardViewModel(
                         autoAdjustEnabled = inputs.autoAdjust,
                         autoRangeOffsetMode = inputs.autoRangeMode,
                         capillaryReadings = inputs.capillaries,
-                        context = calcContext
+                        context = calcContext,
+                        activeSensorSn = inputs.activeSensorSn
                     )
                 }
                 
@@ -523,6 +535,7 @@ class DashboardViewModel(
         val manualOffset: Int,
         val ranges: List<GlucoseOffsetRange>,
         val autoAdjust: Boolean,
-        val autoRangeMode: AutoRangeOffsetMode
+        val autoRangeMode: AutoRangeOffsetMode,
+        val activeSensorSn: String? = null
     )
 }

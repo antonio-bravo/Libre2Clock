@@ -204,20 +204,28 @@ private fun GlobalOffsetSection(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = Icons.Default.Tune,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
+        Column {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Tune,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.settings_auto_adjust_capillary),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.weight(1f)
+                )
+                Switch(checked = autoAdjustEnabled, onCheckedChange = onAutoAdjustChange)
+            }
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = stringResource(R.string.settings_auto_adjust_capillary),
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.weight(1f)
+                text = stringResource(R.string.settings_auto_adjust_capillary_desc),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Switch(checked = autoAdjustEnabled, onCheckedChange = onAutoAdjustChange)
         }
     }
 }

@@ -226,7 +226,8 @@
     <string name="settings_global_manual_offset">Global Manual Offset</string>
     <string name="settings_global_offset_desc">Applied to ALL readings in addition to range-based offsets.</string>
     <string name="settings_manual_offset_label">Manual Offset (mg/dL)</string>
-    <string name="settings_auto_adjust_capillary">Auto-adjust using stored capillary readings</string>
+    <string name="settings_auto_adjust_capillary">Dynamic adjustment by recent fingerstick test</string>
+    <string name="settings_auto_adjust_capillary_desc">Applies the deviation from your latest capillary reading (within last 6 hours) to current glucose.</string>
     <string name="settings_watch_notifications">Watch notifications</string>
     <string name="settings_watch_notifications_desc">Send glucose and trend notifications at a fixed interval so your smartwatch mirrors them.</string>
     <string name="settings_tab_watch">⌚ Smartwatch</string>
@@ -383,10 +384,12 @@
     <string name="settings_fixed_offset_label">Fixed offset (mg/dL)</string>
     <string name="settings_percentage_offset_label">Percentage offset (%)</string>
 
-    <string name="settings_auto_range_label">Auto applied to your ranges</string>
-    <string name="settings_auto_range_off_desc">Use your current manual offsets exactly as configured.</string>
-    <string name="settings_auto_range_global_desc">Computes smart offsets and applies them to your ranges.</string>
-    <string name="settings_auto_range_by_range_desc">Computes independent smart offsets for each range based on the average of capillary values for that range.</string>
+    <string name="settings_auto_range_label">Automatic smart offsets by range</string>
+    <string name="settings_auto_range_off_desc">Disabled: Uses your manual range offsets exactly as configured below.</string>
+    <string name="settings_auto_range_global_desc">Global smart offset: Computes a single overall offset from capillary readings and applies it to all ranges.</string>
+    <string name="settings_auto_range_by_range_desc">Smart offsets by range: Uses capillary measurements from your current sensor for each range. If no readings exist for this sensor in a range, it falls back to the historical average for that range.</string>
+    <string name="settings_range_smart_sensor">Smart: Current sensor (%1$d tests)</string>
+    <string name="settings_range_smart_fallback">Smart: Historical range average (%1$d tests)</string>
     <string name="settings_apply_intelligent_suggestions">Apply intelligent suggestions (%1$d ranges)</string>
     <string name="settings_real_deviation_label">Real deviation for this range: %1$.1f%%</string>
     <string name="settings_smart_estimated_deviation_label">Smart estimated deviation: %1$.1f%%</string>

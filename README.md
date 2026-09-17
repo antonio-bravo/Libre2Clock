@@ -19,12 +19,12 @@ The app is fully localized in **English** and **Spanish**, respecting your devic
 
 ### 🩸 Glucose Monitoring & Calibration
 - **Dual Display**: See your raw sensor value and your calibrated value side-by-side: `raw(calibrated)` mg/dL.
-- **Range-Based Offsets**: Define specific calibration rules for different glucose ranges (e.g., more correction at high values).
+- **Range-Based Offsets**: Define specific calibration rules for different glucose ranges. Supports automatic smart offsets using current sensor readings per range, falling back to historical range averages if no active sensor readings exist for that range.
 - **Sensor Audit System**: A specialized tool to **prove sensor inaccuracy**. For each range, the app calculates:
     - **Bias (Error %)**: Technical percentage of how much the hardware drifts from your capillary readings.
     - **Averages Comparison**: Directly compare mean sensor values vs. mean capillary values.
-    - **Sample Validation**: Track how many tests support the error claim.
-- **Capillary Auto-Adjust**: Automatically applies the latest capillary deviation to current readings for up to 6 hours.
+    - **Sample Validation**: Track how many tests support the error claim and identify whether smart offsets use current sensor data or range averages.
+- **Dynamic Capillary Adjustment**: Automatically applies the latest capillary deviation (within 6 hours) to current readings.
 
 ### 💉 Advanced Insulin Hub
 - **IOB (Insulin On Board)**: Uses a realistic 4-stage decay model for rapid-acting insulin.

@@ -391,6 +391,21 @@ fun RangeItem(
                             MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.ExtraBold
                     )
+
+                    val smartModeText = if (insight.isSensorSpecific) {
+                        stringResource(R.string.settings_range_smart_sensor, insight.sampleCount)
+                    } else if (insight.sampleCount > 0) {
+                        stringResource(R.string.settings_range_smart_fallback, insight.sampleCount)
+                    } else null
+
+                    if (smartModeText != null) {
+                        Text(
+                            text = smartModeText,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.tertiary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
             }
             IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, contentDescription = "Edit") }

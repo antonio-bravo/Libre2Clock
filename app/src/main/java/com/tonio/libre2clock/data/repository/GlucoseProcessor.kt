@@ -23,7 +23,8 @@ object GlucoseProcessor {
         autoAdjustEnabled: Boolean = false,
         autoRangeOffsetMode: AutoRangeOffsetMode = AutoRangeOffsetMode.OFF,
         capillaryReadings: List<CapillaryMeasurement> = emptyList(),
-        context: CalculationContext? = null
+        context: CalculationContext? = null,
+        activeSensorSn: String? = null
     ): GlucoseMeasurement {
         val measurementInstant = TimestampParser.parseMeasurementInstant(measurement)
 
@@ -35,7 +36,8 @@ object GlucoseProcessor {
             autoRangeOffsetMode = autoRangeOffsetMode,
             capillaryReadings = capillaryReadings,
             measurementInstant = measurementInstant,
-            context = context
+            context = context,
+            activeSensorSn = activeSensorSn
         )
 
         // Si el valor no cambia, evitamos crear una nueva instancia (ahorro de memoria)
@@ -57,7 +59,8 @@ object GlucoseProcessor {
         autoRangeOffsetMode: AutoRangeOffsetMode,
         userRanges: List<GlucoseOffsetRange>,
         capillaryReadings: List<CapillaryMeasurement>,
-        sensorLogs: List<SensorLog> = emptyList()
+        sensorLogs: List<SensorLog> = emptyList(),
+        activeSensorSn: String? = null
     ): CalculationContext {
         val globalEstimate = if (autoRangeOffsetMode == AutoRangeOffsetMode.GLOBAL) {
             estimateGlobalOffsets(capillaryReadings)
@@ -65,7 +68,7 @@ object GlucoseProcessor {
 
         val rangeEstimates = if (autoRangeOffsetMode == AutoRangeOffsetMode.BY_RANGE) {
             userRanges.mapNotNull { range ->
-                estimateOffsetsForRange(range, capillaryReadings)?.let { range to it }
+                estimateOffsetsForRange(range, capillaryReadings, activeSensorSn)?.let { range to it }
             }.toMap()
         } else emptyMap()
 
@@ -85,7 +88,8 @@ object GlucoseProcessor {
         autoRangeOffsetMode: AutoRangeOffsetMode = AutoRangeOffsetMode.OFF,
         capillaryReadings: List<CapillaryMeasurement> = emptyList(),
         measurementInstant: Instant? = null,
-        context: CalculationContext? = null
+        context: CalculationContext? = null,
+        activeSensorSn: String? = null
     ): Int {
         // Búsqueda lineal está bien aquí porque userRanges suele ser muy pequeño (< 10 elementos)
         val matchingRange = userRanges.firstOrNull { range ->
@@ -99,7 +103,7 @@ object GlucoseProcessor {
                 if (context != null && matchingRange != null) {
                     context.rangeEstimates[matchingRange]
                 } else {
-                    matchingRange?.let { estimateOffsetsForRange(it, capillaryReadings) }
+                    matchingRange?.let { estimateOffsetsForRange(it, capillaryReadings, activeSensorSn) }
                 }
             }
         }
@@ -217,16 +221,29 @@ object GlucoseProcessor {
     data class RangeOffsetEstimate(
         val offset: Int,
         val percentage: Int,
-        val sampleCount: Int
+        val sampleCount: Int,
+        val isSensorSpecific: Boolean = false
     )
 
     fun estimateOffsetsForRange(
         range: GlucoseOffsetRange,
-        capillaryReadings: List<CapillaryMeasurement>
+        capillaryReadings: List<CapillaryMeasurement>,
+        activeSensorSn: String? = null
     ): RangeOffsetEstimate? {
-        return estimateOffsetsInternal(capillaryReadings) { sensor ->
+        if (!activeSensorSn.isNullOrBlank()) {
+            val sensorSpecificReadings = capillaryReadings.filter { it.sensorSerialNumber == activeSensorSn }
+            val sensorEstimate = estimateOffsetsInternal(sensorSpecificReadings) { sensor ->
+                sensor >= range.min && (range.max == null || sensor < range.max)
+            }
+            if (sensorEstimate != null && sensorEstimate.sampleCount > 0) {
+                return sensorEstimate.copy(isSensorSpecific = true)
+            }
+        }
+
+        val fallbackEstimate = estimateOffsetsInternal(capillaryReadings) { sensor ->
             sensor >= range.min && (range.max == null || sensor < range.max)
         }
+        return fallbackEstimate?.copy(isSensorSpecific = false)
     }
 
     fun estimateGlobalOffsets(

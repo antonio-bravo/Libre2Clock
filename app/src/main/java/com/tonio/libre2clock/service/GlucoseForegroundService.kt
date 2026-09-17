@@ -90,7 +90,8 @@ class GlucoseForegroundService : Service() {
         val glucoseOffsetRanges: List<GlucoseOffsetRange>,
         val autoAdjustEnabled: Boolean,
         val autoRangeOffsetMode: AutoRangeOffsetMode,
-        val capillaryReadings: List<CapillaryMeasurement>
+        val capillaryReadings: List<CapillaryMeasurement>,
+        val activeSensorSn: String? = null
     ) {
         val hasActiveAlerts: Boolean
             get() = watchNotificationMode != WatchNotificationMode.OFF || 
@@ -175,19 +176,25 @@ class GlucoseForegroundService : Service() {
         }
 
         val glucoseConfigFlow = combine(
-            preferenceManager.glucoseOffset,
-            preferenceManager.glucoseOffsetRanges,
-            preferenceManager.autoAdjustEnabled,
-            preferenceManager.autoRangeOffsetMode,
-            preferenceManager.capillaryReadings
-        ) { offset, ranges, autoAdjust, autoMode, capillaries -> 
+            combine(
+                preferenceManager.glucoseOffset,
+                preferenceManager.glucoseOffsetRanges,
+                preferenceManager.autoAdjustEnabled
+            ) { offset, ranges, autoAdjust -> Triple(offset, ranges, autoAdjust) },
+            combine(
+                preferenceManager.autoRangeOffsetMode,
+                preferenceManager.capillaryReadings,
+                preferenceManager.activeSensorSerialNumber
+            ) { autoMode, capillaries, activeSn -> Triple(autoMode, capillaries, activeSn) }
+        ) { part1, part2 ->
             GlucoseConfig(
-                offset = offset,
-                ranges = ranges,
-                autoAdjust = autoAdjust,
-                autoMode = autoMode,
-                capillaries = capillaries
-            ) 
+                offset = part1.first,
+                ranges = part1.second,
+                autoAdjust = part1.third,
+                autoMode = part2.first,
+                capillaries = part2.second,
+                activeSensorSn = part2.third
+            )
         }
 
         configState = combine(
@@ -210,7 +217,8 @@ class GlucoseForegroundService : Service() {
                 glucoseOffsetRanges = glucose.ranges,
                 autoAdjustEnabled = glucose.autoAdjust,
                 autoRangeOffsetMode = glucose.autoMode,
-                capillaryReadings = glucose.capillaries
+                capillaryReadings = glucose.capillaries,
+                activeSensorSn = glucose.activeSensorSn
             )
         }.stateIn(serviceScope, SharingStarted.Eagerly, ServiceConfig(
             watchAlertsEnabled = false, WatchNotificationMode.OFF, 60, 0,
@@ -440,7 +448,8 @@ class GlucoseForegroundService : Service() {
             userRanges = config.glucoseOffsetRanges,
             autoAdjustEnabled = config.autoAdjustEnabled,
             autoRangeOffsetMode = config.autoRangeOffsetMode,
-            capillaryReadings = config.capillaryReadings
+            capillaryReadings = config.capillaryReadings,
+            activeSensorSn = config.activeSensorSn
         )
     }
 
@@ -639,5 +648,5 @@ class GlucoseForegroundService : Service() {
     private data class AlertConfig(val enabled: Boolean, val mode: WatchNotificationMode, val interval: Int, val startMinute: Int, val lowEnabled: Boolean, val highEnabled: Boolean, val useCalibrated: Boolean)
     private data class ScheduleConfig(val watch: List<ParsedSchedule>, val alarm: List<ParsedSchedule>)
     private data class BatteryConfig(val low: Int, val critical: Int, val disableFast: Boolean)
-    private data class GlucoseConfig(val offset: Int, val ranges: List<GlucoseOffsetRange>, val autoAdjust: Boolean, val autoMode: AutoRangeOffsetMode, val capillaries: List<CapillaryMeasurement>)
+    private data class GlucoseConfig(val offset: Int, val ranges: List<GlucoseOffsetRange>, val autoAdjust: Boolean, val autoMode: AutoRangeOffsetMode, val capillaries: List<CapillaryMeasurement>, val activeSensorSn: String? = null)
 }

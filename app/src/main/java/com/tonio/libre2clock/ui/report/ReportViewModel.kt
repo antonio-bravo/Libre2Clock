@@ -115,16 +115,16 @@ class ReportViewModel(
         },
         combine(
             preferenceManager.autoRangeOffsetMode, preferenceManager.historyRetentionDays,
-            _startDate, _endDate, _useOffsetValues
-        ) { mode, retention, start, end, useOffset ->
-            ReportParams(mode, retention, start, end, useOffset)
+            _startDate, _endDate, preferenceManager.activeSensorSerialNumber
+        ) { mode, retention, start, end, activeSn ->
+            ReportParams(mode, retention, start, end, activeSn)
         }
     ) { input: ReportInput, params: ReportParams ->
         val signature = ReportSectionCacheRepository.buildSignature(
             glucose = input.glucose, doses = input.doses, offset = input.offset,
             ranges = input.ranges, autoAdjustEnabled = input.autoAdjust,
             capillaries = input.capillaries, autoRangeMode = params.autoRangeMode.name,
-            extraTag = "full_report:${params.start}:${params.end}:${params.useOffset}"
+            extraTag = "full_report:${params.start}:${params.end}:${params.activeSensorSn}"
         )
         
         reportCache.getOrComputeFullReport(
@@ -135,7 +135,8 @@ class ReportViewModel(
             val calcContext = GlucoseProcessor.buildContext(
                 autoRangeOffsetMode = params.autoRangeMode,
                 userRanges = input.ranges,
-                capillaryReadings = input.capillaries
+                capillaryReadings = input.capillaries,
+                activeSensorSn = params.activeSensorSn
             )
 
             // OPTIMIZACIÓN CRÍTICA: Procesar la glucosa UNA SOLA VEZ
@@ -145,7 +146,8 @@ class ReportViewModel(
                 val processed = GlucoseProcessor.process(
                     measurement = m, manualOffset = input.offset, userRanges = input.ranges,
                     autoAdjustEnabled = input.autoAdjust, autoRangeOffsetMode = params.autoRangeMode,
-                    capillaryReadings = input.capillaries, context = calcContext
+                    capillaryReadings = input.capillaries, context = calcContext,
+                    activeSensorSn = params.activeSensorSn
                 )
                 ProcessedGlucose(instant, processed.value.toDouble(), processed.calibratedValue.toDouble())
             }
@@ -314,7 +316,7 @@ class ReportViewModel(
 
     private data class ReportParams(
         val autoRangeMode: AutoRangeOffsetMode, val retentionDays: Int,
-        val start: LocalDate, val end: LocalDate, val useOffset: Boolean
+        val start: LocalDate, val end: LocalDate, val activeSensorSn: String? = null
     )
 
     private class DailySummaryBuilder(val date: LocalDate) {

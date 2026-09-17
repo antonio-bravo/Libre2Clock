@@ -9,6 +9,9 @@ Es un valor fijo que se suma o resta a **todas** las mediciones del sensor.
 ## 2. Rangos de Offset (Range-Based)
 Permite definir correcciones distintas según el nivel de glucosa. Esto es útil porque los sensores suelen ser más precisos en rangos normales que en hipos o hipers.
 - **Lógica**: La app busca en qué rango cae la lectura actual y aplica el offset definido para ese tramo.
+- **Offsets Automáticos Inteligentes por Rango**: Cuando está activado, el motor calcula el ajuste basándose en tus pruebas capilares:
+  - **Prioridad Sensor Activo**: Si tienes mediciones capilares registradas con tu **sensor actual** para ese rango, usará la desviación de esas mediciones.
+  - **Fallback a Promedio del Rango**: Si no hay mediciones de tu sensor actual en ese rango, aplicará el promedio histórico de mediciones capilares en ese rango entre todos tus sensores anteriores.
 - **Ejemplo**:
   - 0 a 70: +10
   - 70 a 150: +20
@@ -18,12 +21,13 @@ Permite definir correcciones distintas según el nivel de glucosa. Esto es útil
 Para cada rango definido, la aplicación realiza un análisis estadístico automático comparando tus mediciones capilares con lo que marcó el sensor de fábrica.
 - **Error Sensor (Sesgo/Bias)**: Calcula el porcentaje técnico de error del hardware. Un valor de -15% indica que el sensor mide sistemáticamente un 15% por debajo de la realidad.
 - **Comparativa de Medias**: Muestra el valor promedio del sensor frente al promedio capilar en ese rango específico.
+- **Indicador Smart**: Muestra si el ajuste inteligente de ese rango proviene de los datos de tu sensor actual o del promedio histórico del rango.
 - **Validación**: Indica cuántas pruebas respaldan este cálculo para dar validez técnica a tus reclamaciones o ajustes.
 
-## 4. Auto-Ajuste Capilar (Algoritmo Inteligente)
-Si se activa, la aplicación utiliza tus últimas mediciones capilares guardadas para calcular una desviación media.
-- **Funcionamiento**: La app compara tus lecturas capilares con lo que marcaba el sensor en ese mismo minuto.
-- **Aplicación**: Calcula el porcentaje de error medio y lo aplica a la lectura actual para predecir un valor más cercano a la realidad capilar.
+## 4. Ajuste Dinámico por Capilar Reciente (Algoritmo Inteligente)
+Si se activa, la aplicación utiliza tu última prueba capilar tomada (dentro de un margen de 6 horas) para calcular una desviación puntual.
+- **Funcionamiento**: La app compara tu lectura capilar reciente con lo que marcaba el sensor en ese mismo momento.
+- **Aplicación**: Aplica esa desviación a la lectura actual para predecir un valor más cercano a la realidad de tu última prueba física.
 
 ## Visualización Dual
 En toda la interfaz verás el formato: **`Valor_Real(Valor_Corregido)`**.
