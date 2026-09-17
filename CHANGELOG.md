@@ -1,5 +1,42 @@
 # Changelog
 
+## 9a65898 (Sep 17, 2026 16:15:14)
+auto adjust range per senson on capilarity otherwise use avg for measures in that range — antonio-bravo
+[detail](#9a65898-details)
+
+<details id='9a65898-details'>
+<summary>Changed files</summary>
+
+- .idea/misc.xml [Modified]
+- CALIBRATION_SYSTEM.md [Modified]
+- README.md [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseProcessor.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCalibrationScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsComponents.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+- app/src/test/java/com/tonio/libre2clock/ExampleUnitTest.kt [Modified]
+</details>
+
+
+---
+## 0bb4bd5 (Sep 17, 2026 08:50:36)
+Update changelog — github-actions[bot]
+[detail](#0bb4bd5-details)
+
+<details id='0bb4bd5-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 1fdbc94 (Sep 17, 2026 10:50:25)
 report used by endocrine — antonio-bravo
 [detail](#1fdbc94-details)
@@ -636,30 +673,6 @@ Update changelog — github-actions[bot]
 [detail](#b86508c-details)
 
 <details id='b86508c-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 537fa03 (Sep 12, 2026 17:21:08)
-logs CloudSync — antonio-bravo
-[detail](#537fa03-details)
-
-<details id='537fa03-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
-</details>
-
-
----
-## 84c5e59 (Sep 12, 2026 13:52:19)
-Update changelog — github-actions[bot]
-[detail](#84c5e59-details)
-
-<details id='84c5e59-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
