@@ -1,5 +1,30 @@
 # Changelog
 
+## 8f155e0 (Sep 17, 2026 10:25:57)
+fix date format in SensorLogsScreen — antonio-bravo
+[detail](#8f155e0-details)
+
+<details id='8f155e0-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/sensor/SensorLogsScreen.kt [Modified]
+</details>
+
+
+---
+## 21ad6aa (Sep 16, 2026 22:37:15)
+Update changelog — github-actions[bot]
+[detail](#21ad6aa-details)
+
+<details id='21ad6aa-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 171d02b (Sep 17, 2026 00:36:56)
 Improvements — antonio-bravo
 [detail](#171d02b-details)
@@ -631,35 +656,6 @@ Update changelog — github-actions[bot]
 [detail](#6131bd0-details)
 
 <details id='6131bd0-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 58edef0 (Sep 12, 2026 15:25:54)
-fix cloudSync — antonio-bravo
-[detail](#58edef0-details)
-
-<details id='58edef0-details'>
-<summary>Changed files</summary>
-
-- .idea/misc.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## c58c1db (Sep 11, 2026 13:22:09)
-Update changelog — github-actions[bot]
-[detail](#c58c1db-details)
-
-<details id='c58c1db-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
