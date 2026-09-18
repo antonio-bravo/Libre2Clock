@@ -1,5 +1,35 @@
 # Changelog
 
+## f0afb9f (Sep 18, 2026 18:57:10)
+capillarity get measure based on date and time — antonio-bravo
+[detail](#f0afb9f-details)
+
+<details id='f0afb9f-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepository.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/capillary/CapillaryScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## de1aec2 (Sep 17, 2026 14:15:32)
+Update changelog — github-actions[bot]
+[detail](#de1aec2-details)
+
+<details id='de1aec2-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 9a65898 (Sep 17, 2026 16:15:14)
 auto adjust range per senson on capilarity otherwise use avg for measures in that range — antonio-bravo
 [detail](#9a65898-details)
@@ -647,32 +677,6 @@ Update changelog — github-actions[bot]
 [detail](#e4ca035-details)
 
 <details id='e4ca035-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 9d778ef (Sep 12, 2026 17:54:00)
-update cloud sync — antonio-bravo
-[detail](#9d778ef-details)
-
-<details id='9d778ef-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/model/LibreModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
-</details>
-
-
----
-## b86508c (Sep 12, 2026 15:21:22)
-Update changelog — github-actions[bot]
-[detail](#b86508c-details)
-
-<details id='b86508c-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
