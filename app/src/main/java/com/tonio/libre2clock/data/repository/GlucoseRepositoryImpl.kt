@@ -22,6 +22,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
+import kotlin.math.abs
 
 class GlucoseRepositoryImpl(
     context: Context,
@@ -124,6 +125,28 @@ class GlucoseRepositoryImpl(
         }
 
         return Collections.unmodifiableList(window.toList()).also { historicalWindowCache[key] = it }
+    }
+
+    override suspend fun findSensorReadingForTimestamp(targetEpochMs: Long): GlucoseMeasurement? {
+        return withContext(Dispatchers.IO) {
+            val start = targetEpochMs - 12 * 3600 * 1000L
+            val end = targetEpochMs + 12 * 3600 * 1000L
+            val window = historyDb.readWindowNewestFirst(start, end, maxItems = 1000)
+            val bestInWindow = findClosestMeasurement(window, targetEpochMs)
+            if (bestInWindow != null) return@withContext bestInWindow
+
+            val all = historyDb.readAllNewestFirst()
+            findClosestMeasurement(all, targetEpochMs)
+        }
+    }
+
+    private fun findClosestMeasurement(measurements: List<GlucoseMeasurement>, targetEpochMs: Long): GlucoseMeasurement? {
+        if (measurements.isEmpty()) return null
+        return measurements.minByOrNull { m ->
+            val instant = parseMeasurementInstant(m)
+            val mEpoch = instant?.toEpochMilli() ?: (m.epochSeconds?.times(1000L) ?: 0L)
+            if (mEpoch == 0L) Long.MAX_VALUE else abs(mEpoch - targetEpochMs)
+        }
     }
 
     override suspend fun syncLocalArchiveFromPreferences() {

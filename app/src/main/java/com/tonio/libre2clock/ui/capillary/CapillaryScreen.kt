@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tonio.libre2clock.R
 import com.tonio.libre2clock.data.model.CapillaryMeasurement
+import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.ui.components.DateHourMinuteInput
 import com.tonio.libre2clock.ui.settings.SettingsViewModel
 import com.tonio.libre2clock.util.SectionPerfTelemetry
@@ -168,6 +169,15 @@ fun CapillaryScreen(
     }
 
     if (showCapillaryDialog) {
+        var associatedSensorReading by remember { mutableStateOf<GlucoseMeasurement?>(null) }
+        LaunchedEffect(capillaryDate, capillaryHour, capillaryMinute, showCapillaryDialog) {
+            if (showCapillaryDialog) {
+                val h = capillaryHour.toIntOrNull() ?: 0
+                val m = capillaryMinute.toIntOrNull() ?: 0
+                associatedSensorReading = viewModel.getSensorReadingForTime(capillaryDate, h, m)
+            }
+        }
+
         AlertDialog(
             onDismissRequest = { showCapillaryDialog = false },
             title = { Text(stringResource(R.string.save_capillary_reading)) },
@@ -191,7 +201,8 @@ fun CapillaryScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    val sensorValue = currentGlucose?.value
+                    val sensorMeasurement = associatedSensorReading ?: currentGlucose
+                    val sensorValue = sensorMeasurement?.value
                     OutlinedTextField(
                         value = sensorValue?.toString() ?: stringResource(R.string.no_sensor_data),
                         onValueChange = {},
@@ -204,7 +215,8 @@ fun CapillaryScreen(
             confirmButton = {
                 TextButton(onClick = {
                     val value = capillaryValueText.toIntOrNull() ?: return@TextButton
-                    val sensorValue = currentGlucose?.value
+                    val sensorMeasurement = associatedSensorReading ?: currentGlucose
+                    val sensorValue = sensorMeasurement?.value
                     val delta = sensorValue?.let { value - it }
                     val hour = capillaryHour.toIntOrNull() ?: 0
                     val minute = capillaryMinute.toIntOrNull() ?: 0

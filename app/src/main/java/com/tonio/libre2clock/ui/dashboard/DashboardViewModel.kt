@@ -37,6 +37,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.TextStyle
 import java.util.Locale
@@ -402,6 +405,13 @@ class DashboardViewModel(
                 _isHistoryRefreshing.value = false
             }
         }
+    }
+
+    suspend fun getSensorReadingForTime(date: LocalDate, hour: Int, minute: Int): GlucoseMeasurement? {
+        val zone = ZoneId.systemDefault()
+        val localDateTime = LocalDateTime.of(date, LocalTime.of(hour.coerceIn(0, 23), minute.coerceIn(0, 59)))
+        val targetEpochMs = localDateTime.atZone(zone).toInstant().toEpochMilli()
+        return repository.findSensorReadingForTimestamp(targetEpochMs) ?: currentGlucose.value
     }
 
     fun addInsulinDose(dose: InsulinDose) {

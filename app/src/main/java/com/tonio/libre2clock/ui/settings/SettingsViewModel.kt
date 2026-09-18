@@ -36,6 +36,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneId
 import kotlin.math.abs
 
 class SettingsViewModel(
@@ -328,6 +332,13 @@ class SettingsViewModel(
             activeReadings.sortByDescending { it.timestamp }
             preferenceManager.saveCapillaryReadings(activeReadings)
         }
+    }
+
+    suspend fun getSensorReadingForTime(date: LocalDate, hour: Int, minute: Int): GlucoseMeasurement? {
+        val zone = ZoneId.systemDefault()
+        val localDateTime = LocalDateTime.of(date, LocalTime.of(hour.coerceIn(0, 23), minute.coerceIn(0, 59)))
+        val targetEpochMs = localDateTime.atZone(zone).toInstant().toEpochMilli()
+        return repository.findSensorReadingForTimestamp(targetEpochMs) ?: currentGlucose.value
     }
 
     // CORRECTO: Usa la lista completa (.first()) para encontrar el elemento y marcarlo como borrado
