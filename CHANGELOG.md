@@ -1,5 +1,31 @@
 # Changelog
 
+## 04708a4 (Sep 19, 2026 19:25:43)
+add nice coloring base on gluse measure — antonio-bravo
+[detail](#04708a4-details)
+
+<details id='04708a4-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 88d7c46 (Sep 19, 2026 16:44:39)
+Update changelog — github-actions[bot]
+[detail](#88d7c46-details)
+
+<details id='88d7c46-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## e885374 (Sep 19, 2026 18:44:29)
 add insulin dosis raw(offset) / FS — antonio-bravo
 [detail](#e885374-details)
@@ -655,31 +681,6 @@ Update changelog — github-actions[bot]
 [detail](#991796f-details)
 
 <details id='991796f-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## b1e1137 (Sep 12, 2026 20:23:24)
-Avg in 2 lines — antonio-bravo
-[detail](#b1e1137-details)
-
-<details id='b1e1137-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-</details>
-
-
----
-## 30685cc (Sep 12, 2026 16:47:02)
-Update changelog — github-actions[bot]
-[detail](#30685cc-details)
-
-<details id='30685cc-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
