@@ -279,6 +279,7 @@ fun InteractiveTrendGraph(
             selectedMeasurement?.let { selected ->
                 Spacer(modifier = Modifier.height(8.dp))
                 val dualValue = GlucoseProcessor.formatDualValue(selected.value, selected.calibratedValue)
+                val formattedTimestamp = remember(selected) { formatSelectedTimestamp(selected) }
                 val statusText = when {
                     selected.calibratedValue < targetLow -> stringResource(R.string.graph_status_low, targetLow)
                     selected.calibratedValue > targetHigh -> stringResource(R.string.graph_status_high, targetHigh)
@@ -300,7 +301,7 @@ fun InteractiveTrendGraph(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "${selected.timestamp}  •  $dualValue mg/dL",
+                            text = "$formattedTimestamp  •  $dualValue mg/dL",
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Bold
                         )
@@ -552,3 +553,9 @@ private data class GraphData(
     val lastInstant: Instant,
     val totalSeconds: Long
 )
+
+private fun formatSelectedTimestamp(measurement: GlucoseMeasurement): String {
+    val instant = TimestampParser.parseMeasurementInstant(measurement) ?: return measurement.timestamp
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+    return formatter.format(instant.atZone(ZoneId.systemDefault()))
+}

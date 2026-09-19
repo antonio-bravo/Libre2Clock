@@ -1016,13 +1016,12 @@ private fun DashboardSlidesCard(
         else -> stringResource(R.string.cv_variability_slide_title)
     }
 
-    // Altura aumentada a 210.dp para acomodar perfectamente el layout 2x2 de 4 elementos
     Card(
-        modifier = Modifier.fillMaxWidth().height(210.dp),
+        modifier = Modifier.fillMaxWidth().wrapContentHeight(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHighest),
         shape = RoundedCornerShape(18.dp)
     ) {
-        Column(modifier = Modifier.fillMaxSize().padding(12.dp)) {
+        Column(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(12.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -1054,9 +1053,12 @@ private fun DashboardSlidesCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxWidth().wrapContentHeight()
+            ) { page ->
                 when (page) {
                     0 -> MetricsRow(
                         first = metrics.yesterdayAvg,
@@ -1111,7 +1113,10 @@ private fun MetricsRow(
     secondLabel: String,
     thirdLabel: String
 ) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
         MetricCell(metric = first, label = firstLabel, modifier = Modifier.weight(1f))
         MetricCell(metric = second, label = secondLabel, modifier = Modifier.weight(1f))
         MetricCell(metric = third, label = thirdLabel, modifier = Modifier.weight(1f))
@@ -1125,13 +1130,13 @@ private fun FourItemMetricsLayout(
     third: DisplayMetric, thirdLabel: String,
     fourth: DisplayMetric, fourthLabel: String
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(vertical = 4.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             MetricCell(metric = first, label = firstLabel, modifier = Modifier.weight(1f))
             MetricCell(metric = second, label = secondLabel, modifier = Modifier.weight(1f))
         }
-        Spacer(modifier = Modifier.height(8.dp))
-        Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Spacer(modifier = Modifier.height(10.dp))
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             MetricCell(metric = third, label = thirdLabel, modifier = Modifier.weight(1f))
             MetricCell(metric = fourth, label = fourthLabel, modifier = Modifier.weight(1f))
         }
@@ -1145,13 +1150,13 @@ private fun FourItemHyposLayout(
     third: CountMetric, thirdLabel: String,
     fourth: CountMetric, fourthLabel: String
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(vertical = 4.dp)) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             HypoCell(metric = first, label = firstLabel, modifier = Modifier.weight(1f))
             HypoCell(metric = second, label = secondLabel, modifier = Modifier.weight(1f))
         }
-        Spacer(modifier = Modifier.height(8.dp))
-        Row(modifier = Modifier.fillMaxWidth().weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Spacer(modifier = Modifier.height(10.dp))
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             HypoCell(metric = third, label = thirdLabel, modifier = Modifier.weight(1f))
             HypoCell(metric = fourth, label = fourthLabel, modifier = Modifier.weight(1f))
         }

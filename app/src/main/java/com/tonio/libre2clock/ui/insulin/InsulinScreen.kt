@@ -495,17 +495,25 @@ fun TodayStatsCard(rapid: Double, slow: Double) {
 fun AdvancedSettingsCard(
     rapidMin: Int, slowMin: Int, icC: Int, isfC: Int, mTdi: Double?, mIsf: Double?, viewModel: SettingsViewModel
 ) {
-    var tdiText by remember(mTdi) { mutableStateOf(mTdi?.toString() ?: "") }
-    var isfText by remember(mIsf) { mutableStateOf(mIsf?.toString() ?: "") }
+    var tdiText by remember(mTdi) {
+        mutableStateOf(mTdi?.let { if (it % 1.0 == 0.0) "%.0f".format(Locale.US, it) else it.toString() } ?: "40")
+    }
+    var isfText by remember(mIsf) {
+        mutableStateOf(mIsf?.let { if (it % 1.0 == 0.0) "%.0f".format(Locale.US, it) else it.toString() } ?: "45")
+    }
 
     // OPTIMIZACIÓN: Debounce para evitar escrituras excesivas en DataStore mientras el usuario escribe
     LaunchedEffect(tdiText) {
-        delay(600)
-        tdiText.toDoubleOrNull()?.let { viewModel.updateManualTdi(it) }
+        if (mTdi != null) {
+            delay(600)
+            tdiText.toDoubleOrNull()?.let { viewModel.updateManualTdi(it) }
+        }
     }
     LaunchedEffect(isfText) {
-        delay(600)
-        isfText.toDoubleOrNull()?.let { viewModel.updateManualIsf(it) }
+        if (mIsf != null) {
+            delay(600)
+            isfText.toDoubleOrNull()?.let { viewModel.updateManualIsf(it) }
+        }
     }
 
     Card(
@@ -540,12 +548,21 @@ fun AdvancedSettingsCard(
 
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = stringResource(R.string.settings_manual_tdi), style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        text = stringResource(R.string.settings_manual_tdi),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f).padding(end = 8.dp)
+                    )
                     Switch(
                         checked = mTdi != null,
                         onCheckedChange = { isEnabled ->
-                            if (!isEnabled) viewModel.updateManualTdi(null)
-                            else tdiText.toDoubleOrNull()?.let { viewModel.updateManualTdi(it) }
+                            if (!isEnabled) {
+                                viewModel.updateManualTdi(null)
+                            } else {
+                                val valToSet = tdiText.toDoubleOrNull() ?: 40.0
+                                tdiText = if (valToSet % 1.0 == 0.0) "%.0f".format(Locale.US, valToSet) else valToSet.toString()
+                                viewModel.updateManualTdi(valToSet)
+                            }
                         }
                     )
                 }
@@ -563,12 +580,21 @@ fun AdvancedSettingsCard(
 
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = stringResource(R.string.settings_manual_isf), style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        text = stringResource(R.string.settings_manual_isf),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f).padding(end = 8.dp)
+                    )
                     Switch(
                         checked = mIsf != null,
                         onCheckedChange = { isEnabled ->
-                            if (!isEnabled) viewModel.updateManualIsf(null)
-                            else isfText.toDoubleOrNull()?.let { viewModel.updateManualIsf(it) }
+                            if (!isEnabled) {
+                                viewModel.updateManualIsf(null)
+                            } else {
+                                val valToSet = isfText.toDoubleOrNull() ?: 45.0
+                                isfText = if (valToSet % 1.0 == 0.0) "%.0f".format(Locale.US, valToSet) else valToSet.toString()
+                                viewModel.updateManualIsf(valToSet)
+                            }
                         }
                     )
                 }
@@ -666,19 +692,24 @@ fun InsulinDoseDialog(
                         "--"
                     }
 
-                    val suggestedDisplayText = stringResource(R.string.calc_suggested_bolus_with_isf, unitsStr, formattedIsf)
-
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = suggestedDisplayText,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.weight(1f)
-                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.calc_suggested_bolus_dual, unitsStr),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = stringResource(R.string.dash_fs_label, formattedIsf),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                         TextButton(onClick = {
                             val unitsToUse = suggestedUnitsCal ?: rawVal
                             unitsText = String.format(Locale.US, "%.2f", formatValue(unitsToUse))

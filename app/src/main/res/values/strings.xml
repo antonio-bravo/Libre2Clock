@@ -91,10 +91,10 @@
     <string name="calc_glucose_label">Current Glucose (mg/dL)</string>
     <string name="calc_suggested_bolus">Suggested Units: %1$.2f</string>
     <string name="calc_suggested_bolus_dual">Suggested Units: %1$s</string>
-    <string name="calc_suggested_bolus_with_isf">Suggested Units: %1$s / FS: %2$s</string>
-    <string name="glucose_status_low">LOW GLUCOSE (OUT OF RANGE)</string>
+    <string name="calc_suggested_bolus_with_isf">Suggested Units: %1$s\nFS: %2$s</string>
+    <string name="glucose_status_low">LOW GLUCOSE</string>
     <string name="glucose_status_in_range">IN RANGE</string>
-    <string name="glucose_status_high">HIGH GLUCOSE (OUT OF RANGE)</string>
+    <string name="glucose_status_high">HIGH GLUCOSE</string>
     <string name="calc_suggested_real">Suggested Bolus (Real)</string>
     <string name="calc_suggested_offset">Suggested Bolus (Offset)</string>
     <string name="calc_breakdown_label">(Carbs: %1$.2f + Corr: %2$.2f)</string>
