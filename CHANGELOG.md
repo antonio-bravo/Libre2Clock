@@ -1,5 +1,33 @@
 # Changelog
 
+## e885374 (Sep 19, 2026 18:44:29)
+add insulin dosis raw(offset) / FS — antonio-bravo
+[detail](#e885374-details)
+
+<details id='e885374-details'>
+<summary>Changed files</summary>
+
+- .idea/misc.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## d601985 (Sep 18, 2026 16:57:26)
+Update changelog — github-actions[bot]
+[detail](#d601985-details)
+
+<details id='d601985-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## f0afb9f (Sep 18, 2026 18:57:10)
 capillarity get measure based on date and time — antonio-bravo
 [detail](#f0afb9f-details)
@@ -652,31 +680,6 @@ Update changelog — github-actions[bot]
 [detail](#30685cc-details)
 
 <details id='30685cc-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 1a548b7 (Sep 12, 2026 18:46:51)
-More logs — antonio-bravo
-[detail](#1a548b7-details)
-
-<details id='1a548b7-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-</details>
-
-
----
-## e4ca035 (Sep 12, 2026 15:54:12)
-Update changelog — github-actions[bot]
-[detail](#e4ca035-details)
-
-<details id='e4ca035-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
