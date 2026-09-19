@@ -1,5 +1,32 @@
 # Changelog
 
+## 60e2c05 (Sep 19, 2026 23:39:30)
+fix issue add insulin to sync — antonio-bravo
+[detail](#60e2c05-details)
+
+<details id='60e2c05-details'>
+<summary>Changed files</summary>
+
+- .idea/misc.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+</details>
+
+
+---
+## f1a8e05 (Sep 19, 2026 20:05:30)
+Update changelog — github-actions[bot]
+[detail](#f1a8e05-details)
+
+<details id='f1a8e05-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 46a0ead (Sep 19, 2026 22:05:15)
 adjust text size in App — antonio-bravo
 [detail](#46a0ead-details)
@@ -655,34 +682,6 @@ Update changelog — github-actions[bot]
 [detail](#5df7a92-details)
 
 <details id='5df7a92-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 403ed79 (Sep 13, 2026 16:08:05)
-fix graph time — antonio-bravo
-[detail](#403ed79-details)
-
-<details id='403ed79-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
-- app/src/test/java/com/tonio/libre2clock/TimestampPriorityTest.kt [Deleted]
-</details>
-
-
----
-## 223c8a2 (Sep 13, 2026 12:46:27)
-Update changelog — github-actions[bot]
-[detail](#223c8a2-details)
-
-<details id='223c8a2-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
