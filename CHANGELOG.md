@@ -1,5 +1,32 @@
 # Changelog
 
+## 25303a3 (Sep 20, 2026 00:27:47)
+fix problem add insulin — antonio-bravo
+[detail](#25303a3-details)
+
+<details id='25303a3-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/MainActivity.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 7f1ccbc (Sep 19, 2026 21:58:32)
+Update changelog — github-actions[bot]
+[detail](#7f1ccbc-details)
+
+<details id='7f1ccbc-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## bf3f4ca (Sep 19, 2026 23:58:19)
 Glucose Prediction and Preventive Hypoglycemia Alerts — antonio-bravo
 [detail](#bf3f4ca-details)
@@ -659,32 +686,6 @@ Update changelog — github-actions[bot]
 [detail](#df9a82d-details)
 
 <details id='df9a82d-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 96e277e (Sep 14, 2026 11:57:50)
-fix utc time with local time — antonio-bravo
-[detail](#96e277e-details)
-
-<details id='96e277e-details'>
-<summary>Changed files</summary>
-
-- .idea/misc.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/TimestampParser.kt [Modified]
-</details>
-
-
----
-## cb46140 (Sep 13, 2026 19:25:37)
-Update changelog — github-actions[bot]
-[detail](#cb46140-details)
-
-<details id='cb46140-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
