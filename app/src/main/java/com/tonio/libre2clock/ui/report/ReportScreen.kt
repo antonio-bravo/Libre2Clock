@@ -60,6 +60,7 @@ fun ReportScreen(
     val agpData by viewModel.agpData.collectAsStateWithLifecycle()
     val rawAgpData by viewModel.rawAgpData.collectAsStateWithLifecycle()
     val dailySummaries by viewModel.dailySummaries.collectAsStateWithLifecycle()
+    val multiPeriodCv by viewModel.multiPeriodCv.collectAsStateWithLifecycle()
     val isGenerating by viewModel.isGenerating.collectAsStateWithLifecycle()
     
     var selectedLayout by remember { mutableStateOf(ReportLayout.FULL) }
@@ -185,7 +186,20 @@ fun ReportScreen(
 
                 metrics?.let { m ->
                     GlucoseStatsSection(m)
+                    CvVariabilityCard(
+                        multiPeriodCv = multiPeriodCv,
+                        compareRawAndCalibrated = compareRawAndCalibrated,
+                        useOffset = useOffset
+                    )
                     InsulinStatsSection(m)
+                }
+
+                if (agpData.isNotEmpty()) {
+                    AgpChartComponent(
+                        agpData = agpData,
+                        rawAgpData = rawAgpData,
+                        compareRawAndCalibrated = compareRawAndCalibrated
+                    )
                 }
 
                 Text(text = stringResource(R.string.report_preview_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -351,9 +365,68 @@ private fun GlucoseStatsSection(metrics: ReportMetrics) {
             MetricRow(stringResource(R.string.report_avg_glucose), "%.0f mg/dL".format(metrics.avgGlucose))
             MetricRow(stringResource(R.string.report_gmi), "%.1f %%".format(metrics.gmi))
             MetricRow(stringResource(R.string.report_variability_cv), "%.1f %%".format(metrics.cv))
+            MetricRow(stringResource(R.string.report_std_dev), "%.1f mg/dL".format(metrics.stdDev))
+            MetricRow(stringResource(R.string.report_active_sensor), "%.1f %%".format(metrics.activeSensorPercent))
             
             Spacer(modifier = Modifier.height(16.dp))
             TirBarAdvanced(metrics)
+
+            Spacer(modifier = Modifier.height(16.dp))
+            ClinicalTargetsSection(metrics.targetsStatus)
+        }
+    }
+}
+
+@Composable
+private fun ClinicalTargetsSection(targets: AgpTargetsStatus) {
+    Column {
+        Text(
+            text = stringResource(R.string.report_clinical_targets),
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            TargetChip(
+                label = "TIR > 70%",
+                isMet = targets.isTirMet,
+                modifier = Modifier.weight(1f)
+            )
+            TargetChip(
+                label = "TBR < 4%",
+                isMet = targets.isTbrMet,
+                modifier = Modifier.weight(1f)
+            )
+            TargetChip(
+                label = "CV < 36%",
+                isMet = targets.isCvMet,
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun TargetChip(label: String, isMet: Boolean, modifier: Modifier = Modifier) {
+    val containerColor = if (isMet) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
+    val contentColor = if (isMet) Color(0xFF2E7D32) else Color(0xFFC62828)
+    val statusText = if (isMet) "✓" else "!"
+
+    Surface(
+        modifier = modifier,
+        shape = MaterialTheme.shapes.small,
+        color = containerColor
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = label, style = MaterialTheme.typography.labelSmall, color = contentColor)
+            Text(text = statusText, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = contentColor)
         }
     }
 }
@@ -378,6 +451,13 @@ private fun MetricRow(label: String, value: String) {
     }
 }
 
+private fun formatHoursMinutes(hours: Double): String {
+    val totalMinutes = (hours * 60).toInt()
+    val h = totalMinutes / 60
+    val m = totalMinutes % 60
+    return if (h > 0) "${h}h ${m}m" else "${m}m"
+}
+
 @Composable
 private fun TirBarAdvanced(m: ReportMetrics) {
     val tirAnim by animateFloatAsState(targetValue = m.tir.toFloat(), animationSpec = tween(1000), label = "tir")
@@ -389,7 +469,11 @@ private fun TirBarAdvanced(m: ReportMetrics) {
     Column {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(text = stringResource(R.string.report_time_in_range_label), style = MaterialTheme.typography.labelSmall)
-            Text(text = "%.0f%%".format(m.tir), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+            Text(
+                text = "%.0f%% (%s/día)".format(m.tir, formatHoursMinutes(m.timeInRangesHours.tirHours)),
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold
+            )
         }
         
         Row(modifier = Modifier.fillMaxWidth().height(12.dp).background(ColorBgBar)) {
@@ -402,15 +486,178 @@ private fun TirBarAdvanced(m: ReportMetrics) {
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(
-                text = stringResource(R.string.report_low_percent, m.tbrLow + m.tbrVLow), 
+                text = "%s (%s)".format(
+                    stringResource(R.string.report_low_percent, m.tbrLow + m.tbrVLow),
+                    formatHoursMinutes(m.timeInRangesHours.tbrLowHours + m.timeInRangesHours.tbrVLowHours)
+                ), 
                 style = MaterialTheme.typography.labelSmall, 
                 color = ColorTbrLow
             )
             Text(
-                text = stringResource(R.string.report_high_percent, m.tarHigh + m.tarVHigh), 
+                text = "%s (%s)".format(
+                    stringResource(R.string.report_high_percent, m.tarHigh + m.tarVHigh),
+                    formatHoursMinutes(m.timeInRangesHours.tarHighHours + m.timeInRangesHours.tarVHighHours)
+                ), 
                 style = MaterialTheme.typography.labelSmall, 
                 color = ColorTarHigh
             )
+        }
+    }
+}
+
+@Composable
+private fun CvVariabilityCard(
+    multiPeriodCv: MultiPeriodCv,
+    compareRawAndCalibrated: Boolean,
+    useOffset: Boolean
+) {
+    val currentCv = if (useOffset) multiPeriodCv.cv30d else multiPeriodCv.rawCv30d
+    val isStable = currentCv < 36.0 && currentCv > 0.0
+
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.report_cv_card_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Surface(
+                    shape = MaterialTheme.shapes.small,
+                    color = if (isStable) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
+                ) {
+                    Text(
+                        text = if (isStable) stringResource(R.string.report_cv_stable) else stringResource(R.string.report_cv_unstable),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isStable) Color(0xFF2E7D32) else Color(0xFFC62828),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = stringResource(R.string.report_cv_card_explanation),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = stringResource(R.string.report_cv_target_label),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                CvPeriodCell(
+                    label = stringResource(R.string.report_cv_period_7d),
+                    rawCv = multiPeriodCv.rawCv7d,
+                    offsetCv = multiPeriodCv.cv7d,
+                    compareRawAndCalibrated = compareRawAndCalibrated,
+                    useOffset = useOffset,
+                    modifier = Modifier.weight(1f)
+                )
+                CvPeriodCell(
+                    label = stringResource(R.string.report_cv_period_14d),
+                    rawCv = multiPeriodCv.rawCv14d,
+                    offsetCv = multiPeriodCv.cv14d,
+                    compareRawAndCalibrated = compareRawAndCalibrated,
+                    useOffset = useOffset,
+                    modifier = Modifier.weight(1f)
+                )
+                CvPeriodCell(
+                    label = stringResource(R.string.report_cv_period_30d),
+                    rawCv = multiPeriodCv.rawCv30d,
+                    offsetCv = multiPeriodCv.cv30d,
+                    compareRawAndCalibrated = compareRawAndCalibrated,
+                    useOffset = useOffset,
+                    modifier = Modifier.weight(1f)
+                )
+                CvPeriodCell(
+                    label = stringResource(R.string.report_cv_period_90d),
+                    rawCv = multiPeriodCv.rawCv90d,
+                    offsetCv = multiPeriodCv.cv90d,
+                    compareRawAndCalibrated = compareRawAndCalibrated,
+                    useOffset = useOffset,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CvPeriodCell(
+    label: String,
+    rawCv: Double,
+    offsetCv: Double,
+    compareRawAndCalibrated: Boolean,
+    useOffset: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        shape = MaterialTheme.shapes.small,
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+    ) {
+        Column(
+            modifier = Modifier.padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+
+            if (compareRawAndCalibrated) {
+                Text(
+                    text = "%.1f%%".format(rawCv),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "(%.1f%%)".format(offsetCv),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.secondary,
+                    fontWeight = FontWeight.Bold
+                )
+            } else if (useOffset) {
+                Text(
+                    text = "%.1f%%".format(rawCv),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "(%.1f%%)".format(offsetCv),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.secondary,
+                    fontWeight = FontWeight.Bold
+                )
+            } else {
+                Text(
+                    text = "%.1f%%".format(rawCv),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }

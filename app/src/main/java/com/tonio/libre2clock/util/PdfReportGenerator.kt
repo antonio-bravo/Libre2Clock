@@ -184,7 +184,7 @@ object PdfReportGenerator {
         val rawValPaint = Paint().apply { color = COLOR_RAW_ORANGE; textSize = 9f; isFakeBoldText = true }
 
         canvas.drawText("ESTADÍSTICA Y OBJETIVOS DE GLUCOSA", MARGIN, y + 10f, headerPaint)
-        canvas.drawText("Tiempo activo del Sensor: 100%", PAGE_WIDTH - MARGIN - 160f, y + 10f, labelPaint)
+        canvas.drawText("Tiempo activo del Sensor: %.1f%%".format(cal.activeSensorPercent), PAGE_WIDTH - MARGIN - 180f, y + 10f, labelPaint)
         y += 18f
 
         // Table Header
@@ -198,24 +198,26 @@ object PdfReportGenerator {
 
         canvas.drawText("Rangos de glucosa", col1 + 5f, y + 12f, labelPaint)
         canvas.drawText("Objetivos %", col2, y + 12f, labelPaint)
-        canvas.drawText("Calibrada", col3, y + 12f, valPaint)
+        canvas.drawText("Calibrada (Tiempo/día)", col3, y + 12f, valPaint)
         if (compare) canvas.drawText("Raw (Sin calibrar)", col4, y + 12f, rawValPaint)
         y += 20f
 
         val rows = listOf(
-            Triple("Intervalo objetivo 70-180 mg/dL", "Mayor que 70%", Pair(cal.tir, raw?.tir)),
-            Triple("Por debajo 70 mg/dL", "Menor que 4%", Pair(cal.tbrLow + cal.tbrVLow, raw?.let { it.tbrLow + it.tbrVLow })),
-            Triple("Por debajo 54 mg/dL", "Menor que 1%", Pair(cal.tbrVLow, raw?.tbrVLow)),
-            Triple("Por encima 180 mg/dL", "Menor que 25%", Pair(cal.tarHigh + cal.tarVHigh, raw?.let { it.tarHigh + it.tarVHigh })),
-            Triple("Por encima 250 mg/dL", "Menor que 5%", Pair(cal.tarVHigh, raw?.tarVHigh))
+            Triple("Intervalo objetivo 70-180 mg/dL", "Mayor que 70%", Pair(cal.tir to cal.timeInRangesHours.tirHours, raw?.let { it.tir to it.timeInRangesHours.tirHours })),
+            Triple("Por debajo 70 mg/dL", "Menor que 4%", Pair(cal.tbrLow + cal.tbrVLow to cal.timeInRangesHours.tbrLowHours + cal.timeInRangesHours.tbrVLowHours, raw?.let { (it.tbrLow + it.tbrVLow) to (it.timeInRangesHours.tbrLowHours + it.timeInRangesHours.tbrVLowHours) })),
+            Triple("Por debajo 54 mg/dL", "Menor que 1%", Pair(cal.tbrVLow to cal.timeInRangesHours.tbrVLowHours, raw?.let { it.tbrVLow to it.timeInRangesHours.tbrVLowHours })),
+            Triple("Por encima 180 mg/dL", "Menor que 25%", Pair(cal.tarHigh + cal.tarVHigh to cal.timeInRangesHours.tarHighHours + cal.timeInRangesHours.tarVHighHours, raw?.let { (it.tarHigh + it.tarVHigh) to (it.timeInRangesHours.tarHighHours + it.timeInRangesHours.tarVHighHours) })),
+            Triple("Por encima 250 mg/dL", "Menor que 5%", Pair(cal.tarVHigh to cal.timeInRangesHours.tarVHighHours, raw?.let { it.tarVHigh to it.timeInRangesHours.tarVHighHours }))
         )
 
         rows.forEach { (rangeLabel, targetLabel, values) ->
+            val calText = "%.0f%% (%s)".format(values.first.first, formatHoursMinutes(values.first.second))
             canvas.drawText(rangeLabel, col1 + 5f, y + 10f, labelPaint)
             canvas.drawText(targetLabel, col2, y + 10f, labelPaint)
-            canvas.drawText("%.0f%%".format(values.first), col3, y + 10f, valPaint)
+            canvas.drawText(calText, col3, y + 10f, valPaint)
             if (compare && values.second != null) {
-                canvas.drawText("%.0f%%".format(values.second), col4, y + 10f, rawValPaint)
+                val rawText = "%.0f%% (%s)".format(values.second!!.first, formatHoursMinutes(values.second!!.second))
+                canvas.drawText(rawText, col4, y + 10f, rawValPaint)
             }
             y += 14f
         }
@@ -225,6 +227,11 @@ object PdfReportGenerator {
         canvas.drawText("Glucosa promedio:", col1 + 5f, y + 10f, headerPaint)
         canvas.drawText("%.0f mg/dL".format(cal.avgGlucose), col3, y + 10f, valPaint)
         if (compare && raw != null) canvas.drawText("%.0f mg/dL".format(raw.avgGlucose), col4, y + 10f, rawValPaint)
+        y += 14f
+
+        canvas.drawText("Desviación estándar (SD):", col1 + 5f, y + 10f, headerPaint)
+        canvas.drawText("%.1f mg/dL".format(cal.stdDev), col3, y + 10f, valPaint)
+        if (compare && raw != null) canvas.drawText("%.1f mg/dL".format(raw.stdDev), col4, y + 10f, rawValPaint)
         y += 14f
 
         canvas.drawText("GMI (Est. A1c):", col1 + 5f, y + 10f, headerPaint)
@@ -628,10 +635,10 @@ object PdfReportGenerator {
         canvas.drawText("PROMEDIO DE GLUCOSA", MARGIN + 10f, y + 18f, headerPaint)
         canvas.drawText("%.0f mg/dL".format(cal.avgGlucose), MARGIN + 10f, y + 42f, bigValPaint)
         if (compare && raw != null) {
-            canvas.drawText("%.0f mg/dL (Raw)".format(raw.avgGlucose), MARGIN + 10f, y + 60f, rawBigValPaint)
+            canvas.drawText("%.0f mg/dL (Raw)".format(raw.avgGlucose), MARGIN + 10f, y + 58f, rawBigValPaint)
         }
-        canvas.drawText("GMI (Est. A1c): %.1f%%".format(cal.gmi), MARGIN + 10f, y + 80f, labelPaint)
-        canvas.drawText("Variabilidad (CV): %.1f%%".format(cal.cv), MARGIN + 10f, y + 95f, labelPaint)
+        canvas.drawText("GMI (Est. A1c): %.1f%% | CV: %.1f%%".format(cal.gmi, cal.cv), MARGIN + 10f, y + 76f, labelPaint)
+        canvas.drawText("SD: %.1f mg/dL | Sensor Activo: %.1f%%".format(cal.stdDev, cal.activeSensorPercent), MARGIN + 10f, y + 92f, labelPaint)
 
         // Box 2: Time in Range Summary
         val box2X = MARGIN + boxW + 20f
@@ -639,9 +646,9 @@ object PdfReportGenerator {
         canvas.drawRect(box2X, y, box2X + boxW, y + boxH, cardBorder)
 
         canvas.drawText("TIEMPO EN RANGO (70-180)", box2X + 10f, y + 18f, headerPaint)
-        canvas.drawText("%.0f%%".format(cal.tir), box2X + 10f, y + 42f, bigValPaint)
-        canvas.drawText("Sobre objetivo (>180): %.0f%%".format(cal.tarHigh + cal.tarVHigh), box2X + 10f, y + 65f, labelPaint)
-        canvas.drawText("Bajo objetivo (<70): %.0f%%".format(cal.tbrLow + cal.tbrVLow), box2X + 10f, y + 80f, labelPaint)
+        canvas.drawText("%.0f%% (%s)".format(cal.tir, formatHoursMinutes(cal.timeInRangesHours.tirHours)), box2X + 10f, y + 42f, bigValPaint)
+        canvas.drawText("Sobre objetivo (>180): %.0f%% (%s)".format(cal.tarHigh + cal.tarVHigh, formatHoursMinutes(cal.timeInRangesHours.tarHighHours + cal.timeInRangesHours.tarVHighHours)), box2X + 10f, y + 65f, labelPaint)
+        canvas.drawText("Bajo objetivo (<70): %.0f%% (%s)".format(cal.tbrLow + cal.tbrVLow, formatHoursMinutes(cal.timeInRangesHours.tbrLowHours + cal.timeInRangesHours.tbrVLowHours)), box2X + 10f, y + 80f, labelPaint)
 
         y += boxH + 25f
 
@@ -748,5 +755,12 @@ object PdfReportGenerator {
 
     private fun formatDateSpanish(date: LocalDate): String {
         return "${date.dayOfMonth} ${date.month.getDisplayName(TextStyle.FULL, Locale("es"))} ${date.year}"
+    }
+
+    private fun formatHoursMinutes(hours: Double): String {
+        val totalMinutes = (hours * 60).toInt()
+        val h = totalMinutes / 60
+        val m = totalMinutes % 60
+        return if (h > 0) "${h}h ${m}m" else "${m}m"
     }
 }

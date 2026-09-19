@@ -24,11 +24,41 @@ enum class ReportRange(val days: Int) {
 enum class ReportLayout { SNAPSHOT, DAILY_LOG, FULL }
 
 @Serializable
+data class TimeInRangesHours(
+    val tirHours: Double = 0.0,
+    val tarHighHours: Double = 0.0,
+    val tarVHighHours: Double = 0.0,
+    val tbrLowHours: Double = 0.0,
+    val tbrVLowHours: Double = 0.0
+)
+
+@Serializable
+data class AgpTargetsStatus(
+    val isTirMet: Boolean = false,
+    val isTbrMet: Boolean = false,
+    val isTbrVLowMet: Boolean = false,
+    val isTarMet: Boolean = false,
+    val isTarVHighMet: Boolean = false,
+    val isCvMet: Boolean = false
+)
+
+@Serializable
 data class ReportMetrics(
-    val avgGlucose: Double, val gmi: Double, val cv: Double,
-    val tir: Double, val tarHigh: Double, val tarVHigh: Double,
-    val tbrLow: Double, val tbrVLow: Double,
-    val avgTdi: Double, val basalPercentage: Double, val bolusPercentage: Double,
+    val avgGlucose: Double,
+    val gmi: Double,
+    val cv: Double,
+    val stdDev: Double = 0.0,
+    val activeSensorPercent: Double = 0.0,
+    val tir: Double,
+    val tarHigh: Double,
+    val tarVHigh: Double,
+    val tbrLow: Double,
+    val tbrVLow: Double,
+    val timeInRangesHours: TimeInRangesHours = TimeInRangesHours(),
+    val targetsStatus: AgpTargetsStatus = AgpTargetsStatus(),
+    val avgTdi: Double,
+    val basalPercentage: Double,
+    val bolusPercentage: Double,
     val readingsCount: Int
 )
 
@@ -45,6 +75,18 @@ data class DailySummary(
     val insulin: Double, val carbs: Double, val basal: Double, val bolus: Double
 )
 
+@Serializable
+data class MultiPeriodCv(
+    val cv7d: Double = 0.0,
+    val cv14d: Double = 0.0,
+    val cv30d: Double = 0.0,
+    val cv90d: Double = 0.0,
+    val rawCv7d: Double = 0.0,
+    val rawCv14d: Double = 0.0,
+    val rawCv30d: Double = 0.0,
+    val rawCv90d: Double = 0.0
+)
+
 // OPTIMIZACIÓN: Agrupamos todo el reporte en una sola clase para calcular y cachear una sola vez
 @Serializable
 data class FullReportData(
@@ -52,7 +94,8 @@ data class FullReportData(
     val rawMetrics: ReportMetrics? = null,
     val agp: List<AgpPoint>,
     val rawAgp: List<AgpPoint>? = null,
-    val dailySummaries: List<DailySummary>
+    val dailySummaries: List<DailySummary>,
+    val multiPeriodCv: MultiPeriodCv = MultiPeriodCv()
 )
 
 // Clase ligera para evitar reprocesar la glucosa
@@ -82,18 +125,19 @@ class ReportViewModel(
     private val _isGenerating = MutableStateFlow(false)
     val isGenerating: StateFlow<Boolean> = _isGenerating.asStateFlow()
 
-    // 1. Ventana de datos optimizada
+    // 1. Ventana de datos optimizada (Asegura al menos 90 días para el desglose temporal de CV%)
     private val windowedData: Flow<Pair<List<GlucoseMeasurement>, List<InsulinDose>>> = combine(
         _startDate, _endDate, preferenceManager.insulinDoses, repository.historicalGlucose
     ) { start, end, doses, _ ->
         val zone = ZoneId.systemDefault()
-        val startInstant = start.atStartOfDay(zone).toInstant()
+        val effectiveStart = if (ChronoUnit.DAYS.between(start, end) < 90) end.minusDays(90) else start
+        val startInstant = effectiveStart.atStartOfDay(zone).toInstant()
         val endInstant = end.plusDays(1).atStartOfDay(zone).toInstant()
 
         val filteredG = repository.getHistoricalGlucoseWindow(
             startEpochMs = startInstant.toEpochMilli(),
             endEpochMs = endInstant.toEpochMilli(),
-            maxItems = 10000
+            maxItems = 20000
         )
         
         // OPTIMIZACIÓN: Parsear timestamp una sola vez por dosis
@@ -152,14 +196,34 @@ class ReportViewModel(
                 ProcessedGlucose(instant, processed.value.toDouble(), processed.calibratedValue.toDouble())
             }
 
+            val startInstant = params.start.atStartOfDay(zone).toInstant()
+            val endInstant = params.end.plusDays(1).atStartOfDay(zone).toInstant()
+
+            // Filtrar glucosa para el rango seleccionado
+            val selectedRangeGlucose = processedGlucose.filter {
+                !it.instant.isBefore(startInstant) && !it.instant.isAfter(endInstant)
+            }
+
             val daysCount = (ChronoUnit.DAYS.between(params.start, params.end) + 1).toInt()
 
+            val multiPeriodCv = MultiPeriodCv(
+                cv7d = calculateCvForPeriod(processedGlucose, endInstant, 7),
+                cv14d = calculateCvForPeriod(processedGlucose, endInstant, 14),
+                cv30d = calculateCvForPeriod(processedGlucose, endInstant, 30),
+                cv90d = calculateCvForPeriod(processedGlucose, endInstant, 90),
+                rawCv7d = calculateCvForPeriod(processedGlucose, endInstant, 7, useOffset = false),
+                rawCv14d = calculateCvForPeriod(processedGlucose, endInstant, 14, useOffset = false),
+                rawCv30d = calculateCvForPeriod(processedGlucose, endInstant, 30, useOffset = false),
+                rawCv90d = calculateCvForPeriod(processedGlucose, endInstant, 90, useOffset = false)
+            )
+
             FullReportData(
-                metrics = calculateMetricsOptimized(processedGlucose, input.doses, daysCount, useOffset = true),
-                rawMetrics = calculateMetricsOptimized(processedGlucose, input.doses, daysCount, useOffset = false),
-                agp = calculateAgpOptimized(processedGlucose, zone, useOffset = true),
-                rawAgp = calculateAgpOptimized(processedGlucose, zone, useOffset = false),
-                dailySummaries = calculateDailySummariesOptimized(processedGlucose, input.doses, zone)
+                metrics = calculateMetricsOptimized(selectedRangeGlucose, input.doses, daysCount, useOffset = true),
+                rawMetrics = calculateMetricsOptimized(selectedRangeGlucose, input.doses, daysCount, useOffset = false),
+                agp = calculateAgpOptimized(selectedRangeGlucose, zone, useOffset = true),
+                rawAgp = calculateAgpOptimized(selectedRangeGlucose, zone, useOffset = false),
+                dailySummaries = calculateDailySummariesOptimized(selectedRangeGlucose, input.doses, zone),
+                multiPeriodCv = multiPeriodCv
             )
         }
     }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
@@ -170,6 +234,7 @@ class ReportViewModel(
     val agpData: StateFlow<List<AgpPoint>> = reportData.map { it?.agp ?: emptyList() }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val rawAgpData: StateFlow<List<AgpPoint>> = reportData.map { it?.rawAgp ?: emptyList() }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val dailySummaries: StateFlow<List<DailySummary>> = reportData.map { it?.dailySummaries ?: emptyList() }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val multiPeriodCv: StateFlow<MultiPeriodCv> = reportData.map { it?.multiPeriodCv ?: MultiPeriodCv() }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MultiPeriodCv())
 
     fun setRange(range: ReportRange) {
         _endDate.value = LocalDate.now()
@@ -191,13 +256,47 @@ class ReportViewModel(
 
     // --- FUNCIONES DE CÁLCULO OPTIMIZADAS ---
 
+    private fun calculateCvForPeriod(
+        processed: List<ProcessedGlucose>,
+        endInstant: Instant,
+        days: Long,
+        useOffset: Boolean = true
+    ): Double {
+        val cutoff = endInstant.minus(days, ChronoUnit.DAYS)
+        var sum = 0.0
+        var sumSq = 0.0
+        var count = 0
+
+        for (pg in processed) {
+            if (!pg.instant.isBefore(cutoff) && !pg.instant.isAfter(endInstant)) {
+                val v = if (useOffset) pg.calibratedValue else pg.rawValue
+                sum += v
+                sumSq += v * v
+                count++
+            }
+        }
+
+        if (count == 0) return 0.0
+        val avg = sum / count
+        val variance = (sumSq / count) - (avg * avg)
+        val stdDev = if (variance > 0) sqrt(variance) else 0.0
+        return if (avg > 0) (stdDev / avg) * 100.0 else 0.0
+    }
+
     private fun calculateMetricsOptimized(
         processed: List<ProcessedGlucose>,
         doses: List<InsulinDose>,
         daysCount: Int,
         useOffset: Boolean
     ): ReportMetrics {
-        if (processed.isEmpty()) return ReportMetrics(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0)
+        if (processed.isEmpty()) {
+            return ReportMetrics(
+                avgGlucose = 0.0, gmi = 0.0, cv = 0.0, stdDev = 0.0, activeSensorPercent = 0.0,
+                tir = 0.0, tarHigh = 0.0, tarVHigh = 0.0, tbrLow = 0.0, tbrVLow = 0.0,
+                timeInRangesHours = TimeInRangesHours(), targetsStatus = AgpTargetsStatus(),
+                avgTdi = 0.0, basalPercentage = 0.0, bolusPercentage = 0.0, readingsCount = 0
+            )
+        }
 
         var sum = 0.0
         var sumSq = 0.0
@@ -226,6 +325,45 @@ class ReportViewModel(
         val cv = if (avg > 0) (stdDev / avg) * 100 else 0.0
         val gmi = if (avg > 0) (avg + 46.7) / 28.7 else 0.0
 
+        val tirPct = (tir / count) * 100
+        val tarHighPct = (tarHigh / count) * 100
+        val tarVHighPct = (tarVHigh / count) * 100
+        val tbrLowPct = (tbrLow / count) * 100
+        val tbrVLowPct = (tbrVLow / count) * 100
+
+        // Horas por día dedicadas a cada rango (basado en 24h por día)
+        val tirHours = (tirPct / 100.0) * 24.0
+        val tarHighHours = (tarHighPct / 100.0) * 24.0
+        val tarVHighHours = (tarVHighPct / 100.0) * 24.0
+        val tbrLowHours = (tbrLowPct / 100.0) * 24.0
+        val tbrVLowHours = (tbrVLowPct / 100.0) * 24.0
+
+        val timeInRangesHours = TimeInRangesHours(
+            tirHours = tirHours,
+            tarHighHours = tarHighHours,
+            tarVHighHours = tarVHighHours,
+            tbrLowHours = tbrLowHours,
+            tbrVLowHours = tbrVLowHours
+        )
+
+        // Estado de cumplimiento de objetivos clínicos del consenso internacional
+        val targetsStatus = AgpTargetsStatus(
+            isTirMet = tirPct >= 70.0,
+            isTbrMet = (tbrLowPct + tbrVLowPct) <= 4.0,
+            isTbrVLowMet = tbrVLowPct <= 1.0,
+            isTarMet = (tarHighPct + tarVHighPct) <= 25.0,
+            isTarVHighMet = tarVHighPct <= 5.0,
+            isCvMet = cv <= 36.0
+        )
+
+        // Cálculo de porcentaje de sensor activo
+        // Si hay más de 96 lecturas/día (intervalos de <15 min, p. ej. 1 min = 1440 lecturas/día), usamos 1440; sino 96 (15 min).
+        val safeDays = daysCount.coerceAtLeast(1)
+        val maxExpected15Min = safeDays * 96.0
+        val maxExpected1Min = safeDays * 1440.0
+        val expectedReadings = if (count > maxExpected15Min * 1.2) maxExpected1Min else maxExpected15Min
+        val activeSensorPct = ((count / expectedReadings) * 100.0).coerceAtMost(100.0)
+
         var totalInsulin = 0.0; var basal = 0.0; var bolus = 0.0
         for (d in doses) {
             totalInsulin += d.units
@@ -233,10 +371,19 @@ class ReportViewModel(
         }
 
         return ReportMetrics(
-            avgGlucose = avg, gmi = gmi, cv = cv,
-            tir = (tir / count) * 100, tarHigh = (tarHigh / count) * 100, tarVHigh = (tarVHigh / count) * 100,
-            tbrLow = (tbrLow / count) * 100, tbrVLow = (tbrVLow / count) * 100,
-            avgTdi = totalInsulin / daysCount.coerceAtLeast(1),
+            avgGlucose = avg,
+            gmi = gmi,
+            cv = cv,
+            stdDev = stdDev,
+            activeSensorPercent = activeSensorPct,
+            tir = tirPct,
+            tarHigh = tarHighPct,
+            tarVHigh = tarVHighPct,
+            tbrLow = tbrLowPct,
+            tbrVLow = tbrVLowPct,
+            timeInRangesHours = timeInRangesHours,
+            targetsStatus = targetsStatus,
+            avgTdi = totalInsulin / safeDays,
             basalPercentage = if (totalInsulin > 0) (basal / totalInsulin) * 100 else 0.0,
             bolusPercentage = if (totalInsulin > 0) (bolus / totalInsulin) * 100 else 0.0,
             readingsCount = processed.size

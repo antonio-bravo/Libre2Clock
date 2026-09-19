@@ -1008,11 +1008,12 @@ private fun DashboardSlidesCard(
     isRefreshing: Boolean,
     onRefresh: () -> Unit
 ) {
-    val pagerState = rememberPagerState(pageCount = { 3 })
+    val pagerState = rememberPagerState(pageCount = { 4 })
     val pageTitle = when (pagerState.currentPage) {
         0 -> stringResource(R.string.avg_glucose)
         1 -> stringResource(R.string.avg_glucose_last_month)
-        else -> stringResource(R.string.hypos_last_month)
+        2 -> stringResource(R.string.hypos_last_month)
+        else -> stringResource(R.string.cv_variability_slide_title)
     }
 
     // Altura aumentada a 210.dp para acomodar perfectamente el layout 2x2 de 4 elementos
@@ -1030,7 +1031,7 @@ private fun DashboardSlidesCard(
                 Text(text = pageTitle, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        repeat(3) { index ->
+                        repeat(4) { index ->
                             val active = index == pagerState.currentPage
                             Box(
                                 modifier = Modifier
@@ -1084,6 +1085,16 @@ private fun DashboardSlidesCard(
                         secondLabel = stringResource(R.string.lunch),
                         thirdLabel = stringResource(R.string.dinner),
                         fourthLabel = stringResource(R.string.night)
+                    )
+                    else -> FourItemMetricsLayout(
+                        first = metrics.cv7d,
+                        second = metrics.cv14d,
+                        third = metrics.cv30d,
+                        fourth = metrics.cv90d,
+                        firstLabel = stringResource(R.string.period_7d),
+                        secondLabel = stringResource(R.string.period_14d),
+                        thirdLabel = stringResource(R.string.period_30d),
+                        fourthLabel = stringResource(R.string.period_90d)
                     )
                 }
             }

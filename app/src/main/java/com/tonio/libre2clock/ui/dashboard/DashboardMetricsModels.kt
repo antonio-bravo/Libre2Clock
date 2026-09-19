@@ -9,6 +9,7 @@ import java.time.ZoneId
 import java.util.Locale
 import kotlin.math.max // <-- CORRECCIÓN: Usamos max en lugar de maxOf
 import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 @Serializable
 data class DisplayMetric(
@@ -37,7 +38,11 @@ data class DashboardMetrics(
     val breakfastHypos: CountMetric,
     val lunchHypos: CountMetric,
     val dinnerHypos: CountMetric,
-    val nightHypos: CountMetric
+    val nightHypos: CountMetric,
+    val cv7d: DisplayMetric = DisplayMetric("--", ""),
+    val cv14d: DisplayMetric = DisplayMetric("--", ""),
+    val cv30d: DisplayMetric = DisplayMetric("--", ""),
+    val cv90d: DisplayMetric = DisplayMetric("--", "")
 )
 
 object DashboardMetricsCalculator {
@@ -209,6 +214,55 @@ object DashboardMetricsCalculator {
             DisplayMetric("--", "")
         }
 
+        val twoWeeksStart = today.minusDays(13)
+
+        fun buildCvFromMeasurements(datePredicate: (LocalDate) -> Boolean): DisplayMetric {
+            var sumRaw = 0.0
+            var sumSqRaw = 0.0
+            var countRaw = 0
+
+            var sumCal = 0.0
+            var sumSqCal = 0.0
+            var countCal = 0
+
+            for (m in measurements) {
+                val rawVal = m.value
+                if (rawVal <= 40) continue
+                val instant = parseMeasurementInstant(m) ?: continue
+                val date = instant.atZone(zone).toLocalDate()
+
+                if (datePredicate(date)) {
+                    val raw = rawVal.toDouble()
+                    val cal = m.calibratedValue.toDouble()
+
+                    sumRaw += raw
+                    sumSqRaw += raw * raw
+                    countRaw++
+
+                    sumCal += cal
+                    sumSqCal += cal * cal
+                    countCal++
+                }
+            }
+
+            if (countRaw < 5 || countCal < 5) return DisplayMetric("--", "")
+
+            val avgRaw = sumRaw / countRaw
+            val varRaw = (sumSqRaw / countRaw) - (avgRaw * avgRaw)
+            val stdDevRaw = if (varRaw > 0) sqrt(varRaw) else 0.0
+            val cvRaw = if (avgRaw > 0) (stdDevRaw / avgRaw) * 100.0 else 0.0
+
+            val avgCal = sumCal / countCal
+            val varCal = (sumSqCal / countCal) - (avgCal * avgCal)
+            val stdDevCal = if (varCal > 0) sqrt(varCal) else 0.0
+            val cvCal = if (avgCal > 0) (stdDevCal / avgCal) * 100.0 else 0.0
+
+            return DisplayMetric(
+                primary = String.format(Locale.US, "%.1f%%", cvRaw),
+                secondary = String.format(Locale.US, "(%.1f%%)", cvCal)
+            )
+        }
+
         return DashboardMetrics(
             estimatedA1c = estimatedA1c,
             todayAvg = buildMetricFromDays { it == today },
@@ -223,7 +277,11 @@ object DashboardMetricsCalculator {
             breakfastHypos = CountMetric(breakfastHypoCal, breakfastHypoCal - breakfastHypoRaw),
             lunchHypos = CountMetric(lunchHypoCal, lunchHypoCal - lunchHypoRaw),
             dinnerHypos = CountMetric(dinnerHypoCal, dinnerHypoCal - dinnerHypoRaw),
-            nightHypos = CountMetric(nightHypoCal, nightHypoCal - nightHypoRaw)
+            nightHypos = CountMetric(nightHypoCal, nightHypoCal - nightHypoRaw),
+            cv7d = buildCvFromMeasurements { it >= weekStart },
+            cv14d = buildCvFromMeasurements { it >= twoWeeksStart },
+            cv30d = buildCvFromMeasurements { it >= monthStart },
+            cv90d = buildCvFromMeasurements { it >= quarterStart }
         )
     }
 
@@ -241,7 +299,11 @@ object DashboardMetricsCalculator {
         breakfastHypos = CountMetric(0, 0),
         lunchHypos = CountMetric(0, 0),
         dinnerHypos = CountMetric(0, 0),
-        nightHypos = CountMetric(0, 0)
+        nightHypos = CountMetric(0, 0),
+        cv7d = DisplayMetric("--", ""),
+        cv14d = DisplayMetric("--", ""),
+        cv30d = DisplayMetric("--", ""),
+        cv90d = DisplayMetric("--", "")
     )
 
     private fun parseMeasurementInstant(measurement: GlucoseMeasurement): Instant? {
