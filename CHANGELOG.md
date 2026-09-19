@@ -1,5 +1,36 @@
 # Changelog
 
+## 13552cc (Sep 19, 2026 20:41:04)
+add CV Coeficiente de Variabilidad % — antonio-bravo
+[detail](#13552cc-details)
+
+<details id='13552cc-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/AgpChartComponent.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/PdfReportGenerator.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 553db4c (Sep 19, 2026 17:25:54)
+Update changelog — github-actions[bot]
+[detail](#553db4c-details)
+
+<details id='553db4c-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 04708a4 (Sep 19, 2026 19:25:43)
 add nice coloring base on gluse measure — antonio-bravo
 [detail](#04708a4-details)
@@ -653,34 +684,6 @@ Update changelog — github-actions[bot]
 [detail](#b851035-details)
 
 <details id='b851035-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 6ac039e (Sep 12, 2026 21:51:37)
-Sync other stuff — antonio-bravo
-[detail](#6ac039e-details)
-
-<details id='6ac039e-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-</details>
-
-
----
-## 991796f (Sep 12, 2026 18:23:41)
-Update changelog — github-actions[bot]
-[detail](#991796f-details)
-
-<details id='991796f-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
