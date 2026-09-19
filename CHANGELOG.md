@@ -1,5 +1,36 @@
 # Changelog
 
+## bf3f4ca (Sep 19, 2026 23:58:19)
+Glucose Prediction and Preventive Hypoglycemia Alerts — antonio-bravo
+[detail](#bf3f4ca-details)
+
+<details id='bf3f4ca-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/repository/InsulinProcessor.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsAlertsScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+- app/src/test/java/com/tonio/libre2clock/ExampleUnitTest.kt [Modified]
+</details>
+
+
+---
+## c35cc7c (Sep 19, 2026 21:39:42)
+Update changelog — github-actions[bot]
+[detail](#c35cc7c-details)
+
+<details id='c35cc7c-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 60e2c05 (Sep 19, 2026 23:39:30)
 fix issue add insulin to sync — antonio-bravo
 [detail](#60e2c05-details)
@@ -654,34 +685,6 @@ Update changelog — github-actions[bot]
 [detail](#cb46140-details)
 
 <details id='cb46140-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 8812099 (Sep 13, 2026 21:25:23)
-Hypo count in 4 ranges — antonio-bravo
-[detail](#8812099-details)
-
-<details id='8812099-details'>
-<summary>Changed files</summary>
-
-- .idea/misc.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 5df7a92 (Sep 13, 2026 14:08:15)
-Update changelog — github-actions[bot]
-[detail](#5df7a92-details)
-
-<details id='5df7a92-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
