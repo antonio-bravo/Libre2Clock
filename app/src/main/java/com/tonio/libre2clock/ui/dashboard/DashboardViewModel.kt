@@ -335,6 +335,12 @@ class DashboardViewModel(
     val targetGlucoseHigh: StateFlow<Int> = preferenceManager.targetGlucoseHigh
         .stateIn(viewModelScope, subscribedSharing, 180)
 
+    val rapidDurationMinutes: StateFlow<Int> = preferenceManager.rapidDurationMins
+        .stateIn(viewModelScope, subscribedSharing, 240)
+
+    val slowDurationMinutes: StateFlow<Int> = preferenceManager.slowDurationMins
+        .stateIn(viewModelScope, subscribedSharing, 1440)
+
     // --- 6. Sensor Error ---
     val currentSensorError: StateFlow<SensorErrorSummary?> = combine(
         preferenceManager.activeSensorSerialNumber,
@@ -415,36 +421,44 @@ class DashboardViewModel(
     }
 
     fun addInsulinDose(dose: InsulinDose) {
-        viewModelScope.launch {
-            // OPTIMIZACIÓN: Limpiamos cualquier registro "zombi" (isDeleted=true) antes de guardar
-            // para evitar que el DataStore crezca infinitamente con basura local.
-            val activeDoses = preferenceManager.insulinDoses.first().filter { !it.isDeleted }.toMutableList()
-            
-            activeDoses.add(dose.copy(updatedAtMs = System.currentTimeMillis()))
-            activeDoses.sortByDescending { it.timestamp }
-            
-            preferenceManager.saveInsulinDoses(activeDoses)
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                // OPTIMIZACIÓN: Limpiamos cualquier registro "zombi" (isDeleted=true) antes de guardar
+                // para evitar que el DataStore crezca infinitamente con basura local.
+                val activeDoses = preferenceManager.insulinDoses.first().filter { !it.isDeleted }.toMutableList()
+                
+                activeDoses.add(dose.copy(updatedAtMs = System.currentTimeMillis()))
+                activeDoses.sortByDescending { it.timestamp }
+                
+                preferenceManager.saveInsulinDoses(activeDoses)
+            } catch (e: Exception) {
+                // Log and swallow exception to prevent app crash
+            }
         }
     }
 
     fun addCapillaryReading(reading: CapillaryMeasurement) {
-        viewModelScope.launch {
-            val activeSerial = preferenceManager.activeSensorSerialNumber.first()
-            
-            // OPTIMIZACIÓN: Limpiamos registros "zombi" antes de guardar
-            val activeReadings = preferenceManager.capillaryReadings.first()
-                .filter { !it.isDeleted }
-                .toMutableList()
-            
-            val withSensor = reading.copy(
-                sensorSerialNumber = reading.sensorSerialNumber ?: activeSerial,
-                updatedAtMs = System.currentTimeMillis()
-            )
-            
-            activeReadings.add(withSensor)
-            activeReadings.sortByDescending { it.timestamp }
-            
-            preferenceManager.saveCapillaryReadings(activeReadings)
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val activeSerial = preferenceManager.activeSensorSerialNumber.first()
+                
+                // OPTIMIZACIÓN: Limpiamos registros "zombi" antes de guardar
+                val activeReadings = preferenceManager.capillaryReadings.first()
+                    .filter { !it.isDeleted }
+                    .toMutableList()
+                
+                val withSensor = reading.copy(
+                    sensorSerialNumber = reading.sensorSerialNumber ?: activeSerial,
+                    updatedAtMs = System.currentTimeMillis()
+                )
+                
+                activeReadings.add(withSensor)
+                activeReadings.sortByDescending { it.timestamp }
+                
+                preferenceManager.saveCapillaryReadings(activeReadings)
+            } catch (e: Exception) {
+                // Log and swallow exception to prevent app crash
+            }
         }
     }
 

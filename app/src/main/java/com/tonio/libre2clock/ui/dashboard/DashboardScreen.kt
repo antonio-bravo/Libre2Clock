@@ -86,6 +86,8 @@ fun DashboardScreen(
     val manualTdi by viewModel.manualTdi.collectAsStateWithLifecycle()
     val manualIsf by viewModel.manualIsf.collectAsStateWithLifecycle()
     val isfRuleConstant by viewModel.isfRuleConstant.collectAsStateWithLifecycle()
+    val rapidDuration by viewModel.rapidDurationMinutes.collectAsStateWithLifecycle()
+    val slowDuration by viewModel.slowDurationMinutes.collectAsStateWithLifecycle()
     val isDemoMode by viewModel.isDemoMode.collectAsStateWithLifecycle()
     val isHistoryRefreshing by viewModel.isHistoryRefreshing.collectAsStateWithLifecycle()
     val dashboardMetrics by viewModel.dashboardMetrics.collectAsStateWithLifecycle()
@@ -306,7 +308,9 @@ fun DashboardScreen(
                         isfRuleConstant = isfRuleConstant,
                         icRuleConstant = icRuleConstant,
                         targetGlucose = targetGlucose,
-                        currentGlucose = currentGlucose
+                        currentGlucose = currentGlucose,
+                        rapidDuration = rapidDuration,
+                        slowDuration = slowDuration
                     )
                 }
                 item {
@@ -452,7 +456,9 @@ fun InsulinHealthCard(
     isfRuleConstant: Int,
     icRuleConstant: Int,
     targetGlucose: Int,
-    currentGlucose: GlucoseMeasurement?
+    currentGlucose: GlucoseMeasurement?,
+    rapidDuration: Int = 240,
+    slowDuration: Int = 1440
 ) {
     val pagerState = rememberPagerState(pageCount = { 2 })
     val today = LocalDate.now()
@@ -614,14 +620,17 @@ fun InsulinHealthCard(
 
     if (showAddDialog) {
         InsulinDoseDialog(
-            rapidDuration = 240,
-            slowDuration = 1440,
+            rapidDuration = rapidDuration,
+            slowDuration = slowDuration,
             suggestedUnits = suggestedUnitsRaw,
             suggestedUnitsCal = suggestedUnitsCal,
             isf = currentIsf,
             isBasalExpiringSoon = isBasalExpiringSoon,
             onDismiss = { showAddDialog = false },
-            onConfirm = { onAddDose(it); showAddDialog = false }
+            onConfirm = { dose ->
+                runCatching { onAddDose(dose) }
+                showAddDialog = false
+            }
         )
     }
 }

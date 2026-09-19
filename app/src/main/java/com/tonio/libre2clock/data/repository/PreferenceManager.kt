@@ -25,6 +25,8 @@ import com.tonio.libre2clock.data.model.InsulinDose
 import com.tonio.libre2clock.data.model.SensorLog
 import com.tonio.libre2clock.data.model.WatchNotificationMode
 import com.tonio.libre2clock.util.TimestampParser
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
@@ -640,8 +642,14 @@ class PreferenceManager(private val context: Context) {
         return File(dir, HISTORY_BACKUP_FILE)
     }
 
-    private fun saveHistoryBackupPayload(payload: HistoryBackupPayload) {
-        historyBackupFile().writeText(json.encodeToString(payload))
+    private suspend fun saveHistoryBackupPayload(payload: HistoryBackupPayload) {
+        withContext(Dispatchers.IO) {
+            try {
+                historyBackupFile().writeText(json.encodeToString(payload))
+            } catch (_: Exception) {
+                // Ignore backup file write error to prevent app crash
+            }
+        }
     }
 
     suspend fun getCurrentBackupPayload(): HistoryBackupPayload = buildCurrentHistoryBackupPayload()
