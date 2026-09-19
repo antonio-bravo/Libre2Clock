@@ -1,5 +1,33 @@
 # Changelog
 
+## 46a0ead (Sep 19, 2026 22:05:15)
+adjust text size in App — antonio-bravo
+[detail](#46a0ead-details)
+
+<details id='46a0ead-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## a199935 (Sep 19, 2026 18:41:16)
+Update changelog — github-actions[bot]
+[detail](#a199935-details)
+
+<details id='a199935-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 13552cc (Sep 19, 2026 20:41:04)
 add CV Coeficiente de Variabilidad % — antonio-bravo
 [detail](#13552cc-details)
@@ -655,35 +683,6 @@ Update changelog — github-actions[bot]
 [detail](#223c8a2-details)
 
 <details id='223c8a2-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 5a3132e (Sep 13, 2026 14:46:17)
-fix lost connectivity — antonio-bravo
-[detail](#5a3132e-details)
-
-<details id='5a3132e-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## b851035 (Sep 12, 2026 19:51:49)
-Update changelog — github-actions[bot]
-[detail](#b851035-details)
-
-<details id='b851035-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
