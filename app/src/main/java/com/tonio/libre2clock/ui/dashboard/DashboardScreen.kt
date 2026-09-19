@@ -286,7 +286,7 @@ fun DashboardScreen(
                         }
                     }
                 }
-                item { GlucoseCard(currentGlucose, dashboardMetrics) }
+                item { GlucoseCard(currentGlucose, dashboardMetrics, targetGlucoseLow, targetGlucoseHigh) }
                 item {
                     SensorHealthCard(
                         status = sensorStatus,
@@ -777,8 +777,15 @@ fun SensorHealthCard(
     }
 }
 
+private enum class GlucoseRangeCategory { LOW, IN_RANGE, HIGH }
+
 @Composable
-private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetrics) {
+private fun GlucoseCard(
+    measurement: GlucoseMeasurement?,
+    metrics: DashboardMetrics,
+    targetLow: Int = 70,
+    targetHigh: Int = 180
+) {
     val measurementInstant = remember(measurement) {
         measurement?.let { m -> TimestampParser.parseMeasurementInstant(m) }
     }
@@ -801,11 +808,31 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
         } ?: "------ --:--:--"
     }
 
+    val evalVal = measurement?.calibratedValue ?: measurement?.value ?: 100
+    val category = remember(evalVal, targetLow, targetHigh) {
+        when {
+            evalVal < targetLow -> GlucoseRangeCategory.LOW
+            evalVal > targetHigh -> GlucoseRangeCategory.HIGH
+            else -> GlucoseRangeCategory.IN_RANGE
+        }
+    }
+
+    val cardBgColor = when {
+        isStale -> MaterialTheme.colorScheme.surfaceVariant
+        category == GlucoseRangeCategory.LOW -> Color(0xFFC83B34) // Bright Red
+        category == GlucoseRangeCategory.HIGH -> Color(0xFFE89940) // Bright Vivid Orange
+        else -> Color(0xFF9DCA44) // Bright Light Green
+    }
+
+    val cardContentColor = when {
+        isStale -> MaterialTheme.colorScheme.onSurfaceVariant
+        category == GlucoseRangeCategory.IN_RANGE -> Color.Black // Black text on green
+        else -> Color.White // White text on red and orange
+    }
+
     Card(
-        modifier = Modifier.fillMaxWidth().height(220.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isStale) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.primaryContainer
-        ),
+        modifier = Modifier.fillMaxWidth().height(230.dp),
+        colors = CardDefaults.cardColors(containerColor = cardBgColor),
         shape = RoundedCornerShape(20.dp)
     ) {
         Box(modifier = Modifier.fillMaxSize().padding(12.dp)) {
@@ -818,6 +845,7 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
                     title = stringResource(R.string.estimated_hba1c_90d),
                     primary = metrics.estimatedA1c.primary,
                     secondary = metrics.estimatedA1c.secondary,
+                    contentColor = cardContentColor,
                     isStale = isStale,
                     modifier = Modifier.weight(1f)
                 )
@@ -826,6 +854,7 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
                     title = stringResource(R.string.avg_glucose),
                     primary = metrics.todayAvg.primary,
                     secondary = metrics.todayAvg.secondary,
+                    contentColor = cardContentColor,
                     alignEnd = true,
                     isStale = isStale,
                     modifier = Modifier.weight(1f)
@@ -842,7 +871,7 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
                         Surface(
                             color = MaterialTheme.colorScheme.error,
                             shape = RoundedCornerShape(4.dp),
-                            modifier = Modifier.padding(bottom = 8.dp)
+                            modifier = Modifier.padding(bottom = 6.dp)
                         ) {
                             Text(
                                 text = stringResource(R.string.signal_lost_stale),
@@ -851,11 +880,32 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                             )
                         }
+                    } else {
+                        val statusText = when (category) {
+                            GlucoseRangeCategory.LOW -> "⚠️ " + stringResource(R.string.glucose_status_low)
+                            GlucoseRangeCategory.HIGH -> "⚠️ " + stringResource(R.string.glucose_status_high)
+                            GlucoseRangeCategory.IN_RANGE -> "" //"✓ " + stringResource(R.string.glucose_status_in_range)
+                        }
+                        Surface(
+                            color = Color.Transparent, //cardContentColor.copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(6.dp),
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        ) {
+                            Text(
+                                text = statusText,
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.ExtraBold),
+                                color = cardContentColor,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                            )
+                        }
                     }
                     
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         val displayValue = remember(measurement) {
-                            GlucoseProcessor.formatDualValue(measurement.value, measurement.calibratedValue)
+                            val rawVal = measurement.value
+                            if (rawVal < 40) "LO"
+                            else if (rawVal > 500) "HI"
+                            else GlucoseProcessor.formatDualValue(measurement.value, measurement.calibratedValue)
                         }
                         
                         AnimatedContent(
@@ -872,10 +922,10 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
                             Text(
                                 text = targetText,
                                 style = MaterialTheme.typography.displayLarge.copy(
-                                    fontSize = if (targetText.length > 6) 48.sp else 64.sp,
-                                    fontWeight = FontWeight.Bold
+                                    fontSize = if (targetText.length > 7) 48.sp else if (targetText.length > 5) 56.sp else 72.sp,
+                                    fontWeight = FontWeight.Black
                                 ),
-                                color = if (isStale) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onPrimaryContainer
+                                color = if (isStale) cardContentColor.copy(alpha = 0.5f) else cardContentColor
                             )
                         }
                         
@@ -884,25 +934,30 @@ private fun GlucoseCard(measurement: GlucoseMeasurement?, metrics: DashboardMetr
                             Text(
                                 text = "mg/dL",
                                 style = MaterialTheme.typography.titleMedium,
-                                color = if (isStale) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onPrimaryContainer
+                                fontWeight = FontWeight.Bold,
+                                color = if (isStale) cardContentColor.copy(alpha = 0.5f) else cardContentColor
                             )
-                            if (!isStale) TrendIcon(measurement.trendArrow)
+                            if (!isStale) TrendIcon(measurement.trendArrow, tint = cardContentColor)
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = stringResource(R.string.last_sync, lastSyncText),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = (if (isStale) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onPrimaryContainer).copy(alpha = 0.7f)
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = (if (isStale) cardContentColor.copy(alpha = 0.5f) else cardContentColor).copy(alpha = 0.95f)
                     )
                 } else {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(color = cardContentColor)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         stringResource(R.string.fetching_data),
                         style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = cardContentColor
                     )
                 }
             }
@@ -917,22 +972,31 @@ private fun CornerMetric(
     secondary: String,
     modifier: Modifier = Modifier,
     alignEnd: Boolean = false,
+    contentColor: Color = MaterialTheme.colorScheme.onPrimaryContainer,
     isStale: Boolean = false
 ) {
-    val contentColor = if (isStale) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onPrimaryContainer
+    val finalColor = if (isStale) MaterialTheme.colorScheme.onSurfaceVariant else contentColor
 
     Column(modifier = modifier, horizontalAlignment = if (alignEnd) Alignment.End else Alignment.Start) {
         Text(
             text = title,
-            style = MaterialTheme.typography.labelSmall,
-            color = contentColor.copy(alpha = 0.7f)
+            style = MaterialTheme.typography.labelMedium.copy(fontSize = 13.sp, fontWeight = FontWeight.Bold),
+            color = finalColor.copy(alpha = 0.85f)
         )
         AnimatedContent(targetState = primary, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "corner_primary_anim") { text ->
-            Text(text = text, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = contentColor)
+            Text(
+                text = text,
+                style = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp, fontWeight = FontWeight.Black),
+                color = finalColor
+            )
         }
         if (secondary.isNotEmpty()) {
             AnimatedContent(targetState = secondary, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "corner_secondary_anim") { text ->
-                Text(text = text, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Medium, color = contentColor.copy(alpha = 0.85f))
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 15.sp, fontWeight = FontWeight.Bold),
+                    color = finalColor.copy(alpha = 0.9f)
+                )
             }
         }
     }
@@ -1087,15 +1151,15 @@ private fun FourItemHyposLayout(
 private fun MetricCell(metric: DisplayMetric, label: String, modifier: Modifier = Modifier) {
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         AnimatedContent(targetState = metric.primary, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "metric_primary_anim") { text ->
-            Text(text = text, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            Text(text = text, style = MaterialTheme.typography.titleLarge.copy(fontSize = 18.sp, fontWeight = FontWeight.Black), textAlign = TextAlign.Center)
         }
         if (metric.secondary.isNotEmpty()) {
             AnimatedContent(targetState = metric.secondary, transitionSpec = { fadeIn() togetherWith fadeOut() }, label = "metric_secondary_anim") { text ->
-                Text(text = text, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), textAlign = TextAlign.Center)
+                Text(text = text, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp, fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f), textAlign = TextAlign.Center)
             }
         }
         Spacer(modifier = Modifier.height(4.dp))
-        Text(text = label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
+        Text(text = label, style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f))
     }
 }
 
@@ -1115,10 +1179,10 @@ private fun HypoCell(metric: CountMetric, label: String, modifier: Modifier = Mo
 }
 
 @Composable
-fun TrendIcon(trend: Int?, fontSize: TextUnit = 36.sp) {
+fun TrendIcon(trend: Int?, fontSize: TextUnit = 36.sp, tint: Color? = null) {
     val symbol = GlucoseProcessor.getTrendArrowSymbol(trend)
     val colorIndex = trend?.coerceIn(0, 6) ?: 0
-    val color = TrendColors[colorIndex]
+    val color = tint ?: TrendColors[colorIndex]
     Text(
         text = symbol,
         color = color,
