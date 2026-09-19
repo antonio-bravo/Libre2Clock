@@ -25,7 +25,9 @@ import com.tonio.libre2clock.data.model.InsulinDose
 import com.tonio.libre2clock.data.model.SensorLog
 import com.tonio.libre2clock.data.model.WatchNotificationMode
 import com.tonio.libre2clock.util.TimestampParser
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -480,11 +482,16 @@ class PreferenceManager(private val context: Context) {
     }
 
     // --- Backup y Restauración ---
-    private suspend fun updateBackupPayload(timestamp: Long? = null) {
-        context.dataStore.edit { it[SETTINGS_UPDATED_AT_KEY] = timestamp ?: System.currentTimeMillis() }
-        val payload = buildCurrentHistoryBackupPayload()
-        saveHistoryBackupPayload(payload)
-        requestHistoryCloudBackupIfDue()
+    private fun updateBackupPayload(timestamp: Long? = null) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                context.dataStore.edit { it[SETTINGS_UPDATED_AT_KEY] = timestamp ?: System.currentTimeMillis() }
+                val payload = buildCurrentHistoryBackupPayload()
+                saveHistoryBackupPayload(payload)
+                requestHistoryCloudBackupIfDue()
+            } catch (_: Exception) {
+            }
+        }
     }
 
     fun loadHistoryBackupPayload(): HistoryBackupPayload? {
@@ -651,13 +658,11 @@ class PreferenceManager(private val context: Context) {
         return File(dir, HISTORY_BACKUP_FILE)
     }
 
-    private suspend fun saveHistoryBackupPayload(payload: HistoryBackupPayload) {
-        withContext(Dispatchers.IO) {
-            try {
-                historyBackupFile().writeText(json.encodeToString(payload))
-            } catch (_: Exception) {
-                // Ignore backup file write error to prevent app crash
-            }
+    private fun saveHistoryBackupPayload(payload: HistoryBackupPayload) {
+        try {
+            historyBackupFile().writeText(json.encodeToString(payload))
+        } catch (_: Exception) {
+            // Ignore backup file write error to prevent app crash
         }
     }
 

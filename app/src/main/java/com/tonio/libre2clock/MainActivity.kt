@@ -24,10 +24,27 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import com.tonio.libre2clock.di.AppContainer
 import com.tonio.libre2clock.service.GlucoseForegroundService
+import com.tonio.libre2clock.util.LogLevel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // ✅ Interceptor global para registrar cualquier fallo/crash inesperado en el ErrorLog / EventLogManager
+        val defaultUncaughtHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            runCatching {
+                val eventLogger = AppContainer.provideEventLogManager(applicationContext)
+                eventLogger.log(
+                    level = LogLevel.ERROR,
+                    tag = "UncaughtException",
+                    message = "${throwable.javaClass.simpleName}: ${throwable.message}",
+                    detail = throwable.stackTraceToString()
+                )
+            }
+            defaultUncaughtHandler?.uncaughtException(thread, throwable)
+        }
+
         enableEdgeToEdge()
         
         val preferenceManager = AppContainer.providePreferenceManager(applicationContext)
