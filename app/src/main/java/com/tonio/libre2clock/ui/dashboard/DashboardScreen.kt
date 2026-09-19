@@ -493,9 +493,11 @@ fun InsulinHealthCard(
         }
     }
 
-    val suggestedUnits = remember(currentGlucose, tdi, currentIsf, targetGlucose, isBasalExpiringSoon) {
-        val glucoseValue = currentGlucose?.calibratedValue ?: currentGlucose?.value
-        glucoseValue?.let {
+    val (suggestedUnitsRaw, suggestedUnitsCal) = remember(currentGlucose, tdi, currentIsf, targetGlucose, isBasalExpiringSoon) {
+        val rawG = currentGlucose?.value
+        val calG = currentGlucose?.calibratedValue ?: rawG
+
+        val rawUnits = rawG?.let {
             InsulinProcessor.getSuggestedBolusDetailed(
                 carbs = 0.0,
                 currentGlucose = it,
@@ -506,6 +508,18 @@ fun InsulinHealthCard(
                 isBasalExpiringSoon = isBasalExpiringSoon
             ).total
         }
+        val calUnits = calG?.let {
+            InsulinProcessor.getSuggestedBolusDetailed(
+                carbs = 0.0,
+                currentGlucose = it,
+                targetGlucose = targetGlucose,
+                tdi = tdi,
+                icConstant = icRuleConstant,
+                isf = currentIsf,
+                isBasalExpiringSoon = isBasalExpiringSoon
+            ).total
+        }
+        rawUnits to calUnits
     }
 
     var showAddDialog by remember { mutableStateOf(false) }
@@ -602,7 +616,9 @@ fun InsulinHealthCard(
         InsulinDoseDialog(
             rapidDuration = 240,
             slowDuration = 1440,
-            suggestedUnits = suggestedUnits,
+            suggestedUnits = suggestedUnitsRaw,
+            suggestedUnitsCal = suggestedUnitsCal,
+            isf = currentIsf,
             isBasalExpiringSoon = isBasalExpiringSoon,
             onDismiss = { showAddDialog = false },
             onConfirm = { onAddDose(it); showAddDialog = false }

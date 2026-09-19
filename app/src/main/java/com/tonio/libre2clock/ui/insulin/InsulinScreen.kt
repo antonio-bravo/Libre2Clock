@@ -87,9 +87,11 @@ fun InsulinHubScreen(
         }
     }
 
-    val suggestedUnits = remember(currentGlucoseData, tdi, isf, targetGlucose, isBasalExpiringSoon) {
-        val glucoseValue = currentGlucoseData?.calibratedValue ?: currentGlucoseData?.value
-        glucoseValue?.let {
+    val (suggestedUnitsRaw, suggestedUnitsCal) = remember(currentGlucoseData, tdi, isf, targetGlucose, isBasalExpiringSoon) {
+        val rawG = currentGlucoseData?.value
+        val calG = currentGlucoseData?.calibratedValue ?: rawG
+
+        val rawUnits = rawG?.let {
             InsulinProcessor.getSuggestedBolusDetailed(
                 carbs = 0.0,
                 currentGlucose = it,
@@ -100,6 +102,18 @@ fun InsulinHubScreen(
                 isBasalExpiringSoon = isBasalExpiringSoon
             ).total
         }
+        val calUnits = calG?.let {
+            InsulinProcessor.getSuggestedBolusDetailed(
+                carbs = 0.0,
+                currentGlucose = it,
+                targetGlucose = targetGlucose,
+                tdi = tdi,
+                icConstant = icRuleConstant,
+                isf = isf,
+                isBasalExpiringSoon = isBasalExpiringSoon
+            ).total
+        }
+        rawUnits to calUnits
     }
 
     val today = LocalDate.now()
@@ -208,7 +222,9 @@ fun InsulinHubScreen(
         InsulinDoseDialog(
             rapidDuration = rapidDurationMins,
             slowDuration = slowDurationMins,
-            suggestedUnits = suggestedUnits,
+            suggestedUnits = suggestedUnitsRaw,
+            suggestedUnitsCal = suggestedUnitsCal,
+            isf = isf,
             isBasalExpiringSoon = isBasalExpiringSoon,
             onDismiss = { showAddDialog = false },
             onConfirm = {
@@ -426,6 +442,10 @@ fun BolusCalculatorCard(
                         ),
                         rapidDuration = rapidDuration,
                         slowDuration = slowDuration,
+                        suggestedUnits = bReal.total,
+                        suggestedUnitsCal = bCal.total,
+                        isf = isf,
+                        isBasalExpiringSoon = isBasalExpiringSoon,
                         onDismiss = { showLogDialog = false },
                         onConfirm = {
                             viewModel.addInsulinDose(it)
@@ -597,6 +617,8 @@ fun InsulinDoseDialog(
     rapidDuration: Int,
     slowDuration: Int,
     suggestedUnits: Double? = null,
+    suggestedUnitsCal: Double? = null,
+    isf: Double? = null,
     isBasalExpiringSoon: Boolean = false,
     onDismiss: () -> Unit,
     onConfirm: (InsulinDose) -> Unit
@@ -629,9 +651,38 @@ fun InsulinDoseDialog(
         text = {
             Column {
                 if (suggestedUnits != null) {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = stringResource(R.string.calc_suggested_bolus, suggestedUnits), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-                        TextButton(onClick = { unitsText = String.format(Locale.US, "%.2f", suggestedUnits) }) {
+                    val formatValue = { v: Double -> (Math.floor(v * 100) / 100.0) }
+                    val rawVal = maxOf(0.0, suggestedUnits)
+                    val calVal = suggestedUnitsCal?.let { maxOf(0.0, it) }
+                    val unitsStr = if (calVal != null) {
+                        String.format(Locale.US, "%.2f(%.2f)", formatValue(rawVal), formatValue(calVal))
+                    } else {
+                        String.format(Locale.US, "%.2f", formatValue(rawVal))
+                    }
+
+                    val formattedIsf = if (isf != null && isf > 0.0) {
+                        if (isf % 1.0 == 0.0) String.format(Locale.US, "%.0f", isf) else String.format(Locale.US, "%.1f", isf)
+                    } else {
+                        "--"
+                    }
+
+                    val suggestedDisplayText = stringResource(R.string.calc_suggested_bolus_with_isf, unitsStr, formattedIsf)
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = suggestedDisplayText,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.weight(1f)
+                        )
+                        TextButton(onClick = {
+                            val unitsToUse = suggestedUnitsCal ?: rawVal
+                            unitsText = String.format(Locale.US, "%.2f", formatValue(unitsToUse))
+                        }) {
                             Text(stringResource(R.string.insulin_use_suggested))
                         }
                     }
