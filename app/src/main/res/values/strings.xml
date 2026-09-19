@@ -177,6 +177,8 @@
     <string name="settings_backup_insulin">Backup only insulin history</string>
     <string name="settings_restore_insulin">Restore only insulin history (merge)</string>
     <string name="settings_use_calibrated_alarms">Use value with offset for alarms</string>
+    <string name="settings_predictive_alarms">Early Predictive Hypo Warnings</string>
+    <string name="settings_predictive_alarms_subtitle">Projects glucose 15-45 min ahead based on trend and IOB to alert the watch before falling below 70 mg/dL.</string>
 
     <string name="report_title">Reports &amp; Analytics</string>
     <string name="report_range_1d">1 Day</string>

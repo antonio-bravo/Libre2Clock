@@ -177,6 +177,8 @@
     <string name="settings_backup_insulin">Solo historial de insulina</string>
     <string name="settings_restore_insulin">Solo historial de insulina (unir)</string>
     <string name="settings_use_calibrated_alarms">Usar valor con offset para las alarmas</string>
+    <string name="settings_predictive_alarms">Alertas Preventivas de Hipoglucemia (Predicción)</string>
+    <string name="settings_predictive_alarms_subtitle">Proyecta la glucosa a 15-45 min basándose en la tendencia e IOB para avisar al reloj antes de caer por debajo de 70 mg/dL.</string>
 
     <string name="report_title">Informes y Estadísticas</string>
     <string name="report_range_1d">1 Día</string>

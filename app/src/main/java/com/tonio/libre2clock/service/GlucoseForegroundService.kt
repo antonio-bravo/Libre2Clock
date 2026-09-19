@@ -1,5 +1,6 @@
 package com.tonio.libre2clock.service
 
+import android.R
 import android.app.AlarmManager
 import android.app.Notification
 import android.app.NotificationChannel
@@ -30,6 +31,7 @@ import com.tonio.libre2clock.data.model.WatchNotificationMode
 import com.tonio.libre2clock.data.repository.GlucoseProcessor
 import com.tonio.libre2clock.data.repository.GlucoseRepository
 import com.tonio.libre2clock.data.repository.GlucoseRepositoryImpl
+import com.tonio.libre2clock.data.repository.InsulinProcessor
 import com.tonio.libre2clock.data.repository.PreferenceManager
 import com.tonio.libre2clock.di.AppContainer
 import com.tonio.libre2clock.util.EventLogManager
@@ -62,6 +64,7 @@ class GlucoseForegroundService : Service() {
     private var lastWatchAlertEpochMinute: Long = -1L
     private var lastLowAlarmAtMillis: Long = 0L
     private var lastHighAlarmAtMillis: Long = 0L
+    private var lastPredictiveAlarmAtMillis: Long = 0L
     private var lastForegroundNotificationContent: String? = null
     
     // ✅ CORRECCIÓN: Bandera para garantizar que initialize() se llame solo una vez
@@ -75,6 +78,7 @@ class GlucoseForegroundService : Service() {
 
     private data class ServiceConfig(
         val watchAlertsEnabled: Boolean,
+        val predictiveAlarmsEnabled: Boolean,
         val watchNotificationMode: WatchNotificationMode,
         val watchAlertIntervalMinutes: Int,
         val watchAlertStartMinute: Int,
@@ -144,13 +148,15 @@ class GlucoseForegroundService : Service() {
             combine(
                 preferenceManager.lowGlucoseAlarmEnabled,
                 preferenceManager.highGlucoseAlarmEnabled,
-                preferenceManager.useCalibratedForAlarms
-            ) { low, high, cal ->
-                AlertConfigPart2(low, high, cal)
+                preferenceManager.useCalibratedForAlarms,
+                preferenceManager.predictiveAlarmsEnabled
+            ) { low, high, cal, predictive ->
+                AlertConfigPart2(low, high, cal, predictive)
             }
         ) { part1, part2 ->
             AlertConfig(
                 enabled = part1.enabled,
+                predictive = part2.predictive,
                 mode = part1.mode,
                 interval = part1.interval,
                 startMinute = part1.startMinute,
@@ -202,6 +208,7 @@ class GlucoseForegroundService : Service() {
         ) { alert, schedule, battery, glucose ->
             ServiceConfig(
                 watchAlertsEnabled = alert.enabled,
+                predictiveAlarmsEnabled = alert.predictive,
                 watchNotificationMode = alert.mode,
                 watchAlertIntervalMinutes = alert.interval.coerceIn(5, 180),
                 watchAlertStartMinute = alert.startMinute.coerceIn(0, 59),
@@ -221,9 +228,12 @@ class GlucoseForegroundService : Service() {
                 activeSensorSn = glucose.activeSensorSn
             )
         }.stateIn(serviceScope, SharingStarted.Eagerly, ServiceConfig(
-            watchAlertsEnabled = false, WatchNotificationMode.OFF, 60, 0,
-            false, false, true, emptyList(), emptyList(), 15, 5, true,
-            0, emptyList(), false, AutoRangeOffsetMode.OFF, emptyList()
+            watchAlertsEnabled = false, predictiveAlarmsEnabled = true, watchNotificationMode = WatchNotificationMode.OFF,
+            watchAlertIntervalMinutes = 60, watchAlertStartMinute = 0, lowGlucoseAlarmEnabled = false,
+            highGlucoseAlarmEnabled = false, useCalibratedForAlarms = true, parsedWatchSchedules = emptyList(),
+            parsedAlarmSchedules = emptyList(), batteryLowThreshold = 15, batteryCriticalThreshold = 5,
+            disableFastOnSlowCharge = true, glucoseOffset = 0, glucoseOffsetRanges = emptyList(),
+            autoAdjustEnabled = false, autoRangeOffsetMode = AutoRangeOffsetMode.OFF, capillaryReadings = emptyList()
         ))
     }
 
@@ -292,6 +302,7 @@ class GlucoseForegroundService : Service() {
                 updateNotification(processed)
                 maybeSendWatchAlert(processed, config)
                 maybeSendGlucoseAlarms(processed, config)
+                maybeSendPredictiveHypoAlert(processed, config)
             } else {
                 fetchResult.exceptionOrNull()?.let { error ->
                     eventLogger.log(LogLevel.WARNING, "ServiceSync", "Fetch failed: ${error.message}")
@@ -609,6 +620,59 @@ class GlucoseForegroundService : Service() {
         notificationManager.notify(GLUCOSE_ALARM_NOTIFICATION_ID, notification)
     }
 
+    private suspend fun maybeSendPredictiveHypoAlert(measurement: GlucoseMeasurement, config: ServiceConfig) {
+        if (!config.predictiveAlarmsEnabled || !config.watchAlertsEnabled) return
+
+        val now = System.currentTimeMillis()
+        if (now - lastPredictiveAlarmAtMillis < GLUCOSE_ALARM_COOLDOWN_MS) return
+
+        val valueToCheck = if (config.useCalibratedForAlarms) measurement.calibratedValue else measurement.value
+
+        val doses = preferenceManager.insulinDoses.first().filter { !it.isDeleted }
+        val manualIsf = preferenceManager.manualIsf.first()
+        val isfRuleC = preferenceManager.isfRuleConstant.first()
+        val manualTdi = preferenceManager.manualTdi.first()
+        val calculatedTdi = InsulinProcessor.calculateAverageDaily(doses, 30)
+        val tdi = manualTdi ?: calculatedTdi
+        val isf = InsulinProcessor.calculateISF(tdi, isfRuleC, manualIsf)
+
+        val risk = InsulinProcessor.calculatePredictiveHypoRisk(
+            currentGlucose = valueToCheck,
+            trendArrow = measurement.trendArrow ?: 4,
+            doses = doses,
+            isf = isf,
+            hypoThreshold = LOW_GLUCOSE_THRESHOLD
+        )
+
+        if (risk.isRisk) {
+            sendPredictiveAlarmNotification(risk.minutesUntilHypo, risk.projectedValue)
+            lastPredictiveAlarmAtMillis = now
+        }
+    }
+
+    private fun sendPredictiveAlarmNotification(minutes: Int, projectedVal: Int) {
+        val titleText = "⚠️ Riesgo Hipoglucemia en ${minutes}m"
+        val contentText = "Atención: Proyección $projectedVal mg/dL en $minutes min"
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+
+        val notification = NotificationCompat.Builder(this, ALERT_CHANNEL_ID)
+            .setContentTitle(titleText)
+            .setContentText(contentText)
+            .setSmallIcon(R.drawable.stat_notify_sync)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .setStyle(NotificationCompat.BigTextStyle().setBigContentTitle(titleText).bigText(contentText))
+            .setVibrate(longArrayOf(0, 500, 200, 500))
+            .setOngoing(false)
+            .setAutoCancel(true)
+            .setTimeoutAfter(WATCH_ALERT_TIMEOUT_MS)
+            .build()
+
+        notificationManager.notify(GLUCOSE_ALARM_NOTIFICATION_ID, notification)
+    }
+
     private fun buildWatchPlainTitle(measurement: GlucoseMeasurement): String {
         val trendStr = GlucoseProcessor.getTrendArrowSymbol(measurement.trendArrow)
         val dualValue = GlucoseProcessor.formatDualValue(measurement.value, measurement.calibratedValue)
@@ -644,8 +708,8 @@ class GlucoseForegroundService : Service() {
     }
 
     private data class AlertConfigPart1(val enabled: Boolean, val mode: WatchNotificationMode, val interval: Int, val startMinute: Int)
-    private data class AlertConfigPart2(val low: Boolean, val high: Boolean, val cal: Boolean)
-    private data class AlertConfig(val enabled: Boolean, val mode: WatchNotificationMode, val interval: Int, val startMinute: Int, val lowEnabled: Boolean, val highEnabled: Boolean, val useCalibrated: Boolean)
+    private data class AlertConfigPart2(val low: Boolean, val high: Boolean, val cal: Boolean, val predictive: Boolean)
+    private data class AlertConfig(val enabled: Boolean, val predictive: Boolean, val mode: WatchNotificationMode, val interval: Int, val startMinute: Int, val lowEnabled: Boolean, val highEnabled: Boolean, val useCalibrated: Boolean)
     private data class ScheduleConfig(val watch: List<ParsedSchedule>, val alarm: List<ParsedSchedule>)
     private data class BatteryConfig(val low: Int, val critical: Int, val disableFast: Boolean)
     private data class GlucoseConfig(val offset: Int, val ranges: List<GlucoseOffsetRange>, val autoAdjust: Boolean, val autoMode: AutoRangeOffsetMode, val capillaries: List<CapillaryMeasurement>, val activeSensorSn: String? = null)

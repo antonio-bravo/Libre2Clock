@@ -295,4 +295,72 @@ object InsulinProcessor {
         
         return result
     }
+
+    fun getTrendRateOfChangePerMin(trendArrow: Int): Double {
+        return when (trendArrow) {
+            1 -> 3.0   // Double Up
+            2 -> 2.0   // Single Up
+            3 -> 1.0   // FortyFive Up
+            4 -> 0.0   // Flat
+            5 -> -1.0  // FortyFive Down
+            6 -> -2.0  // Single Down
+            7 -> -3.0  // Double Down
+            else -> 0.0
+        }
+    }
+
+    fun calculatePredictiveHypoRisk(
+        currentGlucose: Int,
+        trendArrow: Int,
+        doses: List<InsulinDose>,
+        isf: Double,
+        hypoThreshold: Int = 70
+    ): PredictiveHypoRisk {
+        if (currentGlucose <= 0) return PredictiveHypoRisk(false)
+
+        val trendRoc = getTrendRateOfChangePerMin(trendArrow)
+        val now = Instant.now()
+        val parsedDoses = if (isf > 0.0 && doses.isNotEmpty()) {
+            doses.mapNotNull { dose ->
+                TimestampParser.parseFlexibleInstant(dose.timestamp)?.let { it to dose }
+            }
+        } else emptyList()
+
+        var initialIob = 0.0
+        for ((instant, dose) in parsedDoses) {
+            initialIob += calculateIOBFromInstant(dose, instant, now)
+        }
+
+        var lastIob = initialIob
+        var currentG = currentGlucose.toDouble()
+
+        for (minute in 5..45 step 5) {
+            val futureTime = now.plus(Duration.ofMinutes(minute.toLong()))
+            var futureIob = 0.0
+            for ((instant, dose) in parsedDoses) {
+                futureIob += calculateIOBFromInstant(dose, instant, futureTime)
+            }
+
+            val iobDrop = (lastIob - futureIob) * isf
+            currentG = currentG + (trendRoc * 5.0) - iobDrop
+            lastIob = futureIob
+
+            val projectedInt = currentG.roundToInt()
+            if (projectedInt < hypoThreshold) {
+                return PredictiveHypoRisk(
+                    isRisk = true,
+                    minutesUntilHypo = minute,
+                    projectedValue = projectedInt.coerceAtLeast(40)
+                )
+            }
+        }
+
+        return PredictiveHypoRisk(false)
+    }
 }
+
+data class PredictiveHypoRisk(
+    val isRisk: Boolean = false,
+    val minutesUntilHypo: Int = 0,
+    val projectedValue: Int = 0
+)

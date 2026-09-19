@@ -4,6 +4,7 @@ import com.tonio.libre2clock.data.model.CapillaryMeasurement
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.GlucoseOffsetRange
 import com.tonio.libre2clock.data.repository.GlucoseProcessor
+import com.tonio.libre2clock.data.repository.InsulinProcessor
 import com.tonio.libre2clock.util.buildSensorErrorSummary
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -125,5 +126,20 @@ class ExampleUnitTest {
         assertEquals(2, estimateFallback?.sampleCount)
         assertEquals(false, estimateFallback?.isSensorSpecific)
         assertEquals(20, estimateFallback?.offset)
+    }
+
+    @Test
+    fun predictiveHypoRiskDetectsImpendingLow() {
+        val risk = InsulinProcessor.calculatePredictiveHypoRisk(
+            currentGlucose = 90,
+            trendArrow = 6,
+            doses = emptyList(),
+            isf = 45.0,
+            hypoThreshold = 70
+        )
+
+        assertEquals(true, risk.isRisk)
+        assertEquals(15, risk.minutesUntilHypo)
+        assertEquals(60, risk.projectedValue)
     }
 }

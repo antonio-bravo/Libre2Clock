@@ -104,6 +104,7 @@ class PreferenceManager(private val context: Context) {
     private val IS_CLOUD_SYNC_ENABLED_KEY = booleanPreferencesKey("is_cloud_sync_enabled")
     private val CLOUD_SYNC_LAST_SUCCESS_AT_KEY = longPreferencesKey("cloud_sync_last_success_at")
     private val SETTINGS_UPDATED_AT_KEY = longPreferencesKey("settings_updated_at")
+    private val PREDICTIVE_ALARMS_ENABLED_KEY = booleanPreferencesKey("predictive_alarms_enabled")
 
     // --- Flows ---
     val authToken: Flow<String?> = context.dataStore.data.map { it[TOKEN_KEY] }.distinctUntilChanged()
@@ -151,6 +152,7 @@ class PreferenceManager(private val context: Context) {
         }
 
     val watchAlertsEnabled: Flow<Boolean> = context.dataStore.data.map { it[WATCH_ALERTS_ENABLED_KEY] ?: false }.distinctUntilChanged()
+    val predictiveAlarmsEnabled: Flow<Boolean> = context.dataStore.data.map { it[PREDICTIVE_ALARMS_ENABLED_KEY] ?: true }.distinctUntilChanged()
 
     val watchNotificationMode: Flow<WatchNotificationMode> = context.dataStore.data.map { prefs ->
         val persisted = prefs[WATCH_NOTIFICATION_MODE_KEY]
@@ -294,6 +296,13 @@ class PreferenceManager(private val context: Context) {
         context.dataStore.edit { preferences ->
             preferences[WATCH_ALERTS_ENABLED_KEY] = enabled
             preferences[WATCH_NOTIFICATION_MODE_KEY] = if (enabled) WatchNotificationMode.PERIODIC_AND_SCHEDULES.name else WatchNotificationMode.OFF.name
+        }
+        updateBackupPayload()
+    }
+
+    suspend fun savePredictiveAlarmsEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PREDICTIVE_ALARMS_ENABLED_KEY] = enabled
         }
         updateBackupPayload()
     }

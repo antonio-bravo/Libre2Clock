@@ -45,6 +45,7 @@ fun SettingsAlertsScreen(
     val lowGlucoseAlarmEnabled by viewModel.lowGlucoseAlarmEnabled.collectAsStateWithLifecycle()
     val highGlucoseAlarmEnabled by viewModel.highGlucoseAlarmEnabled.collectAsStateWithLifecycle()
     val useCalibratedForAlarms by viewModel.useCalibratedForAlarms.collectAsStateWithLifecycle()
+    val predictiveAlarmsEnabled by viewModel.predictiveAlarmsEnabled.collectAsStateWithLifecycle()
 
     var editingWatchSchedule by remember { mutableStateOf<AlarmSchedule?>(null) }
     var editingAlarmSchedule by remember { mutableStateOf<AlarmSchedule?>(null) }
@@ -183,9 +184,11 @@ fun SettingsAlertsScreen(
                             lowEnabled = lowGlucoseAlarmEnabled,
                             highEnabled = highGlucoseAlarmEnabled,
                             useCalibrated = useCalibratedForAlarms,
+                            predictiveEnabled = predictiveAlarmsEnabled,
                             onLowChange = viewModel::updateLowGlucoseAlarmEnabled,
                             onHighChange = viewModel::updateHighGlucoseAlarmEnabled,
-                            onCalibratedChange = viewModel::updateUseCalibratedForAlarms
+                            onCalibratedChange = viewModel::updateUseCalibratedForAlarms,
+                            onPredictiveChange = viewModel::updatePredictiveAlarmsEnabled
                         )
                     }
 
@@ -396,9 +399,11 @@ private fun GlucoseAlarmsCard(
     lowEnabled: Boolean,
     highEnabled: Boolean,
     useCalibrated: Boolean,
+    predictiveEnabled: Boolean,
     onLowChange: (Boolean) -> Unit,
     onHighChange: (Boolean) -> Unit,
-    onCalibratedChange: (Boolean) -> Unit
+    onCalibratedChange: (Boolean) -> Unit,
+    onPredictiveChange: (Boolean) -> Unit
 ) {
     SettingsSection(title = stringResource(R.string.settings_glucose_alarms)) {
         Text(
@@ -413,6 +418,44 @@ private fun GlucoseAlarmsCard(
         ToggleItem(R.string.settings_high_glucose_alarm_label, highEnabled, onHighChange)
         Spacer(modifier = Modifier.height(12.dp))
         ToggleItem(R.string.settings_use_calibrated_alarms, useCalibrated, onCalibratedChange)
+        Spacer(modifier = Modifier.height(16.dp))
+        HorizontalDivider(thickness = 0.5.dp)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        ToggleItemWithSubtitle(
+            title = stringResource(R.string.settings_predictive_alarms),
+            subtitle = stringResource(R.string.settings_predictive_alarms_subtitle),
+            checked = predictiveEnabled,
+            onCheckedChange = onPredictiveChange
+        )
+    }
+}
+
+@Composable
+private fun ToggleItemWithSubtitle(
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }
 

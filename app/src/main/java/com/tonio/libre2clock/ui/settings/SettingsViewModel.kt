@@ -97,6 +97,7 @@ class SettingsViewModel(
         .stateInDefault(emptyList())
         
     val watchAlertsEnabled = preferenceManager.watchAlertsEnabled.stateInDefault(false)
+    val predictiveAlarmsEnabled = preferenceManager.predictiveAlarmsEnabled.stateInDefault(true)
     val watchNotificationMode = preferenceManager.watchNotificationMode.stateInDefault(WatchNotificationMode.OFF)
     val watchAlertIntervalMinutes = preferenceManager.watchAlertIntervalMinutes.stateInDefault(60)
     val watchAlertStartMinute = preferenceManager.watchAlertStartMinute.stateInDefault(0)
@@ -300,6 +301,10 @@ class SettingsViewModel(
             if (enabled) preferenceManager.initializeWatchAlertStartMinuteIfMissing()
             preferenceManager.saveWatchAlertsEnabled(enabled)
         }
+    }
+
+    fun updatePredictiveAlarmsEnabled(enabled: Boolean) {
+        launchSave { preferenceManager.savePredictiveAlarmsEnabled(enabled) }
     }
 
     fun updateWatchNotificationMode(mode: WatchNotificationMode) {
