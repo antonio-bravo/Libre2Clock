@@ -85,12 +85,12 @@
     <string name="calc_isf">ISF: %1$.1f mg/dL per U</string>
     <string name="calc_formula_label">Formula: %1$d / TDI</string>
     <string name="calc_manual_label">Manual Override</string>
-    <string name="dash_fs_label">FS: %1$s</string>
+    <string name="dash_fs_label">FS: %1$.4f</string>
     <string name="calc_bolus_helper">Bolus Helper</string>
     <string name="calc_carbs_label">Carbs (g)</string>
     <string name="calc_glucose_label">Current Glucose (mg/dL)</string>
     <string name="calc_suggested_bolus">Suggested Units: %1$.2f</string>
-    <string name="calc_suggested_bolus_dual">Suggested Units: %1$s</string>
+    <string name="calc_suggested_bolus_dual">Suggested Units: %1$.2f</string>
     <string name="calc_suggested_bolus_with_isf">Suggested Units: %1$s\nFS: %2$s</string>
     <string name="glucose_status_low">LOW GLUCOSE</string>
     <string name="glucose_status_in_range">IN RANGE</string>
@@ -232,11 +232,12 @@
     <string name="report_cv_period_14d">14 Days</string>
     <string name="report_cv_period_30d">30 Days</string>
     <string name="report_cv_period_90d">90 Days</string>
-    <string name="cv_variability_slide_title">Glycemic Variability (CV%)</string>
+    <string name="cv_variability_slide_title">Glycemic Variability (CV%) &lt; 36</string>
     <string name="period_7d">7 Days</string>
     <string name="period_14d">14 Days</string>
     <string name="period_30d">30 Days</string>
     <string name="period_90d">90 Days</string>
+    <string name="tir_tbr_slide_title">Time in Range (TIR &gt; 70 / TBR &lt; 5)</string>
 
     <string name="login_welcome">Sign in with your LibreLinkUp account</string>
     <string name="login_email_label">Email</string>

@@ -42,7 +42,11 @@ data class DashboardMetrics(
     val cv7d: DisplayMetric = DisplayMetric("--", ""),
     val cv14d: DisplayMetric = DisplayMetric("--", ""),
     val cv30d: DisplayMetric = DisplayMetric("--", ""),
-    val cv90d: DisplayMetric = DisplayMetric("--", "")
+    val cv90d: DisplayMetric = DisplayMetric("--", ""),
+    val tirTbr7d: DisplayMetric = DisplayMetric("--", ""),
+    val tirTbr14d: DisplayMetric = DisplayMetric("--", ""),
+    val tirTbr30d: DisplayMetric = DisplayMetric("--", ""),
+    val tirTbr90d: DisplayMetric = DisplayMetric("--", "")
 )
 
 object DashboardMetricsCalculator {
@@ -263,6 +267,44 @@ object DashboardMetricsCalculator {
             )
         }
 
+        fun buildTirTbrFromMeasurements(datePredicate: (LocalDate) -> Boolean): DisplayMetric {
+            var count = 0
+            var tirRawCount = 0
+            var tbrRawCount = 0
+            var tirCalCount = 0
+            var tbrCalCount = 0
+
+            for (m in measurements) {
+                val rawVal = m.value
+                if (rawVal <= 40) continue
+                val instant = parseMeasurementInstant(m) ?: continue
+                val date = instant.atZone(zone).toLocalDate()
+
+                if (datePredicate(date)) {
+                    count++
+                    val calVal = m.calibratedValue
+
+                    if (rawVal in 70..180) tirRawCount++
+                    if (rawVal < 70) tbrRawCount++
+
+                    if (calVal in 70..180) tirCalCount++
+                    if (calVal < 70) tbrCalCount++
+                }
+            }
+
+            if (count < 5) return DisplayMetric("--", "")
+
+            val tirRawPct = (tirRawCount.toDouble() / count) * 100.0
+            val tbrRawPct = (tbrRawCount.toDouble() / count) * 100.0
+            val tirCalPct = (tirCalCount.toDouble() / count) * 100.0
+            val tbrCalPct = (tbrCalCount.toDouble() / count) * 100.0
+
+            return DisplayMetric(
+                primary = String.format(Locale.US, "%.0f%% (%.0f%%)", tirRawPct, tirCalPct),
+                secondary = String.format(Locale.US, "%.0f%% (%.0f%%)", tbrRawPct, tbrCalPct)
+            )
+        }
+
         return DashboardMetrics(
             estimatedA1c = estimatedA1c,
             todayAvg = buildMetricFromDays { it == today },
@@ -281,7 +323,11 @@ object DashboardMetricsCalculator {
             cv7d = buildCvFromMeasurements { it >= weekStart },
             cv14d = buildCvFromMeasurements { it >= twoWeeksStart },
             cv30d = buildCvFromMeasurements { it >= monthStart },
-            cv90d = buildCvFromMeasurements { it >= quarterStart }
+            cv90d = buildCvFromMeasurements { it >= quarterStart },
+            tirTbr7d = buildTirTbrFromMeasurements { it >= weekStart },
+            tirTbr14d = buildTirTbrFromMeasurements { it >= twoWeeksStart },
+            tirTbr30d = buildTirTbrFromMeasurements { it >= monthStart },
+            tirTbr90d = buildTirTbrFromMeasurements { it >= quarterStart }
         )
     }
 
@@ -303,7 +349,11 @@ object DashboardMetricsCalculator {
         cv7d = DisplayMetric("--", ""),
         cv14d = DisplayMetric("--", ""),
         cv30d = DisplayMetric("--", ""),
-        cv90d = DisplayMetric("--", "")
+        cv90d = DisplayMetric("--", ""),
+        tirTbr7d = DisplayMetric("--", ""),
+        tirTbr14d = DisplayMetric("--", ""),
+        tirTbr30d = DisplayMetric("--", ""),
+        tirTbr90d = DisplayMetric("--", "")
     )
 
     private fun parseMeasurementInstant(measurement: GlucoseMeasurement): Instant? {

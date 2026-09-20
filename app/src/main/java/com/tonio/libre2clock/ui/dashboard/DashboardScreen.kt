@@ -1017,12 +1017,13 @@ private fun DashboardSlidesCard(
     isRefreshing: Boolean,
     onRefresh: () -> Unit
 ) {
-    val pagerState = rememberPagerState(pageCount = { 4 })
+    val pagerState = rememberPagerState(pageCount = { 5 })
     val pageTitle = when (pagerState.currentPage) {
         0 -> stringResource(R.string.avg_glucose)
         1 -> stringResource(R.string.avg_glucose_last_month)
         2 -> stringResource(R.string.hypos_last_month)
-        else -> stringResource(R.string.cv_variability_slide_title)
+        3 -> stringResource(R.string.cv_variability_slide_title)
+        else -> stringResource(R.string.tir_tbr_slide_title)
     }
 
     Card(
@@ -1039,7 +1040,7 @@ private fun DashboardSlidesCard(
                 Text(text = pageTitle, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        repeat(4) { index ->
+                        repeat(5) { index ->
                             val active = index == pagerState.currentPage
                             Box(
                                 modifier = Modifier
@@ -1097,11 +1098,21 @@ private fun DashboardSlidesCard(
                         thirdLabel = stringResource(R.string.dinner),
                         fourthLabel = stringResource(R.string.night)
                     )
-                    else -> FourItemMetricsLayout(
+                    3 -> FourItemMetricsLayout(
                         first = metrics.cv7d,
                         second = metrics.cv14d,
                         third = metrics.cv30d,
                         fourth = metrics.cv90d,
+                        firstLabel = stringResource(R.string.period_7d),
+                        secondLabel = stringResource(R.string.period_14d),
+                        thirdLabel = stringResource(R.string.period_30d),
+                        fourthLabel = stringResource(R.string.period_90d)
+                    )
+                    else -> FourItemMetricsLayout(
+                        first = metrics.tirTbr7d,
+                        second = metrics.tirTbr14d,
+                        third = metrics.tirTbr30d,
+                        fourth = metrics.tirTbr90d,
                         firstLabel = stringResource(R.string.period_7d),
                         secondLabel = stringResource(R.string.period_14d),
                         thirdLabel = stringResource(R.string.period_30d),
