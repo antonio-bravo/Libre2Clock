@@ -1,5 +1,43 @@
 # Changelog
 
+## b98abf5 (Sep 20, 2026 14:02:26)
+Merge pull request #4 from antonio-bravo/feature/timestamp_parser
+
+fix timestap on GlucoseRepositoryImpl — antonio-bravo
+[detail](#b98abf5-details)
+
+<details id='b98abf5-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
+</details>
+
+
+---
+## ec67355 (Sep 20, 2026 13:59:21)
+fix timestap on GlucoseRepositoryImpl — antonio-bravo
+[detail](#ec67355-details)
+
+<details id='ec67355-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
+</details>
+
+
+---
+## b001994 (Sep 20, 2026 09:52:22)
+Update changelog — github-actions[bot]
+[detail](#b001994-details)
+
+<details id='b001994-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 90fcc7e (Sep 20, 2026 11:52:12)
 Merge pull request #3 from antonio-bravo/feature/optmization_20260920
 
@@ -681,42 +719,6 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
-</details>
-
-
----
-## 12ba1a6 (Sep 14, 2026 14:18:40)
-build on push — antonio-bravo
-[detail](#12ba1a6-details)
-
-<details id='12ba1a6-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/build-release.yml [Modified]
-</details>
-
-
----
-## 78df3f7 (Sep 14, 2026 12:17:32)
-Update changelog — github-actions[bot]
-[detail](#78df3f7-details)
-
-<details id='78df3f7-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## b40e8ec (Sep 14, 2026 14:17:21)
-fix sync — antonio-bravo
-[detail](#b40e8ec-details)
-
-<details id='b40e8ec-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
 </details>
 
 
