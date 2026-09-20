@@ -89,7 +89,7 @@
     <string name="calc_bolus_helper">Asistente de Bolo</string>
     <string name="calc_carbs_label">HC (g)</string>
     <string name="calc_glucose_label">Glucosa Actual (mg/dL)</string>
-    <string name="calc_suggested_bolus">Unidades Sugeridas: %1$.2f</string>
+    <string name="calc_suggested_bolus">Unidades Sugeridas: %1$s</string>
     <string name="calc_suggested_bolus_dual">Unidades Sugeridas: %1$s</string>
     <string name="calc_suggested_bolus_with_isf">Unidades Sugeridas: %1$s\nFS: %2$s</string>
     <string name="glucose_status_low">GLUCOSA BAJA</string>

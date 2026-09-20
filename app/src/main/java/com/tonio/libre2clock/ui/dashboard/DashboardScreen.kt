@@ -576,8 +576,13 @@ fun InsulinHealthCard(
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(text = stringResource(R.string.total_iob), style = MaterialTheme.typography.labelSmall)
                             Text(text = String.format(Locale.US, "%.2f U", totalIOB), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                            val formattedIsf = if (currentIsf > 0.0) {
+                                if (currentIsf % 1.0 == 0.0) String.format(Locale.US, "%.0f", currentIsf) else String.format(Locale.US, "%.1f", currentIsf)
+                            } else {
+                                "--"
+                            }
                             Text(
-                                text = stringResource(R.string.dash_fs_label, currentIsf) + if (manualIsf != null) " (M)" else " (C)",
+                                text = stringResource(R.string.dash_fs_label, formattedIsf) + if (manualIsf != null) " (M)" else " (C)",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold
                             )

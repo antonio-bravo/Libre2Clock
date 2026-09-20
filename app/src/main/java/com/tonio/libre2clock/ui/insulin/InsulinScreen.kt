@@ -293,7 +293,12 @@ fun ActiveInsulinCard(
             Spacer(modifier = Modifier.height(8.dp))
             Surface(color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.1f), shape = MaterialTheme.shapes.small) {
                 Row(modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = stringResource(R.string.dash_fs_label, fs), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                    val formattedFs = if (fs > 0.0) {
+                        if (fs % 1.0 == 0.0) String.format(Locale.US, "%.0f", fs) else String.format(Locale.US, "%.1f", fs)
+                    } else {
+                        "--"
+                    }
+                    Text(text = stringResource(R.string.dash_fs_label, formattedFs), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(text = if (isManualFs) stringResource(R.string.insulin_manual) else stringResource(R.string.insulin_calculated), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f))
                 }
