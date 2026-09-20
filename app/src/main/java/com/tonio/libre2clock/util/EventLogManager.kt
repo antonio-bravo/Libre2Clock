@@ -17,6 +17,7 @@ import java.time.format.DateTimeFormatter
 
 @Serializable
 data class LogEvent(
+    val id: Long = 0L,
     val timestamp: Long,
     val level: LogLevel,
     val tag: String,
@@ -69,7 +70,10 @@ class EventLogManager(context: Context) {
             val list = mutableListOf<LogEvent>()
             cursor.use {
                 while (it.moveToNext()) {
+                    val idIdx = it.getColumnIndex("id")
+                    val id = if (idIdx >= 0) it.getLong(idIdx) else 0L
                     list.add(LogEvent(
+                        id = id,
                         timestamp = it.getLong(it.getColumnIndexOrThrow("timestamp")),
                         level = LogLevel.valueOf(it.getString(it.getColumnIndexOrThrow("level"))),
                         tag = it.getString(it.getColumnIndexOrThrow("tag")),
