@@ -21,6 +21,17 @@ class DashboardMetricsCacheRepository(
     private val db = SectionCacheDatabaseHelper(context.applicationContext)
     private val lastPurgeAtMs = AtomicLong(0L)
 
+    fun getLatestCached(sectionKey: String): DashboardMetrics? {
+        return try {
+            val cached = db.getLatestCachedPayload(sectionKey)
+            if (cached != null) {
+                json.decodeFromString<DashboardMetrics>(cached)
+            } else null
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     suspend fun getOrCompute(
         sectionKey: String,
         signature: String,

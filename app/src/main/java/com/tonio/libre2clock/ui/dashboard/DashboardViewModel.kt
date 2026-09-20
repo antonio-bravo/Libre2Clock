@@ -258,6 +258,12 @@ class DashboardViewModel(
         )
     }.flatMapLatest { inputs -> 
         flow {
+            // 1. Emitir de inmediato la última versión guardada en SQLite para respuesta instantánea (0ms)
+            val initialCached = dashboardMetricsCache.getLatestCached("historical_metrics_v2")
+            if (initialCached != null) {
+                emit(initialCached)
+            }
+
             val signature = DashboardMetricsCacheRepository.buildSignatureFast(
                 dataVersion = inputs.dataVersion,
                 capillaries = inputs.capillaries,
@@ -276,25 +282,34 @@ class DashboardViewModel(
                 val cutoff = Instant.now().minus(Duration.ofDays(90))
                 val rawHistorical = repository.getHistoricalGlucoseWindow(cutoff.toEpochMilli(), Instant.now().toEpochMilli(), maxItems = 150000)
 
-                val calcContext = GlucoseProcessor.buildContext(
-                    autoRangeOffsetMode = inputs.autoRangeMode,
-                    userRanges = inputs.ranges,
-                    capillaryReadings = inputs.capillaries,
-                    sensorLogs = inputs.sensorLogs,
-                    activeSensorSn = inputs.activeSensorSn
-                )
-                
-                val processed = rawHistorical.map {
-                    GlucoseProcessor.process(
-                        measurement = it,
-                        manualOffset = inputs.manualOffset,
-                        userRanges = inputs.ranges,
-                        autoAdjustEnabled = inputs.autoAdjust,
+                val isDefaultOffset = inputs.manualOffset == 0 && 
+                    inputs.ranges.isEmpty() && 
+                    !inputs.autoAdjust && 
+                    inputs.autoRangeMode == AutoRangeOffsetMode.OFF
+
+                val processed = if (isDefaultOffset) {
+                    rawHistorical
+                } else {
+                    val calcContext = GlucoseProcessor.buildContext(
                         autoRangeOffsetMode = inputs.autoRangeMode,
+                        userRanges = inputs.ranges,
                         capillaryReadings = inputs.capillaries,
-                        context = calcContext,
+                        sensorLogs = inputs.sensorLogs,
                         activeSensorSn = inputs.activeSensorSn
                     )
+                    
+                    rawHistorical.map {
+                        GlucoseProcessor.process(
+                            measurement = it,
+                            manualOffset = inputs.manualOffset,
+                            userRanges = inputs.ranges,
+                            autoAdjustEnabled = inputs.autoAdjust,
+                            autoRangeOffsetMode = inputs.autoRangeMode,
+                            capillaryReadings = inputs.capillaries,
+                            context = calcContext,
+                            activeSensorSn = inputs.activeSensorSn
+                        )
+                    }
                 }
                 
                 DashboardMetricsCalculator.calculate(processed)
@@ -304,7 +319,8 @@ class DashboardViewModel(
     }.stateIn(
         viewModelScope, 
         SharingStarted.WhileSubscribed(5000), 
-        DashboardMetricsCalculator.calculate(emptyList())
+        dashboardMetricsCache.getLatestCached("historical_metrics_v2")
+            ?: DashboardMetricsCalculator.calculate(emptyList())
     )
 
     // --- 5. Insulin & Preferences ---

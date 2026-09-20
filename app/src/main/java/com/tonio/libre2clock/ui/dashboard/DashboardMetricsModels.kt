@@ -200,7 +200,7 @@ object DashboardMetricsCalculator {
             }
         }
 
-        val estimatedA1c = if (a1cDaysCount > 0 && a1cTotalMeasurements > 100) {
+        val estimatedA1c = if (a1cDaysCount > 0 && a1cTotalMeasurements >= 10) {
             val avgRawForA1c = a1cSumAvgRaw / a1cDaysCount
             val avgCalForA1c = a1cSumAvgCal / a1cDaysCount
 
