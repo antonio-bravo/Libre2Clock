@@ -66,18 +66,18 @@ object TimestampParser {
     )
 
     fun parseMeasurementInstant(measurement: GlucoseMeasurement, zoneId: ZoneId = ZoneId.systemDefault()): Instant? {
-        // Priorizar 'timestamp' que contiene la fecha y hora en el horario local del dispositivo
+        // Fast-path: Si ya tenemos epochSeconds pre-calculado (p. ej. desde SQLite), retornar de inmediato
+        measurement.epochSeconds?.let { return Instant.ofEpochSecond(it) }
+
+        // Priorizar 'factoryTimestamp' que es UTC estricto por definición de Abbott Libre
+        if (measurement.factoryTimestamp.isNotBlank()) {
+            parseFlexibleInstant(measurement.factoryTimestamp, ZoneId.of("UTC"))?.let { return it }
+        }
+
+        // Fallback a 'timestamp' (local)
         if (measurement.timestamp.isNotBlank()) {
             parseFlexibleInstant(measurement.timestamp, zoneId)?.let { return it }
         }
-
-        // Si 'timestamp' no está disponible, parsear 'factoryTimestamp' en el horario local del dispositivo
-        if (measurement.factoryTimestamp.isNotBlank()) {
-            parseFlexibleInstant(measurement.factoryTimestamp, zoneId)?.let { return it }
-        }
-
-        // Fallback a epochSeconds si ya existe
-        measurement.epochSeconds?.let { return Instant.ofEpochSecond(it) }
 
         return null
     }

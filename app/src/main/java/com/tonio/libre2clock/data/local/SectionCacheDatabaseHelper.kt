@@ -67,6 +67,27 @@ class SectionCacheDatabaseHelper(context: Context) :
         return null
     }
 
+    fun getLatestCachedPayload(sectionKey: String): String? {
+        val db = readableDatabase
+        val cursor = db.query(
+            "section_cache",
+            projection,
+            "section_key = ?",
+            arrayOf(sectionKey),
+            null,
+            null,
+            "updated_at_epoch_ms DESC",
+            "1"
+        )
+
+        cursor.use {
+            if (it.moveToFirst()) {
+                return it.getString(0)
+            }
+        }
+        return null
+    }
+
     fun upsertPayload(sectionKey: String, signature: String, payloadJson: String) {
         // 3. OPTIMIZACIÓN: Usar la sentencia pre-compilada en lugar de ContentValues
         upsertStatement.bindString(1, sectionKey)
