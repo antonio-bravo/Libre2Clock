@@ -85,7 +85,7 @@
     <string name="calc_isf">ISF: %1$.1f mg/dL per U</string>
     <string name="calc_formula_label">Formula: %1$d / TDI</string>
     <string name="calc_manual_label">Manual Override</string>
-    <string name="dash_fs_label">FS: %1$.4f</string>
+    <string name="dash_fs_label">FS: %1$s</string>
     <string name="calc_bolus_helper">Bolus Helper</string>
     <string name="calc_carbs_label">Carbs (g)</string>
     <string name="calc_glucose_label">Current Glucose (mg/dL)</string>
