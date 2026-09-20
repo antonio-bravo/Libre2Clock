@@ -1,5 +1,32 @@
 # Changelog
 
+## ca79b14 (Sep 20, 2026 15:38:41)
+fix insulin — antonio-bravo
+[detail](#ca79b14-details)
+
+<details id='ca79b14-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 27ed7f0 (Sep 20, 2026 13:01:33)
+Update changelog — github-actions[bot]
+[detail](#27ed7f0-details)
+
+<details id='27ed7f0-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## c50867a (Sep 20, 2026 15:01:22)
 fix text in FS: — antonio-bravo
 [detail](#c50867a-details)
@@ -699,31 +726,6 @@ gemini — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/util/TimestampParser.kt [Modified]
 - app/src/test/java/com/tonio/libre2clock/TimestampPriorityTest.kt [Modified]
-</details>
-
-
----
-## 3f34ac5 (Sep 14, 2026 14:40:40)
-Update changelog — github-actions[bot]
-[detail](#3f34ac5-details)
-
-<details id='3f34ac5-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## f359058 (Sep 14, 2026 16:40:25)
-undo changes — antonio-bravo
-[detail](#f359058-details)
-
-<details id='f359058-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/TimestampParser.kt [Modified]
 </details>
 
 
