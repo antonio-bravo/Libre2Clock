@@ -78,7 +78,7 @@ fun SettingsEventLogScreen(
                 // OPTIMIZACIÓN: Clave estable para reciclado eficiente de elementos
                 items(
                     items = events,
-                    key = { event -> "${event.timestamp}_${event.tag}" }
+                    key = { event -> "${event.id}_${event.timestamp}_${event.tag}" }
                 ) { event ->
                     EventLogItem(
                         event = event,
