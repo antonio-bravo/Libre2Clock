@@ -1,5 +1,30 @@
 # Changelog
 
+## c50867a (Sep 20, 2026 15:01:22)
+fix text in FS: — antonio-bravo
+[detail](#c50867a-details)
+
+<details id='c50867a-details'>
+<summary>Changed files</summary>
+
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## d0dcae3 (Sep 20, 2026 12:48:01)
+Update changelog — github-actions[bot]
+[detail](#d0dcae3-details)
+
+<details id='d0dcae3-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 8e4e7c1 (Sep 20, 2026 14:47:49)
 Merge pull request #5 from antonio-bravo/feature/timestamp_parser
 
@@ -698,30 +723,6 @@ undo changes — antonio-bravo
 <summary>Changed files</summary>
 
 - app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/TimestampParser.kt [Modified]
-</details>
-
-
----
-## 3d797af (Sep 14, 2026 14:23:41)
-Update changelog — github-actions[bot]
-[detail](#3d797af-details)
-
-<details id='3d797af-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 02a9430 (Sep 14, 2026 16:23:29)
-fix not update glucose — antonio-bravo
-[detail](#02a9430-details)
-
-<details id='02a9430-details'>
-<summary>Changed files</summary>
-
 - app/src/main/java/com/tonio/libre2clock/util/TimestampParser.kt [Modified]
 </details>
 
