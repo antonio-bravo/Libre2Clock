@@ -1,5 +1,32 @@
 # Changelog
 
+## e8585bd (Sep 20, 2026 10:56:34)
+added TIR  > 70% & TBR < 5% — antonio-bravo
+[detail](#e8585bd-details)
+
+<details id='e8585bd-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## af6eaf5 (Sep 19, 2026 22:27:58)
+Update changelog — github-actions[bot]
+[detail](#af6eaf5-details)
+
+<details id='af6eaf5-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 25303a3 (Sep 20, 2026 00:27:47)
 fix problem add insulin — antonio-bravo
 [detail](#25303a3-details)
@@ -660,32 +687,6 @@ Update changelog — github-actions[bot]
 [detail](#ac5592b-details)
 
 <details id='ac5592b-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## da07f3a (Sep 14, 2026 12:54:37)
-fix foreground service — antonio-bravo
-[detail](#da07f3a-details)
-
-<details id='da07f3a-details'>
-<summary>Changed files</summary>
-
-- app/src/main/AndroidManifest.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/service/GlucoseAlarmReceiver.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
-</details>
-
-
----
-## df9a82d (Sep 14, 2026 09:58:05)
-Update changelog — github-actions[bot]
-[detail](#df9a82d-details)
-
-<details id='df9a82d-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
