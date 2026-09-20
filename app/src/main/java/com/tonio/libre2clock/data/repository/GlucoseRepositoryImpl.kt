@@ -412,10 +412,8 @@ class GlucoseRepositoryImpl(
     }
 
     private fun parseMeasurementInstant(measurement: GlucoseMeasurement): Instant? {
-        // FactoryTimestamp is always UTC (ends in Z), while Timestamp might be local or ambiguous.
-        // We prioritize FactoryTimestamp for accurate timeline alignment.
-        return parseFlexibleInstant(measurement.factoryTimestamp)
-            ?: parseFlexibleInstant(measurement.timestamp)
+        return parseFlexibleInstant(measurement.timestamp)
+            ?: parseFlexibleInstant(measurement.factoryTimestamp)
     }
 
     private fun parseFlexibleInstant(timestamp: String, zoneId: ZoneId = ZoneId.systemDefault()): Instant? {
