@@ -118,6 +118,12 @@ data class HistoryBackupPayload(
     val watchAlertStartMinute: Int? = null,
     val lowGlucoseAlarmEnabled: Boolean? = null,
     val highGlucoseAlarmEnabled: Boolean? = null,
+    val lowGlucoseThreshold: Int? = null,
+    val highGlucoseThreshold: Int? = null,
+    val customGlucoseAlarmEnabled: Boolean? = null,
+    val customGlucoseThreshold: Int? = null,
+    val customGlucoseAlarmDirection: String? = null,
+    val customGlucoseValueType: String? = null,
     val useCalibratedForAlarms: Boolean? = null,
     // App Config
     val historyRetentionDays: Int? = null,

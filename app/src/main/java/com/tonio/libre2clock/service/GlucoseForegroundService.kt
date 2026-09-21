@@ -64,6 +64,7 @@ class GlucoseForegroundService : Service() {
     private var lastWatchAlertEpochMinute: Long = -1L
     private var lastLowAlarmAtMillis: Long = 0L
     private var lastHighAlarmAtMillis: Long = 0L
+    private var lastCustomAlarmAtMillis: Long = 0L
     private var lastPredictiveAlarmAtMillis: Long = 0L
     private var lastForegroundNotificationContent: String? = null
     
@@ -84,6 +85,12 @@ class GlucoseForegroundService : Service() {
         val watchAlertStartMinute: Int,
         val lowGlucoseAlarmEnabled: Boolean,
         val highGlucoseAlarmEnabled: Boolean,
+        val lowGlucoseThreshold: Int,
+        val highGlucoseThreshold: Int,
+        val customGlucoseAlarmEnabled: Boolean,
+        val customGlucoseThreshold: Int,
+        val customGlucoseAlarmDirection: String,
+        val customGlucoseValueType: String,
         val useCalibratedForAlarms: Boolean,
         val parsedWatchSchedules: List<ParsedSchedule>,
         val parsedAlarmSchedules: List<ParsedSchedule>,
@@ -99,7 +106,7 @@ class GlucoseForegroundService : Service() {
     ) {
         val hasActiveAlerts: Boolean
             get() = watchNotificationMode != WatchNotificationMode.OFF || 
-                    lowGlucoseAlarmEnabled || highGlucoseAlarmEnabled || 
+                    lowGlucoseAlarmEnabled || highGlucoseAlarmEnabled || customGlucoseAlarmEnabled ||
                     parsedWatchSchedules.isNotEmpty() || parsedAlarmSchedules.isNotEmpty()
     }
 
@@ -146,23 +153,47 @@ class GlucoseForegroundService : Service() {
                 AlertConfigPart1(enabled, mode, interval, startMinute)
             },
             combine(
-                preferenceManager.lowGlucoseAlarmEnabled,
-                preferenceManager.highGlucoseAlarmEnabled,
-                preferenceManager.useCalibratedForAlarms,
-                preferenceManager.predictiveAlarmsEnabled
-            ) { low, high, cal, predictive ->
-                AlertConfigPart2(low, high, cal, predictive)
+                combine(
+                    preferenceManager.lowGlucoseAlarmEnabled,
+                    preferenceManager.highGlucoseAlarmEnabled,
+                    preferenceManager.lowGlucoseThreshold,
+                    preferenceManager.highGlucoseThreshold
+                ) { low, high, lowTh, highTh ->
+                    AlertConfigPart2(low, high, lowTh, highTh)
+                },
+                combine(
+                    preferenceManager.customGlucoseAlarmEnabled,
+                    preferenceManager.customGlucoseThreshold,
+                    preferenceManager.customGlucoseAlarmDirection,
+                    preferenceManager.customGlucoseValueType
+                ) { customOn, customTh, customDir, customType ->
+                    AlertConfigPart3(customOn, customTh, customDir, customType)
+                },
+                combine(
+                    preferenceManager.useCalibratedForAlarms,
+                    preferenceManager.predictiveAlarmsEnabled
+                ) { cal, predictive ->
+                    Pair(cal, predictive)
+                }
+            ) { part2, part3, part4 ->
+                AlertConfigParts(part2, part3, part4.first, part4.second)
             }
-        ) { part1, part2 ->
+        ) { part1, parts ->
             AlertConfig(
                 enabled = part1.enabled,
-                predictive = part2.predictive,
+                predictive = parts.predictive,
                 mode = part1.mode,
                 interval = part1.interval,
                 startMinute = part1.startMinute,
-                lowEnabled = part2.low,
-                highEnabled = part2.high,
-                useCalibrated = part2.cal
+                lowEnabled = parts.p2.low,
+                highEnabled = parts.p2.high,
+                lowThreshold = parts.p2.lowThreshold,
+                highThreshold = parts.p2.highThreshold,
+                customEnabled = parts.p3.customEnabled,
+                customThreshold = parts.p3.customThreshold,
+                customDirection = parts.p3.customDirection,
+                customValueType = parts.p3.customValueType,
+                useCalibrated = parts.cal
             )
         }
 
@@ -214,6 +245,12 @@ class GlucoseForegroundService : Service() {
                 watchAlertStartMinute = alert.startMinute.coerceIn(0, 59),
                 lowGlucoseAlarmEnabled = alert.lowEnabled,
                 highGlucoseAlarmEnabled = alert.highEnabled,
+                lowGlucoseThreshold = alert.lowThreshold,
+                highGlucoseThreshold = alert.highThreshold,
+                customGlucoseAlarmEnabled = alert.customEnabled,
+                customGlucoseThreshold = alert.customThreshold,
+                customGlucoseAlarmDirection = alert.customDirection,
+                customGlucoseValueType = alert.customValueType,
                 useCalibratedForAlarms = alert.useCalibrated,
                 parsedWatchSchedules = schedule.watch,
                 parsedAlarmSchedules = schedule.alarm,
@@ -230,7 +267,9 @@ class GlucoseForegroundService : Service() {
         }.stateIn(serviceScope, SharingStarted.Eagerly, ServiceConfig(
             watchAlertsEnabled = false, predictiveAlarmsEnabled = true, watchNotificationMode = WatchNotificationMode.OFF,
             watchAlertIntervalMinutes = 60, watchAlertStartMinute = 0, lowGlucoseAlarmEnabled = false,
-            highGlucoseAlarmEnabled = false, useCalibratedForAlarms = true, parsedWatchSchedules = emptyList(),
+            highGlucoseAlarmEnabled = false, lowGlucoseThreshold = 70, highGlucoseThreshold = 180,
+            customGlucoseAlarmEnabled = false, customGlucoseThreshold = 140, customGlucoseAlarmDirection = "ABOVE",
+            customGlucoseValueType = "CALIBRATED", useCalibratedForAlarms = true, parsedWatchSchedules = emptyList(),
             parsedAlarmSchedules = emptyList(), batteryLowThreshold = 15, batteryCriticalThreshold = 5,
             disableFastOnSlowCharge = true, glucoseOffset = 0, glucoseOffsetRanges = emptyList(),
             autoAdjustEnabled = false, autoRangeOffsetMode = AutoRangeOffsetMode.OFF, capillaryReadings = emptyList()
@@ -580,17 +619,30 @@ class GlucoseForegroundService : Service() {
         val now = System.currentTimeMillis()
         val valueToCheck = if (config.useCalibratedForAlarms) measurement.calibratedValue else measurement.value
 
-        if (config.lowGlucoseAlarmEnabled && valueToCheck < LOW_GLUCOSE_THRESHOLD) {
+        if (config.lowGlucoseAlarmEnabled && valueToCheck < config.lowGlucoseThreshold) {
             if (now - lastLowAlarmAtMillis >= GLUCOSE_ALARM_COOLDOWN_MS) {
                 sendThresholdAlarmNotification(measurement, isLow = true)
                 lastLowAlarmAtMillis = now
             }
         }
 
-        if (config.highGlucoseAlarmEnabled && valueToCheck > HIGH_GLUCOSE_THRESHOLD) {
+        if (config.highGlucoseAlarmEnabled && valueToCheck > config.highGlucoseThreshold) {
             if (now - lastHighAlarmAtMillis >= GLUCOSE_ALARM_COOLDOWN_MS) {
                 sendThresholdAlarmNotification(measurement, isLow = false)
                 lastHighAlarmAtMillis = now
+            }
+        }
+
+        if (config.customGlucoseAlarmEnabled) {
+            val customValue = if (config.customGlucoseValueType == "RAW") measurement.value else measurement.calibratedValue
+            val isTriggered = if (config.customGlucoseAlarmDirection == "BELOW") {
+                customValue < config.customGlucoseThreshold
+            } else {
+                customValue > config.customGlucoseThreshold
+            }
+            if (isTriggered && now - lastCustomAlarmAtMillis >= GLUCOSE_ALARM_COOLDOWN_MS) {
+                sendCustomAlarmNotification(measurement, config)
+                lastCustomAlarmAtMillis = now
             }
         }
     }
@@ -600,6 +652,33 @@ class GlucoseForegroundService : Service() {
         val dualValue = GlucoseProcessor.formatDualValue(measurement.value, measurement.calibratedValue)
         val styledTitle = buildWatchStyledTitle(plainTitle, dualValue)
         val alarmText = if (isLow) "Low glucose alarm" else "High glucose alarm"
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+
+        val notification = NotificationCompat.Builder(this, ALERT_CHANNEL_ID)
+            .setContentTitle(styledTitle)
+            .setContentText(alarmText)
+            .setSmallIcon(R.drawable.stat_notify_sync)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .setStyle(NotificationCompat.BigTextStyle().setBigContentTitle(styledTitle).bigText("$alarmText\n$plainTitle"))
+            .setVibrate(longArrayOf(0, 500, 200, 500))
+            .setOngoing(false)
+            .setAutoCancel(true)
+            .setTimeoutAfter(TEST_ALERT_TIMEOUT_MS)
+            .build()
+
+        notificationManager.notify(GLUCOSE_ALARM_NOTIFICATION_ID, notification)
+    }
+
+    private fun sendCustomAlarmNotification(measurement: GlucoseMeasurement, config: ServiceConfig) {
+        val plainTitle = buildWatchPlainTitle(measurement)
+        val dualValue = GlucoseProcessor.formatDualValue(measurement.value, measurement.calibratedValue)
+        val styledTitle = buildWatchStyledTitle(plainTitle, dualValue)
+        val dirSymbol = if (config.customGlucoseAlarmDirection == "BELOW") "<" else ">"
+        val typeLabel = if (config.customGlucoseValueType == "RAW") "Raw" else "Calibrado"
+        val alarmText = "Alarma Personalizada ($typeLabel $dirSymbol ${config.customGlucoseThreshold} mg/dL)"
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
         val notification = NotificationCompat.Builder(this, ALERT_CHANNEL_ID)
@@ -708,8 +787,25 @@ class GlucoseForegroundService : Service() {
     }
 
     private data class AlertConfigPart1(val enabled: Boolean, val mode: WatchNotificationMode, val interval: Int, val startMinute: Int)
-    private data class AlertConfigPart2(val low: Boolean, val high: Boolean, val cal: Boolean, val predictive: Boolean)
-    private data class AlertConfig(val enabled: Boolean, val predictive: Boolean, val mode: WatchNotificationMode, val interval: Int, val startMinute: Int, val lowEnabled: Boolean, val highEnabled: Boolean, val useCalibrated: Boolean)
+    private data class AlertConfigPart2(val low: Boolean, val high: Boolean, val lowThreshold: Int, val highThreshold: Int)
+    private data class AlertConfigPart3(val customEnabled: Boolean, val customThreshold: Int, val customDirection: String, val customValueType: String)
+    private data class AlertConfigParts(val p2: AlertConfigPart2, val p3: AlertConfigPart3, val cal: Boolean, val predictive: Boolean)
+    private data class AlertConfig(
+        val enabled: Boolean,
+        val predictive: Boolean,
+        val mode: WatchNotificationMode,
+        val interval: Int,
+        val startMinute: Int,
+        val lowEnabled: Boolean,
+        val highEnabled: Boolean,
+        val lowThreshold: Int,
+        val highThreshold: Int,
+        val customEnabled: Boolean,
+        val customThreshold: Int,
+        val customDirection: String,
+        val customValueType: String,
+        val useCalibrated: Boolean
+    )
     private data class ScheduleConfig(val watch: List<ParsedSchedule>, val alarm: List<ParsedSchedule>)
     private data class BatteryConfig(val low: Int, val critical: Int, val disableFast: Boolean)
     private data class GlucoseConfig(val offset: Int, val ranges: List<GlucoseOffsetRange>, val autoAdjust: Boolean, val autoMode: AutoRangeOffsetMode, val capillaries: List<CapillaryMeasurement>, val activeSensorSn: String? = null)

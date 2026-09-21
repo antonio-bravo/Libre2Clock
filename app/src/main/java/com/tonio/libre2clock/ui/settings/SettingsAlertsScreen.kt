@@ -44,6 +44,12 @@ fun SettingsAlertsScreen(
     val alarmSchedules by viewModel.glucoseAlarmSchedules.collectAsStateWithLifecycle()
     val lowGlucoseAlarmEnabled by viewModel.lowGlucoseAlarmEnabled.collectAsStateWithLifecycle()
     val highGlucoseAlarmEnabled by viewModel.highGlucoseAlarmEnabled.collectAsStateWithLifecycle()
+    val lowGlucoseThreshold by viewModel.lowGlucoseThreshold.collectAsStateWithLifecycle()
+    val highGlucoseThreshold by viewModel.highGlucoseThreshold.collectAsStateWithLifecycle()
+    val customGlucoseAlarmEnabled by viewModel.customGlucoseAlarmEnabled.collectAsStateWithLifecycle()
+    val customGlucoseThreshold by viewModel.customGlucoseThreshold.collectAsStateWithLifecycle()
+    val customGlucoseAlarmDirection by viewModel.customGlucoseAlarmDirection.collectAsStateWithLifecycle()
+    val customGlucoseValueType by viewModel.customGlucoseValueType.collectAsStateWithLifecycle()
     val useCalibratedForAlarms by viewModel.useCalibratedForAlarms.collectAsStateWithLifecycle()
     val predictiveAlarmsEnabled by viewModel.predictiveAlarmsEnabled.collectAsStateWithLifecycle()
 
@@ -183,12 +189,29 @@ fun SettingsAlertsScreen(
                         GlucoseAlarmsCard(
                             lowEnabled = lowGlucoseAlarmEnabled,
                             highEnabled = highGlucoseAlarmEnabled,
+                            lowThreshold = lowGlucoseThreshold,
+                            highThreshold = highGlucoseThreshold,
                             useCalibrated = useCalibratedForAlarms,
                             predictiveEnabled = predictiveAlarmsEnabled,
                             onLowChange = viewModel::updateLowGlucoseAlarmEnabled,
                             onHighChange = viewModel::updateHighGlucoseAlarmEnabled,
+                            onLowThresholdChange = viewModel::updateLowGlucoseThreshold,
+                            onHighThresholdChange = viewModel::updateHighGlucoseThreshold,
                             onCalibratedChange = viewModel::updateUseCalibratedForAlarms,
                             onPredictiveChange = viewModel::updatePredictiveAlarmsEnabled
+                        )
+                    }
+
+                    item {
+                        CustomAlarmCard(
+                            enabled = customGlucoseAlarmEnabled,
+                            threshold = customGlucoseThreshold,
+                            direction = customGlucoseAlarmDirection,
+                            valueType = customGlucoseValueType,
+                            onEnabledChange = viewModel::updateCustomGlucoseAlarmEnabled,
+                            onThresholdChange = viewModel::updateCustomGlucoseThreshold,
+                            onDirectionChange = viewModel::updateCustomGlucoseAlarmDirection,
+                            onValueTypeChange = viewModel::updateCustomGlucoseValueType
                         )
                     }
 
@@ -398,10 +421,14 @@ private fun WatchNotificationModeCard(
 private fun GlucoseAlarmsCard(
     lowEnabled: Boolean,
     highEnabled: Boolean,
+    lowThreshold: Int,
+    highThreshold: Int,
     useCalibrated: Boolean,
     predictiveEnabled: Boolean,
     onLowChange: (Boolean) -> Unit,
     onHighChange: (Boolean) -> Unit,
+    onLowThresholdChange: (Int) -> Unit,
+    onHighThresholdChange: (Int) -> Unit,
     onCalibratedChange: (Boolean) -> Unit,
     onPredictiveChange: (Boolean) -> Unit
 ) {
@@ -414,8 +441,31 @@ private fun GlucoseAlarmsCard(
         Spacer(modifier = Modifier.height(16.dp))
 
         ToggleItem(R.string.settings_low_glucose_alarm_label, lowEnabled, onLowChange)
+        if (lowEnabled) {
+            Spacer(modifier = Modifier.height(8.dp))
+            NumericSettingField(
+                value = lowThreshold,
+                onValueChange = onLowThresholdChange,
+                label = stringResource(R.string.settings_low_threshold_label),
+                min = 40,
+                max = 120
+            )
+        }
+
         Spacer(modifier = Modifier.height(12.dp))
+
         ToggleItem(R.string.settings_high_glucose_alarm_label, highEnabled, onHighChange)
+        if (highEnabled) {
+            Spacer(modifier = Modifier.height(8.dp))
+            NumericSettingField(
+                value = highThreshold,
+                onValueChange = onHighThresholdChange,
+                label = stringResource(R.string.settings_high_threshold_label),
+                min = 120,
+                max = 400
+            )
+        }
+
         Spacer(modifier = Modifier.height(12.dp))
         ToggleItem(R.string.settings_use_calibrated_alarms, useCalibrated, onCalibratedChange)
         Spacer(modifier = Modifier.height(16.dp))
@@ -428,6 +478,101 @@ private fun GlucoseAlarmsCard(
             checked = predictiveEnabled,
             onCheckedChange = onPredictiveChange
         )
+    }
+}
+
+@Composable
+private fun CustomAlarmCard(
+    enabled: Boolean,
+    threshold: Int,
+    direction: String,
+    valueType: String,
+    onEnabledChange: (Boolean) -> Unit,
+    onThresholdChange: (Int) -> Unit,
+    onDirectionChange: (String) -> Unit,
+    onValueTypeChange: (String) -> Unit
+) {
+    SettingsSection(title = stringResource(R.string.settings_custom_alarm_title)) {
+        Text(
+            text = stringResource(R.string.settings_custom_alarm_desc),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        ToggleItem(R.string.settings_custom_alarm_enable, enabled, onEnabledChange)
+
+        if (enabled) {
+            Spacer(modifier = Modifier.height(16.dp))
+
+            NumericSettingField(
+                value = threshold,
+                onValueChange = onThresholdChange,
+                label = stringResource(R.string.settings_custom_threshold_label),
+                min = 40,
+                max = 400
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = stringResource(R.string.settings_custom_direction_label),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilterChip(
+                    selected = direction == "ABOVE",
+                    onClick = { onDirectionChange("ABOVE") },
+                    label = { Text(stringResource(R.string.settings_custom_direction_above)) },
+                    leadingIcon = if (direction == "ABOVE") {
+                        { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                    } else null
+                )
+                FilterChip(
+                    selected = direction == "BELOW",
+                    onClick = { onDirectionChange("BELOW") },
+                    label = { Text(stringResource(R.string.settings_custom_direction_below)) },
+                    leadingIcon = if (direction == "BELOW") {
+                        { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                    } else null
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = stringResource(R.string.settings_custom_value_type_label),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                FilterChip(
+                    selected = valueType == "CALIBRATED",
+                    onClick = { onValueTypeChange("CALIBRATED") },
+                    label = { Text(stringResource(R.string.settings_custom_value_type_calibrated)) },
+                    leadingIcon = if (valueType == "CALIBRATED") {
+                        { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                    } else null
+                )
+                FilterChip(
+                    selected = valueType == "RAW",
+                    onClick = { onValueTypeChange("RAW") },
+                    label = { Text(stringResource(R.string.settings_custom_value_type_raw)) },
+                    leadingIcon = if (valueType == "RAW") {
+                        { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                    } else null
+                )
+            }
+        }
     }
 }
 

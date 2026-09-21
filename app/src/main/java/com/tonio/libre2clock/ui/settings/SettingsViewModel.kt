@@ -103,6 +103,12 @@ class SettingsViewModel(
     val watchAlertStartMinute = preferenceManager.watchAlertStartMinute.stateInDefault(0)
     val lowGlucoseAlarmEnabled = preferenceManager.lowGlucoseAlarmEnabled.stateInDefault(false)
     val highGlucoseAlarmEnabled = preferenceManager.highGlucoseAlarmEnabled.stateInDefault(false)
+    val lowGlucoseThreshold = preferenceManager.lowGlucoseThreshold.stateInDefault(70)
+    val highGlucoseThreshold = preferenceManager.highGlucoseThreshold.stateInDefault(180)
+    val customGlucoseAlarmEnabled = preferenceManager.customGlucoseAlarmEnabled.stateInDefault(false)
+    val customGlucoseThreshold = preferenceManager.customGlucoseThreshold.stateInDefault(140)
+    val customGlucoseAlarmDirection = preferenceManager.customGlucoseAlarmDirection.stateInDefault("ABOVE")
+    val customGlucoseValueType = preferenceManager.customGlucoseValueType.stateInDefault("CALIBRATED")
     val useCalibratedForAlarms = preferenceManager.useCalibratedForAlarms.stateInDefault(true)
     val lastHistoryBackupRequestAt = preferenceManager.lastHistoryBackupRequestAt.stateInDefault(null)
     val historyRetentionDays = preferenceManager.historyRetentionDays.stateInDefault(90)
@@ -277,6 +283,12 @@ class SettingsViewModel(
     fun updateWatchAlertStartMinute(minute: Int) = launchSave { preferenceManager.saveWatchAlertStartMinute(minute) }
     fun updateLowGlucoseAlarmEnabled(enabled: Boolean) = launchSave { preferenceManager.saveLowGlucoseAlarmEnabled(enabled) }
     fun updateHighGlucoseAlarmEnabled(enabled: Boolean) = launchSave { preferenceManager.saveHighGlucoseAlarmEnabled(enabled) }
+    fun updateLowGlucoseThreshold(value: Int) = launchSave { preferenceManager.saveLowGlucoseThreshold(value) }
+    fun updateHighGlucoseThreshold(value: Int) = launchSave { preferenceManager.saveHighGlucoseThreshold(value) }
+    fun updateCustomGlucoseAlarmEnabled(enabled: Boolean) = launchSave { preferenceManager.saveCustomGlucoseAlarmEnabled(enabled) }
+    fun updateCustomGlucoseThreshold(value: Int) = launchSave { preferenceManager.saveCustomGlucoseThreshold(value) }
+    fun updateCustomGlucoseAlarmDirection(direction: String) = launchSave { preferenceManager.saveCustomGlucoseAlarmDirection(direction) }
+    fun updateCustomGlucoseValueType(type: String) = launchSave { preferenceManager.saveCustomGlucoseValueType(type) }
     fun updateUseCalibratedForAlarms(enabled: Boolean) = launchSave { preferenceManager.saveUseCalibratedForAlarms(enabled) }
     fun updateRapidDuration(minutes: Int) = launchSave { preferenceManager.saveRapidDurationMins(minutes) }
     fun updateSlowDuration(minutes: Int) = launchSave { preferenceManager.saveSlowDurationMins(minutes) }

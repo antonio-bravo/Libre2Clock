@@ -79,6 +79,12 @@ class PreferenceManager(private val context: Context) {
     private val WATCH_ALERT_START_MINUTE_KEY = intPreferencesKey("watch_alert_start_minute")
     private val LOW_GLUCOSE_ALARM_ENABLED_KEY = booleanPreferencesKey("low_glucose_alarm_enabled")
     private val HIGH_GLUCOSE_ALARM_ENABLED_KEY = booleanPreferencesKey("high_glucose_alarm_enabled")
+    private val LOW_GLUCOSE_THRESHOLD_KEY = intPreferencesKey("low_glucose_threshold")
+    private val HIGH_GLUCOSE_THRESHOLD_KEY = intPreferencesKey("high_glucose_threshold")
+    private val CUSTOM_GLUCOSE_ALARM_ENABLED_KEY = booleanPreferencesKey("custom_glucose_alarm_enabled")
+    private val CUSTOM_GLUCOSE_THRESHOLD_KEY = intPreferencesKey("custom_glucose_threshold")
+    private val CUSTOM_GLUCOSE_ALARM_DIRECTION_KEY = stringPreferencesKey("custom_glucose_alarm_direction")
+    private val CUSTOM_GLUCOSE_VALUE_TYPE_KEY = stringPreferencesKey("custom_glucose_value_type")
     private val USE_CALIBRATED_FOR_ALARMS_KEY = booleanPreferencesKey("use_calibrated_for_alarms")
     private val HISTORICAL_GLUCOSE_KEY = stringPreferencesKey("historical_glucose_archive")
     private val HISTORY_RETENTION_DAYS_KEY = intPreferencesKey("history_retention_days")
@@ -169,6 +175,12 @@ class PreferenceManager(private val context: Context) {
     val watchAlertStartMinute: Flow<Int> = context.dataStore.data.map { (it[WATCH_ALERT_START_MINUTE_KEY] ?: 0).coerceIn(0, 59) }.distinctUntilChanged()
     val lowGlucoseAlarmEnabled: Flow<Boolean> = context.dataStore.data.map { it[LOW_GLUCOSE_ALARM_ENABLED_KEY] ?: false }.distinctUntilChanged()
     val highGlucoseAlarmEnabled: Flow<Boolean> = context.dataStore.data.map { it[HIGH_GLUCOSE_ALARM_ENABLED_KEY] ?: false }.distinctUntilChanged()
+    val lowGlucoseThreshold: Flow<Int> = context.dataStore.data.map { (it[LOW_GLUCOSE_THRESHOLD_KEY] ?: 70).coerceIn(40, 120) }.distinctUntilChanged()
+    val highGlucoseThreshold: Flow<Int> = context.dataStore.data.map { (it[HIGH_GLUCOSE_THRESHOLD_KEY] ?: 180).coerceIn(120, 400) }.distinctUntilChanged()
+    val customGlucoseAlarmEnabled: Flow<Boolean> = context.dataStore.data.map { it[CUSTOM_GLUCOSE_ALARM_ENABLED_KEY] ?: false }.distinctUntilChanged()
+    val customGlucoseThreshold: Flow<Int> = context.dataStore.data.map { (it[CUSTOM_GLUCOSE_THRESHOLD_KEY] ?: 140).coerceIn(40, 400) }.distinctUntilChanged()
+    val customGlucoseAlarmDirection: Flow<String> = context.dataStore.data.map { it[CUSTOM_GLUCOSE_ALARM_DIRECTION_KEY] ?: "ABOVE" }.distinctUntilChanged()
+    val customGlucoseValueType: Flow<String> = context.dataStore.data.map { it[CUSTOM_GLUCOSE_VALUE_TYPE_KEY] ?: "CALIBRATED" }.distinctUntilChanged()
     val useCalibratedForAlarms: Flow<Boolean> = context.dataStore.data.map { it[USE_CALIBRATED_FOR_ALARMS_KEY] ?: true }.distinctUntilChanged()
 
     val historicalGlucoseArchive: Flow<List<GlucoseMeasurement>> = context.dataStore.data
@@ -344,6 +356,36 @@ class PreferenceManager(private val context: Context) {
 
     suspend fun saveHighGlucoseAlarmEnabled(enabled: Boolean) {
         context.dataStore.edit { it[HIGH_GLUCOSE_ALARM_ENABLED_KEY] = enabled }
+        updateBackupPayload()
+    }
+
+    suspend fun saveLowGlucoseThreshold(value: Int) {
+        context.dataStore.edit { it[LOW_GLUCOSE_THRESHOLD_KEY] = value.coerceIn(40, 120) }
+        updateBackupPayload()
+    }
+
+    suspend fun saveHighGlucoseThreshold(value: Int) {
+        context.dataStore.edit { it[HIGH_GLUCOSE_THRESHOLD_KEY] = value.coerceIn(120, 400) }
+        updateBackupPayload()
+    }
+
+    suspend fun saveCustomGlucoseAlarmEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[CUSTOM_GLUCOSE_ALARM_ENABLED_KEY] = enabled }
+        updateBackupPayload()
+    }
+
+    suspend fun saveCustomGlucoseThreshold(value: Int) {
+        context.dataStore.edit { it[CUSTOM_GLUCOSE_THRESHOLD_KEY] = value.coerceIn(40, 400) }
+        updateBackupPayload()
+    }
+
+    suspend fun saveCustomGlucoseAlarmDirection(direction: String) {
+        context.dataStore.edit { it[CUSTOM_GLUCOSE_ALARM_DIRECTION_KEY] = if (direction == "BELOW") "BELOW" else "ABOVE" }
+        updateBackupPayload()
+    }
+
+    suspend fun saveCustomGlucoseValueType(type: String) {
+        context.dataStore.edit { it[CUSTOM_GLUCOSE_VALUE_TYPE_KEY] = if (type == "RAW") "RAW" else "CALIBRATED" }
         updateBackupPayload()
     }
 
@@ -721,6 +763,12 @@ class PreferenceManager(private val context: Context) {
             watchAlertStartMinute = (prefs[WATCH_ALERT_START_MINUTE_KEY] ?: 0).coerceIn(0, 59),
             lowGlucoseAlarmEnabled = prefs[LOW_GLUCOSE_ALARM_ENABLED_KEY] ?: false,
             highGlucoseAlarmEnabled = prefs[HIGH_GLUCOSE_ALARM_ENABLED_KEY] ?: false,
+            lowGlucoseThreshold = (prefs[LOW_GLUCOSE_THRESHOLD_KEY] ?: 70).coerceIn(40, 120),
+            highGlucoseThreshold = (prefs[HIGH_GLUCOSE_THRESHOLD_KEY] ?: 180).coerceIn(120, 400),
+            customGlucoseAlarmEnabled = prefs[CUSTOM_GLUCOSE_ALARM_ENABLED_KEY] ?: false,
+            customGlucoseThreshold = (prefs[CUSTOM_GLUCOSE_THRESHOLD_KEY] ?: 140).coerceIn(40, 400),
+            customGlucoseAlarmDirection = prefs[CUSTOM_GLUCOSE_ALARM_DIRECTION_KEY] ?: "ABOVE",
+            customGlucoseValueType = prefs[CUSTOM_GLUCOSE_VALUE_TYPE_KEY] ?: "CALIBRATED",
             useCalibratedForAlarms = prefs[USE_CALIBRATED_FOR_ALARMS_KEY] ?: true,
             historyRetentionDays = (prefs[HISTORY_RETENTION_DAYS_KEY] ?: DEFAULT_HISTORY_RETENTION_DAYS).coerceIn(MIN_HISTORY_RETENTION_DAYS, MAX_HISTORY_RETENTION_DAYS),
             batteryLowThreshold = prefs[BATTERY_LOW_THRESHOLD_KEY] ?: 15,
@@ -815,6 +863,12 @@ class PreferenceManager(private val context: Context) {
             watchAlertStartMinute = (prefs[WATCH_ALERT_START_MINUTE_KEY] ?: 0).coerceIn(0, 59),
             lowGlucoseAlarmEnabled = prefs[LOW_GLUCOSE_ALARM_ENABLED_KEY] ?: false,
             highGlucoseAlarmEnabled = prefs[HIGH_GLUCOSE_ALARM_ENABLED_KEY] ?: false,
+            lowGlucoseThreshold = (prefs[LOW_GLUCOSE_THRESHOLD_KEY] ?: 70).coerceIn(40, 120),
+            highGlucoseThreshold = (prefs[HIGH_GLUCOSE_THRESHOLD_KEY] ?: 180).coerceIn(120, 400),
+            customGlucoseAlarmEnabled = prefs[CUSTOM_GLUCOSE_ALARM_ENABLED_KEY] ?: false,
+            customGlucoseThreshold = (prefs[CUSTOM_GLUCOSE_THRESHOLD_KEY] ?: 140).coerceIn(40, 400),
+            customGlucoseAlarmDirection = prefs[CUSTOM_GLUCOSE_ALARM_DIRECTION_KEY] ?: "ABOVE",
+            customGlucoseValueType = prefs[CUSTOM_GLUCOSE_VALUE_TYPE_KEY] ?: "CALIBRATED",
             useCalibratedForAlarms = prefs[USE_CALIBRATED_FOR_ALARMS_KEY] ?: true,
             historyRetentionDays = (prefs[HISTORY_RETENTION_DAYS_KEY] ?: DEFAULT_HISTORY_RETENTION_DAYS).coerceIn(MIN_HISTORY_RETENTION_DAYS, MAX_HISTORY_RETENTION_DAYS),
             watchNotificationSchedules = decodeList(prefs, WATCH_NOTIFICATION_SCHEDULES_KEY),
@@ -845,6 +899,12 @@ class PreferenceManager(private val context: Context) {
         payload.watchAlertStartMinute?.let { preferences[WATCH_ALERT_START_MINUTE_KEY] = it }
         payload.lowGlucoseAlarmEnabled?.let { preferences[LOW_GLUCOSE_ALARM_ENABLED_KEY] = it }
         payload.highGlucoseAlarmEnabled?.let { preferences[HIGH_GLUCOSE_ALARM_ENABLED_KEY] = it }
+        payload.lowGlucoseThreshold?.let { preferences[LOW_GLUCOSE_THRESHOLD_KEY] = it }
+        payload.highGlucoseThreshold?.let { preferences[HIGH_GLUCOSE_THRESHOLD_KEY] = it }
+        payload.customGlucoseAlarmEnabled?.let { preferences[CUSTOM_GLUCOSE_ALARM_ENABLED_KEY] = it }
+        payload.customGlucoseThreshold?.let { preferences[CUSTOM_GLUCOSE_THRESHOLD_KEY] = it }
+        payload.customGlucoseAlarmDirection?.let { preferences[CUSTOM_GLUCOSE_ALARM_DIRECTION_KEY] = it }
+        payload.customGlucoseValueType?.let { preferences[CUSTOM_GLUCOSE_VALUE_TYPE_KEY] = it }
         payload.useCalibratedForAlarms?.let { preferences[USE_CALIBRATED_FOR_ALARMS_KEY] = it }
         payload.historyRetentionDays?.let { preferences[HISTORY_RETENTION_DAYS_KEY] = it }
         payload.batteryLowThreshold?.let { preferences[BATTERY_LOW_THRESHOLD_KEY] = it }
