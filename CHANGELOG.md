@@ -1,5 +1,39 @@
 # Changelog
 
+## 5d9e910 (Sep 22, 2026 20:49:09)
+notify once on custom + availability to discount active insulin — antonio-bravo
+[detail](#5d9e910-details)
+
+<details id='5d9e910-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/InsulinProcessor.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsAlertsScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 48c60fc (Sep 21, 2026 11:39:44)
+Update changelog — github-actions[bot]
+[detail](#48c60fc-details)
+
+<details id='48c60fc-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 552957c (Sep 21, 2026 13:39:30)
 Add custom alarm when reach to value > or < — antonio-bravo
 [detail](#552957c-details)
@@ -687,31 +721,6 @@ delta glucose — antonio-bravo
 <summary>Changed files</summary>
 
 - app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
-</details>
-
-
----
-## 284e296 (Sep 15, 2026 09:26:56)
-intento de fix — antonio-bravo
-[detail](#284e296-details)
-
-<details id='284e296-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-</details>
-
-
----
-## af2ed8b (Sep 15, 2026 07:23:50)
-Update changelog — github-actions[bot]
-[detail](#af2ed8b-details)
-
-<details id='af2ed8b-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
 </details>
 
 
