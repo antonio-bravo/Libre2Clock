@@ -50,6 +50,7 @@ fun SettingsAlertsScreen(
     val customGlucoseThreshold by viewModel.customGlucoseThreshold.collectAsStateWithLifecycle()
     val customGlucoseAlarmDirection by viewModel.customGlucoseAlarmDirection.collectAsStateWithLifecycle()
     val customGlucoseValueType by viewModel.customGlucoseValueType.collectAsStateWithLifecycle()
+    val customGlucoseOnlyOnCrossing by viewModel.customGlucoseOnlyOnCrossing.collectAsStateWithLifecycle()
     val useCalibratedForAlarms by viewModel.useCalibratedForAlarms.collectAsStateWithLifecycle()
     val predictiveAlarmsEnabled by viewModel.predictiveAlarmsEnabled.collectAsStateWithLifecycle()
 
@@ -208,10 +209,12 @@ fun SettingsAlertsScreen(
                             threshold = customGlucoseThreshold,
                             direction = customGlucoseAlarmDirection,
                             valueType = customGlucoseValueType,
+                            onlyOnCrossing = customGlucoseOnlyOnCrossing,
                             onEnabledChange = viewModel::updateCustomGlucoseAlarmEnabled,
                             onThresholdChange = viewModel::updateCustomGlucoseThreshold,
                             onDirectionChange = viewModel::updateCustomGlucoseAlarmDirection,
-                            onValueTypeChange = viewModel::updateCustomGlucoseValueType
+                            onValueTypeChange = viewModel::updateCustomGlucoseValueType,
+                            onOnlyOnCrossingChange = viewModel::updateCustomGlucoseOnlyOnCrossing
                         )
                     }
 
@@ -487,10 +490,12 @@ private fun CustomAlarmCard(
     threshold: Int,
     direction: String,
     valueType: String,
+    onlyOnCrossing: Boolean,
     onEnabledChange: (Boolean) -> Unit,
     onThresholdChange: (Int) -> Unit,
     onDirectionChange: (String) -> Unit,
-    onValueTypeChange: (String) -> Unit
+    onValueTypeChange: (String) -> Unit,
+    onOnlyOnCrossingChange: (Boolean) -> Unit
 ) {
     SettingsSection(title = stringResource(R.string.settings_custom_alarm_title)) {
         Text(
@@ -572,6 +577,17 @@ private fun CustomAlarmCard(
                     } else null
                 )
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            HorizontalDivider(thickness = 0.5.dp)
+            Spacer(modifier = Modifier.height(16.dp))
+
+            ToggleItemWithSubtitle(
+                title = stringResource(R.string.settings_custom_only_on_crossing),
+                subtitle = stringResource(R.string.settings_custom_only_on_crossing_desc),
+                checked = onlyOnCrossing,
+                onCheckedChange = onOnlyOnCrossingChange
+            )
         }
     }
 }

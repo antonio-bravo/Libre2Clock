@@ -294,6 +294,11 @@
     <string name="settings_custom_value_type_label">Tipo de valor a comprobar</string>
     <string name="settings_custom_value_type_calibrated">Calibrado (con offset)</string>
     <string name="settings_custom_value_type_raw">Raw (sin offset)</string>
+    <string name="settings_custom_only_on_crossing">Avisar solo al cruzar la línea</string>
+    <string name="settings_custom_only_on_crossing_desc">Notifica únicamente cuando la glucosa cambia de rango y cruza el umbral.</string>
+    <string name="calc_deduct_iob_label">Descontar Insulina Activa (IOB: %1$.2f U)</string>
+    <string name="calc_deduct_iob_checkbox">Descontar Insulina Activa (IOB)</string>
+    <string name="calc_deduct_iob_subtitle">Resta las unidades de insulina rápida activa restantes de la dosis sugerida.</string>
     <string name="settings_alarm_active_schedules">Horarios Activos de Alarmas</string>
     <string name="settings_add_alarm_schedule">Añadir Horario de Alarma</string>
     <string name="settings_battery_optimization">Optimización de Batería</string>

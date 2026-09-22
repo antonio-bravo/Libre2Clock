@@ -357,6 +357,13 @@ class DashboardViewModel(
     val slowDurationMinutes: StateFlow<Int> = preferenceManager.slowDurationMins
         .stateIn(viewModelScope, subscribedSharing, 1440)
 
+    val deductIobForBolus: StateFlow<Boolean> = preferenceManager.deductIobForBolus
+        .stateIn(viewModelScope, subscribedSharing, false)
+
+    fun updateDeductIobForBolus(enabled: Boolean) {
+        viewModelScope.launch { preferenceManager.saveDeductIobForBolus(enabled) }
+    }
+
     // --- 6. Sensor Error ---
     val currentSensorError: StateFlow<SensorErrorSummary?> = combine(
         preferenceManager.activeSensorSerialNumber,

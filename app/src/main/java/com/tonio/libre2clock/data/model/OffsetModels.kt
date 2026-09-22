@@ -124,6 +124,8 @@ data class HistoryBackupPayload(
     val customGlucoseThreshold: Int? = null,
     val customGlucoseAlarmDirection: String? = null,
     val customGlucoseValueType: String? = null,
+    val customGlucoseOnlyOnCrossing: Boolean? = null,
+    val deductIobForBolus: Boolean? = null,
     val useCalibratedForAlarms: Boolean? = null,
     // App Config
     val historyRetentionDays: Int? = null,

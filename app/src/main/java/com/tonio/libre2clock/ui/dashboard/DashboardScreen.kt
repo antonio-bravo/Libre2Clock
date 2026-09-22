@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
@@ -98,6 +99,7 @@ fun DashboardScreen(
     val targetGlucose by viewModel.targetGlucose.collectAsStateWithLifecycle()
     val targetGlucoseLow by viewModel.targetGlucoseLow.collectAsStateWithLifecycle()
     val targetGlucoseHigh by viewModel.targetGlucoseHigh.collectAsStateWithLifecycle()
+    val deductIobForBolus by viewModel.deductIobForBolus.collectAsStateWithLifecycle()
     val predictedPoints by viewModel.predictedGlucose.collectAsStateWithLifecycle()
     val isBatteryOptimized by viewModel.isBatteryOptimized.collectAsStateWithLifecycle()
 
@@ -310,7 +312,9 @@ fun DashboardScreen(
                         targetGlucose = targetGlucose,
                         currentGlucose = currentGlucose,
                         rapidDuration = rapidDuration,
-                        slowDuration = slowDuration
+                        slowDuration = slowDuration,
+                        deductIobForBolus = deductIobForBolus,
+                        onDeductIobChange = viewModel::updateDeductIobForBolus
                     )
                 }
                 item {
@@ -458,7 +462,9 @@ fun InsulinHealthCard(
     targetGlucose: Int,
     currentGlucose: GlucoseMeasurement?,
     rapidDuration: Int = 240,
-    slowDuration: Int = 1440
+    slowDuration: Int = 1440,
+    deductIobForBolus: Boolean = false,
+    onDeductIobChange: ((Boolean) -> Unit)? = null
 ) {
     val pagerState = rememberPagerState(pageCount = { 2 })
     val today = LocalDate.now()
@@ -499,7 +505,7 @@ fun InsulinHealthCard(
         }
     }
 
-    val (suggestedUnitsRaw, suggestedUnitsCal) = remember(currentGlucose, tdi, currentIsf, targetGlucose, isBasalExpiringSoon) {
+    val (suggestedUnitsRaw, suggestedUnitsCal) = remember(currentGlucose, tdi, currentIsf, targetGlucose, isBasalExpiringSoon, rapidIOB, deductIobForBolus) {
         val rawG = currentGlucose?.value
         val calG = currentGlucose?.calibratedValue ?: rawG
 
@@ -511,7 +517,9 @@ fun InsulinHealthCard(
                 tdi = tdi,
                 icConstant = icRuleConstant,
                 isf = currentIsf,
-                isBasalExpiringSoon = isBasalExpiringSoon
+                isBasalExpiringSoon = isBasalExpiringSoon,
+                iob = rapidIOB,
+                deductIob = deductIobForBolus
             ).total
         }
         val calUnits = calG?.let {
@@ -522,7 +530,9 @@ fun InsulinHealthCard(
                 tdi = tdi,
                 icConstant = icRuleConstant,
                 isf = currentIsf,
-                isBasalExpiringSoon = isBasalExpiringSoon
+                isBasalExpiringSoon = isBasalExpiringSoon,
+                iob = rapidIOB,
+                deductIob = deductIobForBolus
             ).total
         }
         rawUnits to calUnits
@@ -620,6 +630,32 @@ fun InsulinHealthCard(
                     )
                 }
             }
+
+            if (rapidIOB > 0 && onDeductIobChange != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { onDeductIobChange(!deductIobForBolus) }
+                        .padding(vertical = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = deductIobForBolus,
+                        onCheckedChange = { onDeductIobChange(it) }
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = stringResource(R.string.calc_deduct_iob_label, rapidIOB),
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         }
     }
 
@@ -631,6 +667,9 @@ fun InsulinHealthCard(
             suggestedUnitsCal = suggestedUnitsCal,
             isf = currentIsf,
             isBasalExpiringSoon = isBasalExpiringSoon,
+            rapidIOB = rapidIOB,
+            deductIobForBolus = deductIobForBolus,
+            onDeductIobChange = onDeductIobChange,
             onDismiss = { showAddDialog = false },
             onConfirm = { dose ->
                 runCatching { onAddDose(dose) }

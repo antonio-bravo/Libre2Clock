@@ -109,6 +109,8 @@ class SettingsViewModel(
     val customGlucoseThreshold = preferenceManager.customGlucoseThreshold.stateInDefault(140)
     val customGlucoseAlarmDirection = preferenceManager.customGlucoseAlarmDirection.stateInDefault("ABOVE")
     val customGlucoseValueType = preferenceManager.customGlucoseValueType.stateInDefault("CALIBRATED")
+    val customGlucoseOnlyOnCrossing = preferenceManager.customGlucoseOnlyOnCrossing.stateInDefault(true)
+    val deductIobForBolus = preferenceManager.deductIobForBolus.stateInDefault(false)
     val useCalibratedForAlarms = preferenceManager.useCalibratedForAlarms.stateInDefault(true)
     val lastHistoryBackupRequestAt = preferenceManager.lastHistoryBackupRequestAt.stateInDefault(null)
     val historyRetentionDays = preferenceManager.historyRetentionDays.stateInDefault(90)
@@ -289,6 +291,8 @@ class SettingsViewModel(
     fun updateCustomGlucoseThreshold(value: Int) = launchSave { preferenceManager.saveCustomGlucoseThreshold(value) }
     fun updateCustomGlucoseAlarmDirection(direction: String) = launchSave { preferenceManager.saveCustomGlucoseAlarmDirection(direction) }
     fun updateCustomGlucoseValueType(type: String) = launchSave { preferenceManager.saveCustomGlucoseValueType(type) }
+    fun updateCustomGlucoseOnlyOnCrossing(enabled: Boolean) = launchSave { preferenceManager.saveCustomGlucoseOnlyOnCrossing(enabled) }
+    fun updateDeductIobForBolus(enabled: Boolean) = launchSave { preferenceManager.saveDeductIobForBolus(enabled) }
     fun updateUseCalibratedForAlarms(enabled: Boolean) = launchSave { preferenceManager.saveUseCalibratedForAlarms(enabled) }
     fun updateRapidDuration(minutes: Int) = launchSave { preferenceManager.saveRapidDurationMins(minutes) }
     fun updateSlowDuration(minutes: Int) = launchSave { preferenceManager.saveSlowDurationMins(minutes) }

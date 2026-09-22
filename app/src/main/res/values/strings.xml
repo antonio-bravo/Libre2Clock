@@ -294,6 +294,11 @@
     <string name="settings_custom_value_type_label">Value type to check</string>
     <string name="settings_custom_value_type_calibrated">Calibrated (with offset)</string>
     <string name="settings_custom_value_type_raw">Raw (no offset)</string>
+    <string name="settings_custom_only_on_crossing">Notify only on line crossing</string>
+    <string name="settings_custom_only_on_crossing_desc">Notifies only when glucose transitions across the threshold.</string>
+    <string name="calc_deduct_iob_label">Deduct Active Insulin (IOB: %1$.2f U)</string>
+    <string name="calc_deduct_iob_checkbox">Deduct Active Insulin (IOB)</string>
+    <string name="calc_deduct_iob_subtitle">Subtracts remaining active rapid insulin units from the suggested dose.</string>
     <string name="settings_alarm_active_schedules">Alarm Active Schedules</string>
     <string name="settings_add_alarm_schedule">Add Alarm Schedule</string>
     <string name="settings_battery_optimization">Battery Optimization</string>

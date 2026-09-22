@@ -53,6 +53,7 @@ fun InsulinHubScreen(
     val targetGlucose by viewModel.targetGlucose.collectAsStateWithLifecycle()
     val currentGlucoseData by viewModel.currentGlucose.collectAsStateWithLifecycle()
     val useCalibratedForAlarms by viewModel.useCalibratedForAlarms.collectAsStateWithLifecycle()
+    val deductIobForBolus by viewModel.deductIobForBolus.collectAsStateWithLifecycle()
 
     var showAddDialog by remember { mutableStateOf(false) }
 
@@ -87,7 +88,7 @@ fun InsulinHubScreen(
         }
     }
 
-    val (suggestedUnitsRaw, suggestedUnitsCal) = remember(currentGlucoseData, tdi, isf, targetGlucose, isBasalExpiringSoon) {
+    val (suggestedUnitsRaw, suggestedUnitsCal) = remember(currentGlucoseData, tdi, isf, targetGlucose, isBasalExpiringSoon, rapidIOB, deductIobForBolus) {
         val rawG = currentGlucoseData?.value
         val calG = currentGlucoseData?.calibratedValue ?: rawG
 
@@ -99,7 +100,9 @@ fun InsulinHubScreen(
                 tdi = tdi,
                 icConstant = icRuleConstant,
                 isf = isf,
-                isBasalExpiringSoon = isBasalExpiringSoon
+                isBasalExpiringSoon = isBasalExpiringSoon,
+                iob = rapidIOB,
+                deductIob = deductIobForBolus
             ).total
         }
         val calUnits = calG?.let {
@@ -110,7 +113,9 @@ fun InsulinHubScreen(
                 tdi = tdi,
                 icConstant = icRuleConstant,
                 isf = isf,
-                isBasalExpiringSoon = isBasalExpiringSoon
+                isBasalExpiringSoon = isBasalExpiringSoon,
+                iob = rapidIOB,
+                deductIob = deductIobForBolus
             ).total
         }
         rawUnits to calUnits
@@ -186,6 +191,8 @@ fun InsulinHubScreen(
                     targetGlucose = targetGlucose,
                     currentGlucose = currentGlucoseData,
                     doses = doses,
+                    rapidIOB = rapidIOB,
+                    deductIobForBolus = deductIobForBolus,
                     viewModel = viewModel,
                     isBasalExpiringSoon = isBasalExpiringSoon,
                     useCalibratedForAlarms = useCalibratedForAlarms
@@ -226,6 +233,9 @@ fun InsulinHubScreen(
             suggestedUnitsCal = suggestedUnitsCal,
             isf = isf,
             isBasalExpiringSoon = isBasalExpiringSoon,
+            rapidIOB = rapidIOB,
+            deductIobForBolus = deductIobForBolus,
+            onDeductIobChange = viewModel::updateDeductIobForBolus,
             onDismiss = { showAddDialog = false },
             onConfirm = {
                 viewModel.addInsulinDose(it)
@@ -314,6 +324,7 @@ fun BolusCalculatorCard(
     tdi: Double, calculatedTdi: Double, icRatio: Double, isf: Double, calculatedIsf: Double,
     manualIsf: Double?, manualTdi: Double?, icConstant: Int, isfConstant: Int,
     targetGlucose: Int, currentGlucose: GlucoseMeasurement?, doses: List<InsulinDose>,
+    rapidIOB: Double, deductIobForBolus: Boolean,
     viewModel: SettingsViewModel, isBasalExpiringSoon: Boolean, useCalibratedForAlarms: Boolean
 ) {
     var carbsText by remember { mutableStateOf("") }
@@ -328,16 +339,16 @@ fun BolusCalculatorCard(
     // OPTIMIZACIÓN: Derivación de estado en lugar de LaunchedEffect para el slider
     val carbsFloat = carbsText.toFloatOrNull() ?: 0f
 
-    val suggestedResults = remember(carbsText, glucoseText, tdi, isBasalExpiringSoon, isf, targetGlucose, icConstant) {
+    val suggestedResults = remember(carbsText, glucoseText, tdi, isBasalExpiringSoon, isf, targetGlucose, icConstant, rapidIOB, deductIobForBolus) {
         val carbs = carbsText.toDoubleOrNull() ?: 0.0
         val cleanText = glucoseText.replace(" ", "")
         val glucoseParts = cleanText.replace(")", "").split("(")
         val realG = glucoseParts.getOrNull(0)?.toIntOrNull() ?: 0
         val calG = glucoseParts.getOrNull(1)?.toIntOrNull() ?: realG
 
-        val breakdownReal = InsulinProcessor.getSuggestedBolusDetailed(carbs, realG, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon)
+        val breakdownReal = InsulinProcessor.getSuggestedBolusDetailed(carbs, realG, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon, rapidIOB, deductIobForBolus)
         val breakdownCal = if (calG == realG) breakdownReal else
-            InsulinProcessor.getSuggestedBolusDetailed(carbs, calG, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon)
+            InsulinProcessor.getSuggestedBolusDetailed(carbs, calG, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon, rapidIOB, deductIobForBolus)
 
         Triple(realG, calG, breakdownReal to breakdownCal)
     }
@@ -383,6 +394,30 @@ fun BolusCalculatorCard(
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Checkbox(
+                    checked = deductIobForBolus,
+                    onCheckedChange = { viewModel.updateDeductIobForBolus(it) }
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.calc_deduct_iob_label, rapidIOB),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = stringResource(R.string.calc_deduct_iob_subtitle),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
 
             if (isBasalExpiringSoon) {
                 Text(
@@ -451,6 +486,9 @@ fun BolusCalculatorCard(
                         suggestedUnitsCal = bCal.total,
                         isf = isf,
                         isBasalExpiringSoon = isBasalExpiringSoon,
+                        rapidIOB = rapidIOB,
+                        deductIobForBolus = deductIobForBolus,
+                        onDeductIobChange = viewModel::updateDeductIobForBolus,
                         onDismiss = { showLogDialog = false },
                         onConfirm = {
                             viewModel.addInsulinDose(it)
@@ -651,6 +689,9 @@ fun InsulinDoseDialog(
     suggestedUnitsCal: Double? = null,
     isf: Double? = null,
     isBasalExpiringSoon: Boolean = false,
+    rapidIOB: Double = 0.0,
+    deductIobForBolus: Boolean = false,
+    onDeductIobChange: ((Boolean) -> Unit)? = null,
     onDismiss: () -> Unit,
     onConfirm: (InsulinDose) -> Unit
 ) {
@@ -716,14 +757,34 @@ fun InsulinDoseDialog(
                             )
                         }
                         TextButton(onClick = {
-                            val unitsToUse = suggestedUnitsCal ?: rawVal
+                            val unitsToUse = calVal ?: rawVal
                             unitsText = String.format(Locale.US, "%.2f", formatValue(unitsToUse))
                         }) {
                             Text(stringResource(R.string.insulin_use_suggested))
                         }
                     }
+
                     if (isBasalExpiringSoon) {
                         Text(text = stringResource(R.string.calc_basal_expiring_warning_short), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                if (type == InsulinType.RAPID && onDeductIobChange != null && rapidIOB > 0) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Checkbox(
+                            checked = deductIobForBolus,
+                            onCheckedChange = { onDeductIobChange(it) }
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = stringResource(R.string.calc_deduct_iob_label, rapidIOB),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                 }

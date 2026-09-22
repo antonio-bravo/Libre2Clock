@@ -85,6 +85,9 @@ class PreferenceManager(private val context: Context) {
     private val CUSTOM_GLUCOSE_THRESHOLD_KEY = intPreferencesKey("custom_glucose_threshold")
     private val CUSTOM_GLUCOSE_ALARM_DIRECTION_KEY = stringPreferencesKey("custom_glucose_alarm_direction")
     private val CUSTOM_GLUCOSE_VALUE_TYPE_KEY = stringPreferencesKey("custom_glucose_value_type")
+    private val CUSTOM_GLUCOSE_ONLY_ON_CROSSING_KEY = booleanPreferencesKey("custom_glucose_only_on_crossing")
+    private val LAST_CUSTOM_GLUCOSE_VALUE_KEY = intPreferencesKey("last_custom_glucose_value")
+    private val DEDUCT_IOB_FOR_BOLUS_KEY = booleanPreferencesKey("deduct_iob_for_bolus")
     private val USE_CALIBRATED_FOR_ALARMS_KEY = booleanPreferencesKey("use_calibrated_for_alarms")
     private val HISTORICAL_GLUCOSE_KEY = stringPreferencesKey("historical_glucose_archive")
     private val HISTORY_RETENTION_DAYS_KEY = intPreferencesKey("history_retention_days")
@@ -181,6 +184,9 @@ class PreferenceManager(private val context: Context) {
     val customGlucoseThreshold: Flow<Int> = context.dataStore.data.map { (it[CUSTOM_GLUCOSE_THRESHOLD_KEY] ?: 140).coerceIn(40, 400) }.distinctUntilChanged()
     val customGlucoseAlarmDirection: Flow<String> = context.dataStore.data.map { it[CUSTOM_GLUCOSE_ALARM_DIRECTION_KEY] ?: "ABOVE" }.distinctUntilChanged()
     val customGlucoseValueType: Flow<String> = context.dataStore.data.map { it[CUSTOM_GLUCOSE_VALUE_TYPE_KEY] ?: "CALIBRATED" }.distinctUntilChanged()
+    val customGlucoseOnlyOnCrossing: Flow<Boolean> = context.dataStore.data.map { it[CUSTOM_GLUCOSE_ONLY_ON_CROSSING_KEY] ?: true }.distinctUntilChanged()
+    val lastCustomGlucoseValue: Flow<Int?> = context.dataStore.data.map { it[LAST_CUSTOM_GLUCOSE_VALUE_KEY] }.distinctUntilChanged()
+    val deductIobForBolus: Flow<Boolean> = context.dataStore.data.map { it[DEDUCT_IOB_FOR_BOLUS_KEY] ?: false }.distinctUntilChanged()
     val useCalibratedForAlarms: Flow<Boolean> = context.dataStore.data.map { it[USE_CALIBRATED_FOR_ALARMS_KEY] ?: true }.distinctUntilChanged()
 
     val historicalGlucoseArchive: Flow<List<GlucoseMeasurement>> = context.dataStore.data
@@ -386,6 +392,22 @@ class PreferenceManager(private val context: Context) {
 
     suspend fun saveCustomGlucoseValueType(type: String) {
         context.dataStore.edit { it[CUSTOM_GLUCOSE_VALUE_TYPE_KEY] = if (type == "RAW") "RAW" else "CALIBRATED" }
+        updateBackupPayload()
+    }
+
+    suspend fun saveCustomGlucoseOnlyOnCrossing(enabled: Boolean) {
+        context.dataStore.edit { it[CUSTOM_GLUCOSE_ONLY_ON_CROSSING_KEY] = enabled }
+        updateBackupPayload()
+    }
+
+    suspend fun saveLastCustomGlucoseValue(value: Int?) {
+        context.dataStore.edit {
+            if (value != null) it[LAST_CUSTOM_GLUCOSE_VALUE_KEY] = value else it.remove(LAST_CUSTOM_GLUCOSE_VALUE_KEY)
+        }
+    }
+
+    suspend fun saveDeductIobForBolus(enabled: Boolean) {
+        context.dataStore.edit { it[DEDUCT_IOB_FOR_BOLUS_KEY] = enabled }
         updateBackupPayload()
     }
 
@@ -769,6 +791,8 @@ class PreferenceManager(private val context: Context) {
             customGlucoseThreshold = (prefs[CUSTOM_GLUCOSE_THRESHOLD_KEY] ?: 140).coerceIn(40, 400),
             customGlucoseAlarmDirection = prefs[CUSTOM_GLUCOSE_ALARM_DIRECTION_KEY] ?: "ABOVE",
             customGlucoseValueType = prefs[CUSTOM_GLUCOSE_VALUE_TYPE_KEY] ?: "CALIBRATED",
+            customGlucoseOnlyOnCrossing = prefs[CUSTOM_GLUCOSE_ONLY_ON_CROSSING_KEY] ?: true,
+            deductIobForBolus = prefs[DEDUCT_IOB_FOR_BOLUS_KEY] ?: false,
             useCalibratedForAlarms = prefs[USE_CALIBRATED_FOR_ALARMS_KEY] ?: true,
             historyRetentionDays = (prefs[HISTORY_RETENTION_DAYS_KEY] ?: DEFAULT_HISTORY_RETENTION_DAYS).coerceIn(MIN_HISTORY_RETENTION_DAYS, MAX_HISTORY_RETENTION_DAYS),
             batteryLowThreshold = prefs[BATTERY_LOW_THRESHOLD_KEY] ?: 15,
@@ -869,6 +893,8 @@ class PreferenceManager(private val context: Context) {
             customGlucoseThreshold = (prefs[CUSTOM_GLUCOSE_THRESHOLD_KEY] ?: 140).coerceIn(40, 400),
             customGlucoseAlarmDirection = prefs[CUSTOM_GLUCOSE_ALARM_DIRECTION_KEY] ?: "ABOVE",
             customGlucoseValueType = prefs[CUSTOM_GLUCOSE_VALUE_TYPE_KEY] ?: "CALIBRATED",
+            customGlucoseOnlyOnCrossing = prefs[CUSTOM_GLUCOSE_ONLY_ON_CROSSING_KEY] ?: true,
+            deductIobForBolus = prefs[DEDUCT_IOB_FOR_BOLUS_KEY] ?: false,
             useCalibratedForAlarms = prefs[USE_CALIBRATED_FOR_ALARMS_KEY] ?: true,
             historyRetentionDays = (prefs[HISTORY_RETENTION_DAYS_KEY] ?: DEFAULT_HISTORY_RETENTION_DAYS).coerceIn(MIN_HISTORY_RETENTION_DAYS, MAX_HISTORY_RETENTION_DAYS),
             watchNotificationSchedules = decodeList(prefs, WATCH_NOTIFICATION_SCHEDULES_KEY),
@@ -905,6 +931,8 @@ class PreferenceManager(private val context: Context) {
         payload.customGlucoseThreshold?.let { preferences[CUSTOM_GLUCOSE_THRESHOLD_KEY] = it }
         payload.customGlucoseAlarmDirection?.let { preferences[CUSTOM_GLUCOSE_ALARM_DIRECTION_KEY] = it }
         payload.customGlucoseValueType?.let { preferences[CUSTOM_GLUCOSE_VALUE_TYPE_KEY] = it }
+        payload.customGlucoseOnlyOnCrossing?.let { preferences[CUSTOM_GLUCOSE_ONLY_ON_CROSSING_KEY] = it }
+        payload.deductIobForBolus?.let { preferences[DEDUCT_IOB_FOR_BOLUS_KEY] = it }
         payload.useCalibratedForAlarms?.let { preferences[USE_CALIBRATED_FOR_ALARMS_KEY] = it }
         payload.historyRetentionDays?.let { preferences[HISTORY_RETENTION_DAYS_KEY] = it }
         payload.batteryLowThreshold?.let { preferences[BATTERY_LOW_THRESHOLD_KEY] = it }

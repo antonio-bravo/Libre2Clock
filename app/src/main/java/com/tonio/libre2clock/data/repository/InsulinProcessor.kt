@@ -168,6 +168,7 @@ object InsulinProcessor {
     data class BolusBreakdown(
         val carbDose: Double,
         val correctionDose: Double,
+        val appliedIob: Double = 0.0,
         val total: Double
     )
 
@@ -178,23 +179,29 @@ object InsulinProcessor {
         tdi: Double,
         icConstant: Int,
         isf: Double,
-        isBasalExpiringSoon: Boolean
+        isBasalExpiringSoon: Boolean,
+        iob: Double = 0.0,
+        deductIob: Boolean = false
     ): BolusBreakdown {
-        if (tdi <= 0.0 && isf <= 0.0) return BolusBreakdown(0.0, 0.0, 0.0)
+        if (tdi <= 0.0 && isf <= 0.0) return BolusBreakdown(0.0, 0.0, 0.0, 0.0)
         
         val icRatio = if (tdi > 0) icConstant / tdi else 0.0
         val carbDose = if (icRatio > 0) carbs / icRatio else 0.0
         val correctionDose = if (isf > 0) (currentGlucose - targetGlucose).toDouble() / isf else 0.0
         
-        var total = carbDose + correctionDose
+        var subtotal = carbDose + maxOf(0.0, correctionDose)
         if (isBasalExpiringSoon) {
-            total *= 1.20
+            subtotal *= 1.20
         }
+        
+        val appliedIob = if (deductIob) minOf(maxOf(0.0, subtotal), maxOf(0.0, iob)) else 0.0
+        val total = maxOf(0.0, subtotal - appliedIob)
         
         return BolusBreakdown(
             carbDose = carbDose,
-            correctionDose = max(0.0, correctionDose),
-            total = max(0.0, total)
+            correctionDose = maxOf(0.0, correctionDose),
+            appliedIob = appliedIob,
+            total = maxOf(0.0, total)
         )
     }
 
@@ -205,9 +212,11 @@ object InsulinProcessor {
         tdi: Double,
         icConstant: Int,
         isf: Double,
-        isBasalExpiringSoon: Boolean
+        isBasalExpiringSoon: Boolean,
+        iob: Double = 0.0,
+        deductIob: Boolean = false
     ): Double {
-        return getSuggestedBolusDetailed(carbs, currentGlucose, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon).total
+        return getSuggestedBolusDetailed(carbs, currentGlucose, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon, iob, deductIob).total
     }
 
     /**
