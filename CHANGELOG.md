@@ -1,5 +1,33 @@
 # Changelog
 
+## 5f02581 (Sep 23, 2026 10:43:07)
+remove checkbox on main screen and fix merge insulin logs — antonio-bravo
+[detail](#5f02581-details)
+
+<details id='5f02581-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+</details>
+
+
+---
+## 4049a7e (Sep 22, 2026 18:49:22)
+Update changelog — github-actions[bot]
+[detail](#4049a7e-details)
+
+<details id='4049a7e-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 5d9e910 (Sep 22, 2026 20:49:09)
 notify once on custom + availability to discount active insulin — antonio-bravo
 [detail](#5d9e910-details)
@@ -697,30 +725,6 @@ fix workflow — antonio-bravo
 <summary>Changed files</summary>
 
 - .github/workflows/build-release.yml [Modified]
-</details>
-
-
----
-## b301c4d (Sep 15, 2026 07:28:49)
-Update changelog — github-actions[bot]
-[detail](#b301c4d-details)
-
-<details id='b301c4d-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## a895d42 (Sep 15, 2026 09:27:43)
-delta glucose — antonio-bravo
-[detail](#a895d42-details)
-
-<details id='a895d42-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
 </details>
 
 
