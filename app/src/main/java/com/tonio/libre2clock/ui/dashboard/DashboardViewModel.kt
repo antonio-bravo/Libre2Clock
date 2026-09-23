@@ -446,14 +446,12 @@ class DashboardViewModel(
     fun addInsulinDose(dose: InsulinDose) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                // OPTIMIZACIÓN: Limpiamos cualquier registro "zombi" (isDeleted=true) antes de guardar
-                // para evitar que el DataStore crezca infinitamente con basura local.
-                val activeDoses = preferenceManager.insulinDoses.first().filter { !it.isDeleted }.toMutableList()
+                val allDoses = preferenceManager.insulinDoses.first().toMutableList()
                 
-                activeDoses.add(dose.copy(updatedAtMs = System.currentTimeMillis()))
-                activeDoses.sortByDescending { it.timestamp }
+                allDoses.add(dose.copy(updatedAtMs = System.currentTimeMillis()))
+                allDoses.sortByDescending { it.timestamp }
                 
-                preferenceManager.saveInsulinDoses(activeDoses)
+                preferenceManager.saveInsulinDoses(allDoses)
             } catch (e: Exception) {
                 // Log and swallow exception to prevent app crash
             }
@@ -465,20 +463,17 @@ class DashboardViewModel(
             try {
                 val activeSerial = preferenceManager.activeSensorSerialNumber.first()
                 
-                // OPTIMIZACIÓN: Limpiamos registros "zombi" antes de guardar
-                val activeReadings = preferenceManager.capillaryReadings.first()
-                    .filter { !it.isDeleted }
-                    .toMutableList()
+                val allReadings = preferenceManager.capillaryReadings.first().toMutableList()
                 
                 val withSensor = reading.copy(
                     sensorSerialNumber = reading.sensorSerialNumber ?: activeSerial,
                     updatedAtMs = System.currentTimeMillis()
                 )
                 
-                activeReadings.add(withSensor)
-                activeReadings.sortByDescending { it.timestamp }
+                allReadings.add(withSensor)
+                allReadings.sortByDescending { it.timestamp }
                 
-                preferenceManager.saveCapillaryReadings(activeReadings)
+                preferenceManager.saveCapillaryReadings(allReadings)
             } catch (e: Exception) {
                 // Log and swallow exception to prevent app crash
             }

@@ -729,13 +729,11 @@ class SettingsViewModel(
     // MEJORA: Limpia elementos borrados antes de guardar
     fun addInsulinDose(dose: InsulinDose) {
         viewModelScope.launch {
-            val activeDoses = preferenceManager.insulinDoses.first()
-                .filter { !it.isDeleted }
-                .toMutableList()
+            val allDoses = preferenceManager.insulinDoses.first().toMutableList()
                 
-            activeDoses.add(dose.copy(updatedAtMs = System.currentTimeMillis()))
-            activeDoses.sortByDescending { it.timestamp }
-            preferenceManager.saveInsulinDoses(activeDoses)
+            allDoses.add(dose.copy(updatedAtMs = System.currentTimeMillis()))
+            allDoses.sortByDescending { it.timestamp }
+            preferenceManager.saveInsulinDoses(allDoses)
         }
     }
 

@@ -979,11 +979,7 @@ class PreferenceManager(private val context: Context) {
         for (r in backup) {
             val existing = mergedMap[r.id]
             if (existing == null || r.updatedAtMs > existing.updatedAtMs) {
-                if (r.isDeleted) {
-                    mergedMap.remove(r.id) // Elimina físicamente el registro si fue borrado en la nube
-                } else {
-                    mergedMap[r.id] = r
-                }
+                mergedMap[r.id] = r
             }
         }
         
@@ -996,11 +992,7 @@ class PreferenceManager(private val context: Context) {
         for (d in backup) {
             val existing = mergedMap[d.id]
             if (existing == null || d.updatedAtMs > existing.updatedAtMs) {
-                if (d.isDeleted) {
-                    mergedMap.remove(d.id) // Elimina físicamente el registro si fue borrado en la nube
-                } else {
-                    mergedMap[d.id] = d
-                }
+                mergedMap[d.id] = d
             }
         }
         

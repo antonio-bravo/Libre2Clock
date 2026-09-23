@@ -465,11 +465,7 @@ class CloudSyncManager(
                 remote.forEach { dose ->
                     val existing = local[dose.id]
                     if (existing == null || dose.updatedAtMs > existing.updatedAtMs) {
-                        if (dose.isDeleted) {
-                            local.remove(dose.id)
-                        } else {
-                            local[dose.id] = dose
-                        }
+                        local[dose.id] = dose
                     }
                 }
                 preferenceManager.saveInsulinDoses(local.values.sortedByDescending { it.timestamp })
@@ -489,11 +485,7 @@ class CloudSyncManager(
                 remote.forEach { r ->
                     val existing = local[r.id]
                     if (existing == null || r.updatedAtMs > existing.updatedAtMs) {
-                        if (r.isDeleted) {
-                            local.remove(r.id)
-                        } else {
-                            local[r.id] = r
-                        }
+                        local[r.id] = r
                     }
                 }
                 preferenceManager.saveCapillaryReadings(local.values.sortedByDescending { it.timestamp })
@@ -548,11 +540,7 @@ class CloudSyncManager(
                                 val dose = change.document.toObject(InsulinDose::class.java) ?: continue
                                 val existing = localDoses[dose.id]
                                 if (existing == null || dose.updatedAtMs > existing.updatedAtMs) {
-                                    if (dose.isDeleted) {
-                                        localDoses.remove(dose.id)
-                                    } else {
-                                        localDoses[dose.id] = dose
-                                    }
+                                    localDoses[dose.id] = dose
                                     hasChanges = true
                                 }
                             }
@@ -586,11 +574,7 @@ class CloudSyncManager(
                                 val reading = change.document.toObject(CapillaryMeasurement::class.java) ?: continue
                                 val existing = localReadings[reading.id]
                                 if (existing == null || reading.updatedAtMs > existing.updatedAtMs) {
-                                    if (reading.isDeleted) {
-                                        localReadings.remove(reading.id)
-                                    } else {
-                                        localReadings[reading.id] = reading
-                                    }
+                                    localReadings[reading.id] = reading
                                     hasChanges = true
                                 }
                             }
