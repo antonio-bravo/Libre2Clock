@@ -1,5 +1,38 @@
 # Changelog
 
+## 953fe6d (Sep 29, 2026 22:06:59)
+optimize speed and ram — antonio-bravo
+[detail](#953fe6d-details)
+
+<details id='953fe6d-details'>
+<summary>Changed files</summary>
+
+- .idea/misc.xml [Modified]
+- app/build.gradle.kts [Modified]
+- app/proguard-rules.pro [Modified]
+- app/src/main/AndroidManifest.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/MainActivity.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/local/GlucoseHistoryDatabaseHelper.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+- gradle.properties [Modified]
+- verify_optimizations.sh [Deleted]
+</details>
+
+
+---
+## 3ca1f98 (Sep 23, 2026 08:43:19)
+Update changelog — github-actions[bot]
+[detail](#3ca1f98-details)
+
+<details id='3ca1f98-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 5f02581 (Sep 23, 2026 10:43:07)
 remove checkbox on main screen and fix merge insulin logs — antonio-bravo
 [detail](#5f02581-details)
@@ -698,30 +731,6 @@ fix accept android SDL Licenses — antonio-bravo
 [detail](#634bed2-details)
 
 <details id='634bed2-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/build-release.yml [Modified]
-</details>
-
-
----
-## 3a1c3b3 (Sep 15, 2026 07:45:00)
-Update changelog — github-actions[bot]
-[detail](#3a1c3b3-details)
-
-<details id='3a1c3b3-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## c99784b (Sep 15, 2026 09:44:43)
-fix workflow — antonio-bravo
-[detail](#c99784b-details)
-
-<details id='c99784b-details'>
 <summary>Changed files</summary>
 
 - .github/workflows/build-release.yml [Modified]
