@@ -224,7 +224,7 @@
     <string name="report_target_met">Objetivo Cumplido</string>
     <string name="report_target_review">Revisar Control</string>
     <string name="report_cv_card_title">Coeficiente de Variabilidad (CV%)</string>
-    <string name="report_cv_card_explanation">Mide la estabilidad de la glucosa. Un CV &lt; 36% indica variabilidad estable. Un CV ≥ 36% indica glucemia inestable y mayor riesgo de hipoglucemia.</string>
+    <string name="report_cv_card_explanation" formatted="false">Mide la estabilidad de la glucosa. Un CV &lt; 36% indica variabilidad estable. Un CV ≥ 36% indica glucemia inestable y mayor riesgo de hipoglucemia.</string>
     <string name="report_cv_target_label">Objetivo: CV &lt; 36%</string>
     <string name="report_cv_stable">Estable (&lt; 36%)</string>
     <string name="report_cv_unstable">Inestable (≥ 36%)</string>

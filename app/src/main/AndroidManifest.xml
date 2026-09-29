@@ -18,7 +18,9 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Libre2Clock">
+        android:theme="@style/Theme.Libre2Clock"
+        android:hardwareAccelerated="true"
+        android:largeHeap="false">
 
         <service
             android:name=".service.GlucoseForegroundService"

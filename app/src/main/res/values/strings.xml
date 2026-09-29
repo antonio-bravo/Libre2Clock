@@ -224,7 +224,7 @@
     <string name="report_target_met">Target Met</string>
     <string name="report_target_review">Review Control</string>
     <string name="report_cv_card_title">Coefficient of Variation (CV%)</string>
-    <string name="report_cv_card_explanation">Measures glucose stability. A CV &lt; 36% indicates stable variability. A CV ≥ 36% indicates unstable glucose and higher hypoglycemia risk.</string>
+    <string name="report_cv_card_explanation" formatted="false">Measures glucose stability. A CV &lt; 36% indicates stable variability. A CV ≥ 36% indicates unstable glucose and higher hypoglycemia risk.</string>
     <string name="report_cv_target_label">Target: CV &lt; 36%</string>
     <string name="report_cv_stable">Stable (&lt; 36%)</string>
     <string name="report_cv_unstable">Unstable (≥ 36%)</string>

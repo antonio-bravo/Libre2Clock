@@ -5,20 +5,69 @@
 # For more details, see
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Aggressive optimizations for performance and size
+-optimizations !code/simplification/arithmetic,!code/simplification/cast,!field/*,!class/merging/*
+-optimizationpasses 5
+-allowaccessmodification
+-dontpreverify
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Keep stack traces readable
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# CRITICAL: Keep Compose runtime classes
+-keep class androidx.compose.runtime.** { *; }
+-keep class androidx.compose.ui.** { *; }
+-keep class androidx.compose.foundation.** { *; }
+-keep class androidx.compose.material3.** { *; }
+-keep class androidx.compose.material.** { *; }
+
+# Keep all @Composable functions
+-keepclasseswithmembers class * {
+    @androidx.compose.runtime.Composable *;
+}
+
+# Keep Kotlin coroutines
+-keep class kotlinx.coroutines.** { *; }
+-keepclassmembers class kotlinx.coroutines.** { *; }
+-dontwarn kotlinx.coroutines.**
+
+# Keep DataStore
+-keep class androidx.datastore.** { *; }
+-keepclassmembers class androidx.datastore.** { *; }
+
+# Remove logging in production to save space and improve performance
+-assumenosideeffects class android.util.Log {
+    public static boolean isLoggable(java.lang.String, int);
+    public static int v(...);
+    public static int i(...);
+    public static int d(...);
+    public static int w(...);
+    public static int e(...);
+}
+
+# Kotlin optimizations
+-keep class kotlin.Metadata { *; }
+-keep class kotlin.reflect.** { *; }
+-keepclassmembers class kotlin.Metadata {
+    public <methods>;
+}
+
+# Keep all ViewModel classes
+-keep class * extends androidx.lifecycle.ViewModel { *; }
+-keep class * extends androidx.lifecycle.AndroidViewModel { *; }
+
+# IMPORTANT: Don't remove null checks in debug/release for stability
+# Comment out these lines if you want maximum optimization (risky)
+# -assumenosideeffects class kotlin.jvm.internal.Intrinsics {
+#     public static void checkNotNull(...);
+#     public static void checkParameterIsNotNull(...);
+#     public static void checkNotNullParameter(...);
+#     public static void checkExpressionValueIsNotNull(...);
+#     public static void checkNotNullExpressionValue(...);
+#     public static void checkReturnedValueIsNotNull(...);
+#     public static void checkFieldIsNotNull(...);
+# }
 
 # OkHttp checks optional TLS provider implementations that are not packaged on Android.
 -dontwarn org.bouncycastle.jsse.BCSSLParameters

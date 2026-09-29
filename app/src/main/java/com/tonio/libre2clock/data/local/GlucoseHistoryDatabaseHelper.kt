@@ -19,6 +19,26 @@ class GlucoseHistoryDatabaseHelper(context: Context) :
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """.trimIndent()
 
+    override fun onConfigure(db: SQLiteDatabase) {
+        super.onConfigure(db)
+        // OPTIMIZACIÓN: Habilitar WAL mode para mejor concurrencia y rendimiento
+        // WAL (Write-Ahead Logging) permite lecturas mientras se escribe
+        if (!db.isReadOnly) {
+            db.enableWriteAheadLogging()
+        }
+    }
+
+    override fun onOpen(db: SQLiteDatabase) {
+        super.onOpen(db)
+        if (!db.isReadOnly) {
+            // OPTIMIZACIÓN: Configurar pragmas para mejor rendimiento
+            // Estos se ejecutan cada vez que se abre la base de datos
+            db.execSQL("PRAGMA synchronous = NORMAL") // Mejor rendimiento, aún seguro
+            db.execSQL("PRAGMA temp_store = MEMORY") // Tablas temporales en RAM
+            db.execSQL("PRAGMA cache_size = -2000") // 2MB de cache (negativo = KB)
+        }
+    }
+
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
             """
@@ -209,14 +229,29 @@ class GlucoseHistoryDatabaseHelper(context: Context) :
         val db = writableDatabase
         db.execSQL(
             """
-            DELETE FROM glucose_history 
+            DELETE FROM glucose_history
             WHERE rowid NOT IN (
-                SELECT MIN(rowid) 
-                FROM glucose_history 
+                SELECT MIN(rowid)
+                FROM glucose_history
                 GROUP BY sort_epoch_ms, raw_value
             )
             """.trimIndent()
         )
+    }
+
+    /**
+     * OPTIMIZACIÓN: Ejecuta VACUUM para compactar la base de datos y liberar espacio.
+     * Llamar periódicamente (ej: una vez al mes) para mantener el rendimiento óptimo.
+     */
+    fun vacuum() {
+        writableDatabase.execSQL("VACUUM")
+    }
+
+    /**
+     * OPTIMIZACIÓN: Analiza las tablas para optimizar el query planner de SQLite
+     */
+    fun analyze() {
+        writableDatabase.execSQL("ANALYZE")
     }
 
     // OPTIMIZACIÓN: O(1) en lugar de O(N) con COUNT(1)

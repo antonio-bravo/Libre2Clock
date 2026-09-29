@@ -11,6 +11,15 @@ plugins {
 
 kotlin {
     jvmToolchain(21)
+
+    compilerOptions {
+        // Optimizaciones del compilador de Kotlin para mejor rendimiento
+        freeCompilerArgs.addAll(
+            "-opt-in=kotlin.RequiresOptIn",
+            "-Xjvm-default=all",
+            "-Xbackend-threads=0"
+        )
+    }
 }
 
 android {
@@ -36,23 +45,45 @@ android {
 
     signingConfigs {
         create("release") {
-            val pass = System.getenv("KEYSTORE_PASSWORD")
-            storeFile = file(System.getenv("KEYSTORE_PATH") ?: "release.keystore")
-            storePassword = pass
-            keyAlias = System.getenv("KEY_ALIAS")
-            keyPassword = System.getenv("KEY_PASSWORD") ?: pass
+            val keystorePath = System.getenv("KEYSTORE_PATH")
+            if (keystorePath != null && file(keystorePath).exists()) {
+                val pass = System.getenv("KEYSTORE_PASSWORD")
+                storeFile = file(keystorePath)
+                storePassword = pass
+                keyAlias = System.getenv("KEY_ALIAS")
+                keyPassword = System.getenv("KEY_PASSWORD") ?: pass
+            }
         }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = true
-            isShrinkResources = true
-            signingConfig = signingConfigs.getByName("release")
+            // OPTIMIZACIÓN TEMPORAL: Desactivar minify para evitar crashes
+            // Una vez que funcione, puedes reactivarlo gradualmente
+            isMinifyEnabled = false
+            isShrinkResources = false
+
+            // Solo usar signing config si está configurado correctamente
+            val releaseSigningConfig = signingConfigs.getByName("release")
+            if (releaseSigningConfig.storeFile != null) {
+                signingConfig = releaseSigningConfig
+            }
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
+            // Optimizaciones adicionales para reducir tamaño y mejorar rendimiento
+            ndk {
+                debugSymbolLevel = "SYMBOL_TABLE"
+            }
+        }
+
+        debug {
+            // Debug más ligero para desarrollo en dispositivos antiguos
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
     packaging {
@@ -66,9 +97,15 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     buildFeatures {
         compose = true
         buildConfig = true
+
+        // Deshabilitar features no usadas para reducir overhead
+        aidl = false
+        resValues = false
+        shaders = false
     }
 }
 
