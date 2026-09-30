@@ -1,5 +1,47 @@
 # Changelog
 
+## b4f0a1a (Sep 30, 2026 17:47:20)
+remove unnecessary packages — antonio-bravo
+[detail](#b4f0a1a-details)
+
+<details id='b4f0a1a-details'>
+<summary>Changed files</summary>
+
+- app/build.gradle.kts [Modified]
+- app/proguard-rules.pro [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/components/DateTimeEntryFields.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/icons/CustomIcons.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/login/LoginScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/sensor/SensorLogsScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsAdvancedScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsAlertsScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsBatteryScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCalibrationScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsComponents.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEventLogScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/strategy/StrategyScreen.kt [Modified]
+- app/src/main/res/values/themes.xml [Modified]
+</details>
+
+
+---
+## 721071f (Sep 30, 2026 12:01:17)
+Update changelog — github-actions[bot]
+[detail](#721071f-details)
+
+<details id='721071f-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## bf65649 (Sep 30, 2026 14:01:02)
 build.gradle.kts Minify and Shrink — antonio-bravo
 [detail](#bf65649-details)
@@ -696,31 +738,6 @@ report used by endocrine — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/util/PdfReportGenerator.kt [Modified]
 - app/src/main/res/values-es/strings.xml [Modified]
 - app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 4e35867 (Sep 17, 2026 08:26:10)
-Update changelog — github-actions[bot]
-[detail](#4e35867-details)
-
-<details id='4e35867-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 8f155e0 (Sep 17, 2026 10:25:57)
-fix date format in SensorLogsScreen — antonio-bravo
-[detail](#8f155e0-details)
-
-<details id='8f155e0-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/sensor/SensorLogsScreen.kt [Modified]
 </details>
 
 
