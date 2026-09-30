@@ -170,10 +170,18 @@ fun CapillaryScreen(
 
     if (showCapillaryDialog) {
         var associatedSensorReading by remember { mutableStateOf(currentGlucose) }
+
+        // Solo buscar lectura histórica cuando el usuario cambie fecha/hora
         LaunchedEffect(capillaryDate, capillaryHour, capillaryMinute) {
             val h = capillaryHour.toIntOrNull() ?: 0
             val m = capillaryMinute.toIntOrNull() ?: 0
-            associatedSensorReading = viewModel.getSensorReadingForTime(capillaryDate, h, m)
+            val now = LocalTime.now()
+            val today = LocalDate.now()
+
+            // Si la fecha/hora NO es la actual, buscar valor histórico
+            if (capillaryDate != today || h != now.hour || m != now.minute) {
+                associatedSensorReading = viewModel.getSensorReadingForTime(capillaryDate, h, m)
+            }
         }
 
         AlertDialog(
@@ -199,8 +207,7 @@ fun CapillaryScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    val sensorMeasurement = associatedSensorReading ?: currentGlucose
-                    val sensorValue = sensorMeasurement?.value
+                    val sensorValue = associatedSensorReading?.value
                     OutlinedTextField(
                         value = sensorValue?.toString() ?: stringResource(R.string.no_sensor_data),
                         onValueChange = {},
@@ -213,8 +220,7 @@ fun CapillaryScreen(
             confirmButton = {
                 TextButton(onClick = {
                     val value = capillaryValueText.toIntOrNull() ?: return@TextButton
-                    val sensorMeasurement = associatedSensorReading ?: currentGlucose
-                    val sensorValue = sensorMeasurement?.value
+                    val sensorValue = associatedSensorReading?.value
                     val delta = sensorValue?.let { value - it }
                     val hour = capillaryHour.toIntOrNull() ?: 0
                     val minute = capillaryMinute.toIntOrNull() ?: 0
