@@ -1,5 +1,37 @@
 # Changelog
 
+## 119f7ef (Sep 30, 2026 18:05:38)
+added firebase-config to limit Clould Sync users — antonio-bravo
+[detail](#119f7ef-details)
+
+<details id='119f7ef-details'>
+<summary>Changed files</summary>
+
+- app/build.gradle.kts [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/sync/AuthManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/sync/RemoteConfigManager.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## c34c801 (Sep 30, 2026 15:47:36)
+Update changelog — github-actions[bot]
+[detail](#c34c801-details)
+
+<details id='c34c801-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## b4f0a1a (Sep 30, 2026 17:47:20)
 remove unnecessary packages — antonio-bravo
 [detail](#b4f0a1a-details)
@@ -710,34 +742,6 @@ auto adjust range per senson on capilarity otherwise use avg for measures in tha
 - app/src/main/res/values-es/strings.xml [Modified]
 - app/src/main/res/values/strings.xml [Modified]
 - app/src/test/java/com/tonio/libre2clock/ExampleUnitTest.kt [Modified]
-</details>
-
-
----
-## 0bb4bd5 (Sep 17, 2026 08:50:36)
-Update changelog — github-actions[bot]
-[detail](#0bb4bd5-details)
-
-<details id='0bb4bd5-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 1fdbc94 (Sep 17, 2026 10:50:25)
-report used by endocrine — antonio-bravo
-[detail](#1fdbc94-details)
-
-<details id='1fdbc94-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/report/ReportScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/PdfReportGenerator.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
 </details>
 
 
