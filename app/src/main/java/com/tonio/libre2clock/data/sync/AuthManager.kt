@@ -21,8 +21,14 @@ class AuthManager(private val context: Context) {
     val user: StateFlow<com.google.firebase.auth.FirebaseUser?> = _user
 
     init {
+        // Refrescar la configuración de Remote Config en el arranque
+        RemoteConfigManager.getInstance().fetchAndActivate()
+
         auth.addAuthStateListener { firebaseAuth ->
             _user.value = firebaseAuth.currentUser
+            if (firebaseAuth.currentUser != null) {
+                RemoteConfigManager.getInstance().fetchAndActivate()
+            }
         }
     }
 

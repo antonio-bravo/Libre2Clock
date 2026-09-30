@@ -15,6 +15,7 @@ import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
+import com.tonio.libre2clock.R
 import com.tonio.libre2clock.data.local.GlucoseHistoryDatabaseHelper
 import com.tonio.libre2clock.data.model.CapillaryMeasurement
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
@@ -188,6 +189,21 @@ class CloudSyncManager(
             try {
                 if (!isNetworkAvailable()) {
                     log("Sync skipped: No network connection.")
+                    return@launch
+                }
+
+                // --- Verificación de Whitelist (Remote Config) ---
+                val currentUser = authManager.user.value
+                val email = currentUser?.email
+                val remoteConfigManager = RemoteConfigManager.getInstance()
+                val rawConfig = remoteConfigManager.getWhitelistedEmailsRaw().trim()
+                val isWhitelisted = remoteConfigManager.isEmailWhitelisted(email)
+
+                // Si hay correos configurados en Remote Config y el usuario actual NO está en la lista:
+                if (rawConfig != "[]" && rawConfig.isNotBlank() && !isWhitelisted) {
+                    val deniedMsg = context.getString(R.string.cloud_sync_denied_log, email ?: "")
+                    log(deniedMsg)
+                    _cloudSyncDebugOutput.value = deniedMsg
                     return@launch
                 }
 

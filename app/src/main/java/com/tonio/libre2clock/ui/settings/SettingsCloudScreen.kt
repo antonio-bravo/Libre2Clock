@@ -33,6 +33,8 @@ fun SettingsCloudScreen(
     onBack: () -> Unit
 ) {
     val firebaseUser by viewModel.firebaseUser.collectAsStateWithLifecycle()
+    val isWhitelistedUser by viewModel.isWhitelistedUser.collectAsStateWithLifecycle()
+    val isWhitelistActive by viewModel.isWhitelistActive.collectAsStateWithLifecycle()
     val isEnabled by viewModel.isCloudSyncEnabled.collectAsStateWithLifecycle()
     val lastSuccess by viewModel.cloudSyncLastSuccessAt.collectAsStateWithLifecycle()
     val settingsUpdated by viewModel.settingsUpdatedAt.collectAsStateWithLifecycle()
@@ -68,6 +70,8 @@ fun SettingsCloudScreen(
             item(key = "account_section") {
                 AccountSection(
                     firebaseUser = firebaseUser,
+                    isWhitelisted = isWhitelistedUser,
+                    isWhitelistActive = isWhitelistActive,
                     onSignIn = { viewModel.signInWithGoogle(context) },
                     onSignOut = viewModel::signOutFromGoogle
                 )
@@ -165,6 +169,8 @@ fun SettingsCloudScreen(
 @Composable
 private fun AccountSection(
     firebaseUser: com.google.firebase.auth.FirebaseUser?,
+    isWhitelisted: Boolean,
+    isWhitelistActive: Boolean,
     onSignIn: () -> Unit,
     onSignOut: () -> Unit
 ) {
@@ -188,7 +194,55 @@ private fun AccountSection(
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Medium
                     )
+
+                    if (firebaseUser != null && isWhitelisted) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        AssistChip(
+                            onClick = {},
+                            label = { Text(stringResource(R.string.cloud_whitelist_free_access), style = MaterialTheme.typography.labelSmall) },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Check,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            },
+                            colors = AssistChipDefaults.assistChipColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                labelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        )
+                    } else if (firebaseUser != null && isWhitelistActive) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        AssistChip(
+                            onClick = {},
+                            label = { Text(stringResource(R.string.cloud_whitelist_no_access), style = MaterialTheme.typography.labelSmall) },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Lock,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp),
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            },
+                            colors = AssistChipDefaults.assistChipColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer,
+                                labelColor = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        )
+                    }
                 }
+            }
+
+            if (firebaseUser != null && isWhitelistActive && !isWhitelisted) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "⚠️ " + stringResource(R.string.cloud_whitelist_no_access_desc, firebaseUser.email ?: ""),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))

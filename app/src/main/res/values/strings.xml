@@ -453,6 +453,10 @@
     <string name="cloud_last_sync">Last sync: %1$s</string>
     <string name="cloud_sync_pending">Sync pending…</string>
     <string name="cloud_privacy_note">Your data is securely stored in your personal Google Firebase account. Only you have access to it.</string>
+    <string name="cloud_whitelist_free_access">Free Access (Whitelist)</string>
+    <string name="cloud_whitelist_no_access">No Cloud Access</string>
+    <string name="cloud_whitelist_no_access_desc">Your account (%1$s) is not authorized for cloud access. Contact the administrator to request access.</string>
+    <string name="cloud_sync_denied_log">Access denied: Your account (%1$s) does not have access to Cloud Sync (Whitelist active).</string>
     <string name="cloud_configure_button">Configure Sync</string>
     <string name="cloud_sync_now">Sync Now</string>
     <string name="cloud_pull_settings">Pull settings from cloud</string>

@@ -20,6 +20,7 @@ import com.tonio.libre2clock.data.repository.GlucoseProcessor
 import com.tonio.libre2clock.data.repository.GlucoseRepository
 import com.tonio.libre2clock.data.repository.PreferenceManager
 import com.tonio.libre2clock.data.sync.CloudSyncManager
+import com.tonio.libre2clock.data.sync.RemoteConfigManager
 import com.tonio.libre2clock.di.AppContainer
 import com.tonio.libre2clock.R
 import com.tonio.libre2clock.util.LogEvent
@@ -80,6 +81,15 @@ class SettingsViewModel(
 
     // --- StateFlows optimizados ---
     val firebaseUser = authManager.user.stateInDefault(null)
+    val isWhitelistedUser: StateFlow<Boolean> = authManager.user
+        .map { user ->
+            if (user == null) false
+            else RemoteConfigManager.getInstance().isEmailWhitelisted(user.email)
+        }
+        .stateInDefault(false)
+    val isWhitelistActive: StateFlow<Boolean> = authManager.user
+        .map { RemoteConfigManager.getInstance().isWhitelistActive() }
+        .stateInDefault(false)
     val patientId = preferenceManager.patientId.stateInDefault(null)
     val libreLinkUpEmail = preferenceManager.libreLinkUpEmail.stateInDefault(null)
     val isCloudSyncEnabled = preferenceManager.isCloudSyncEnabled.stateInDefault(false)
