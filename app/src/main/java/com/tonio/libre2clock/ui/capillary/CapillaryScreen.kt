@@ -169,13 +169,11 @@ fun CapillaryScreen(
     }
 
     if (showCapillaryDialog) {
-        var associatedSensorReading by remember { mutableStateOf<GlucoseMeasurement?>(null) }
-        LaunchedEffect(capillaryDate, capillaryHour, capillaryMinute, showCapillaryDialog) {
-            if (showCapillaryDialog) {
-                val h = capillaryHour.toIntOrNull() ?: 0
-                val m = capillaryMinute.toIntOrNull() ?: 0
-                associatedSensorReading = viewModel.getSensorReadingForTime(capillaryDate, h, m)
-            }
+        var associatedSensorReading by remember { mutableStateOf(currentGlucose) }
+        LaunchedEffect(capillaryDate, capillaryHour, capillaryMinute) {
+            val h = capillaryHour.toIntOrNull() ?: 0
+            val m = capillaryMinute.toIntOrNull() ?: 0
+            associatedSensorReading = viewModel.getSensorReadingForTime(capillaryDate, h, m)
         }
 
         AlertDialog(
