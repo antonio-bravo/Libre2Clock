@@ -1,5 +1,29 @@
 # Changelog
 
+## c3cc954 (Sep 30, 2026 12:46:55)
+fix CapillariyScreen — antonio-bravo
+[detail](#c3cc954-details)
+
+<details id='c3cc954-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/capillary/CapillaryScreen.kt [Modified]
+</details>
+
+
+---
+## 02f8522 (Sep 30, 2026 10:05:00)
+Update changelog — github-actions[bot]
+[detail](#02f8522-details)
+
+<details id='02f8522-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## a790584 (Sep 30, 2026 12:04:41)
 fix CapillaryScreen default value — antonio-bravo
 [detail](#a790584-details)
@@ -710,30 +734,6 @@ Improvements — antonio-bravo
 - app/src/main/res/values-es/strings.xml [Modified]
 - app/src/main/res/values/strings.xml [Modified]
 - app/src/test/java/com/tonio/libre2clock/ExampleUnitTest.kt [Modified]
-</details>
-
-
----
-## b5ecfa1 (Sep 15, 2026 08:36:45)
-Update changelog — github-actions[bot]
-[detail](#b5ecfa1-details)
-
-<details id='b5ecfa1-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 557a2e8 (Sep 15, 2026 10:36:32)
-parseMeasurementInstant — antonio-bravo
-[detail](#557a2e8-details)
-
-<details id='557a2e8-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/util/TimestampParser.kt [Modified]
 </details>
 
 
