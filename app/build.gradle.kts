@@ -58,10 +58,8 @@ android {
 
     buildTypes {
         release {
-            // OPTIMIZACIÓN TEMPORAL: Desactivar minify para evitar crashes
-            // Una vez que funcione, puedes reactivarlo gradualmente
-            isMinifyEnabled = false
-            isShrinkResources = false
+            isMinifyEnabled = true
+            isShrinkResources = true
 
             // Solo usar signing config si está configurado correctamente
             val releaseSigningConfig = signingConfigs.getByName("release")
