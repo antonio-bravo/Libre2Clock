@@ -5,10 +5,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bolt
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.*
+import com.tonio.libre2clock.ui.icons.Bolt
+import com.tonio.libre2clock.ui.icons.Speed
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -530,7 +529,7 @@ fun SectionPerformanceCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Default.Bolt,
+                imageVector = Icons.Filled.Bolt,
                 contentDescription = null,
                 tint = statusColor,
                 modifier = Modifier.size(20.dp)
@@ -574,7 +573,7 @@ fun PerformanceMetricBadge(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Default.Speed,
+                imageVector = Icons.Filled.Speed,
                 contentDescription = null,
                 tint = color,
                 modifier = Modifier.size(10.dp)

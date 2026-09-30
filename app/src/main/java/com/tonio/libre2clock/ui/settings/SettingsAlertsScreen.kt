@@ -75,13 +75,13 @@ fun SettingsAlertsScreen(
                         selected = selectedTab == 0,
                         onClick = { selectedTab = 0 },
                         text = { Text(stringResource(R.string.settings_tab_watch), fontWeight = FontWeight.Bold) },
-                        icon = { Icon(Icons.Default.Watch, contentDescription = null) }
+                        icon = { Icon(Icons.Default.Notifications, contentDescription = null) }
                     )
                     Tab(
                         selected = selectedTab == 1,
                         onClick = { selectedTab = 1 },
                         text = { Text(stringResource(R.string.settings_tab_alarms), fontWeight = FontWeight.Bold) },
-                        icon = { Icon(Icons.Default.NotificationsActive, contentDescription = null) }
+                        icon = { Icon(Icons.Default.Notifications, contentDescription = null) }
                     )
                 }
             }
@@ -112,7 +112,7 @@ fun SettingsAlertsScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Watch,
+                                    imageVector = Icons.Default.Notifications,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.onPrimaryContainer,
                                     modifier = Modifier.size(32.dp)

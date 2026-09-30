@@ -4,9 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.BatteryAlert
-import androidx.compose.material.icons.filled.BatteryChargingFull
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -86,7 +84,7 @@ fun SettingsBatteryScreen(
                         label = stringResource(R.string.settings_battery_critical_threshold, batteryCriticalThreshold),
                         description = stringResource(R.string.settings_battery_critical_desc),
                         valueRange = 1..(batteryLowThreshold - 1),
-                        icon = Icons.Default.BatteryAlert,
+                        icon = Icons.Default.Warning,
                         iconTint = MaterialTheme.colorScheme.error
                     )
 
@@ -170,7 +168,7 @@ private fun SlowChargeProtectionSwitch(
             modifier = Modifier.weight(1f).padding(end = 16.dp)
         ) {
             Icon(
-                imageVector = Icons.Default.BatteryChargingFull,
+                imageVector = Icons.Default.Warning,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(20.dp)

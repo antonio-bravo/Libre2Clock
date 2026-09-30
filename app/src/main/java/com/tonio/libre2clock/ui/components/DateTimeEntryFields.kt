@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -56,11 +56,11 @@ fun DateHourMinuteInput(
 
     Column(modifier = modifier) {
         OutlinedButton(
-            onClick = { showDatePicker = true }, 
+            onClick = { showDatePicker = true },
             modifier = Modifier.fillMaxWidth()
         ) {
             Icon(
-                Icons.Default.CalendarMonth, 
+                Icons.Default.DateRange,
                 contentDescription = null
             )
             Spacer(modifier = Modifier.width(8.dp))

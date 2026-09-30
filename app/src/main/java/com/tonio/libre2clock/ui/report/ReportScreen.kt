@@ -11,7 +11,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.PictureAsPdf
+import androidx.compose.material.icons.filled.*
+import com.tonio.libre2clock.ui.icons.PictureAsPdf
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -109,7 +110,7 @@ fun ReportScreen(
                             }
                         }
                     ) {
-                        Icon(Icons.Default.PictureAsPdf, contentDescription = stringResource(R.string.settings_export))
+                        Icon(Icons.Filled.PictureAsPdf, contentDescription = stringResource(R.string.settings_export))
                     }
                 }
             )

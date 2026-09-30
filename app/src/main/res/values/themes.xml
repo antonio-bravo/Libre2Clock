@@ -1,4 +1,4 @@
 <resources>
 
-    <style name="Theme.Libre2Clock" parent="Theme.MaterialComponents.Light" />
+    <style name="Theme.Libre2Clock" parent="android:Theme.Material.Light.NoActionBar" />
 </resources>

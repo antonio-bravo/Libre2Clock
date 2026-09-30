@@ -3,8 +3,9 @@ package com.tonio.libre2clock.ui.login
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.*
+import com.tonio.libre2clock.ui.icons.Visibility
+import com.tonio.libre2clock.ui.icons.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -90,9 +91,9 @@ fun LoginScreen(
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             imageVector = if (passwordVisible) {
-                                Icons.Default.VisibilityOff
+                                Icons.Filled.VisibilityOff
                             } else {
-                                Icons.Default.Visibility
+                                Icons.Filled.Visibility
                             },
                             contentDescription = if (passwordVisible) {
                                 stringResource(R.string.login_hide_password)

@@ -15,8 +15,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
+import com.tonio.libre2clock.ui.icons.TrendingUp
+import com.tonio.libre2clock.ui.icons.ContentCopy
+import com.tonio.libre2clock.ui.icons.History
+import com.tonio.libre2clock.ui.icons.WaterDrop
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -159,42 +162,42 @@ fun DashboardScreen(
                     label = { Text(stringResource(R.string.menu_strategies)) },
                     selected = false,
                     onClick = { scope.launch { drawerState.close() }; onNavigateToStrategy() },
-                    icon = { Icon(Icons.AutoMirrored.Filled.TrendingUp, contentDescription = null) },
+                    icon = { Icon(Icons.Filled.TrendingUp, contentDescription = null) },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
                 NavigationDrawerItem(
                     label = { Text(stringResource(R.string.menu_capillary)) },
                     selected = false,
                     onClick = { scope.launch { drawerState.close() }; onNavigateToCapillary() },
-                    icon = { Icon(Icons.Default.WaterDrop, contentDescription = null) },
+                    icon = { Icon(Icons.Filled.WaterDrop, contentDescription = null) },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
                 NavigationDrawerItem(
                     label = { Text(stringResource(R.string.menu_sensor_logs)) },
                     selected = false,
                     onClick = { scope.launch { drawerState.close() }; onNavigateToSensorLogs() },
-                    icon = { Icon(Icons.Default.DeveloperBoard, contentDescription = null) },
+                    icon = { Icon(Icons.Default.Settings, contentDescription = null) },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
                 NavigationDrawerItem(
                     label = { Text(stringResource(R.string.menu_insulin_hub)) },
                     selected = false,
                     onClick = { scope.launch { drawerState.close() }; onNavigateToInsulinHub() },
-                    icon = { Icon(Icons.Default.Medication, contentDescription = null) },
+                    icon = { Icon(Icons.Default.Favorite, contentDescription = null) },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
                 NavigationDrawerItem(
                     label = { Text(stringResource(R.string.menu_reports)) },
                     selected = false,
                     onClick = { scope.launch { drawerState.close() }; onNavigateToReports() },
-                    icon = { Icon(Icons.Default.BarChart, contentDescription = null) },
+                    icon = { Icon(Icons.Default.Info, contentDescription = null) },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
                 NavigationDrawerItem(
                     label = { Text(stringResource(R.string.event_log_title)) },
                     selected = false,
                     onClick = { scope.launch { drawerState.close() }; onNavigateToEventLog() },
-                    icon = { Icon(Icons.Default.History, contentDescription = null) },
+                    icon = { Icon(Icons.Filled.History, contentDescription = null) },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
                 
@@ -231,7 +234,7 @@ fun DashboardScreen(
                             showCapillaryDialog = true
                         }) {
                             Icon(
-                                imageVector = Icons.Default.WaterDrop,
+                                imageVector = Icons.Filled.WaterDrop,
                                 contentDescription = stringResource(R.string.add_capillary_reading),
                                 tint = MaterialTheme.colorScheme.primary
                             )
@@ -268,7 +271,7 @@ fun DashboardScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.BatteryAlert,
+                                    imageVector = Icons.Default.Warning,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.error
                                 )

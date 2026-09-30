@@ -19,6 +19,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tonio.libre2clock.R
+import com.tonio.libre2clock.ui.icons.TrendingUp
+import com.tonio.libre2clock.ui.icons.TrendingDown
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,7 +30,7 @@ fun StrategyScreen(
     val strategies = remember {
         listOf(
             TrendStrategy(
-                icon = Icons.Default.KeyboardDoubleArrowUp,
+                icon = Icons.Default.KeyboardArrowUp,
                 color = Color.Red,
                 directionRes = R.string.trend_rising_very_fast,
                 insulinRes = R.string.adj_rising_very_fast,
@@ -42,21 +44,21 @@ fun StrategyScreen(
                 hcRes = R.string.desc_rising_fast
             ),
             TrendStrategy(
-                icon = Icons.Default.NorthEast,
+                icon = Icons.Filled.TrendingUp,
                 color = Color(0xFFFF9800), // Orange
                 directionRes = R.string.trend_rising_slowly,
                 insulinRes = R.string.adj_rising_slowly,
                 hcRes = R.string.desc_rising_slowly
             ),
             TrendStrategy(
-                icon = Icons.Default.East,
+                icon = Icons.Default.ArrowForward,
                 color = Color.Gray,
                 directionRes = R.string.trend_stable,
                 insulinRes = R.string.adj_stable,
                 hcRes = R.string.desc_stable
             ),
             TrendStrategy(
-                icon = Icons.Default.SouthEast,
+                icon = Icons.Filled.TrendingDown,
                 color = Color(0xFF8BC34A), // Light Green
                 directionRes = R.string.trend_falling_slowly,
                 insulinRes = R.string.adj_falling_slowly,
@@ -70,7 +72,7 @@ fun StrategyScreen(
                 hcRes = R.string.desc_falling_fast
             ),
             TrendStrategy(
-                icon = Icons.Default.KeyboardDoubleArrowDown,
+                icon = Icons.Default.KeyboardArrowDown,
                 color = Color(0xFF2E7D32), // Dark Green
                 directionRes = R.string.trend_falling_very_fast,
                 insulinRes = R.string.adj_falling_very_fast,

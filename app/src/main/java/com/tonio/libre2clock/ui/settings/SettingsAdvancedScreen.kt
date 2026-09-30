@@ -13,7 +13,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.*
+import com.tonio.libre2clock.ui.icons.ContentCopy
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -315,7 +316,7 @@ private fun DebugLogCard(
                         modifier = Modifier.size(36.dp)
                     ) {
                         Icon(
-                            Icons.Default.ContentCopy,
+                            Icons.Filled.ContentCopy,
                             contentDescription = stringResource(R.string.settings_copy_log),
                             modifier = Modifier.size(18.dp)
                         )

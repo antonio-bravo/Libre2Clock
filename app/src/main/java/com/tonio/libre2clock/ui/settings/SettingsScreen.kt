@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -74,7 +74,7 @@ fun SettingsScreen(
                 SettingsCategoryItem(
                     title = stringResource(R.string.settings_watch_notifications),
                     description = stringResource(R.string.settings_watch_notifications_desc),
-                    icon = Icons.Default.Watch,
+                    icon = Icons.Default.Notifications,
                     onClick = onNavigateToAlerts
                 )
             }
@@ -83,7 +83,7 @@ fun SettingsScreen(
                 SettingsCategoryItem(
                     title = stringResource(R.string.settings_range_based_offsets),
                     description = stringResource(R.string.settings_range_based_offsets_desc),
-                    icon = Icons.Default.Tune,
+                    icon = Icons.Default.Settings,
                     perfStats = calibrationStats,
                     onClick = onNavigateToCalibration
                 )
@@ -93,7 +93,7 @@ fun SettingsScreen(
                 SettingsCategoryItem(
                     title = stringResource(R.string.settings_battery_optimization),
                     description = stringResource(R.string.settings_battery_optimization_desc),
-                    icon = Icons.Default.BatteryChargingFull,
+                    icon = Icons.Default.Warning,
                     onClick = onNavigateToBattery
                 )
             }
@@ -102,7 +102,7 @@ fun SettingsScreen(
                 SettingsCategoryItem(
                     title = stringResource(R.string.settings_device_title),
                     description = stringResource(R.string.settings_device_desc),
-                    icon = Icons.Default.Memory,
+                    icon = Icons.Default.Phone,
                     onClick = onNavigateToDevice
                 )
             }
@@ -111,7 +111,7 @@ fun SettingsScreen(
                 SettingsCategoryItem(
                     title = stringResource(R.string.settings_history_backup),
                     description = stringResource(R.string.settings_history_backup_desc),
-                    icon = Icons.Default.Backup,
+                    icon = Icons.Default.Star,
                     perfStats = historicalStats,
                     onClick = onNavigateToData
                 )
@@ -121,7 +121,7 @@ fun SettingsScreen(
                 SettingsCategoryItem(
                     title = stringResource(R.string.settings_cloud_sync_title),
                     description = stringResource(R.string.settings_cloud_sync_desc),
-                    icon = Icons.Default.CloudSync,
+                    icon = Icons.Default.Email,
                     onClick = onNavigateToCloud
                 )
             }
@@ -130,7 +130,7 @@ fun SettingsScreen(
                 SettingsCategoryItem(
                     title = stringResource(R.string.settings_perf_title),
                     description = stringResource(R.string.settings_perf_desc),
-                    icon = Icons.Default.Analytics,
+                    icon = Icons.Default.Settings,
                     perfStats = dashboardEnterStats,
                     onClick = onNavigateToAdvanced
                 )
@@ -146,7 +146,7 @@ fun SettingsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null)
+                    Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(stringResource(R.string.settings_logout))
                 }

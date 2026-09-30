@@ -75,6 +75,11 @@ android {
             // Optimizaciones adicionales para reducir tamaño y mejorar rendimiento
             ndk {
                 debugSymbolLevel = "SYMBOL_TABLE"
+                // Solo incluir arquitecturas ARM (las más comunes en dispositivos móviles)
+                // Esto evita incluir librerías nativas para x86/x86_64 (emuladores/tablets Intel)
+                abiFilters.clear()
+                abiFilters.add("arm64-v8a")
+                abiFilters.add("armeabi-v7a")
             }
         }
 
@@ -114,7 +119,7 @@ dependencies {
     implementation(libs.androidx.compose.adaptive.layout)
     implementation(libs.androidx.compose.adaptive.navigation3)
     implementation(libs.androidx.compose.material.icons.core)
-    implementation(libs.androidx.compose.material.icons.extended)
+    // Eliminado: material-icons-extended (añadía ~20-25MB con 2000+ iconos sin usar)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
@@ -144,7 +149,6 @@ dependencies {
     implementation(libs.kotlinx.serialization.core)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.logging.interceptor)
-    implementation(libs.material)
     implementation(libs.moshi.kotlin)
     implementation(libs.okhttp)
     implementation(libs.retrofit)
