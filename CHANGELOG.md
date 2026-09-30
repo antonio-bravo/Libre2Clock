@@ -1,5 +1,29 @@
 # Changelog
 
+## a790584 (Sep 30, 2026 12:04:41)
+fix CapillaryScreen default value — antonio-bravo
+[detail](#a790584-details)
+
+<details id='a790584-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/capillary/CapillaryScreen.kt [Modified]
+</details>
+
+
+---
+## ceb36c7 (Sep 29, 2026 20:07:14)
+Update changelog — github-actions[bot]
+[detail](#ceb36c7-details)
+
+<details id='ceb36c7-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 953fe6d (Sep 29, 2026 22:06:59)
 optimize speed and ram — antonio-bravo
 [detail](#953fe6d-details)
@@ -710,30 +734,6 @@ parseMeasurementInstant — antonio-bravo
 <summary>Changed files</summary>
 
 - app/src/main/java/com/tonio/libre2clock/util/TimestampParser.kt [Modified]
-</details>
-
-
----
-## b16d494 (Sep 15, 2026 07:51:28)
-Update changelog — github-actions[bot]
-[detail](#b16d494-details)
-
-<details id='b16d494-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 634bed2 (Sep 15, 2026 09:51:17)
-fix accept android SDL Licenses — antonio-bravo
-[detail](#634bed2-details)
-
-<details id='634bed2-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/build-release.yml [Modified]
 </details>
 
 
