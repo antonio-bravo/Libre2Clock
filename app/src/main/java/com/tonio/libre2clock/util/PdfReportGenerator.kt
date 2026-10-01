@@ -45,7 +45,7 @@ object PdfReportGenerator {
         endDate: LocalDate,
         useOffset: Boolean,
         layout: ReportLayout,
-        patientName: String = "Antonio Bravo",
+        patientName: String = "",
         compareRawAndCalibrated: Boolean = true
     ): File? {
         val pdfDocument = PdfDocument()
@@ -236,16 +236,15 @@ object PdfReportGenerator {
         val paintText = Paint().apply { color = Color.BLACK; textSize = 11f; isFakeBoldText = true }
         val paintSub = Paint().apply { color = Color.DKGRAY; textSize = 8f }
 
-        canvas.drawText(name, MARGIN, MARGIN + 12f, paintText)
+        if (name.isNotBlank()) {
+            canvas.drawText(name, MARGIN, MARGIN + 12f, paintText)
+        } else {
+            canvas.drawText("Informe de Glucosa", MARGIN, MARGIN + 12f, paintText)
+        }
 
-        val col2 = MARGIN + 160f
-        val col3 = MARGIN + 340f
+        val col2 = MARGIN + 180f
 
-        canvas.drawText("FECHA DE NACIMIENTO: 04/01/1978", col2, MARGIN + 10f, paintSub)
-        canvas.drawText("FUENTES: FreeStyle LibreLink / Libre2Clock", col2, MARGIN + 22f, paintSub)
-
-        canvas.drawText("Hospital de alta resolución de Utrera", col3, MARGIN + 10f, paintSub)
-        canvas.drawText("TELÉFONO: 635442843", col3, MARGIN + 22f, paintSub)
+        canvas.drawText("FUENTE: Libre2Clock", col2, MARGIN + 12f, paintSub)
 
         val pageStr = "PÁGINA: $pageCurr / $pageTotal"
         val genStr = "Generado: " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
@@ -458,9 +457,33 @@ object PdfReportGenerator {
         val y70 = y + h - (70f - minG) / rangeG * h
         canvas.drawRect(x, y180, x + w, y70, targetPaint)
 
-        val dashPaint = Paint().apply { color = Color.GRAY; strokeWidth = 1f; pathEffect = DashPathEffect(floatArrayOf(4f, 4f), 0f) }
-        canvas.drawLine(x, y180, x + w, y180, dashPaint)
-        canvas.drawLine(x, y70, x + w, y70, dashPaint)
+        // Horizontal dashed grid lines & Y-axis labels
+        val dashPaint = Paint().apply { color = Color.LTGRAY; strokeWidth = 0.8f; pathEffect = DashPathEffect(floatArrayOf(4f, 4f), 0f) }
+        val lblPaint = Paint().apply { color = Color.DKGRAY; textSize = 7.5f }
+        val valTxtPaint = Paint().apply { color = COLOR_BLUE; textSize = 7.5f; isFakeBoldText = true }
+
+        val yLevels = listOf(Pair(350f, "350"), Pair(250f, "250"), Pair(180f, "180"), Pair(130f, "130"), Pair(70f, "70"), Pair(40f, "40"))
+        yLevels.forEach { (level, label) ->
+            val lineY = y + h - (level - minG) / rangeG * h
+            canvas.drawLine(x, lineY, x + w, lineY, dashPaint)
+            canvas.drawText(label, x - 20f, lineY + 3f, lblPaint)
+        }
+
+        // Vertical dashed grid lines & X-axis hour labels
+        val hours = listOf("00:00", "03:00", "06:00", "09:00", "12:00", "15:00", "18:00", "21:00", "00:00")
+        hours.forEachIndexed { i, hr ->
+            val hx = x + (i / 8f) * w
+            canvas.drawLine(hx, y, hx, y + h, dashPaint)
+            canvas.drawText(hr, hx - 10f, y + h + 12f, lblPaint)
+
+            // Draw exact hourly median glucose values
+            val hourIdx = (i * 3) % 24
+            calAgp.getOrNull(hourIdx)?.let { pt ->
+                if (pt.median > 0) {
+                    canvas.drawText("%.0f".format(pt.median), hx - 8f, y + h + 22f, valTxtPaint)
+                }
+            }
+        }
 
         // Draw AGP percentile shading for Calibrated
         if (calAgp.isNotEmpty()) {
@@ -485,28 +508,17 @@ object PdfReportGenerator {
             drawCurveLine(canvas, rawAgp, { it.median }, x, y, w, h, minG, rangeG, rawMedianPaint)
         }
 
-        // Axis labels
-        val lblPaint = Paint().apply { color = Color.DKGRAY; textSize = 7.5f }
-        canvas.drawText("350", x - 18f, y + 8f, lblPaint)
-        canvas.drawText("180", x - 18f, y180 + 3f, lblPaint)
-        canvas.drawText("70", x - 15f, y70 + 3f, lblPaint)
-
-        val hours = listOf("00:00", "03:00", "06:00", "09:00", "12:00", "15:00", "18:00", "21:00", "00:00")
-        hours.forEachIndexed { i, hr ->
-            val hx = x + (i / 8f) * w
-            canvas.drawText(hr, hx - 10f, y + h + 12f, lblPaint)
-        }
-
         // Legend
+        val legY = y + h + 34f
         val legPaint = Paint().apply { textSize = 8f; isFakeBoldText = true }
         legPaint.color = COLOR_BLUE
-        canvas.drawText("— Mediana Calibrada", x, y + h + 24f, legPaint)
+        canvas.drawText("— Mediana Calibrada", x, legY, legPaint)
         if (compare) {
             legPaint.color = COLOR_RAW_ORANGE
-            canvas.drawText("- - Mediana Raw (Sin calibrar)", x + 130f, y + h + 24f, legPaint)
+            canvas.drawText("- - Mediana Raw (Sin calibrar)", x + 130f, legY, legPaint)
         }
 
-        return y + h + 35f
+        return y + h + 46f
     }
 
     private fun drawDailySparklinesGrid(
@@ -1070,15 +1082,35 @@ object PdfReportGenerator {
         val targetPaint = Paint().apply { color = COLOR_BG_BAND; style = Paint.Style.FILL }
         canvas.drawRect(chartX, y180, chartX + chartW, y70, targetPaint)
 
-        // Grid lines
+        // Grid lines (horizontal & vertical)
         val dashPaint = Paint().apply {
-            color = Color.GRAY
+            color = Color.LTGRAY
             strokeWidth = 0.8f
             pathEffect = DashPathEffect(floatArrayOf(4f, 4f), 0f)
         }
-        listOf(350f, 250f, 180f, 130f, 70f, 40f).forEach { glucoseLevel ->
-            val lineY = y + chartH - (glucoseLevel - minG) / rangeG * chartH
+        val lblPaint = Paint().apply { color = Color.DKGRAY; textSize = 8f }
+        val valTxtPaint = Paint().apply { color = COLOR_BLUE; textSize = 7.5f; isFakeBoldText = true }
+
+        // Y-axis grid & labels
+        listOf(Pair(350f, "350"), Pair(250f, "250"), Pair(180f, "180"), Pair(130f, "130"), Pair(70f, "70"), Pair(40f, "40")).forEach { (level, label) ->
+            val lineY = y + chartH - (level - minG) / rangeG * chartH
             canvas.drawLine(chartX, lineY, chartX + chartW, lineY, dashPaint)
+            canvas.drawText(label, chartX - 22f, lineY + 3f, lblPaint)
+        }
+
+        // X-axis grid & labels & exact hourly values
+        for (h in 0..24 step 2) {
+            val hx = chartX + (h / 24f) * chartW
+            canvas.drawLine(hx, y, hx, y + chartH, dashPaint)
+            canvas.drawText(String.format("%02d:00", if (h == 24) 0 else h), hx - 12f, y + chartH + 14f, lblPaint)
+
+            if (h < 24) {
+                calAgp.getOrNull(h)?.let { pt ->
+                    if (pt.median > 0) {
+                        canvas.drawText("%.0f".format(pt.median), hx - 8f, y + chartH + 24f, valTxtPaint)
+                    }
+                }
+            }
         }
 
         // Draw percentile bands for calibrated
@@ -1103,21 +1135,8 @@ object PdfReportGenerator {
                 })
         }
 
-        // Y-axis labels
-        val lblPaint = Paint().apply { color = Color.DKGRAY; textSize = 8f }
-        listOf(Pair(350f, "350"), Pair(250f, "250"), Pair(180f, "180"), Pair(130f, "130"), Pair(70f, "70"), Pair(40f, "40")).forEach { (level, label) ->
-            val lineY = y + chartH - (level - minG) / rangeG * chartH
-            canvas.drawText(label, chartX - 22f, lineY + 3f, lblPaint)
-        }
-
-        // X-axis: hourly labels
-        for (h in 0..24 step 2) {
-            val hx = chartX + (h / 24f) * chartW
-            canvas.drawText(String.format("%02d:00", h), hx - 12f, y + chartH + 14f, lblPaint)
-        }
-
         // Legend
-        val legY = y + chartH + 28f
+        val legY = y + chartH + 38f
         val legPaint = Paint().apply { textSize = 8.5f; isFakeBoldText = true }
         legPaint.color = COLOR_BLUE
         canvas.drawText("— Mediana Calibrada (p50)", chartX, legY, legPaint)
@@ -1356,7 +1375,7 @@ object PdfReportGenerator {
 
         canvas.drawText("DISPOSITIVOS", MARGIN, y, sectionPaint)
         y += 18f
-        canvas.drawText("FreeStyle LibreLink / Libre2Clock", col1, y, labelPaint)
+        canvas.drawText("Libre2Clock", col1, y, labelPaint)
         y += 16f
         canvas.drawText("Versión de software:", col1, y, labelPaint)
         canvas.drawText("2.13.1", col2, y, valPaint)
