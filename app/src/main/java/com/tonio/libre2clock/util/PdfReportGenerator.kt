@@ -831,38 +831,6 @@ object PdfReportGenerator {
         }
     }
 
-            // Plot Raw Glucose
-            if (compare) {
-                val pathRaw = Path()
-                s.glucose.forEachIndexed { i, m ->
-                    val ts = TimestampParser.parseFlexibleInstant(m.timestamp)?.epochSecond ?: firstTs
-                    val px = x + ((ts - firstTs).toFloat() / 86400f) * w
-                    val py = chartY + chartH - (m.value.toFloat() - minG) / rangeG * chartH
-                    val pyC = py.coerceIn(chartY, chartY + chartH)
-                    if (i == 0) pathRaw.moveTo(px, pyC) else pathRaw.lineTo(px, pyC)
-                }
-                canvas.drawPath(pathRaw, rawPaint)
-            }
-        }
-
-        // Timeline labels (00:00, 06:00, 12:00, 18:00, 24:00)
-        val lblPaint = Paint().apply { color = Color.DKGRAY; textSize = 7.5f }
-        val timeLabels = listOf("00:00", "04:00", "08:00", "12:00", "16:00", "20:00", "00:00")
-        timeLabels.forEachIndexed { i, t ->
-            val lx = x + (i / 6f) * w
-            canvas.drawText(t, lx - 8f, chartY + chartH + 10f, lblPaint)
-        }
-
-        // Legend
-        val legPaint = Paint().apply { textSize = 8f; isFakeBoldText = true }
-        legPaint.color = COLOR_BLUE
-        canvas.drawText("— Calibrada", x, chartY + chartH + 22f, legPaint)
-        if (compare) {
-            legPaint.color = COLOR_RAW_ORANGE
-            canvas.drawText("- - Raw (Sin calibrar)", x + 80f, chartY + chartH + 22f, legPaint)
-        }
-    }
-
     // --- INSTANTÁNEA PAGE (Enhanced) ---
     private fun drawSnapshotReport(
         canvas: Canvas,
