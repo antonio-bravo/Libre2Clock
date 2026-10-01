@@ -1,5 +1,128 @@
 # Changelog
 
+## df2dbda (Oct 01, 2026 22:29:13)
+Fix Reports — antonio-bravo
+[detail](#df2dbda-details)
+
+<details id='df2dbda-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/icons/CustomIcons.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/AgpChartComponent.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/PdfViewerDialog.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/strategy/StrategyScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/PdfReportGenerator.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/ReportCalculator.kt [Deleted]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## da77b1e (Oct 01, 2026 22:29:13)
+Corregir error de sintaxis: eliminar código duplicado en PdfReportGenerator
+
+- Eliminado código duplicado de 'Plot Raw Glucose' y leyendas (líneas 834-864)
+- El código estaba fuera de su contexto correcto causando errores de compilación
+- Compilación exitosa verificada
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com> — antonio-bravo
+[detail](#da77b1e-details)
+
+<details id='da77b1e-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/util/PdfReportGenerator.kt [Modified]
+</details>
+
+
+---
+## 66460c1 (Oct 01, 2026 22:29:13)
+Mejoras al informe AGP Complete: barras verticales, hipoglucemias y estadísticas horarias
+
+Cambios implementados:
+- Reemplazado gráfico circular por barras verticales en tiempo en rangos
+- Agregado contador de hipoglucemias por día en resumen mensual
+- Agregado máximo/mínimo mg/dL por hora en registro diario (24 horas)
+- Mejorado diseño de tarjetas de instantánea
+- Agregado clase HourlyStats para cálculos por hora
+- Optimizado espacio en gráficos diarios para mostrar estadísticas
+
+Pendiente:
+- Completar rediseño de página Instantánea
+- Mejorar patrones hora de comidas
+- Mejorar resumen semanal
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com> — antonio-bravo
+[detail](#66460c1-details)
+
+<details id='66460c1-details'>
+<summary>Changed files</summary>
+
+- .idea/misc.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/PdfReportGenerator.kt [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 23a5835 (Oct 01, 2026 22:29:13)
+Mejorado generador de informes AGP con diseño profesional idéntico a FreeStyle Libre
+
+- Añadido gráfico circular de tiempo en rangos (pie chart)
+- Implementadas 9 páginas de informe completo:
+  * Informe AGP principal con bandas de percentiles
+  * Visualización del patrón de glucosa ampliado
+  * Resumen mensual tipo calendario
+  * Registro diario detallado (3 días por página)
+  * Instantánea con layout de 3 columnas
+  * Patrones de hora de comidas
+  * Resumen semanal con sparklines
+  * Configuración del dispositivo
+  * Patrones diarios promedio
+
+Características:
+- Comparación directa RAW vs Calibrado en todas las visualizaciones
+- Colores profesionales idénticos a FreeStyle Libre
+- Bandas de percentiles (10-90%, 25-75%)
+- Líneas discontinuas para valores RAW
+- Grid de referencia con líneas punteadas
+- Sparklines en calendarios y resúmenes
+- Personalizable por rango de fechas
+- 3 layouts: Snapshot, Daily Log, Full Report
+- Compatible con sistema de caché existente
+- Optimizado para grandes volúmenes de datos
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com> — antonio-bravo
+[detail](#23a5835-details)
+
+<details id='23a5835-details'>
+<summary>Changed files</summary>
+
+- INFORME_AGP_MEJORADO.md [Deleted]
+- app/src/main/java/com/tonio/libre2clock/util/PdfReportGenerator.kt [Modified]
+</details>
+
+
+---
+## 1e0e143 (Oct 01, 2026 17:21:43)
+Update changelog — github-actions[bot]
+[detail](#1e0e143-details)
+
+<details id='1e0e143-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 0781b95 (Oct 01, 2026 19:21:32)
 1.
 Tamaño del objeto de informe (FullReportData): Al generar informes (especialmente para periodos de 30 a 90 días o con alta densidad de lecturas de glucosa), la estructura FullReportData almacena todas las lecturas diarias (DailySummary). Al serializar este objeto a JSON, el texto resultante puede medir de 3 MB a 10 MB o más.
@@ -680,78 +803,6 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
-</details>
-
-
----
-## 04708a4 (Sep 19, 2026 19:25:43)
-add nice coloring base on gluse measure — antonio-bravo
-[detail](#04708a4-details)
-
-<details id='04708a4-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 88d7c46 (Sep 19, 2026 16:44:39)
-Update changelog — github-actions[bot]
-[detail](#88d7c46-details)
-
-<details id='88d7c46-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## e885374 (Sep 19, 2026 18:44:29)
-add insulin dosis raw(offset) / FS — antonio-bravo
-[detail](#e885374-details)
-
-<details id='e885374-details'>
-<summary>Changed files</summary>
-
-- .idea/misc.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## d601985 (Sep 18, 2026 16:57:26)
-Update changelog — github-actions[bot]
-[detail](#d601985-details)
-
-<details id='d601985-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## f0afb9f (Sep 18, 2026 18:57:10)
-capillarity get measure based on date and time — antonio-bravo
-[detail](#f0afb9f-details)
-
-<details id='f0afb9f-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepository.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/capillary/CapillaryScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- gradle/libs.versions.toml [Modified]
 </details>
 
 
