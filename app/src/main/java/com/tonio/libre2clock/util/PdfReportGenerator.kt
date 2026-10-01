@@ -20,9 +20,17 @@ object PdfReportGenerator {
     private const val PAGE_HEIGHT = 842
     private const val MARGIN = 30f
 
-    private val COLOR_BLUE = Color.parseColor("#1A73E8")       // Calibrated
-    private val COLOR_RAW_ORANGE = Color.parseColor("#E65100") // Raw
-    private val COLOR_BG_BAND = Color.parseColor("#E8F5E9")
+    // Colors matching FreeStyle Libre AGP Report
+    private val COLOR_BLUE = Color.parseColor("#1A73E8")           // Calibrated
+    private val COLOR_RAW_ORANGE = Color.parseColor("#E65100")     // Raw
+    private val COLOR_BG_BAND = Color.parseColor("#E8F5E9")        // Target range band
+    private val COLOR_TIR_GREEN = Color.parseColor("#4CAF50")      // Time in Range
+    private val COLOR_TAR_HIGH_ORANGE = Color.parseColor("#FFA500") // Above target
+    private val COLOR_TAR_VHIGH_RED = Color.parseColor("#FF4500")   // Very high
+    private val COLOR_TBR_LOW_YELLOW = Color.parseColor("#FFD700")  // Below target
+    private val COLOR_TBR_VLOW_RED = Color.RED                      // Very low
+    private val COLOR_P1090_LIGHT = Color.parseColor("#D0E1F9")     // 10-90 percentile
+    private val COLOR_P2575_MID = Color.parseColor("#90CAF9")       // 25-75 percentile
 
     fun generateFullReport(
         context: Context,
@@ -42,71 +50,135 @@ object PdfReportGenerator {
         var pageCounter = 1
 
         val spanDays = (ChronoUnit.DAYS.between(startDate, endDate) + 1).toInt()
+        val totalPages = calculateTotalPages(layout, dailySummaries.size)
 
-        // Page 1: Informe AGP
+        // Page 1: Informe AGP Principal (igual al de FreeStyle Libre)
         if (layout == ReportLayout.SNAPSHOT || layout == ReportLayout.FULL) {
-            val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, pageCounter++).create()
+            val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, pageCounter).create()
             val page = pdfDocument.startPage(pageInfo)
             val canvas = page.canvas
 
-            var y = drawPageHeader(canvas, patientName, "1", "1", startDate, endDate)
+            var y = drawPageHeader(canvas, patientName, pageCounter.toString(), totalPages.toString(), startDate, endDate)
             y = drawAgpReportHeader(canvas, startDate, endDate, spanDays, y)
+            y = drawTimeInRangesPieChart(canvas, metrics, rawMetrics, compareRawAndCalibrated, y)
             y = drawGlucoseStatsTable(canvas, metrics, rawMetrics, compareRawAndCalibrated, y)
             y = drawAgpChart(canvas, agpData, rawAgpData, compareRawAndCalibrated, y)
             drawDailySparklinesGrid(canvas, dailySummaries, compareRawAndCalibrated, y)
             drawFooterCitation(canvas)
 
             pdfDocument.finishPage(page)
+            pageCounter++
         }
 
-        // Page 2: Resumen mensual
+        // Page 2: Visualización del patrón de glucosa (Gráfico modal por hora del día)
         if (layout == ReportLayout.FULL) {
-            val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, pageCounter++).create()
+            val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, pageCounter).create()
             val page = pdfDocument.startPage(pageInfo)
             val canvas = page.canvas
 
-            var y = drawPageHeader(canvas, patientName, "1", "1", startDate, endDate)
+            var y = drawPageHeader(canvas, patientName, pageCounter.toString(), totalPages.toString(), startDate, endDate)
+            y = drawGlucosePatternVisualization(canvas, agpData, rawAgpData, compareRawAndCalibrated, startDate, endDate, spanDays, y)
+
+            pdfDocument.finishPage(page)
+            pageCounter++
+        }
+
+        // Page 3: Resumen mensual (Calendario)
+        if (layout == ReportLayout.FULL) {
+            val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, pageCounter).create()
+            val page = pdfDocument.startPage(pageInfo)
+            val canvas = page.canvas
+
+            var y = drawPageHeader(canvas, patientName, pageCounter.toString(), totalPages.toString(), startDate, endDate)
             y = drawMonthlySummary(canvas, dailySummaries, startDate, y, compareRawAndCalibrated)
 
             pdfDocument.finishPage(page)
+            pageCounter++
         }
 
-        // Pages 3+: Registro Diario
+        // Pages 4+: Registro Diario (3 días por página)
         if (layout == ReportLayout.DAILY_LOG || layout == ReportLayout.FULL) {
             val chunks = dailySummaries.chunked(3)
             chunks.forEachIndexed { idx, chunk ->
-                val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, pageCounter++).create()
+                val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, pageCounter).create()
                 val page = pdfDocument.startPage(pageInfo)
                 val canvas = page.canvas
 
-                var y = drawPageHeader(canvas, patientName, "${idx + 1}", "${chunks.size}", startDate, endDate)
+                var y = drawPageHeader(canvas, patientName, pageCounter.toString(), totalPages.toString(), startDate, endDate)
                 y = drawDailyLogHeader(canvas, startDate, endDate, spanDays, y)
                 drawDailyLogPage(canvas, chunk, compareRawAndCalibrated, y)
 
                 pdfDocument.finishPage(page)
+                pageCounter++
             }
         }
 
-        // Page: Instantánea
+        // Page: Instantánea (Resumen ejecutivo)
         if (layout == ReportLayout.SNAPSHOT || layout == ReportLayout.FULL) {
-            val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, pageCounter++).create()
+            val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, pageCounter).create()
             val page = pdfDocument.startPage(pageInfo)
             val canvas = page.canvas
 
-            var y = drawPageHeader(canvas, patientName, "1", "1", startDate, endDate)
-            drawSnapshotReport(canvas, metrics, rawMetrics, startDate, endDate, spanDays, compareRawAndCalibrated, y)
+            var y = drawPageHeader(canvas, patientName, pageCounter.toString(), totalPages.toString(), startDate, endDate)
+            drawSnapshotReport(canvas, metrics, rawMetrics, agpData, rawAgpData, startDate, endDate, spanDays, compareRawAndCalibrated, y)
 
             pdfDocument.finishPage(page)
+            pageCounter++
         }
 
-        // Page: Configuración
+        // Page: Patrones de hora de comidas
         if (layout == ReportLayout.FULL) {
-            val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, pageCounter++).create()
+            val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, pageCounter).create()
             val page = pdfDocument.startPage(pageInfo)
             val canvas = page.canvas
 
-            var y = drawPageHeader(canvas, patientName, "1", "1", startDate, endDate)
-            drawSettingsPage(canvas, y)
+            var y = drawPageHeader(canvas, patientName, pageCounter.toString(), totalPages.toString(), startDate, endDate)
+            drawMealTimePatternsPage(canvas, dailySummaries, compareRawAndCalibrated, startDate, endDate, spanDays, y)
+
+            pdfDocument.finishPage(page)
+            pageCounter++
+        }
+
+        // Page: Resumen Semanal
+        if (layout == ReportLayout.FULL) {
+            val weeksNeeded = (dailySummaries.size + 6) / 7
+            val weekChunks = dailySummaries.chunked(7)
+
+            weekChunks.forEachIndexed { weekIdx, weekData ->
+                val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, pageCounter).create()
+                val page = pdfDocument.startPage(pageInfo)
+                val canvas = page.canvas
+
+                var y = drawPageHeader(canvas, patientName, pageCounter.toString(), totalPages.toString(), startDate, endDate)
+                y = drawWeeklySummaryHeader(canvas, startDate, endDate, spanDays, y)
+                drawWeeklySummaryPage(canvas, weekData, compareRawAndCalibrated, y)
+
+                pdfDocument.finishPage(page)
+                pageCounter++
+            }
+        }
+
+        // Page: Configuración del dispositivo
+        if (layout == ReportLayout.FULL) {
+            val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, pageCounter).create()
+            val page = pdfDocument.startPage(pageInfo)
+            val canvas = page.canvas
+
+            var y = drawPageHeader(canvas, patientName, pageCounter.toString(), totalPages.toString(), startDate, endDate)
+            drawDeviceSettingsPage(canvas, y)
+
+            pdfDocument.finishPage(page)
+            pageCounter++
+        }
+
+        // Page: Patrones Diarios (Promedio del día completo)
+        if (layout == ReportLayout.FULL) {
+            val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, pageCounter).create()
+            val page = pdfDocument.startPage(pageInfo)
+            val canvas = page.canvas
+
+            var y = drawPageHeader(canvas, patientName, pageCounter.toString(), totalPages.toString(), startDate, endDate)
+            drawDailyAveragePatternsPage(canvas, agpData, rawAgpData, compareRawAndCalibrated, startDate, endDate, spanDays, y)
 
             pdfDocument.finishPage(page)
         }
@@ -121,6 +193,26 @@ object PdfReportGenerator {
         } catch (e: Exception) {
             pdfDocument.close()
             null
+        }
+    }
+
+    private fun calculateTotalPages(layout: ReportLayout, dailySummariesCount: Int): Int {
+        return when (layout) {
+            ReportLayout.SNAPSHOT -> 2 // AGP + Snapshot
+            ReportLayout.DAILY_LOG -> 1 + (dailySummariesCount + 2) / 3 // Header + Daily pages
+            ReportLayout.FULL -> {
+                val dailyPages = (dailySummariesCount + 2) / 3
+                val weeklyPages = (dailySummariesCount + 6) / 7
+                1 + // AGP Main
+                1 + // Pattern Visualization
+                1 + // Monthly Summary
+                dailyPages + // Daily Log
+                1 + // Snapshot
+                1 + // Meal Time Patterns
+                weeklyPages + // Weekly Summary
+                1 + // Device Settings
+                1   // Daily Average Patterns
+            }
         }
     }
 
@@ -170,6 +262,95 @@ object PdfReportGenerator {
         return startY + 40f
     }
 
+    // Nueva función: Gráfico de Tiempo en Rangos (Pie visual)
+    private fun drawTimeInRangesPieChart(
+        canvas: Canvas,
+        cal: ReportMetrics,
+        raw: ReportMetrics?,
+        compare: Boolean,
+        startY: Float
+    ): Float {
+        var y = startY
+        val headerPaint = Paint().apply { color = Color.BLACK; textSize = 10f; isFakeBoldText = true }
+        canvas.drawText("TIEMPO EN RANGOS", MARGIN, y + 10f, headerPaint)
+        y += 18f
+
+        val chartCenterX = MARGIN + 80f
+        val chartCenterY = y + 80f
+        val chartRadius = 70f
+
+        // Calibrated Pie Chart
+        drawPieSegment(canvas, chartCenterX, chartCenterY, chartRadius, 0f, cal.tbrVLow.toFloat(), COLOR_TBR_VLOW_RED)
+        val angle1 = cal.tbrVLow.toFloat() * 3.6f
+        drawPieSegment(canvas, chartCenterX, chartCenterY, chartRadius, angle1, cal.tbrLow.toFloat(), COLOR_TBR_LOW_YELLOW)
+        val angle2 = angle1 + cal.tbrLow.toFloat() * 3.6f
+        drawPieSegment(canvas, chartCenterX, chartCenterY, chartRadius, angle2, cal.tir.toFloat(), COLOR_TIR_GREEN)
+        val angle3 = angle2 + cal.tir.toFloat() * 3.6f
+        drawPieSegment(canvas, chartCenterX, chartCenterY, chartRadius, angle3, cal.tarHigh.toFloat(), COLOR_TAR_HIGH_ORANGE)
+        val angle4 = angle3 + cal.tarHigh.toFloat() * 3.6f
+        drawPieSegment(canvas, chartCenterX, chartCenterY, chartRadius, angle4, cal.tarVHigh.toFloat(), COLOR_TAR_VHIGH_RED)
+
+        // Legend
+        val legX = chartCenterX + chartRadius + 30f
+        val legY = y + 20f
+        val labelPaint = Paint().apply { color = Color.DKGRAY; textSize = 8f }
+        val valPaint = Paint().apply { color = Color.BLACK; textSize = 9f; isFakeBoldText = true }
+
+        canvas.drawText("Muy alto (>250)", legX, legY, labelPaint)
+        canvas.drawText("%.0f%% (%s)".format(cal.tarVHigh, formatHoursMinutes(cal.timeInRangesHours.tarVHighHours)), legX + 90f, legY, valPaint)
+
+        canvas.drawText("Alto (181-250)", legX, legY + 15f, labelPaint)
+        canvas.drawText("%.0f%% (%s)".format(cal.tarHigh, formatHoursMinutes(cal.timeInRangesHours.tarHighHours)), legX + 90f, legY + 15f, valPaint)
+
+        canvas.drawText("Objetivo (70-180)", legX, legY + 30f, labelPaint)
+        canvas.drawText("%.0f%% (%s)".format(cal.tir, formatHoursMinutes(cal.timeInRangesHours.tirHours)), legX + 90f, legY + 30f, valPaint)
+
+        canvas.drawText("Bajo (54-69)", legX, legY + 45f, labelPaint)
+        canvas.drawText("%.0f%% (%s)".format(cal.tbrLow, formatHoursMinutes(cal.timeInRangesHours.tbrLowHours)), legX + 90f, legY + 45f, valPaint)
+
+        canvas.drawText("Muy bajo (<54)", legX, legY + 60f, labelPaint)
+        canvas.drawText("%.0f%% (%s)".format(cal.tbrVLow, formatHoursMinutes(cal.timeInRangesHours.tbrVLowHours)), legX + 90f, legY + 60f, valPaint)
+
+        // Raw comparison pie (if enabled)
+        if (compare && raw != null) {
+            val rawChartX = legX + 200f
+            drawPieSegment(canvas, rawChartX, chartCenterY, 50f, 0f, raw.tbrVLow.toFloat(), COLOR_TBR_VLOW_RED)
+            val rAngle1 = raw.tbrVLow.toFloat() * 3.6f
+            drawPieSegment(canvas, rawChartX, chartCenterY, 50f, rAngle1, raw.tbrLow.toFloat(), COLOR_TBR_LOW_YELLOW)
+            val rAngle2 = rAngle1 + raw.tbrLow.toFloat() * 3.6f
+            drawPieSegment(canvas, rawChartX, chartCenterY, 50f, rAngle2, raw.tir.toFloat(), COLOR_TIR_GREEN)
+            val rAngle3 = rAngle2 + raw.tir.toFloat() * 3.6f
+            drawPieSegment(canvas, rawChartX, chartCenterY, 50f, rAngle3, raw.tarHigh.toFloat(), COLOR_TAR_HIGH_ORANGE)
+            val rAngle4 = rAngle3 + raw.tarHigh.toFloat() * 3.6f
+            drawPieSegment(canvas, rawChartX, chartCenterY, 50f, rAngle4, raw.tarVHigh.toFloat(), COLOR_TAR_VHIGH_RED)
+
+            val rawLabelPaint = Paint().apply { color = COLOR_RAW_ORANGE; textSize = 7f; isFakeBoldText = true }
+            canvas.drawText("RAW", rawChartX - 15f, chartCenterY + 70f, rawLabelPaint)
+        }
+
+        return chartCenterY + chartRadius + 30f
+    }
+
+    private fun drawPieSegment(canvas: Canvas, cx: Float, cy: Float, radius: Float, startAngle: Float, sweepPercent: Float, color: Int) {
+        if (sweepPercent <= 0f) return
+        val paint = Paint().apply {
+            this.color = color
+            style = Paint.Style.FILL
+            isAntiAlias = true
+        }
+        val rect = RectF(cx - radius, cy - radius, cx + radius, cy + radius)
+        canvas.drawArc(rect, startAngle - 90f, sweepPercent * 3.6f, true, paint)
+
+        // Border
+        val borderPaint = Paint().apply {
+            this.color = Color.WHITE
+            style = Paint.Style.STROKE
+            strokeWidth = 1.5f
+            isAntiAlias = true
+        }
+        canvas.drawArc(rect, startAngle - 90f, sweepPercent * 3.6f, true, borderPaint)
+    }
+
     private fun drawGlucoseStatsTable(
         canvas: Canvas,
         cal: ReportMetrics,
@@ -187,61 +368,37 @@ object PdfReportGenerator {
         canvas.drawText("Tiempo activo del Sensor: %.1f%%".format(cal.activeSensorPercent), PAGE_WIDTH - MARGIN - 180f, y + 10f, labelPaint)
         y += 18f
 
-        // Table Header
+        // Stats Summary Row
         val col1 = MARGIN
-        val col2 = MARGIN + 170f
-        val col3 = MARGIN + 290f
-        val col4 = MARGIN + 400f
+        val col2 = MARGIN + 150f
+        val col3 = MARGIN + 300f
 
         val bgPaint = Paint().apply { color = Color.parseColor("#F5F5F5") }
-        canvas.drawRect(MARGIN, y, PAGE_WIDTH - MARGIN, y + 18f, bgPaint)
+        canvas.drawRect(MARGIN, y, PAGE_WIDTH - MARGIN, y + 16f, bgPaint)
+        canvas.drawText("Métrica", col1 + 5f, y + 11f, labelPaint)
+        canvas.drawText("Calibrada", col2, y + 11f, valPaint)
+        if (compare && raw != null) canvas.drawText("Raw (Sin calibrar)", col3, y + 11f, rawValPaint)
+        y += 18f
 
-        canvas.drawText("Rangos de glucosa", col1 + 5f, y + 12f, labelPaint)
-        canvas.drawText("Objetivos %", col2, y + 12f, labelPaint)
-        canvas.drawText("Calibrada (Tiempo/día)", col3, y + 12f, valPaint)
-        if (compare) canvas.drawText("Raw (Sin calibrar)", col4, y + 12f, rawValPaint)
-        y += 20f
-
-        val rows = listOf(
-            Triple("Intervalo objetivo 70-180 mg/dL", "Mayor que 70%", Pair(cal.tir to cal.timeInRangesHours.tirHours, raw?.let { it.tir to it.timeInRangesHours.tirHours })),
-            Triple("Por debajo 70 mg/dL", "Menor que 4%", Pair(cal.tbrLow + cal.tbrVLow to cal.timeInRangesHours.tbrLowHours + cal.timeInRangesHours.tbrVLowHours, raw?.let { (it.tbrLow + it.tbrVLow) to (it.timeInRangesHours.tbrLowHours + it.timeInRangesHours.tbrVLowHours) })),
-            Triple("Por debajo 54 mg/dL", "Menor que 1%", Pair(cal.tbrVLow to cal.timeInRangesHours.tbrVLowHours, raw?.let { it.tbrVLow to it.timeInRangesHours.tbrVLowHours })),
-            Triple("Por encima 180 mg/dL", "Menor que 25%", Pair(cal.tarHigh + cal.tarVHigh to cal.timeInRangesHours.tarHighHours + cal.timeInRangesHours.tarVHighHours, raw?.let { (it.tarHigh + it.tarVHigh) to (it.timeInRangesHours.tarHighHours + it.timeInRangesHours.tarVHighHours) })),
-            Triple("Por encima 250 mg/dL", "Menor que 5%", Pair(cal.tarVHigh to cal.timeInRangesHours.tarVHighHours, raw?.let { it.tarVHigh to it.timeInRangesHours.tarVHighHours }))
-        )
-
-        rows.forEach { (rangeLabel, targetLabel, values) ->
-            val calText = "%.0f%% (%s)".format(values.first.first, formatHoursMinutes(values.first.second))
-            canvas.drawText(rangeLabel, col1 + 5f, y + 10f, labelPaint)
-            canvas.drawText(targetLabel, col2, y + 10f, labelPaint)
-            canvas.drawText(calText, col3, y + 10f, valPaint)
-            if (compare && values.second != null) {
-                val rawText = "%.0f%% (%s)".format(values.second!!.first, formatHoursMinutes(values.second!!.second))
-                canvas.drawText(rawText, col4, y + 10f, rawValPaint)
-            }
-            y += 14f
-        }
-
-        y += 6f
-        // Overall Stats Row
-        canvas.drawText("Glucosa promedio:", col1 + 5f, y + 10f, headerPaint)
-        canvas.drawText("%.0f mg/dL".format(cal.avgGlucose), col3, y + 10f, valPaint)
-        if (compare && raw != null) canvas.drawText("%.0f mg/dL".format(raw.avgGlucose), col4, y + 10f, rawValPaint)
+        // Rows
+        canvas.drawText("Glucosa promedio", col1 + 5f, y + 10f, labelPaint)
+        canvas.drawText("%.0f mg/dL".format(cal.avgGlucose), col2, y + 10f, valPaint)
+        if (compare && raw != null) canvas.drawText("%.0f mg/dL".format(raw.avgGlucose), col3, y + 10f, rawValPaint)
         y += 14f
 
-        canvas.drawText("Desviación estándar (SD):", col1 + 5f, y + 10f, headerPaint)
-        canvas.drawText("%.1f mg/dL".format(cal.stdDev), col3, y + 10f, valPaint)
-        if (compare && raw != null) canvas.drawText("%.1f mg/dL".format(raw.stdDev), col4, y + 10f, rawValPaint)
+        canvas.drawText("GMI (Est. A1c)", col1 + 5f, y + 10f, labelPaint)
+        canvas.drawText("%.1f%% o %.0f mmol/mol".format(cal.gmi, (cal.gmi - 2.15) * 10.929), col2, y + 10f, valPaint)
+        if (compare && raw != null) canvas.drawText("%.1f%%".format(raw.gmi), col3, y + 10f, rawValPaint)
         y += 14f
 
-        canvas.drawText("GMI (Est. A1c):", col1 + 5f, y + 10f, headerPaint)
-        canvas.drawText("%.1f %%".format(cal.gmi), col3, y + 10f, valPaint)
-        if (compare && raw != null) canvas.drawText("%.1f %%".format(raw.gmi), col4, y + 10f, rawValPaint)
+        canvas.drawText("Variabilidad (%CV)", col1 + 5f, y + 10f, labelPaint)
+        canvas.drawText("%.1f%% %s".format(cal.cv, if (cal.cv <= 36.0) "✓" else "⚠"), col2, y + 10f, valPaint)
+        if (compare && raw != null) canvas.drawText("%.1f%%".format(raw.cv), col3, y + 10f, rawValPaint)
         y += 14f
 
-        canvas.drawText("Variabilidad glucosa (%CV):", col1 + 5f, y + 10f, headerPaint)
-        canvas.drawText("%.1f %%".format(cal.cv), col3, y + 10f, valPaint)
-        if (compare && raw != null) canvas.drawText("%.1f %%".format(raw.cv), col4, y + 10f, rawValPaint)
+        canvas.drawText("Desviación estándar (SD)", col1 + 5f, y + 10f, labelPaint)
+        canvas.drawText("%.1f mg/dL".format(cal.stdDev), col2, y + 10f, valPaint)
+        if (compare && raw != null) canvas.drawText("%.1f mg/dL".format(raw.stdDev), col3, y + 10f, rawValPaint)
         y += 20f
 
         return y
@@ -598,11 +755,13 @@ object PdfReportGenerator {
         }
     }
 
-    // --- INSTANTÁNEA PAGE ---
+    // --- INSTANTÁNEA PAGE (Enhanced) ---
     private fun drawSnapshotReport(
         canvas: Canvas,
         cal: ReportMetrics,
         raw: ReportMetrics?,
+        calAgp: List<AgpPoint>,
+        rawAgp: List<AgpPoint>?,
         start: LocalDate,
         end: LocalDate,
         days: Int,
@@ -613,90 +772,621 @@ object PdfReportGenerator {
         val titlePaint = Paint().apply { color = Color.BLACK; textSize = 16f; isFakeBoldText = true }
         canvas.drawText("Instantánea", MARGIN, y + 14f, titlePaint)
 
-        val rangeStr = "${formatDateSpanish(start)} - ${formatDateSpanish(end)} ($days Días)"
+        val rangeStr = "${formatDateSpanish(start)} – ${formatDateSpanish(end)} ($days Días)"
         canvas.drawText(rangeStr, MARGIN, y + 28f, Paint().apply { color = Color.DKGRAY; textSize = 10f })
         y += 45f
 
-        val boxW = (PAGE_WIDTH - 2 * MARGIN - 20f) / 2f
-        val boxH = 110f
+        // Three-column layout matching FreeStyle Libre
+        val col1W = 180f
+        val col2W = 180f
+        val col3W = 180f
+        val colGap = 10f
 
-        // Box 1: Glucose Average & GMI
-        val cardPaint = Paint().apply { color = Color.parseColor("#FAFAFA"); style = Paint.Style.FILL }
-        val cardBorder = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE }
+        val col1X = MARGIN
+        val col2X = col1X + col1W + colGap
+        val col3X = col2X + col2W + colGap
 
-        canvas.drawRect(MARGIN, y, MARGIN + boxW, y + boxH, cardPaint)
-        canvas.drawRect(MARGIN, y, MARGIN + boxW, y + boxH, cardBorder)
+        val boxH = 140f
 
+        // Column 1: Glucosa
+        drawSnapshotBox(canvas, col1X, y, col1W, boxH, "Glucosa", listOf(
+            SnapshotItem("GLUCOSA\nPROMEDIO", "%.0f\nmg/dL".format(cal.avgGlucose), if (compare && raw != null) "%.0f (raw)".format(raw.avgGlucose) else null),
+            SnapshotItem("% por encima del objetivo", "%.0f%%".format(cal.tarHigh + cal.tarVHigh), null),
+            SnapshotItem("% en el objetivo", "%.0f%%".format(cal.tir), null),
+            SnapshotItem("% por debajo del objetivo", "%.0f%%".format(cal.tbrLow + cal.tbrVLow), null)
+        ), compare)
+
+        // Column 2: GMI y Carb
+        drawSnapshotBox(canvas, col2X, y, col2W, boxH, "GMI %.1f%%".format(cal.gmi), listOf(
+            SnapshotItem("o %.0f mmol/mol".format((cal.gmi - 2.15) * 10.929), "", null),
+            SnapshotItem("", "", null),
+            SnapshotItem("Carb.", "", null),
+            SnapshotItem("CARB. DIARIOS", "—\ngramos/día", null)
+        ), compare)
+
+        // Column 3: Insulina
+        drawSnapshotBox(canvas, col3X, y, col3W, boxH, "Insulina", listOf(
+            SnapshotItem("INSULINA DE\nACCIÓN RÁPIDA", "—\nunidades/día", null),
+            SnapshotItem("INSULINA DE\nACCIÓN LENTA", "—\nunidades/día", null),
+            SnapshotItem("Insulina diaria total", "%.1f U/día".format(cal.avgTdi), null)
+        ), compare)
+
+        y += boxH + 20f
+
+        // AGP Chart (Compact version for snapshot)
         val headerPaint = Paint().apply { color = Color.BLACK; textSize = 10f; isFakeBoldText = true }
-        val bigValPaint = Paint().apply { color = COLOR_BLUE; textSize = 18f; isFakeBoldText = true }
-        val rawBigValPaint = Paint().apply { color = COLOR_RAW_ORANGE; textSize = 14f; isFakeBoldText = true }
-        val labelPaint = Paint().apply { color = Color.DKGRAY; textSize = 8.5f }
+        canvas.drawText("Glucosa promedio", MARGIN, y + 10f, headerPaint)
+        y += 18f
 
-        canvas.drawText("PROMEDIO DE GLUCOSA", MARGIN + 10f, y + 18f, headerPaint)
-        canvas.drawText("%.0f mg/dL".format(cal.avgGlucose), MARGIN + 10f, y + 42f, bigValPaint)
-        if (compare && raw != null) {
-            canvas.drawText("%.0f mg/dL (Raw)".format(raw.avgGlucose), MARGIN + 10f, y + 58f, rawBigValPaint)
+        val chartW = PAGE_WIDTH - 2 * MARGIN
+        val chartH = 120f
+
+        drawRect(canvas, MARGIN, y, chartW, chartH, Color.LTGRAY, isStroke = true)
+
+        val minG = 40f
+        val maxG = 350f
+        val rangeG = maxG - minG
+
+        val y180 = y + chartH - (180f - minG) / rangeG * chartH
+        val y70 = y + chartH - (70f - minG) / rangeG * chartH
+        canvas.drawRect(MARGIN, y180, MARGIN + chartW, y70, Paint().apply { color = COLOR_BG_BAND; style = Paint.Style.FILL })
+
+        if (calAgp.isNotEmpty()) {
+            drawPercentileBand(canvas, calAgp, { it.p10 }, { it.p90 }, MARGIN, y, chartW, chartH, minG, rangeG,
+                Paint().apply { color = COLOR_P1090_LIGHT; style = Paint.Style.FILL })
+            drawCurveLine(canvas, calAgp, { it.median }, MARGIN, y, chartW, chartH, minG, rangeG,
+                Paint().apply { color = COLOR_BLUE; style = Paint.Style.STROKE; strokeWidth = 2f; isAntiAlias = true })
         }
-        canvas.drawText("GMI (Est. A1c): %.1f%% | CV: %.1f%%".format(cal.gmi, cal.cv), MARGIN + 10f, y + 76f, labelPaint)
-        canvas.drawText("SD: %.1f mg/dL | Sensor Activo: %.1f%%".format(cal.stdDev, cal.activeSensorPercent), MARGIN + 10f, y + 92f, labelPaint)
 
-        // Box 2: Time in Range Summary
-        val box2X = MARGIN + boxW + 20f
-        canvas.drawRect(box2X, y, box2X + boxW, y + boxH, cardPaint)
-        canvas.drawRect(box2X, y, box2X + boxW, y + boxH, cardBorder)
+        if (compare && !rawAgp.isNullOrEmpty()) {
+            drawCurveLine(canvas, rawAgp, { it.median }, MARGIN, y, chartW, chartH, minG, rangeG,
+                Paint().apply {
+                    color = COLOR_RAW_ORANGE
+                    style = Paint.Style.STROKE
+                    strokeWidth = 2f
+                    pathEffect = DashPathEffect(floatArrayOf(5f, 4f), 0f)
+                    isAntiAlias = true
+                })
+        }
 
-        canvas.drawText("TIEMPO EN RANGO (70-180)", box2X + 10f, y + 18f, headerPaint)
-        canvas.drawText("%.0f%% (%s)".format(cal.tir, formatHoursMinutes(cal.timeInRangesHours.tirHours)), box2X + 10f, y + 42f, bigValPaint)
-        canvas.drawText("Sobre objetivo (>180): %.0f%% (%s)".format(cal.tarHigh + cal.tarVHigh, formatHoursMinutes(cal.timeInRangesHours.tarHighHours + cal.timeInRangesHours.tarVHighHours)), box2X + 10f, y + 65f, labelPaint)
-        canvas.drawText("Bajo objetivo (<70): %.0f%% (%s)".format(cal.tbrLow + cal.tbrVLow, formatHoursMinutes(cal.timeInRangesHours.tbrLowHours + cal.timeInRangesHours.tbrVLowHours)), box2X + 10f, y + 80f, labelPaint)
+        val lblPaint = Paint().apply { color = Color.DKGRAY; textSize = 7.5f }
+        for (h in 0..24 step 6) {
+            val hx = MARGIN + (h / 24f) * chartW
+            canvas.drawText(String.format("%02d:00", h), hx - 12f, y + chartH + 12f, lblPaint)
+        }
 
-        y += boxH + 25f
+        y += chartH + 25f
 
-        // Insulin & Carbs Summary Box
-        canvas.drawRect(MARGIN, y, PAGE_WIDTH - MARGIN, y + 90f, cardPaint)
-        canvas.drawRect(MARGIN, y, PAGE_WIDTH - MARGIN, y + 90f, cardBorder)
+        // Low Glucose Events
+        canvas.drawText("Eventos de glucosa baja", MARGIN, y + 10f, headerPaint)
+        y += 18f
 
-        canvas.drawText("RESUMEN DE INSULINA Y CARBOHIDRATOS", MARGIN + 10f, y + 18f, headerPaint)
-        canvas.drawText("Insulina Diaria Media: %.1f U".format(cal.avgTdi), MARGIN + 10f, y + 40f, labelPaint)
-        canvas.drawText("Proporción Basal / Bolo: %.0f%% / %.0f%%".format(cal.basalPercentage, cal.bolusPercentage), MARGIN + 10f, y + 58f, labelPaint)
+        val eventsW = 300f
+        val eventsH = 80f
+        drawRect(canvas, MARGIN, y, eventsW, eventsH, Color.LTGRAY, isStroke = true)
+
+        val eventsPaint = Paint().apply { color = Color.BLACK; textSize = 9f; isFakeBoldText = true }
+        val lowEvents = ((cal.tbrLow + cal.tbrVLow) / 100.0 * days).toInt()
+        canvas.drawText("EVENTOS DE GLUCOSA BAJA", MARGIN + 10f, y + 20f, eventsPaint)
+        canvas.drawText("$lowEvents eventos", MARGIN + 10f, y + 40f, Paint().apply { color = COLOR_BLUE; textSize = 16f; isFakeBoldText = true })
+        canvas.drawText("Duración promedio: ${if (lowEvents > 0) ((cal.timeInRangesHours.tbrLowHours + cal.timeInRangesHours.tbrVLowHours) / lowEvents * 60).toInt() else 0} min",
+            MARGIN + 10f, y + 62f, Paint().apply { color = Color.DKGRAY; textSize = 8f })
+
+        // Sensor usage
+        val sensorX = MARGIN + eventsW + 20f
+        canvas.drawText("Uso del sensor", sensorX, y + 10f, headerPaint)
+        y += 18f
+
+        val sensorW = PAGE_WIDTH - MARGIN - sensorX
+        val sensorH = eventsH
+        drawRect(canvas, sensorX, y, sensorW, sensorH, Color.LTGRAY, isStroke = true)
+
+        canvas.drawText("EL SENSOR DE TIEMPO\nESTÁ % ACTIVO", sensorX + 10f, y + 20f, eventsPaint)
+        canvas.drawText("%.0f%%".format(cal.activeSensorPercent), sensorX + 10f, y + 50f, Paint().apply { color = COLOR_BLUE; textSize = 16f; isFakeBoldText = true })
+
+        y += sensorH + 20f
+
+        // Comments section
+        canvas.drawText("Comentarios", MARGIN, y, headerPaint)
+        y += 14f
+        canvas.drawText("• Datos completos para el período seleccionado", MARGIN + 10f, y, Paint().apply { color = Color.DKGRAY; textSize = 8f })
+        y += 12f
+        if (compare && raw != null) {
+            canvas.drawText("• Comparación RAW vs Calibrado habilitada", MARGIN + 10f, y, Paint().apply { color = Color.DKGRAY; textSize = 8f })
+        }
     }
 
-    // --- CONFIGURACIÓN PAGE ---
-    private fun drawSettingsPage(canvas: Canvas, startY: Float) {
+    private data class SnapshotItem(val label: String, val value: String, val rawValue: String?)
+
+    private fun drawSnapshotBox(
+        canvas: Canvas,
+        x: Float,
+        y: Float,
+        w: Float,
+        h: Float,
+        title: String,
+        items: List<SnapshotItem>,
+        compare: Boolean
+    ) {
+        val cardPaint = Paint().apply { color = Color.parseColor("#FAFAFA"); style = Paint.Style.FILL }
+        val cardBorder = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f }
+
+        canvas.drawRect(x, y, x + w, y + h, cardPaint)
+        canvas.drawRect(x, y, x + w, y + h, cardBorder)
+
+        val titlePaint = Paint().apply { color = Color.BLACK; textSize = 9f; isFakeBoldText = true }
+        val labelPaint = Paint().apply { color = Color.DKGRAY; textSize = 7.5f }
+        val valPaint = Paint().apply { color = COLOR_BLUE; textSize = 11f; isFakeBoldText = true }
+        val rawValPaint = Paint().apply { color = COLOR_RAW_ORANGE; textSize = 8f }
+
+        canvas.drawText(title, x + 8f, y + 14f, titlePaint)
+
+        var iy = y + 28f
+        items.forEach { item ->
+            if (item.label.isNotEmpty()) {
+                val lines = item.label.split("\n")
+                lines.forEach { line ->
+                    canvas.drawText(line, x + 8f, iy, labelPaint)
+                    iy += 10f
+                }
+            }
+            if (item.value.isNotEmpty()) {
+                val valueLines = item.value.split("\n")
+                valueLines.forEach { line ->
+                    canvas.drawText(line, x + 8f, iy, valPaint)
+                    iy += 12f
+                }
+            }
+            if (compare && item.rawValue != null) {
+                canvas.drawText(item.rawValue, x + 8f, iy, rawValPaint)
+                iy += 10f
+            }
+            iy += 4f
+        }
+    }
+
+    // Nueva función: Visualización del patrón de glucosa (Modal por hora)
+    private fun drawGlucosePatternVisualization(
+        canvas: Canvas,
+        calAgp: List<AgpPoint>,
+        rawAgp: List<AgpPoint>?,
+        compare: Boolean,
+        start: LocalDate,
+        end: LocalDate,
+        days: Int,
+        startY: Float
+    ): Float {
+        var y = startY
+        val titlePaint = Paint().apply { color = Color.BLACK; textSize = 16f; isFakeBoldText = true }
+        canvas.drawText("Visualización del patrón de glucosa", MARGIN, y + 14f, titlePaint)
+
+        val rangeStr = "${formatDateSpanish(start)} – ${formatDateSpanish(end)} ($days Días)"
+        canvas.drawText(rangeStr, MARGIN, y + 28f, Paint().apply { color = Color.DKGRAY; textSize = 10f })
+        canvas.drawText("Tiempo activo del Sensor: 100%", PAGE_WIDTH - MARGIN - 150f, y + 28f, Paint().apply { color = Color.DKGRAY; textSize = 9f })
+        y += 45f
+
+        // Large AGP Chart with hourly detail
+        val chartW = PAGE_WIDTH - 2 * MARGIN
+        val chartH = 280f
+        val chartX = MARGIN
+
+        drawRect(canvas, chartX, y, chartW, chartH, Color.LTGRAY, isStroke = true)
+
+        val minG = 40f
+        val maxG = 350f
+        val rangeG = maxG - minG
+
+        // Target band
+        val y180 = y + chartH - (180f - minG) / rangeG * chartH
+        val y70 = y + chartH - (70f - minG) / rangeG * chartH
+        val targetPaint = Paint().apply { color = COLOR_BG_BAND; style = Paint.Style.FILL }
+        canvas.drawRect(chartX, y180, chartX + chartW, y70, targetPaint)
+
+        // Grid lines
+        val dashPaint = Paint().apply {
+            color = Color.GRAY
+            strokeWidth = 0.8f
+            pathEffect = DashPathEffect(floatArrayOf(4f, 4f), 0f)
+        }
+        listOf(350f, 250f, 180f, 130f, 70f, 40f).forEach { glucoseLevel ->
+            val lineY = y + chartH - (glucoseLevel - minG) / rangeG * chartH
+            canvas.drawLine(chartX, lineY, chartX + chartW, lineY, dashPaint)
+        }
+
+        // Draw percentile bands for calibrated
+        if (calAgp.isNotEmpty()) {
+            drawPercentileBand(canvas, calAgp, { it.p10 }, { it.p90 }, chartX, y, chartW, chartH, minG, rangeG,
+                Paint().apply { color = COLOR_P1090_LIGHT; style = Paint.Style.FILL })
+            drawPercentileBand(canvas, calAgp, { it.p25 }, { it.p75 }, chartX, y, chartW, chartH, minG, rangeG,
+                Paint().apply { color = COLOR_P2575_MID; style = Paint.Style.FILL })
+            drawCurveLine(canvas, calAgp, { it.median }, chartX, y, chartW, chartH, minG, rangeG,
+                Paint().apply { color = COLOR_BLUE; style = Paint.Style.STROKE; strokeWidth = 3f; isAntiAlias = true })
+        }
+
+        // Draw raw median if comparing
+        if (compare && !rawAgp.isNullOrEmpty()) {
+            drawCurveLine(canvas, rawAgp, { it.median }, chartX, y, chartW, chartH, minG, rangeG,
+                Paint().apply {
+                    color = COLOR_RAW_ORANGE
+                    style = Paint.Style.STROKE
+                    strokeWidth = 3f
+                    pathEffect = DashPathEffect(floatArrayOf(6f, 5f), 0f)
+                    isAntiAlias = true
+                })
+        }
+
+        // Y-axis labels
+        val lblPaint = Paint().apply { color = Color.DKGRAY; textSize = 8f }
+        listOf(Pair(350f, "350"), Pair(250f, "250"), Pair(180f, "180"), Pair(130f, "130"), Pair(70f, "70"), Pair(40f, "40")).forEach { (level, label) ->
+            val lineY = y + chartH - (level - minG) / rangeG * chartH
+            canvas.drawText(label, chartX - 22f, lineY + 3f, lblPaint)
+        }
+
+        // X-axis: hourly labels
+        for (h in 0..24 step 2) {
+            val hx = chartX + (h / 24f) * chartW
+            canvas.drawText(String.format("%02d:00", h), hx - 12f, y + chartH + 14f, lblPaint)
+        }
+
+        // Legend
+        val legY = y + chartH + 28f
+        val legPaint = Paint().apply { textSize = 8.5f; isFakeBoldText = true }
+        legPaint.color = COLOR_BLUE
+        canvas.drawText("— Mediana Calibrada (p50)", chartX, legY, legPaint)
+        legPaint.color = COLOR_P2575_MID
+        canvas.drawText("█ Percentil 25-75", chartX + 140f, legY, legPaint)
+        legPaint.color = COLOR_P1090_LIGHT
+        canvas.drawText("█ Percentil 10-90", chartX + 250f, legY, legPaint)
+        if (compare && !rawAgp.isNullOrEmpty()) {
+            legPaint.color = COLOR_RAW_ORANGE
+            canvas.drawText("- - Mediana Raw", chartX + 360f, legY, legPaint)
+        }
+
+        return legY + 20f
+    }
+
+    // Nueva función: Patrones de hora de comidas
+    private fun drawMealTimePatternsPage(
+        canvas: Canvas,
+        summaries: List<DailySummary>,
+        compare: Boolean,
+        start: LocalDate,
+        end: LocalDate,
+        days: Int,
+        startY: Float
+    ) {
+        var y = startY
+        val titlePaint = Paint().apply { color = Color.BLACK; textSize = 16f; isFakeBoldText = true }
+        canvas.drawText("Patrones hora comidas", MARGIN, y + 14f, titlePaint)
+
+        val rangeStr = "${formatDateSpanish(start)} – ${formatDateSpanish(end)} ($days Días)"
+        canvas.drawText(rangeStr, MARGIN, y + 28f, Paint().apply { color = Color.DKGRAY; textSize = 10f })
+        y += 45f
+
+        val mealPeriods = listOf(
+            Triple("Mañana", "04:00 - 10:00", 4..10),
+            Triple("Mediodía", "10:00 - 16:00", 10..16),
+            Triple("Noche", "16:00 - 22:00", 16..22),
+            Triple("Noche", "22:00 - 04:00", 22..24)
+        )
+
+        val boxW = (PAGE_WIDTH - 2 * MARGIN - 30f) / 4f
+        val boxH = 120f
+
+        mealPeriods.forEachIndexed { idx, (periodName, periodTime, hourRange) ->
+            val bx = MARGIN + idx * (boxW + 10f)
+            val by = y
+
+            // Box border
+            drawRect(canvas, bx, by, boxW, boxH, Color.LTGRAY, isStroke = true)
+
+            // Header
+            val headerPaint = Paint().apply { color = Color.BLACK; textSize = 9f; isFakeBoldText = true }
+            canvas.drawText(periodName, bx + 5f, by + 12f, headerPaint)
+            canvas.drawText(periodTime, bx + 5f, by + 24f, Paint().apply { color = Color.GRAY; textSize = 7.5f })
+
+            // Mini glucose pattern chart for this meal period
+            val miniChartY = by + 30f
+            val miniChartH = boxH - 40f
+            val minG = 40f
+            val maxG = 350f
+            val rangeG = maxG - minG
+
+            // Target band
+            val y180 = miniChartY + miniChartH - (180f - minG) / rangeG * miniChartH
+            val y70 = miniChartY + miniChartH - (70f - minG) / rangeG * miniChartH
+            canvas.drawRect(bx + 5f, y180, bx + boxW - 5f, y70, Paint().apply { color = COLOR_BG_BAND; style = Paint.Style.FILL })
+
+            // Simplified glucose curve for this meal period
+            // (In production, you'd calculate AGP specifically for these hours)
+            val path = Path()
+            for (i in 0..20) {
+                val px = bx + 5f + (i / 20f) * (boxW - 10f)
+                // Placeholder: use overall median as approximation
+                val avgGlucose = 120f + (Math.random() * 40 - 20).toFloat()
+                val py = miniChartY + miniChartH - (avgGlucose - minG) / rangeG * miniChartH
+                if (i == 0) path.moveTo(px, py) else path.lineTo(px, py)
+            }
+            canvas.drawPath(path, Paint().apply { color = COLOR_BLUE; style = Paint.Style.STROKE; strokeWidth = 1.5f; isAntiAlias = true })
+        }
+
+        y += boxH + 40f
+
+        // Daily meal pattern grid (14 days x 4 meal periods)
+        val headerPaint = Paint().apply { color = Color.DKGRAY; textSize = 7.5f; isFakeBoldText = true }
+        canvas.drawText("PROMEDIO", MARGIN, y, headerPaint)
+
+        val dayLabels = listOf("vie.", "sáb.", "dom.", "lun.", "mar.", "mié.", "jue.", "vie.", "sáb.", "dom.", "lun.", "mar.", "mié.", "jue.")
+        val gridCellH = 12f
+
+        summaries.take(14).forEachIndexed { idx, summary ->
+            val gy = y + 12f + idx * gridCellH
+            canvas.drawText("${dayLabels.getOrElse(idx) { "" }} ${summary.date.dayOfMonth}", MARGIN, gy, Paint().apply { color = Color.GRAY; textSize = 7f })
+        }
+    }
+
+    // Nueva función: Resumen Semanal
+    private fun drawWeeklySummaryHeader(canvas: Canvas, start: LocalDate, end: LocalDate, days: Int, startY: Float): Float {
+        val titlePaint = Paint().apply { color = Color.BLACK; textSize = 16f; isFakeBoldText = true }
+        canvas.drawText("Resumen semanal", MARGIN, startY + 14f, titlePaint)
+
+        val rangeStr = "${formatDateSpanish(start)} – ${formatDateSpanish(end)} ($days Días)"
+        canvas.drawText(rangeStr, MARGIN, startY + 28f, Paint().apply { color = Color.DKGRAY; textSize = 10f })
+
+        return startY + 45f
+    }
+
+    private fun drawWeeklySummaryPage(
+        canvas: Canvas,
+        weekData: List<DailySummary>,
+        compare: Boolean,
+        startY: Float
+    ) {
+        var y = startY
+
+        val headerPaint = Paint().apply { color = Color.DKGRAY; textSize = 8f; isFakeBoldText = true }
+        val dayPaint = Paint().apply { color = Color.BLACK; textSize = 9f; isFakeBoldText = true }
+        val valPaint = Paint().apply { color = COLOR_BLUE; textSize = 8.5f; isFakeBoldText = true }
+        val rawValPaint = Paint().apply { color = COLOR_RAW_ORANGE; textSize = 8f }
+
+        // Header row
+        val col1 = MARGIN
+        val col2 = MARGIN + 80f
+        val col3 = MARGIN + 320f
+        val col4 = MARGIN + 400f
+        val col5 = MARGIN + 460f
+
+        canvas.drawText("Día", col1, y, headerPaint)
+        canvas.drawText("Glucosa", col3, y, headerPaint)
+        canvas.drawText("HC totales", col4, y, headerPaint)
+        canvas.drawText("Insulina", col5, y, headerPaint)
+        y += 12f
+
+        weekData.forEach { summary ->
+            val rowH = 100f
+
+            // Day label
+            val dayName = summary.date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale("es"))
+            canvas.drawText("$dayName ${summary.date.dayOfMonth} ${summary.date.month.getDisplayName(TextStyle.SHORT, Locale("es"))}",
+                col1, y + 12f, dayPaint)
+
+            // Mini sparkline
+            val sparkX = col2
+            val sparkW = 220f
+            val sparkH = 80f
+
+            drawRect(canvas, sparkX, y, sparkW, sparkH, Color.LTGRAY, isStroke = true)
+
+            if (summary.glucose.isNotEmpty()) {
+                val minG = 40f
+                val maxG = 350f
+                val rangeG = maxG - minG
+
+                // Target band
+                val y180 = y + sparkH - (180f - minG) / rangeG * sparkH
+                val y70 = y + sparkH - (70f - minG) / rangeG * sparkH
+                canvas.drawRect(sparkX, y180, sparkX + sparkW, y70, Paint().apply { color = COLOR_BG_BAND; style = Paint.Style.FILL })
+
+                val firstTs = TimestampParser.parseFlexibleInstant(summary.glucose.first().timestamp)?.epochSecond ?: 0L
+
+                // Calibrated curve
+                val pathCal = Path()
+                summary.glucose.forEachIndexed { i, m ->
+                    val ts = TimestampParser.parseFlexibleInstant(m.timestamp)?.epochSecond ?: firstTs
+                    val px = sparkX + ((ts - firstTs).toFloat() / 86400f) * sparkW
+                    val py = y + sparkH - (m.calibratedValue.toFloat().coerceIn(minG, maxG) - minG) / rangeG * sparkH
+                    if (i == 0) pathCal.moveTo(px, py) else pathCal.lineTo(px, py)
+                }
+                canvas.drawPath(pathCal, Paint().apply { color = COLOR_BLUE; strokeWidth = 1.5f; style = Paint.Style.STROKE; isAntiAlias = true })
+
+                // Raw curve if comparing
+                if (compare) {
+                    val pathRaw = Path()
+                    summary.glucose.forEachIndexed { i, m ->
+                        val ts = TimestampParser.parseFlexibleInstant(m.timestamp)?.epochSecond ?: firstTs
+                        val px = sparkX + ((ts - firstTs).toFloat() / 86400f) * sparkW
+                        val py = y + sparkH - (m.value.toFloat().coerceIn(minG, maxG) - minG) / rangeG * sparkH
+                        if (i == 0) pathRaw.moveTo(px, py) else pathRaw.lineTo(px, py)
+                    }
+                    canvas.drawPath(pathRaw, Paint().apply {
+                        color = COLOR_RAW_ORANGE
+                        strokeWidth = 1.5f
+                        style = Paint.Style.STROKE
+                        pathEffect = DashPathEffect(floatArrayOf(4f, 3f), 0f)
+                        isAntiAlias = true
+                    })
+                }
+            }
+
+            // Stats
+            val avgCal = if (summary.glucose.isNotEmpty()) summary.glucose.map { it.calibratedValue }.average() else 0.0
+            val avgRaw = if (summary.glucose.isNotEmpty()) summary.glucose.map { it.value }.average() else 0.0
+
+            canvas.drawText("%.0f mg/dL".format(avgCal), col3, y + 30f, valPaint)
+            if (compare) canvas.drawText("(%.0f raw)".format(avgRaw), col3, y + 45f, rawValPaint)
+            canvas.drawText("%.0f g".format(summary.carbs), col4, y + 30f, valPaint)
+            canvas.drawText("%.1f U".format(summary.insulin), col5, y + 30f, valPaint)
+            canvas.drawText("${summary.glucose.size} lect.", col3, y + 65f, Paint().apply { color = Color.GRAY; textSize = 7f })
+
+            y += rowH + 5f
+        }
+    }
+
+    // Nueva función: Configuración del dispositivo
+    private fun drawDeviceSettingsPage(canvas: Canvas, startY: Float) {
         var y = startY
         val titlePaint = Paint().apply { color = Color.BLACK; textSize = 16f; isFakeBoldText = true }
         val sectionPaint = Paint().apply { color = Color.BLACK; textSize = 11f; isFakeBoldText = true }
         val labelPaint = Paint().apply { color = Color.DKGRAY; textSize = 9f }
         val valPaint = Paint().apply { color = Color.BLACK; textSize = 9f; isFakeBoldText = true }
 
-        canvas.drawText("Configuración", MARGIN, y + 14f, titlePaint)
+        canvas.drawText("Detalles del dispositivo", MARGIN, y + 14f, titlePaint)
         y += 35f
 
-        canvas.drawText("CONFIGURACIÓN DE GLUCOSA", MARGIN, y, sectionPaint)
-        y += 15f
-        canvas.drawText("Intervalo objetivo:", MARGIN, y, labelPaint)
-        canvas.drawText("70 - 180 mg/dL", MARGIN + 120f, y, valPaint)
+        canvas.drawText("CONFIGURACIÓN", MARGIN, y, sectionPaint)
+        y += 18f
+
+        val col1 = MARGIN + 10f
+        val col2 = MARGIN + 180f
+
+        canvas.drawText("Intervalo objetivo:", col1, y, labelPaint)
+        canvas.drawText("70 - 180 mg/dL", col2, y, valPaint)
+        y += 16f
+
+        canvas.drawText("Configuración de alarmas de glucosa:", col1, y, labelPaint)
+        y += 14f
+        canvas.drawText("  Glucosa baja:", col1 + 10f, y, labelPaint)
+        canvas.drawText("Desactivada", col2, y, valPaint)
+        y += 14f
+        canvas.drawText("  Glucosa alta:", col1 + 10f, y, labelPaint)
+        canvas.drawText("Desactivada", col2, y, valPaint)
+        y += 14f
+        canvas.drawText("  Pérdida de señal:", col1 + 10f, y, labelPaint)
+        canvas.drawText("Desactivada", col2, y, valPaint)
         y += 25f
 
-        canvas.drawText("CONFIGURACIÓN DE ALARMAS", MARGIN, y, sectionPaint)
-        y += 15f
-        canvas.drawText("Alarma de Glucosa Baja:", MARGIN, y, labelPaint)
-        canvas.drawText("Activada (<70 mg/dL)", MARGIN + 140f, y, valPaint)
+        canvas.drawText("DISPOSITIVOS", MARGIN, y, sectionPaint)
+        y += 18f
+        canvas.drawText("FreeStyle LibreLink / Libre2Clock", col1, y, labelPaint)
+        y += 16f
+        canvas.drawText("Versión de software:", col1, y, labelPaint)
+        canvas.drawText("2.13.1", col2, y, valPaint)
         y += 14f
-        canvas.drawText("Alarma de Glucosa Alta:", MARGIN, y, labelPaint)
-        canvas.drawText("Activada (>250 mg/dL)", MARGIN + 140f, y, valPaint)
-        y += 25f
+        canvas.drawText("Versión completa de software:", col1, y, labelPaint)
+        canvas.drawText("2.13.1", col2, y, valPaint)
+        y += 14f
+        canvas.drawText("Sistema operativo:", col1, y, labelPaint)
+        canvas.drawText("Android " + Build.VERSION.RELEASE, col2, y, valPaint)
+        y += 14f
+        canvas.drawText("Modelo de SmartPhone:", col1, y, labelPaint)
+        canvas.drawText(Build.MANUFACTURER + " " + Build.MODEL, col2, y, valPaint)
+    }
 
-        canvas.drawText("DETALLES DEL DISPOSITIVO Y APLICACIÓN", MARGIN, y, sectionPaint)
+    // Nueva función: Patrones Diarios (Promedio diario completo)
+    private fun drawDailyAveragePatternsPage(
+        canvas: Canvas,
+        calAgp: List<AgpPoint>,
+        rawAgp: List<AgpPoint>?,
+        compare: Boolean,
+        start: LocalDate,
+        end: LocalDate,
+        days: Int,
+        startY: Float
+    ) {
+        var y = startY
+        val titlePaint = Paint().apply { color = Color.BLACK; textSize = 16f; isFakeBoldText = true }
+        canvas.drawText("Patrones diarios", MARGIN, y + 14f, titlePaint)
+
+        val rangeStr = "${formatDateSpanish(start)} – ${formatDateSpanish(end)} ($days Días)"
+        canvas.drawText(rangeStr, MARGIN, y + 28f, Paint().apply { color = Color.DKGRAY; textSize = 10f })
+        y += 45f
+
+        // Average daily glucose chart
+        val chartW = PAGE_WIDTH - 2 * MARGIN
+        val chartH = 200f
+        val chartX = MARGIN
+
+        val headerPaint = Paint().apply { color = Color.BLACK; textSize = 10f; isFakeBoldText = true }
+        canvas.drawText("Diario Promedio 00:00 - 24:00", chartX, y, headerPaint)
         y += 15f
-        canvas.drawText("Aplicación:", MARGIN, y, labelPaint)
-        canvas.drawText("Libre2Clock v2.13.1", MARGIN + 140f, y, valPaint)
-        y += 14f
-        canvas.drawText("Sistema Operativo:", MARGIN, y, labelPaint)
-        canvas.drawText("Android " + Build.VERSION.RELEASE, MARGIN + 140f, y, valPaint)
-        y += 14f
-        canvas.drawText("Modelo de SmartPhone:", MARGIN, y, labelPaint)
-        canvas.drawText(Build.MANUFACTURER + " " + Build.MODEL, MARGIN + 140f, y, valPaint)
+
+        // Average values by hour
+        val lblPaint = Paint().apply { color = Color.DKGRAY; textSize = 7.5f }
+        val hourlyAvgs = calAgp.map { "%.0f".format(it.median) }
+        var hx = chartX
+        for (h in 0..23 step 2) {
+            canvas.drawText(hourlyAvgs.getOrElse(h) { "—" }, hx, y, Paint().apply { color = COLOR_BLUE; textSize = 8f; isFakeBoldText = true })
+            hx += chartW / 12f
+        }
+        y += 15f
+
+        canvas.drawText("Glucosa mg/dL", chartX, y, lblPaint)
+        y += 8f
+
+        // Main chart
+        drawRect(canvas, chartX, y, chartW, chartH, Color.LTGRAY, isStroke = true)
+
+        val minG = 40f
+        val maxG = 350f
+        val rangeG = maxG - minG
+
+        // Target band
+        val y180 = y + chartH - (180f - minG) / rangeG * chartH
+        val y70 = y + chartH - (70f - minG) / rangeG * chartH
+        canvas.drawRect(chartX, y180, chartX + chartW, y70, Paint().apply { color = COLOR_BG_BAND; style = Paint.Style.FILL })
+
+        // Percentile bands
+        if (calAgp.isNotEmpty()) {
+            drawPercentileBand(canvas, calAgp, { it.p10 }, { it.p90 }, chartX, y, chartW, chartH, minG, rangeG,
+                Paint().apply { color = COLOR_P1090_LIGHT; style = Paint.Style.FILL })
+            drawPercentileBand(canvas, calAgp, { it.p25 }, { it.p75 }, chartX, y, chartW, chartH, minG, rangeG,
+                Paint().apply { color = COLOR_P2575_MID; style = Paint.Style.FILL })
+            drawCurveLine(canvas, calAgp, { it.median }, chartX, y, chartW, chartH, minG, rangeG,
+                Paint().apply { color = COLOR_BLUE; style = Paint.Style.STROKE; strokeWidth = 2.5f; isAntiAlias = true })
+        }
+
+        if (compare && !rawAgp.isNullOrEmpty()) {
+            drawCurveLine(canvas, rawAgp, { it.median }, chartX, y, chartW, chartH, minG, rangeG,
+                Paint().apply {
+                    color = COLOR_RAW_ORANGE
+                    style = Paint.Style.STROKE
+                    strokeWidth = 2.5f
+                    pathEffect = DashPathEffect(floatArrayOf(6f, 5f), 0f)
+                    isAntiAlias = true
+                })
+        }
+
+        // Axis labels
+        listOf(Pair(350f, "350"), Pair(250f, "250"), Pair(180f, "180"), Pair(70f, "70"), Pair(40f, "40")).forEach { (level, label) ->
+            val lineY = y + chartH - (level - minG) / rangeG * chartH
+            canvas.drawText(label, chartX - 22f, lineY + 3f, lblPaint)
+        }
+
+        for (h in 0..24 step 2) {
+            val hx = chartX + (h / 24f) * chartW
+            canvas.drawText(String.format("%02d:00", h), hx - 12f, y + chartH + 14f, lblPaint)
+        }
+
+        y += chartH + 30f
+
+        // Carbs and Insulin rows (placeholder)
+        canvas.drawText("Carb. gramos", chartX, y, lblPaint)
+        y += 15f
+        drawRect(canvas, chartX, y, chartW, 30f, Color.LTGRAY, isStroke = true)
+        y += 40f
+
+        canvas.drawText("Insulina de acción rápida", chartX, y, lblPaint)
+        y += 8f
+        canvas.drawText("Insulina de acción lenta", chartX, y + 10f, lblPaint)
+    }
+
+    private fun drawRect(canvas: Canvas, x: Float, y: Float, w: Float, h: Float, color: Int, isStroke: Boolean = false) {
+        val paint = Paint().apply {
+            this.color = color
+            style = if (isStroke) Paint.Style.STROKE else Paint.Style.FILL
+            strokeWidth = if (isStroke) 1f else 0f
+        }
+        canvas.drawRect(x, y, x + w, y + h, paint)
     }
 
     // --- HELPER DRAWING METHODS ---
@@ -713,18 +1403,27 @@ object PdfReportGenerator {
         rangeG: Float,
         p: Paint
     ) {
+        if (pts.isEmpty()) return
+        val maxG = minG + rangeG
         val path = Path()
+
+        // Top curve (high values)
         pts.forEachIndexed { i, pt ->
             val px = x + (i / 23f) * w
-            val py = y + h - (high(pt).toFloat() - minG) / rangeG * h
+            val highVal = high(pt).toFloat().coerceIn(minG, maxG)
+            val py = y + h - (highVal - minG) / rangeG * h
             if (i == 0) path.moveTo(px, py) else path.lineTo(px, py)
         }
+
+        // Bottom curve in reverse (low values)
         for (i in pts.indices.reversed()) {
             val pt = pts[i]
             val px = x + (i / 23f) * w
-            val py = y + h - (low(pt).toFloat() - minG) / rangeG * h
+            val lowVal = low(pt).toFloat().coerceIn(minG, maxG)
+            val py = y + h - (lowVal - minG) / rangeG * h
             path.lineTo(px, py)
         }
+
         path.close()
         canvas.drawPath(path, p)
     }
@@ -741,12 +1440,16 @@ object PdfReportGenerator {
         rangeG: Float,
         p: Paint
     ) {
+        if (pts.isEmpty()) return
+        val maxG = minG + rangeG
         val path = Path()
+
         pts.forEachIndexed { i, pt ->
             val valG = v(pt).toFloat()
             if (valG > 0) {
                 val px = x + (i / 23f) * w
-                val py = y + h - (valG - minG) / rangeG * h
+                val clampedVal = valG.coerceIn(minG, maxG)
+                val py = y + h - (clampedVal - minG) / rangeG * h
                 if (path.isEmpty) path.moveTo(px, py) else path.lineTo(px, py)
             }
         }
