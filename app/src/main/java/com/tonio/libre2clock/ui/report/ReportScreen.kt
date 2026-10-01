@@ -63,9 +63,11 @@ fun ReportScreen(
     val dailySummaries by viewModel.dailySummaries.collectAsStateWithLifecycle()
     val multiPeriodCv by viewModel.multiPeriodCv.collectAsStateWithLifecycle()
     val isGenerating by viewModel.isGenerating.collectAsStateWithLifecycle()
+    val previewFile by viewModel.previewFile.collectAsStateWithLifecycle()
+    val showPdfViewer by viewModel.showPdfViewer.collectAsStateWithLifecycle()
+    val selectedLayout by viewModel.selectedLayout.collectAsStateWithLifecycle()
+    val compareRawAndCalibrated by viewModel.compareRawAndCalibrated.collectAsStateWithLifecycle()
     
-    var selectedLayout by remember { mutableStateOf(ReportLayout.FULL) }
-    var compareRawAndCalibrated by remember { mutableStateOf(true) }
     var showDatePicker by remember { mutableStateOf<DatePickerType?>(null) }
 
     val reportFailedMsg = stringResource(R.string.report_failed_generate)
@@ -81,7 +83,7 @@ fun ReportScreen(
                     }
                 },
                 actions = {
-                    IconButton(
+                    TextButton(
                         enabled = !isGenerating && metrics != null,
                         onClick = {
                             scope.launch {
@@ -105,12 +107,18 @@ fun ReportScreen(
                                 }
                                 
                                 viewModel.setGenerating(false)
-                                if (file != null) sharePdf(context, file, shareReportTitle)
-                                else Toast.makeText(context, reportFailedMsg, Toast.LENGTH_SHORT).show()
+                                if (file != null) {
+                                    viewModel.setPreviewFile(file)
+                                    viewModel.setShowPdfViewer(true)
+                                } else {
+                                    Toast.makeText(context, reportFailedMsg, Toast.LENGTH_SHORT).show()
+                                }
                             }
                         }
                     ) {
-                        Icon(Icons.Filled.PictureAsPdf, contentDescription = stringResource(R.string.settings_export))
+                        Icon(Icons.Filled.PictureAsPdf, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(stringResource(R.string.report_view_pdf))
                     }
                 }
             )
@@ -179,11 +187,11 @@ fun ReportScreen(
                     }
                     Switch(
                         checked = compareRawAndCalibrated,
-                        onCheckedChange = { compareRawAndCalibrated = it }
+                        onCheckedChange = viewModel::setCompareRawAndCalibrated
                     )
                 }
 
-                LayoutSelector(selected = selectedLayout, onSelect = { selectedLayout = it })
+                LayoutSelector(selected = selectedLayout, onSelect = viewModel::setLayout)
 
                 metrics?.let { m ->
                     GlucoseStatsSection(m)
@@ -231,6 +239,13 @@ fun ReportScreen(
             
             if (isGenerating) {
                 GenerationLoadingDialog()
+            }
+
+            if (showPdfViewer && previewFile != null) {
+                PdfViewerDialog(
+                    pdfFile = previewFile!!,
+                    onDismiss = { viewModel.setShowPdfViewer(false) }
+                )
             }
 
             // OPTIMIZACIÓN: Diálogo de fecha unificado y limpio

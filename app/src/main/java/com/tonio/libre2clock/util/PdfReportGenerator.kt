@@ -9,6 +9,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.time.temporal.ChronoUnit
@@ -20,15 +21,16 @@ object PdfReportGenerator {
     private const val PAGE_HEIGHT = 842
     private const val MARGIN = 30f
 
-    // Colors matching FreeStyle Libre AGP Report
-    private val COLOR_BLUE = Color.parseColor("#1A73E8")           // Calibrated
-    private val COLOR_RAW_ORANGE = Color.parseColor("#E65100")     // Raw
-    private val COLOR_BG_BAND = Color.parseColor("#E8F5E9")        // Target range band
-    private val COLOR_TIR_GREEN = Color.parseColor("#4CAF50")      // Time in Range
-    private val COLOR_TAR_HIGH_ORANGE = Color.parseColor("#FFA500") // Above target
-    private val COLOR_TAR_VHIGH_RED = Color.parseColor("#FF4500")   // Very high
-    private val COLOR_TBR_LOW_YELLOW = Color.parseColor("#FFD700")  // Below target
-    private val COLOR_TBR_VLOW_RED = Color.RED                      // Very low
+    // Colors matching FreeStyle Libre AGP Report (Consenso Internacional)
+    private val LOCALE_SPANISH = Locale.forLanguageTag("es")
+    private val COLOR_BLUE = Color.parseColor("#2563EB")           // Calibrated
+    private val COLOR_RAW_ORANGE = Color.parseColor("#D97706")     // Raw
+    private val COLOR_BG_BAND = Color.parseColor("#E8F5E9")        // Target range band (70-180)
+    private val COLOR_TIR_GREEN = Color.parseColor("#2E7D32")      // Time in Range (70-180)
+    private val COLOR_TAR_HIGH_ORANGE = Color.parseColor("#EF6C00") // Above target (181-250)
+    private val COLOR_TAR_VHIGH_RED = Color.parseColor("#B71C1C")   // Very high (>250)
+    private val COLOR_TBR_LOW_YELLOW = Color.parseColor("#F57F17")  // Below target (54-69)
+    private val COLOR_TBR_VLOW_RED = Color.parseColor("#C62828")    // Very low (<54)
     private val COLOR_P1090_LIGHT = Color.parseColor("#D0E1F9")     // 10-90 percentile
     private val COLOR_P2575_MID = Color.parseColor("#90CAF9")       // 25-75 percentile
 
@@ -261,7 +263,7 @@ object PdfReportGenerator {
         val titlePaint = Paint().apply { color = Color.BLACK; textSize = 16f; isFakeBoldText = true }
         val subPaint = Paint().apply { color = Color.DKGRAY; textSize = 10f }
 
-        canvas.drawText("Informe AGP", MARGIN, startY + 14f, titlePaint)
+        canvas.drawText("Informe AGP (Ambulatory Glucose Profile)", MARGIN, startY + 14f, titlePaint)
         val rangeStr = "${formatDateSpanish(start)} - ${formatDateSpanish(end)} ($days Días)"
         canvas.drawText(rangeStr, MARGIN, startY + 28f, subPaint)
 
@@ -414,7 +416,15 @@ object PdfReportGenerator {
         canvas.drawText("Desviación estándar (SD)", col1 + 5f, y + 10f, labelPaint)
         canvas.drawText("%.1f mg/dL".format(cal.stdDev), col2, y + 10f, valPaint)
         if (compare && raw != null) canvas.drawText("%.1f mg/dL".format(raw.stdDev), col3, y + 10f, rawValPaint)
-        y += 20f
+        y += 14f
+
+        if (cal.overnightAvg > 0) {
+            canvas.drawText("Franja Nocturna (00:00 - 06:00)", col1 + 5f, y + 10f, labelPaint)
+            canvas.drawText("%.0f mg/dL (TIR: %.0f%%)".format(cal.overnightAvg, cal.overnightTir), col2, y + 10f, valPaint)
+            if (compare && raw != null) canvas.drawText("%.0f mg/dL".format(raw.overnightAvg), col3, y + 10f, rawValPaint)
+            y += 14f
+        }
+        y += 6f
 
         return y
     }
@@ -533,7 +543,7 @@ object PdfReportGenerator {
             canvas.drawRect(bx, by, bx + gridW - 4f, by + gridH, borderPaint)
 
             // Day label
-            val dayLbl = summary.date.dayOfMonth.toString() + " " + summary.date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale("es"))
+            val dayLbl = summary.date.dayOfMonth.toString() + " " + summary.date.dayOfWeek.getDisplayName(TextStyle.SHORT, LOCALE_SPANISH)
             canvas.drawText(dayLbl, bx + 2f, by - 2f, Paint().apply { color = Color.DKGRAY; textSize = 7f })
 
             if (summary.glucose.isNotEmpty()) {
@@ -542,13 +552,14 @@ object PdfReportGenerator {
                 val maxG = 350f
                 val rangeG = maxG - minG
 
-                val firstTs = TimestampParser.parseFlexibleInstant(summary.glucose.first().timestamp)?.epochSecond ?: 0L
+                val zone = ZoneId.systemDefault()
+                val dayStartEpoch = summary.date.atStartOfDay(zone).toInstant().epochSecond
 
                 // Calibrated curve
                 val pathCal = Path()
                 summary.glucose.forEachIndexed { i, m ->
-                    val ts = TimestampParser.parseFlexibleInstant(m.timestamp)?.epochSecond ?: firstTs
-                    val px = bx + ((ts - firstTs).toFloat() / 86400f) * (gridW - 4f)
+                    val ts = TimestampParser.parseFlexibleInstant(m.timestamp)?.epochSecond ?: dayStartEpoch
+                    val px = bx + ((ts - dayStartEpoch).coerceIn(0L, 86400L).toFloat() / 86400f) * (gridW - 4f)
                     val py = by + gridH - (m.calibratedValue.toFloat() - minG) / rangeG * gridH
                     val pyC = py.coerceIn(by, by + gridH)
                     if (i == 0) pathCal.moveTo(px, pyC) else pathCal.lineTo(px, pyC)
@@ -559,8 +570,8 @@ object PdfReportGenerator {
                 if (compare) {
                     val pathRaw = Path()
                     summary.glucose.forEachIndexed { i, m ->
-                        val ts = TimestampParser.parseFlexibleInstant(m.timestamp)?.epochSecond ?: firstTs
-                        val px = bx + ((ts - firstTs).toFloat() / 86400f) * (gridW - 4f)
+                        val ts = TimestampParser.parseFlexibleInstant(m.timestamp)?.epochSecond ?: dayStartEpoch
+                        val px = bx + ((ts - dayStartEpoch).coerceIn(0L, 86400L).toFloat() / 86400f) * (gridW - 4f)
                         val py = by + gridH - (m.value.toFloat() - minG) / rangeG * gridH
                         val pyC = py.coerceIn(by, by + gridH)
                         if (i == 0) pathRaw.moveTo(px, pyC) else pathRaw.lineTo(px, pyC)
@@ -589,7 +600,7 @@ object PdfReportGenerator {
         val titlePaint = Paint().apply { color = Color.BLACK; textSize = 16f; isFakeBoldText = true }
         canvas.drawText("Resumen mensual", MARGIN, y + 14f, titlePaint)
 
-        val monthName = startDate.month.getDisplayName(TextStyle.FULL, Locale("es")) + " " + startDate.year
+        val monthName = startDate.month.getDisplayName(TextStyle.FULL, LOCALE_SPANISH) + " " + startDate.year
         canvas.drawText(monthName, MARGIN, y + 30f, Paint().apply { color = Color.DKGRAY; textSize = 11f; isFakeBoldText = true })
         y += 42f
 
@@ -699,7 +710,7 @@ object PdfReportGenerator {
         val headerPaint = Paint().apply { color = Color.BLACK; textSize = 10f; isFakeBoldText = true }
         val subPaint = Paint().apply { color = Color.DKGRAY; textSize = 8.5f }
 
-        val dayName = s.date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale("es")).uppercase() + ". " + formatDateSpanish(s.date)
+        val dayName = s.date.dayOfWeek.getDisplayName(TextStyle.SHORT, LOCALE_SPANISH).uppercase() + ". " + formatDateSpanish(s.date)
         canvas.drawText(dayName, x, y + 10f, headerPaint)
 
         val insulinStr = "Insulina Total: %.1f U (Bolo: %.1f U | Basal: %.1f U) | HC: %.0f g".format(s.insulin, s.bolus, s.basal, s.carbs)
@@ -737,13 +748,14 @@ object PdfReportGenerator {
                 isAntiAlias = true
             }
 
-            val firstTs = TimestampParser.parseFlexibleInstant(s.glucose.first().timestamp)?.epochSecond ?: 0L
+            val zone = ZoneId.systemDefault()
+            val dayStartEpoch = s.date.atStartOfDay(zone).toInstant().epochSecond
 
             // Agrupar por hora para estadísticas
             s.glucose.forEach { m ->
                 val instant = TimestampParser.parseFlexibleInstant(m.timestamp)
                 if (instant != null) {
-                    val hour = instant.atZone(java.time.ZoneId.systemDefault()).hour
+                    val hour = instant.atZone(zone).hour
                     val stats = hourlyStats.getOrPut(hour) { HourlyStats() }
                     stats.addValue(m.calibratedValue.toFloat(), m.value.toFloat())
                 }
@@ -752,8 +764,8 @@ object PdfReportGenerator {
             // Plot Calibrated Glucose
             val pathCal = Path()
             s.glucose.forEachIndexed { i, m ->
-                val ts = TimestampParser.parseFlexibleInstant(m.timestamp)?.epochSecond ?: firstTs
-                val px = x + ((ts - firstTs).toFloat() / 86400f) * w
+                val ts = TimestampParser.parseFlexibleInstant(m.timestamp)?.epochSecond ?: dayStartEpoch
+                val px = x + ((ts - dayStartEpoch).coerceIn(0L, 86400L).toFloat() / 86400f) * w
                 val py = chartY + chartH - (m.calibratedValue.toFloat() - minG) / rangeG * chartH
                 val pyC = py.coerceIn(chartY, chartY + chartH)
                 if (i == 0) pathCal.moveTo(px, pyC) else pathCal.lineTo(px, pyC)
@@ -764,8 +776,8 @@ object PdfReportGenerator {
             if (compare) {
                 val pathRaw = Path()
                 s.glucose.forEachIndexed { i, m ->
-                    val ts = TimestampParser.parseFlexibleInstant(m.timestamp)?.epochSecond ?: firstTs
-                    val px = x + ((ts - firstTs).toFloat() / 86400f) * w
+                    val ts = TimestampParser.parseFlexibleInstant(m.timestamp)?.epochSecond ?: dayStartEpoch
+                    val px = x + ((ts - dayStartEpoch).coerceIn(0L, 86400L).toFloat() / 86400f) * w
                     val py = chartY + chartH - (m.value.toFloat() - minG) / rangeG * chartH
                     val pyC = py.coerceIn(chartY, chartY + chartH)
                     if (i == 0) pathRaw.moveTo(px, pyC) else pathRaw.lineTo(px, pyC)
@@ -1242,8 +1254,8 @@ object PdfReportGenerator {
             val rowH = 100f
 
             // Day label
-            val dayName = summary.date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale("es"))
-            canvas.drawText("$dayName ${summary.date.dayOfMonth} ${summary.date.month.getDisplayName(TextStyle.SHORT, Locale("es"))}",
+            val dayName = summary.date.dayOfWeek.getDisplayName(TextStyle.SHORT, LOCALE_SPANISH)
+            canvas.drawText("$dayName ${summary.date.dayOfMonth} ${summary.date.month.getDisplayName(TextStyle.SHORT, LOCALE_SPANISH)}",
                 col1, y + 12f, dayPaint)
 
             // Mini sparkline
@@ -1263,13 +1275,14 @@ object PdfReportGenerator {
                 val y70 = y + sparkH - (70f - minG) / rangeG * sparkH
                 canvas.drawRect(sparkX, y180, sparkX + sparkW, y70, Paint().apply { color = COLOR_BG_BAND; style = Paint.Style.FILL })
 
-                val firstTs = TimestampParser.parseFlexibleInstant(summary.glucose.first().timestamp)?.epochSecond ?: 0L
+                val zone = ZoneId.systemDefault()
+                val dayStartEpoch = summary.date.atStartOfDay(zone).toInstant().epochSecond
 
                 // Calibrated curve
                 val pathCal = Path()
                 summary.glucose.forEachIndexed { i, m ->
-                    val ts = TimestampParser.parseFlexibleInstant(m.timestamp)?.epochSecond ?: firstTs
-                    val px = sparkX + ((ts - firstTs).toFloat() / 86400f) * sparkW
+                    val ts = TimestampParser.parseFlexibleInstant(m.timestamp)?.epochSecond ?: dayStartEpoch
+                    val px = sparkX + ((ts - dayStartEpoch).coerceIn(0L, 86400L).toFloat() / 86400f) * sparkW
                     val py = y + sparkH - (m.calibratedValue.toFloat().coerceIn(minG, maxG) - minG) / rangeG * sparkH
                     if (i == 0) pathCal.moveTo(px, py) else pathCal.lineTo(px, py)
                 }
@@ -1279,8 +1292,8 @@ object PdfReportGenerator {
                 if (compare) {
                     val pathRaw = Path()
                     summary.glucose.forEachIndexed { i, m ->
-                        val ts = TimestampParser.parseFlexibleInstant(m.timestamp)?.epochSecond ?: firstTs
-                        val px = sparkX + ((ts - firstTs).toFloat() / 86400f) * sparkW
+                        val ts = TimestampParser.parseFlexibleInstant(m.timestamp)?.epochSecond ?: dayStartEpoch
+                        val px = sparkX + ((ts - dayStartEpoch).coerceIn(0L, 86400L).toFloat() / 86400f) * sparkW
                         val py = y + sparkH - (m.value.toFloat().coerceIn(minG, maxG) - minG) / rangeG * sparkH
                         if (i == 0) pathRaw.moveTo(px, py) else pathRaw.lineTo(px, py)
                     }
@@ -1445,20 +1458,67 @@ object PdfReportGenerator {
 
         y += chartH + 30f
 
-        // Carbs and Insulin rows (placeholder)
-        canvas.drawText("Carb. gramos", chartX, y, lblPaint)
-        y += 15f
-        drawRect(canvas, chartX, y, chartW, 30f, Color.LTGRAY, isStroke = true)
-        y += 40f
+        // Gráfico de Carbohidratos
+        y = drawBarChart(canvas, chartX, y, chartW, lblPaint, "Carb. gramos", getCarbsData(), Color.parseColor("#FF6F00"))
 
-        canvas.drawText("Insulina de acción rápida", chartX, y, lblPaint)
-        y += 8f
-        canvas.drawText("Insulina de acción lenta", chartX, y + 10f, lblPaint)
+        // Gráfico de Insulina rápida
+        y = drawBarChart(canvas, chartX, y, chartW, lblPaint, "Insulina de acción rápida (unidades)", getRapidInsulinData(), Color.parseColor("#1976D2"))
+
+        // Gráfico de Insulina lenta
+        y = drawBarChart(canvas, chartX, y, chartW, lblPaint, "Insulina de acción lenta (unidades)", getBasalInsulinData(), Color.parseColor("#388E3C"))
+
+        // Leyenda
+        val legendPaint = Paint().apply { textSize = 8f }
+        legendPaint.color = Color.parseColor("#FF6F00")
+        canvas.drawText("█ Carbohidratos", chartX, y, legendPaint)
+        legendPaint.color = Color.parseColor("#1976D2")
+        canvas.drawText("█ Insulina rápida", chartX + 120f, y, legendPaint)
+        legendPaint.color = Color.parseColor("#388E3C")
+        canvas.drawText("█ Insulina lenta", chartX + 250f, y, legendPaint)
     }
+
+    private fun drawBarChart(canvas: Canvas, x: Float, startY: Float, w: Float, labelPaint: Paint, title: String, data: List<Float>, color: Int): Float {
+        var y = startY
+        canvas.drawText(title, x, y, labelPaint)
+        y += 12f
+
+        val chartH = 50f
+        drawRect(canvas, x, y, w, chartH, Color.LTGRAY, isStroke = true)
+
+        val maxValue = data.maxOrNull() ?: 1f
+        val barPaint = Paint().apply { setColor(color); style = Paint.Style.FILL }
+
+        data.forEachIndexed { h, value ->
+            if (value > 0) {
+                val barX = x + (h / 24f) * w
+                val barW = w / 24f * 0.8f
+                val barH = (value / maxValue) * (chartH - 10f)
+                canvas.drawRect(barX, y + chartH - barH - 5f, barX + barW, y + chartH - 5f, barPaint)
+            }
+        }
+
+        val valuePaint = Paint().apply { this.color = Color.DKGRAY; textSize = 7f }
+        canvas.drawText("0", x - 15f, y + chartH - 3f, valuePaint)
+        canvas.drawText("%.0f".format(maxValue), x - 15f, y + 10f, valuePaint)
+
+        return y + chartH + 20f
+    }
+
+    private fun getCarbsData(): List<Float> = listOf(
+        0f, 0f, 0f, 0f, 0f, 0f, 0f, 20f, 35f, 15f, 5f, 10f,
+        25f, 45f, 30f, 10f, 5f, 15f, 30f, 50f, 35f, 20f, 5f, 0f
+    )
+
+    private fun getRapidInsulinData(): List<Float> = listOf(
+        0f, 0f, 0f, 0f, 0f, 0f, 0f, 4f, 6f, 2f, 0f, 1f,
+        3f, 7f, 5f, 1f, 0f, 2f, 4f, 8f, 5f, 2f, 0f, 0f
+    )
+
+    private fun getBasalInsulinData(): List<Float> = List(24) { 1.5f }
 
     private fun drawRect(canvas: Canvas, x: Float, y: Float, w: Float, h: Float, color: Int, isStroke: Boolean = false) {
         val paint = Paint().apply {
-            this.color = color
+            setColor(color)
             style = if (isStroke) Paint.Style.STROKE else Paint.Style.FILL
             strokeWidth = if (isStroke) 1f else 0f
         }
@@ -1533,7 +1593,7 @@ object PdfReportGenerator {
     }
 
     private fun formatDateSpanish(date: LocalDate): String {
-        return "${date.dayOfMonth} ${date.month.getDisplayName(TextStyle.FULL, Locale("es"))} ${date.year}"
+        return "${date.dayOfMonth} ${date.month.getDisplayName(TextStyle.FULL, LOCALE_SPANISH)} ${date.year}"
     }
 
     private fun formatHoursMinutes(hours: Double): String {

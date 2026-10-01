@@ -342,3 +342,126 @@ val Icons.Filled.PictureAsPdf: ImageVector
         return _pictureAsPdf!!
     }
 private var _pictureAsPdf: ImageVector? = null
+
+val Icons.Filled.Print: ImageVector
+    get() {
+        if (_print != null) return _print!!
+        _print = materialIcon(name = "Filled.Print") {
+            materialPath {
+                moveTo(19f, 8f)
+                horizontalLineTo(5f)
+                curveToRelative(-1.66f, 0f, -3f, 1.34f, -3f, 3f)
+                verticalLineToRelative(6f)
+                horizontalLineToRelative(4f)
+                verticalLineToRelative(4f)
+                horizontalLineToRelative(12f)
+                verticalLineToRelative(-4f)
+                horizontalLineToRelative(4f)
+                verticalLineToRelative(-6f)
+                curveToRelative(0f, -1.66f, -1.34f, -3f, -3f, -3f)
+                close()
+                moveTo(16f, 19f)
+                horizontalLineTo(8f)
+                verticalLineToRelative(-5f)
+                horizontalLineToRelative(8f)
+                verticalLineToRelative(5f)
+                close()
+                moveTo(19f, 12f)
+                curveToRelative(-0.55f, 0f, -1f, -0.45f, -1f, -1f)
+                reflectiveCurveToRelative(0.45f, -1f, 1f, -1f)
+                reflectiveCurveToRelative(1f, 0.45f, 1f, 1f)
+                reflectiveCurveToRelative(-0.45f, 1f, -1f, 1f)
+                close()
+                moveTo(18f, 3f)
+                horizontalLineTo(6f)
+                verticalLineToRelative(4f)
+                horizontalLineToRelative(12f)
+                verticalLineTo(3f)
+                close()
+            }
+        }
+        return _print!!
+    }
+private var _print: ImageVector? = null
+
+val Icons.Filled.ZoomIn: ImageVector
+    get() {
+        if (_zoomIn != null) return _zoomIn!!
+        _zoomIn = materialIcon(name = "Filled.ZoomIn") {
+            materialPath {
+                moveTo(15.5f, 14f)
+                horizontalLineToRelative(-0.79f)
+                lineToRelative(-0.28f, -0.27f)
+                curveTo(15.41f, 12.59f, 16f, 11.11f, 16f, 9.5f)
+                curveTo(16f, 5.91f, 13.09f, 3f, 9.5f, 3f)
+                reflectiveCurveTo(3f, 5.91f, 3f, 9.5f)
+                reflectiveCurveTo(5.91f, 16f, 9.5f, 16f)
+                curveToRelative(1.61f, 0f, 3.09f, -0.59f, 4.23f, -1.57f)
+                lineToRelative(0.27f, 0.28f)
+                verticalLineToRelative(0.79f)
+                lineTo(19f, 20.49f)
+                lineTo(20.49f, 19f)
+                lineToRelative(-4.99f, -5f)
+                close()
+                moveTo(9.5f, 14f)
+                curveTo(7.01f, 14f, 5f, 11.99f, 5f, 9.5f)
+                reflectiveCurveTo(7.01f, 5f, 9.5f, 5f)
+                reflectiveCurveTo(14f, 7.01f, 14f, 9.5f)
+                reflectiveCurveTo(11.99f, 14f, 9.5f, 14f)
+                close()
+                moveTo(12f, 10f)
+                horizontalLineToRelative(-2f)
+                verticalLineToRelative(2f)
+                horizontalLineTo(9f)
+                verticalLineToRelative(-2f)
+                horizontalLineTo(7f)
+                verticalLineTo(9f)
+                horizontalLineToRelative(2f)
+                verticalLineTo(7f)
+                horizontalLineToRelative(1f)
+                verticalLineToRelative(2f)
+                horizontalLineToRelative(2f)
+                verticalLineToRelative(1f)
+                close()
+            }
+        }
+        return _zoomIn!!
+    }
+private var _zoomIn: ImageVector? = null
+
+val Icons.Filled.ZoomOut: ImageVector
+    get() {
+        if (_zoomOut != null) return _zoomOut!!
+        _zoomOut = materialIcon(name = "Filled.ZoomOut") {
+            materialPath {
+                moveTo(15.5f, 14f)
+                horizontalLineToRelative(-0.79f)
+                lineToRelative(-0.28f, -0.27f)
+                curveTo(15.41f, 12.59f, 16f, 11.11f, 16f, 9.5f)
+                curveTo(16f, 5.91f, 13.09f, 3f, 9.5f, 3f)
+                reflectiveCurveTo(3f, 5.91f, 3f, 9.5f)
+                reflectiveCurveTo(5.91f, 16f, 9.5f, 16f)
+                curveToRelative(1.61f, 0f, 3.09f, -0.59f, 4.23f, -1.57f)
+                lineToRelative(0.27f, 0.28f)
+                verticalLineToRelative(0.79f)
+                lineTo(19f, 20.49f)
+                lineTo(20.49f, 19f)
+                lineToRelative(-4.99f, -5f)
+                close()
+                moveTo(9.5f, 14f)
+                curveTo(7.01f, 14f, 5f, 11.99f, 5f, 9.5f)
+                reflectiveCurveTo(7.01f, 5f, 9.5f, 5f)
+                reflectiveCurveTo(14f, 7.01f, 14f, 9.5f)
+                reflectiveCurveTo(11.99f, 14f, 9.5f, 14f)
+                close()
+                moveTo(7f, 9f)
+                horizontalLineToRelative(5f)
+                verticalLineToRelative(1f)
+                horizontalLineTo(7f)
+                close()
+            }
+        }
+        return _zoomOut!!
+    }
+private var _zoomOut: ImageVector? = null
+

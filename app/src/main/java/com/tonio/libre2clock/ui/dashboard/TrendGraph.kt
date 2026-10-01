@@ -98,7 +98,7 @@ fun InteractiveTrendGraph(
 
         if (downsampled.isEmpty()) return@remember null
 
-        val minGlucose = 50f
+        val minGlucose = 40f
         val maxGlucose = 350f
         val range = (maxGlucose - minGlucose).coerceAtLeast(1f)
 
@@ -112,31 +112,16 @@ fun InteractiveTrendGraph(
         val totalDurationHours = totalSeconds / 3600.0
         val totalWidthPx = (totalDurationHours * pixelsPerHourPx).toFloat().coerceAtLeast(with(density) { screenWidth.toPx() })
 
-        val totalHeightPx = with(density) { 220.dp.toPx() }
-        val topPaddingPx = with(density) { 16.dp.toPx() }
-        val bottomLabelSpacePx = with(density) { 36.dp.toPx() }
-        val plotHeightPx = (totalHeightPx - bottomLabelSpacePx - topPaddingPx).coerceAtLeast(1f)
-
-        val rawPath = Path()
-        val calPath = Path()
-        val lowPath = Path()
         val normalizedPoints = ArrayList<NormalizedPoint>(downsampled.size)
-        
-        var isFirstPoint = true
-        var isFirstLow = true
-        var lastProcessedEpoch = 0L
 
         downsampled.forEach { (instant, measurement) ->
             val currentEpoch = instant.epochSecond
             val relX = ((currentEpoch - firstInstant.epochSecond).toFloat() / totalSeconds).coerceIn(0f, 1f)
-            val x = relX * totalWidthPx
             
             val relRawY = (1f - ((measurement.value - minGlucose) / range)).coerceIn(0f, 1f)
-            val rawY = topPaddingPx + (relRawY * plotHeightPx)
             
             val calValue = measurement.calibratedValue
             val relCalY = (1f - ((calValue - minGlucose) / range)).coerceIn(0f, 1f)
-            val calY = topPaddingPx + (relCalY * plotHeightPx)
 
             val isLow = calValue < targetLow
             val isHigh = calValue > targetHigh
@@ -144,49 +129,9 @@ fun InteractiveTrendGraph(
             normalizedPoints.add(
                 NormalizedPoint(relX, relRawY, relCalY, currentEpoch, measurement, isLow, isHigh)
             )
-
-            val isGap = !isFirstPoint && (currentEpoch - lastProcessedEpoch) > 900
-
-            if (isFirstPoint || isGap) {
-                rawPath.moveTo(x, rawY)
-                calPath.moveTo(x, calY)
-                isFirstPoint = false
-            } else {
-                rawPath.lineTo(x, rawY)
-                calPath.lineTo(x, calY)
-            }
-
-            // Construir sub-ruta específica para glucosa baja en rojo
-            if (isLow) {
-                if (isFirstLow || isGap) {
-                    lowPath.moveTo(x, calY)
-                    isFirstLow = false
-                } else {
-                    lowPath.lineTo(x, calY)
-                }
-            } else {
-                isFirstLow = true
-            }
-
-            lastProcessedEpoch = currentEpoch
         }
 
-        val predPath = if (predictedPoints.isNotEmpty()) {
-            val path = Path()
-            val lastDataPoint = downsampled.last()
-            val startRelX = ((lastDataPoint.first.epochSecond - firstInstant.epochSecond).toFloat() / totalSeconds).coerceIn(0f, 1f)
-            val startRelY = (1f - ((lastDataPoint.second.calibratedValue - minGlucose) / range)).coerceIn(0f, 1f)
-            path.moveTo(startRelX * totalWidthPx, topPaddingPx + (startRelY * plotHeightPx))
-
-            predictedPoints.forEach { (instant, value) ->
-                val relX = ((instant.epochSecond - firstInstant.epochSecond).toFloat() / totalSeconds).coerceIn(0f, 1f)
-                val relY = (1f - ((value - minGlucose) / range)).coerceIn(0f, 1f)
-                path.lineTo(relX * totalWidthPx, topPaddingPx + (relY * plotHeightPx))
-            }
-            path
-        } else null
-
-        GraphData(normalizedPoints, rawPath, calPath, lowPath, predPath, firstInstant, lastInstant, totalSeconds)
+        GraphData(normalizedPoints, Path(), Path(), Path(), null, firstInstant, lastInstant, totalSeconds)
     }
 
     if (graphData == null) {
@@ -348,9 +293,9 @@ fun InteractiveTrendGraph(
                         val bottomLabelSpace = 36.dp.toPx()
                         val plotHeight = (height - bottomLabelSpace - topPadding).coerceAtLeast(1f)
 
-                        // 1. DIBUJO DE LA BANDA SOMBREADA DEL RANGO SALUDABLE
-                        val minGlucose = 50f
-                        val range = 300f
+                        // 1. DIBUJO DE LA BANDA SOMBREADA DEL RANGO SALUDABLE (40 - 350 mg/dL)
+                        val minGlucose = 40f
+                        val range = 310f
 
                         val yTargetHigh = topPadding + (1f - ((targetHigh.toFloat() - minGlucose) / range)) * plotHeight
                         val yTargetLow = topPadding + (1f - ((targetLow.toFloat() - minGlucose) / range)) * plotHeight
@@ -377,10 +322,47 @@ fun InteractiveTrendGraph(
                             pathEffect = PathEffect.dashPathEffect(floatArrayOf(8.dp.toPx(), 6.dp.toPx()), 0f)
                         )
 
-                        // 2. DIBUJO DE LAS LÍNEAS DE GLUCOSA
+                        // 2. CONSTRUCCIÓN Y DIBUJO DE LAS LÍNEAS DE GLUCOSA (Alineación Y Exacta)
+                        val rawPath = Path()
+                        val calPath = Path()
+                        val lowPath = Path()
+
+                        var isFirstPoint = true
+                        var isFirstLow = true
+                        var lastEpoch = 0L
+
+                        graphData.normalizedPoints.forEach { pt ->
+                            val ptX = pt.relX * width
+                            val rawY = topPadding + (pt.relRawY * plotHeight)
+                            val calY = topPadding + (pt.relCalY * plotHeight)
+
+                            val isGap = !isFirstPoint && (pt.epoch - lastEpoch) > 900
+
+                            if (isFirstPoint || isGap) {
+                                rawPath.moveTo(ptX, rawY)
+                                calPath.moveTo(ptX, calY)
+                                isFirstPoint = false
+                            } else {
+                                rawPath.lineTo(ptX, rawY)
+                                calPath.lineTo(ptX, calY)
+                            }
+
+                            if (pt.isLow) {
+                                if (isFirstLow || isGap) {
+                                    lowPath.moveTo(ptX, calY)
+                                    isFirstLow = false
+                                } else {
+                                    lowPath.lineTo(ptX, calY)
+                                }
+                            } else {
+                                isFirstLow = true
+                            }
+                            lastEpoch = pt.epoch
+                        }
+
                         // Línea Original (Raw / Sin calibrar): Gris Punteada
                         drawPath(
-                            path = graphData.rawPath,
+                            path = rawPath,
                             color = RAW_LINE_COLOR,
                             style = Stroke(
                                 width = 1.5.dp.toPx(),
@@ -390,14 +372,14 @@ fun InteractiveTrendGraph(
 
                         // Línea Calibrada Principal: Cyan/Azul Continua
                         drawPath(
-                            path = graphData.calPath,
+                            path = calPath,
                             color = CALIBRATED_LINE_COLOR,
                             style = Stroke(width = 2.5.dp.toPx())
                         )
 
                         // Sobrescribir segmentos en Rojo Vivo donde la glucosa está baja (< targetLow)
                         drawPath(
-                            path = graphData.lowPath,
+                            path = lowPath,
                             color = LOW_GLUCOSE_COLOR,
                             style = Stroke(width = 3.5.dp.toPx())
                         )
@@ -429,9 +411,9 @@ fun InteractiveTrendGraph(
                         }
 
                         // 4. EJE X Y REJILLA TEMPORAL
-                        val tickValues = listOf(50, 100, 150, 200, 250, 300, 350)
+                        val tickValues = listOf(40, 70, 100, 150, 180, 250, 300, 350)
                         tickValues.forEach { value ->
-                            val relY = (1f - ((value - 50f) / 300f)).coerceIn(0f, 1f)
+                            val relY = (1f - ((value - 40f) / 310f)).coerceIn(0f, 1f)
                             val y = topPadding + (relY * plotHeight)
                             
                             drawLine(
