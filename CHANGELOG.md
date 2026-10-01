@@ -1,5 +1,30 @@
 # Changelog
 
+## c2d7fe4 (Oct 01, 2026 22:54:08)
+fix report — antonio-bravo
+[detail](#c2d7fe4-details)
+
+<details id='c2d7fe4-details'>
+<summary>Changed files</summary>
+
+- .idea/misc.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/PdfReportGenerator.kt [Modified]
+</details>
+
+
+---
+## 6b12813 (Oct 01, 2026 20:29:30)
+Update changelog — github-actions[bot]
+[detail](#6b12813-details)
+
+<details id='6b12813-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## df2dbda (Oct 01, 2026 22:29:13)
 Fix Reports — antonio-bravo
 [detail](#df2dbda-details)
@@ -769,37 +794,6 @@ Update changelog — github-actions[bot]
 [detail](#a199935-details)
 
 <details id='a199935-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 13552cc (Sep 19, 2026 20:41:04)
-add CV Coeficiente de Variabilidad % — antonio-bravo
-[detail](#13552cc-details)
-
-<details id='13552cc-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/report/AgpChartComponent.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/ui/report/ReportScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/PdfReportGenerator.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 553db4c (Sep 19, 2026 17:25:54)
-Update changelog — github-actions[bot]
-[detail](#553db4c-details)
-
-<details id='553db4c-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
