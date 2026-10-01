@@ -197,6 +197,7 @@
     <string name="report_layout_snapshot">Snapshot (1 pg)</string>
     <string name="report_layout_daily">Daily Logs</string>
     <string name="report_layout_full">Full Report</string>
+    <string name="report_layout_agp_complete">Informe AGP Completo</string>
     <string name="report_share">Share Summary</string>
     <string name="report_summary_header">Libre2Clock Report (%1$s)\nRange: %2$s to %3$s\n</string>
     <string name="report_failed_generate">Failed to generate report</string>

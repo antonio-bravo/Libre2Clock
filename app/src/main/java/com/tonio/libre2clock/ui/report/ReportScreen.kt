@@ -342,7 +342,10 @@ private fun LayoutSelector(selected: ReportLayout, onSelect: (ReportLayout) -> U
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             LayoutButton(ReportLayout.SNAPSHOT, stringResource(R.string.report_layout_snapshot), selected == ReportLayout.SNAPSHOT, onSelect, Modifier.weight(1f))
             LayoutButton(ReportLayout.DAILY_LOG, stringResource(R.string.report_layout_daily), selected == ReportLayout.DAILY_LOG, onSelect, Modifier.weight(1f))
+        }
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             LayoutButton(ReportLayout.FULL, stringResource(R.string.report_layout_full), selected == ReportLayout.FULL, onSelect, Modifier.weight(1f))
+            LayoutButton(ReportLayout.AGP_COMPLETE, stringResource(R.string.report_layout_agp_complete), selected == ReportLayout.AGP_COMPLETE, onSelect, Modifier.weight(1f))
         }
     }
 }

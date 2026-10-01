@@ -21,7 +21,7 @@ enum class ReportRange(val days: Int) {
     ONE_DAY(1), SEVEN_DAYS(7), FIFTEEN_DAYS(15), THIRTY_DAYS(30), NINETY_DAYS(90)
 }
 
-enum class ReportLayout { SNAPSHOT, DAILY_LOG, FULL }
+enum class ReportLayout { SNAPSHOT, DAILY_LOG, FULL, AGP_COMPLETE }
 
 @Serializable
 data class TimeInRangesHours(
