@@ -184,25 +184,21 @@ object DashboardMetricsCalculator {
         // =========================================================================
         // CÁLCULO DE HbA1c ESTIMADA (eA1c / GMI)
         // =========================================================================
-        var a1cSumAvgRaw = 0.0
-        var a1cSumAvgCal = 0.0
-        var a1cDaysCount = 0
+        var a1cTotalSumRaw = 0.0
+        var a1cTotalSumCal = 0.0
         var a1cTotalMeasurements = 0
 
         for ((date, stats) in allDailyStats) {
             if (date >= quarterStart) {
-                if (stats.count > 0) {
-                    a1cDaysCount++
-                    a1cSumAvgRaw += (stats.sumRaw / stats.count)
-                    a1cSumAvgCal += (stats.sumCal / stats.count)
-                }
+                a1cTotalSumRaw += stats.sumRaw
+                a1cTotalSumCal += stats.sumCal
                 a1cTotalMeasurements += stats.count
             }
         }
 
-        val estimatedA1c = if (a1cDaysCount > 0 && a1cTotalMeasurements >= 10) {
-            val avgRawForA1c = a1cSumAvgRaw / a1cDaysCount
-            val avgCalForA1c = a1cSumAvgCal / a1cDaysCount
+        val estimatedA1c = if (a1cTotalMeasurements >= 10) {
+            val avgRawForA1c = a1cTotalSumRaw / a1cTotalMeasurements
+            val avgCalForA1c = a1cTotalSumCal / a1cTotalMeasurements
 
             if (avgCalForA1c > 40.0) {
                 val a1cRaw = (avgRawForA1c + 46.7) / 28.7
@@ -300,8 +296,8 @@ object DashboardMetricsCalculator {
             val tbrCalPct = (tbrCalCount.toDouble() / count) * 100.0
 
             return DisplayMetric(
-                primary = String.format(Locale.US, "%.0f%% (%.0f%%)", tirRawPct, tirCalPct),
-                secondary = String.format(Locale.US, "%.0f%% (%.0f%%)", tbrRawPct, tbrCalPct)
+                primary = String.format(Locale.US, "%.0f%% (TBR: %.0f%%)", tirRawPct, tbrRawPct),
+                secondary = String.format(Locale.US, "Cal: %.0f%% (TBR: %.0f%%)", tirCalPct, tbrCalPct)
             )
         }
 
