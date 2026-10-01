@@ -1,5 +1,52 @@
 # Changelog
 
+## 0781b95 (Oct 01, 2026 19:21:32)
+1.
+Tamaño del objeto de informe (FullReportData): Al generar informes (especialmente para periodos de 30 a 90 días o con alta densidad de lecturas de glucosa), la estructura FullReportData almacena todas las lecturas diarias (DailySummary). Al serializar este objeto a JSON, el texto resultante puede medir de 3 MB a 10 MB o más.
+2.
+Límite de CursorWindow en Android SQLite: En la arquitectura de Android, la clase CursorWindow de SQLite tiene un límite estricto de memoria por fila (típicamente 2 MB). Cuando SectionCacheDatabaseHelper.getCachedPayload ejecutaba una consulta db.query() sobre una fila cuyo campo payload_json superaba los 2 MB, el motor de SQLite lanzaba una excepción nativa SQLiteBlobTooBigException al intentar cargar el cursor (cursor.moveToFirst()), haciendo colapsar la aplicación.
+🛠️ Solución Implementada
+Se actualizó  SectionCacheDatabaseHelper.kt con las siguientes mejoras:
+1.
+Compresión GZIP + Base64 Transparente:
+◦
+Al guardar payloads en la caché (upsertPayload), si el JSON supera los 10 KB se comprime automáticamente mediante GZIPOutputStream y se codifica en Base64.
+◦
+Como las estructuras JSON de lecturas de glucosa contienen claves muy repetitivas (factoryTimestamp, calibratedValue, etc.), la compresión GZIP reduce su tamaño entre un 85% y 95% (por ejemplo, un JSON de 4 MB se reduce a ~200-250 KB). Esto permite almacenarlos e interrogarlos dentro de SQLite de manera ultrarrápida y muy por debajo del límite de 2 MB del CursorWindow.
+◦
+Al recuperar la información (getCachedPayload / getLatestCachedPayload), la app detecta automáticamente el prefijo GZIP_BASE64: y descomprime el texto en memoria sin afectar al resto del código.
+2.
+Captura de Excepciones y Purga de Registros Problemáticos:
+◦
+Se añadieron bloques try-catch en las operaciones de lectura de la base de datos SQLite.
+◦
+Si se encuentra un registro antiguo no comprimido o corrupto que cause un error de tamaño en el cursor, el sistema lo elimina en silencio de la tabla section_cache y devuelve null (cache miss). Esto permite que el reporte se recalcule y se vuelva a guardar comprimido sin lanzar jamás un UncaughtException.
+3.
+Límite de Seguridad Máximo:
+◦
+Se estableció un umbral de seguridad (1.8 MB). Si tras la compresión un payload siguiera excediendo este tamaño, se omite su escritura en SQLite, permitiendo que la aplicación funcione con los datos en memoria sin interrumpir el flujo del usuario. — antonio-bravo
+[detail](#0781b95-details)
+
+<details id='0781b95-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/local/SectionCacheDatabaseHelper.kt [Modified]
+</details>
+
+
+---
+## 44f20d7 (Sep 30, 2026 16:05:51)
+Update changelog — github-actions[bot]
+[detail](#44f20d7-details)
+
+<details id='44f20d7-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 119f7ef (Sep 30, 2026 18:05:38)
 added firebase-config to limit Clould Sync users — antonio-bravo
 [detail](#119f7ef-details)
@@ -705,43 +752,6 @@ capillarity get measure based on date and time — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
 - gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## de1aec2 (Sep 17, 2026 14:15:32)
-Update changelog — github-actions[bot]
-[detail](#de1aec2-details)
-
-<details id='de1aec2-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 9a65898 (Sep 17, 2026 16:15:14)
-auto adjust range per senson on capilarity otherwise use avg for measures in that range — antonio-bravo
-[detail](#9a65898-details)
-
-<details id='9a65898-details'>
-<summary>Changed files</summary>
-
-- .idea/misc.xml [Modified]
-- CALIBRATION_SYSTEM.md [Modified]
-- README.md [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseProcessor.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCalibrationScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsComponents.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-- app/src/test/java/com/tonio/libre2clock/ExampleUnitTest.kt [Modified]
 </details>
 
 
