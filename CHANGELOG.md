@@ -1,5 +1,31 @@
 # Changelog
 
+## f3bc027 (Oct 01, 2026 23:15:58)
+fix hbaqc órmula oficial internacional del Consenso ADA / Bergenstal (2018):
+\text{GMI (%)} = (\text{Glucosa Promedio (mg/dL)} + 46.7)/(28.7)
+Por ejemplo, con una glucosa promedio calibrada de 125 mg/dL: \text{GMI} = (125 + 46.7)/(28.7) = (171.7)/(28.7) = \mathbf{5.98% ≈ 6.0%} — antonio-bravo
+[detail](#f3bc027-details)
+
+<details id='f3bc027-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
+</details>
+
+
+---
+## da3f1cf (Oct 01, 2026 20:54:23)
+Update changelog — github-actions[bot]
+[detail](#da3f1cf-details)
+
+<details id='da3f1cf-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## c2d7fe4 (Oct 01, 2026 22:54:08)
 fix report — antonio-bravo
 [detail](#c2d7fe4-details)
@@ -766,34 +792,6 @@ Update changelog — github-actions[bot]
 [detail](#f1a8e05-details)
 
 <details id='f1a8e05-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 46a0ead (Sep 19, 2026 22:05:15)
-adjust text size in App — antonio-bravo
-[detail](#46a0ead-details)
-
-<details id='46a0ead-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## a199935 (Sep 19, 2026 18:41:16)
-Update changelog — github-actions[bot]
-[detail](#a199935-details)
-
-<details id='a199935-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
