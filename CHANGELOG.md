@@ -1,5 +1,31 @@
 # Changelog
 
+## a21fd1c (Oct 02, 2026 19:18:14)
+Create guide for Telegram Bot setup in Libre2Clock
+
+Added a step-by-step guide for creating a Telegram Bot to obtain necessary data for Libre2Clock. — antonio-bravo
+[detail](#a21fd1c-details)
+
+<details id='a21fd1c-details'>
+<summary>Changed files</summary>
+
+- telegram_glucose_SOS.md [Deleted]
+</details>
+
+
+---
+## c0bdc1b (Oct 01, 2026 21:16:12)
+Update changelog — github-actions[bot]
+[detail](#c0bdc1b-details)
+
+<details id='c0bdc1b-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## f3bc027 (Oct 01, 2026 23:15:58)
 fix hbaqc órmula oficial internacional del Consenso ADA / Bergenstal (2018):
 \text{GMI (%)} = (\text{Glucosa Promedio (mg/dL)} + 46.7)/(28.7)
@@ -765,33 +791,6 @@ Update changelog — github-actions[bot]
 [detail](#c35cc7c-details)
 
 <details id='c35cc7c-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 60e2c05 (Sep 19, 2026 23:39:30)
-fix issue add insulin to sync — antonio-bravo
-[detail](#60e2c05-details)
-
-<details id='60e2c05-details'>
-<summary>Changed files</summary>
-
-- .idea/misc.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-</details>
-
-
----
-## f1a8e05 (Sep 19, 2026 20:05:30)
-Update changelog — github-actions[bot]
-[detail](#f1a8e05-details)
-
-<details id='f1a8e05-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
