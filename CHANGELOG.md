@@ -1,5 +1,29 @@
 # Changelog
 
+## e2fd32b (Oct 02, 2026 22:14:55)
+SOS Location — antonio-bravo
+[detail](#e2fd32b-details)
+
+<details id='e2fd32b-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/util/EmergencyLocationManager.kt [Modified]
+</details>
+
+
+---
+## ca7ca5d (Oct 02, 2026 20:04:16)
+Update changelog — github-actions[bot]
+[detail](#ca7ca5d-details)
+
+<details id='ca7ca5d-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 50b8142 (Oct 02, 2026 22:03:53)
 SOS Location — antonio-bravo
 [detail](#50b8142-details)
@@ -757,53 +781,6 @@ Optimizaciones realizadas para que vaya "Como un Flash" en teléfonos … — an
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/util/TimestampParser.kt [Modified]
-</details>
-
-
----
-## 76a9ab0 (Sep 20, 2026 11:45:30)
-Optimizaciones realizadas para que vaya "Como un Flash" en teléfonos con pocos recursos
-Se han aplicado las siguientes optimizaciones de alto rendimiento en el código:
-1.
-Emisión de interfaz instantánea (0 ms de espera):
-◦
- DashboardViewModel.kt ahora inicia el estado de las métricas directamente desde las métricas guardadas en la base de datos SQLite (getLatestCached).
-◦
-Resultado: Al abrir la aplicación, la HbA1c, promedios, hipoglucemias, variabilidad CV% y TIR/TBR aparecen inmediatamente en pantalla al instante sin mostrar símbolos -- ni esperas. Luego, en segundo plano, se recalcula fluidamente solo si han llegado nuevas glucemias.
-2.
-Parseo de fechas 500 veces más rápido:
-◦
-En  TimestampParser.kt, se añadió un fast-path que prioriza el sello de tiempo numérico epochSeconds leído desde SQLite. Esto evita ejecutar analizadores de texto y expresiones regulares para miles de puntos de datos.
-3.
-Bypass de procesamiento cuando no hay offsets:
-◦
-En  DashboardViewModel.kt, si el usuario no tiene calibraciones o rangos de ajuste manual activos, se salta la re-creación en memoria de 50,000 objetos, ahorrando significativamente uso de CPU y memoria RAM en teléfonos de pocos recursos.
-4.
-Ajuste del umbral para HbA1c Estimada:
-◦
-En  DashboardMetricsModels.kt, se redujo el requisito de mediciones de 100 a 10 (a1cTotalMeasurements >= 10), garantizando que la HbA1c estimada se muestre siempre que haya datos suficientes. — antonio-bravo
-[detail](#76a9ab0-details)
-
-<details id='76a9ab0-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/local/SectionCacheDatabaseHelper.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsCacheRepository.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/TimestampParser.kt [Modified]
-</details>
-
-
----
-## 58c817e (Sep 20, 2026 08:56:55)
-Update changelog — github-actions[bot]
-[detail](#58c817e-details)
-
-<details id='58c817e-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
 </details>
 
 
