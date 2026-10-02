@@ -1,5 +1,29 @@
 # Changelog
 
+## dfb4c08 (Oct 02, 2026 22:47:45)
+SOS Location order — antonio-bravo
+[detail](#dfb4c08-details)
+
+<details id='dfb4c08-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/util/EmergencyLocationManager.kt [Modified]
+</details>
+
+
+---
+## 37dbca9 (Oct 02, 2026 20:28:17)
+Update changelog — github-actions[bot]
+[detail](#37dbca9-details)
+
+<details id='37dbca9-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 09f9e52 (Oct 02, 2026 22:28:05)
 SOS Location — antonio-bravo
 [detail](#09f9e52-details)
@@ -750,32 +774,6 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
-</details>
-
-
----
-## b98abf5 (Sep 20, 2026 14:02:26)
-Merge pull request #4 from antonio-bravo/feature/timestamp_parser
-
-fix timestap on GlucoseRepositoryImpl — antonio-bravo
-[detail](#b98abf5-details)
-
-<details id='b98abf5-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-</details>
-
-
----
-## ec67355 (Sep 20, 2026 13:59:21)
-fix timestap on GlucoseRepositoryImpl — antonio-bravo
-[detail](#ec67355-details)
-
-<details id='ec67355-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
 </details>
 
 
