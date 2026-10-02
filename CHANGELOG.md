@@ -1,5 +1,33 @@
 # Changelog
 
+## f17df46 (Oct 02, 2026 23:14:02)
+3 test buttons SOS — antonio-bravo
+[detail](#f17df46-details)
+
+<details id='f17df46-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEmergencyScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/EmergencyLocationManager.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 902ce40 (Oct 02, 2026 20:47:58)
+Update changelog — github-actions[bot]
+[detail](#902ce40-details)
+
+<details id='902ce40-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## dfb4c08 (Oct 02, 2026 22:47:45)
 SOS Location order — antonio-bravo
 [detail](#dfb4c08-details)
@@ -749,31 +777,6 @@ fix — antonio-bravo
 
 - app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEventLogScreen.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/util/EventLogManager.kt [Modified]
-</details>
-
-
----
-## 47cfbd9 (Sep 20, 2026 14:46:30)
-fix — antonio-bravo
-[detail](#47cfbd9-details)
-
-<details id='47cfbd9-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEventLogScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/EventLogManager.kt [Modified]
-</details>
-
-
----
-## c1acfb2 (Sep 20, 2026 12:02:38)
-Update changelog — github-actions[bot]
-[detail](#c1acfb2-details)
-
-<details id='c1acfb2-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
 </details>
 
 
