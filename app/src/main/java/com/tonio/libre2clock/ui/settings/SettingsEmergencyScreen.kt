@@ -66,7 +66,6 @@ fun SettingsEmergencyScreen(
     var editingContact by remember { mutableStateOf<EmergencyContact?>(null) }
     var isTestingAlert by remember { mutableStateOf(false) }
     var showTelegramHelpDialog by remember { mutableStateOf(false) }
-    var showLocationEnableDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -272,12 +271,7 @@ fun SettingsEmergencyScreen(
                             }
                             Switch(
                                 checked = emergencyConfig.includeLocation,
-                                onCheckedChange = { enabled ->
-                                    viewModel.setEmergencyIncludeLocation(enabled)
-                                    if (enabled && !locationManager.isLocationEnabled()) {
-                                        showLocationEnableDialog = true
-                                    }
-                                }
+                                onCheckedChange = { viewModel.setEmergencyIncludeLocation(it) }
                             )
                         }
                     }
@@ -404,21 +398,10 @@ fun SettingsEmergencyScreen(
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(
                     onClick = {
-                        if (emergencyConfig.includeLocation && !locationManager.hasLocationPermission()) {
-                            permissionLauncher.launch(
-                                arrayOf(
-                                    Manifest.permission.ACCESS_FINE_LOCATION,
-                                    Manifest.permission.ACCESS_COARSE_LOCATION
-                                )
-                            )
-                        } else if (emergencyConfig.includeLocation && !locationManager.isLocationEnabled()) {
-                            showLocationEnableDialog = true
-                        } else {
-                            isTestingAlert = true
-                            viewModel.testEmergencyAlert(forceHighAccuracy = true) { resultMsg ->
-                                isTestingAlert = false
-                                scope.launch { snackbarHostState.showSnackbar(resultMsg) }
-                            }
+                        isTestingAlert = true
+                        viewModel.testEmergencyAlert { resultMsg ->
+                            isTestingAlert = false
+                            scope.launch { snackbarHostState.showSnackbar(resultMsg) }
                         }
                     },
                     modifier = Modifier
@@ -471,30 +454,6 @@ fun SettingsEmergencyScreen(
             confirmButton = {
                 Button(onClick = { showTelegramHelpDialog = false }) {
                     Text(stringResource(R.string.emergency_btn_close))
-                }
-            }
-        )
-    }
-
-    if (showLocationEnableDialog) {
-        AlertDialog(
-            onDismissRequest = { showLocationEnableDialog = false },
-            icon = { Icon(Icons.Default.LocationOn, contentDescription = null) },
-            title = { Text(stringResource(R.string.emergency_enable_gps_dialog_title)) },
-            text = { Text(stringResource(R.string.emergency_enable_gps_dialog_desc)) },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showLocationEnableDialog = false
-                        locationManager.promptEnableLocation()
-                    }
-                ) {
-                    Text(stringResource(R.string.emergency_enable_gps_dialog_btn))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showLocationEnableDialog = false }) {
-                    Text(stringResource(R.string.emergency_btn_cancel))
                 }
             }
         )
