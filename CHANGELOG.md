@@ -1,5 +1,43 @@
 # Changelog
 
+## 41111b5 (Oct 02, 2026 19:41:53)
+SOS Alert — antonio-bravo
+[detail](#41111b5-details)
+
+<details id='41111b5-details'>
+<summary>Changed files</summary>
+
+- app/build.gradle.kts [Modified]
+- app/src/main/AndroidManifest.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/model/EmergencyModels.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/navigation/Destinations.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEmergencyScreen.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/EmergencyAlertDispatcher.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/util/EmergencyLocationManager.kt [Deleted]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 3a27b82 (Oct 02, 2026 17:18:25)
+Update changelog — github-actions[bot]
+[detail](#3a27b82-details)
+
+<details id='3a27b82-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## a21fd1c (Oct 02, 2026 19:18:14)
 Create guide for Telegram Bot setup in Libre2Clock
 
@@ -760,37 +798,6 @@ Update changelog — github-actions[bot]
 [detail](#7f1ccbc-details)
 
 <details id='7f1ccbc-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## bf3f4ca (Sep 19, 2026 23:58:19)
-Glucose Prediction and Preventive Hypoglycemia Alerts — antonio-bravo
-[detail](#bf3f4ca-details)
-
-<details id='bf3f4ca-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/repository/InsulinProcessor.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsAlertsScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-- app/src/test/java/com/tonio/libre2clock/ExampleUnitTest.kt [Modified]
-</details>
-
-
----
-## c35cc7c (Sep 19, 2026 21:39:42)
-Update changelog — github-actions[bot]
-[detail](#c35cc7c-details)
-
-<details id='c35cc7c-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
