@@ -47,7 +47,7 @@ class EmergencyLocationManager(private val context: Context) {
     }
 
     /**
-     * Abre la pantalla de configuración de ubicación para que el usuario active la ubicación del sistema.
+     * Abre la pantalla de configuración de ubicación para que el usuario active la ubicación del sistema si lo desea.
      */
     fun promptEnableLocation() {
         val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS).apply {
@@ -58,19 +58,15 @@ class EmergencyLocationManager(private val context: Context) {
 
     @SuppressLint("MissingPermission")
     suspend fun getCurrentLocation(
-        timeoutMillis: Long = 15000L,
+        timeoutMillis: Long = 6000L,
         forceHighAccuracy: Boolean = false
     ): EmergencyLocation? = withContext(Dispatchers.IO) {
-        if (!hasLocationPermission()) return@withContext null
-
-        // 1. INSTANTÁNEO: Comprobar última ubicación conocida
-        val lastKnown = getBestLastKnownLocation()
-        if (lastKnown != null && isLocationFreshAndAccurate(lastKnown, forceHighAccuracy)) {
-            return@withContext lastKnown.toEmergencyLocation("last_known_fresh")
+        if (!hasLocationPermission()) {
+            return@withContext getBestLastKnownLocation()?.toEmergencyLocation("last_known_no_perm")
         }
 
-        try {
-            withTimeoutOrNull(timeoutMillis) {
+        return@withContext try {
+            val freshLocation = withTimeoutOrNull(timeoutMillis) {
                 var location: Location? = null
 
                 // A) Probar con Fused Location (Google Play Services) - Torres Móviles + Wi-Fi + GPS
@@ -92,23 +88,15 @@ class EmergencyLocationManager(private val context: Context) {
                     location = fetchFreshGpsLocation()
                 }
 
-                // D) Último recurso: comprobar la mejor ubicación registrada en cualquier proveedor
-                if (location == null) {
-                    location = getBestLastKnownLocation()
-                }
-
-                location?.toEmergencyLocation(location.provider ?: "network_cell_fallback")
+                location
             }
-        } catch (_: Exception) {
-            getBestLastKnownLocation()?.toEmergencyLocation("network_cell_last_known")
-        }
-    }
 
-    private fun isLocationFreshAndAccurate(location: Location, forceHighAccuracy: Boolean): Boolean {
-        val ageMs = System.currentTimeMillis() - location.time
-        val isRecent = ageMs < 120_000 // Menos de 2 minutos
-        val accuracyThreshold = if (forceHighAccuracy) 30f else 200f
-        return isRecent && location.accuracy <= accuracyThreshold
+            // D) Si la captura en tiempo real fue nula o expiró por tiempo, usar la mejor ubicación previa conocida
+            val finalLoc = freshLocation ?: getBestLastKnownLocation()
+            finalLoc?.toEmergencyLocation(finalLoc.provider ?: "network_cell_fallback")
+        } catch (_: Exception) {
+            getBestLastKnownLocation()?.toEmergencyLocation("last_known_fallback")
+        }
     }
 
     @SuppressLint("MissingPermission")
