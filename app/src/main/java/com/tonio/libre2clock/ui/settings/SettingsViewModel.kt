@@ -459,7 +459,7 @@ class SettingsViewModel(
         }
     }
 
-    fun testEmergencyAlert(onResult: (String) -> Unit) {
+    fun testEmergencyAlert(forceHighAccuracy: Boolean = true, onResult: (String) -> Unit) {
         viewModelScope.launch {
             val config = preferenceManager.emergencyConfig.first()
             val locationManager = EmergencyLocationManager(appContext)
@@ -470,12 +470,15 @@ class SettingsViewModel(
                 return@launch
             }
 
-            if (config.includeLocation && !locationManager.isGpsEnabled()) {
+            if (config.includeLocation && !locationManager.isLocationEnabled()) {
                 onResult(appContext.getString(R.string.emergency_gps_disabled_warning))
             }
 
             val location = if (config.includeLocation) {
-                locationManager.getCurrentLocation(timeoutMillis = 8000L)
+                locationManager.getCurrentLocation(
+                    timeoutMillis = 15000L,
+                    forceHighAccuracy = forceHighAccuracy
+                )
             } else null
 
             val testGlucose = config.thresholdMgDl

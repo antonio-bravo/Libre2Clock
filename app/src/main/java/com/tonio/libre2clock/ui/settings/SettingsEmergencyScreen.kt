@@ -66,6 +66,7 @@ fun SettingsEmergencyScreen(
     var editingContact by remember { mutableStateOf<EmergencyContact?>(null) }
     var isTestingAlert by remember { mutableStateOf(false) }
     var showTelegramHelpDialog by remember { mutableStateOf(false) }
+    var showLocationEnableDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -271,7 +272,12 @@ fun SettingsEmergencyScreen(
                             }
                             Switch(
                                 checked = emergencyConfig.includeLocation,
-                                onCheckedChange = { viewModel.setEmergencyIncludeLocation(it) }
+                                onCheckedChange = { enabled ->
+                                    viewModel.setEmergencyIncludeLocation(enabled)
+                                    if (enabled && !locationManager.isLocationEnabled()) {
+                                        showLocationEnableDialog = true
+                                    }
+                                }
                             )
                         }
                     }
@@ -405,9 +411,11 @@ fun SettingsEmergencyScreen(
                                     Manifest.permission.ACCESS_COARSE_LOCATION
                                 )
                             )
+                        } else if (emergencyConfig.includeLocation && !locationManager.isLocationEnabled()) {
+                            showLocationEnableDialog = true
                         } else {
                             isTestingAlert = true
-                            viewModel.testEmergencyAlert { resultMsg ->
+                            viewModel.testEmergencyAlert(forceHighAccuracy = true) { resultMsg ->
                                 isTestingAlert = false
                                 scope.launch { snackbarHostState.showSnackbar(resultMsg) }
                             }
@@ -463,6 +471,30 @@ fun SettingsEmergencyScreen(
             confirmButton = {
                 Button(onClick = { showTelegramHelpDialog = false }) {
                     Text(stringResource(R.string.emergency_btn_close))
+                }
+            }
+        )
+    }
+
+    if (showLocationEnableDialog) {
+        AlertDialog(
+            onDismissRequest = { showLocationEnableDialog = false },
+            icon = { Icon(Icons.Default.LocationOn, contentDescription = null) },
+            title = { Text(stringResource(R.string.emergency_enable_gps_dialog_title)) },
+            text = { Text(stringResource(R.string.emergency_enable_gps_dialog_desc)) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showLocationEnableDialog = false
+                        locationManager.promptEnableLocation()
+                    }
+                ) {
+                    Text(stringResource(R.string.emergency_enable_gps_dialog_btn))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLocationEnableDialog = false }) {
+                    Text(stringResource(R.string.emergency_btn_cancel))
                 }
             }
         )

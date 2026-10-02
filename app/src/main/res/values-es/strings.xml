@@ -575,4 +575,7 @@
     <string name="emergency_btn_close">Cerrar</string>
     <string name="emergency_gps_disabled_warning">El GPS está desactivado en tu dispositivo. Activa la Ubicación en los Ajustes del sistema para enviar la posición SOS.</string>
     <string name="emergency_permission_denied_warning">Permiso de ubicación denegado. Los mensajes SOS se enviarán sin coordenadas GPS.</string>
+    <string name="emergency_enable_gps_dialog_title">Ubicación Desactivada</string>
+    <string name="emergency_enable_gps_dialog_desc">Para poder enviar tu ubicación en las alertas SOS, necesitas activar la Ubicación en los Ajustes de tu dispositivo.</string>
+    <string name="emergency_enable_gps_dialog_btn">Activar Ubicación</string>
 </resources>

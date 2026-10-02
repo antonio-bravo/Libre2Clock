@@ -580,4 +580,7 @@
     <string name="emergency_btn_close">Close</string>
     <string name="emergency_gps_disabled_warning">GPS is disabled on your device. Please enable GPS in system settings for SOS location.</string>
     <string name="emergency_permission_denied_warning">Location permission was denied. SOS messages will be sent without GPS coordinates.</string>
+    <string name="emergency_enable_gps_dialog_title">Location Disabled</string>
+    <string name="emergency_enable_gps_dialog_desc">To send your GPS location in SOS alerts, please enable Location Services on your device.</string>
+    <string name="emergency_enable_gps_dialog_btn">Enable Location</string>
 </resources>
