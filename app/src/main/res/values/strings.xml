@@ -575,7 +575,9 @@
     <string name="emergency_msg_body_no_location">📍 GPS location not available.</string>
     <string name="emergency_msg_text">⚠️ HYPOGLYCEMIA SOS ALERT: My glucose level dropped to %1$d mg/dL at %2$s on %3$s.\n%4$s</string>
     <string name="emergency_telegram_help_title">How to Setup Telegram Bot</string>
-    <string name="emergency_telegram_help_content">1. Open Telegram and search for @BotFather.\n2. Send /newbot and follow instructions to name your bot.\n3. Copy the HTTP API Token and paste it above.\n\nGetting Chat ID:\n• For an individual: Have your contact start your bot, then ask @userinfobot for their ID.\n• For a Family Group: Add your bot and @myidbot to a Telegram group and type /getgroupid to get the group ID (starts with -100...).</string>
+    <string name="emergency_telegram_help_content">1. Open Telegram and search for @BotFather.\n2. Send /newbot and follow instructions to name your bot.\n3. Copy the HTTP API Token and paste it above.\n\nGetting Chat ID:\n• For an individual: Have your contact start your bot, then add @getidsbot to get ID and ask ask @userinfobot for their ID.\n• For a Family Group: Add your bot and @myidbot to a Telegram group and type /getgroupid to get the group ID (starts with -100...).</string>
     <string name="emergency_telegram_help_button">Telegram Setup Guide</string>
     <string name="emergency_btn_close">Close</string>
+    <string name="emergency_gps_disabled_warning">GPS is disabled on your device. Please enable GPS in system settings for SOS location.</string>
+    <string name="emergency_permission_denied_warning">Location permission was denied. SOS messages will be sent without GPS coordinates.</string>
 </resources>

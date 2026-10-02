@@ -465,8 +465,17 @@ class SettingsViewModel(
             val locationManager = EmergencyLocationManager(appContext)
             val dispatcher = EmergencyAlertDispatcher(appContext)
 
+            if (config.includeLocation && !locationManager.hasLocationPermission()) {
+                onResult(appContext.getString(R.string.emergency_permission_denied_warning))
+                return@launch
+            }
+
+            if (config.includeLocation && !locationManager.isGpsEnabled()) {
+                onResult(appContext.getString(R.string.emergency_gps_disabled_warning))
+            }
+
             val location = if (config.includeLocation) {
-                locationManager.getCurrentLocation(timeoutMillis = 5000L)
+                locationManager.getCurrentLocation(timeoutMillis = 8000L)
             } else null
 
             val testGlucose = config.thresholdMgDl

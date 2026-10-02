@@ -570,7 +570,9 @@
     <string name="emergency_msg_body_no_location">📍 Ubicación GPS no disponible.</string>
     <string name="emergency_msg_text">⚠️ ALERTA SOS HIPOGLUCEMIA: Mi nivel de glucosa ha bajado a %1$d mg/dL a las %2$s del %3$s.\n%4$s</string>
     <string name="emergency_telegram_help_title">Cómo Configurar el Bot de Telegram</string>
-    <string name="emergency_telegram_help_content">1. Abre Telegram y busca @BotFather.\n2. Envía /newbot y sigue los pasos para crear tu bot.\n3. Copia el Token de la API HTTP y pégalo arriba.\n\nObtener el Chat ID:\n• Para una persona: Haz que tu contacto inicie el bot y use @userinfobot para conocer su ID.\n• Para un Grupo Familiar: Añade tu bot y el bot @myidbot al grupo de Telegram y escribe /getgroupid (obtendrás un número que empieza por -100...).</string>
+    <string name="emergency_telegram_help_content">1. Abre Telegram y busca @BotFather.\n2. Envía /newbot y sigue los pasos para crear tu bot.\n3. Copia el Token de la API HTTP y pégalo arriba.\n\nObtener el Chat ID:\n• Para una persona: Haz que tu contacto inicie el bot, entonces añade @getidsbot para obtener el ID del grupo y use @userinfobot para conocer su ID.\n• Para un Grupo Familiar: Añade tu bot y el bot @myidbot al grupo de Telegram y escribe /getgroupid (obtendrás un número que empieza por -100...).</string>
     <string name="emergency_telegram_help_button">Guía de Configuración Telegram</string>
     <string name="emergency_btn_close">Cerrar</string>
+    <string name="emergency_gps_disabled_warning">El GPS está desactivado en tu dispositivo. Activa la Ubicación en los Ajustes del sistema para enviar la posición SOS.</string>
+    <string name="emergency_permission_denied_warning">Permiso de ubicación denegado. Los mensajes SOS se enviarán sin coordenadas GPS.</string>
 </resources>

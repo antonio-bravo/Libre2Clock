@@ -5,17 +5,15 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
-import android.location.LocationListener
 import android.location.LocationManager
-import android.os.Build
-import android.os.Bundle
-import android.os.CancellationSignal
 import androidx.core.content.ContextCompat
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
-import kotlin.coroutines.resume
 
 data class EmergencyLocation(
     val latitude: Double,
@@ -32,17 +30,35 @@ class EmergencyLocationManager(private val context: Context) {
         return finePerm || coarsePerm
     }
 
+    fun isGpsEnabled(): Boolean {
+        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager ?: return false
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+                locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+    }
+
     @SuppressLint("MissingPermission")
-    suspend fun getCurrentLocation(timeoutMillis: Long = 8000L): EmergencyLocation? = withContext(Dispatchers.IO) {
+    suspend fun getCurrentLocation(timeoutMillis: Long = 10000L): EmergencyLocation? = withContext(Dispatchers.IO) {
         if (!hasLocationPermission()) return@withContext null
 
-        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
-            ?: return@withContext null
-
-        try {
+        return@withContext try {
             withTimeoutOrNull(timeoutMillis) {
-                val loc = getFreshLocation(locationManager) ?: getBestLastKnownLocation(locationManager)
-                loc?.let {
+                // 1. Intentar con FusedLocationProviderClient (Google Play Services)
+                val fusedLocation = try {
+                    val fusedClient = LocationServices.getFusedLocationProviderClient(context)
+                    val cancellationSource = CancellationTokenSource()
+                    
+                    fusedClient.getCurrentLocation(
+                        Priority.PRIORITY_HIGH_ACCURACY,
+                        cancellationSource.token
+                    ).await() ?: fusedClient.lastLocation.await()
+                } catch (_: Exception) {
+                    null
+                }
+
+                // 2. Fallback a LocationManager tradicional si FusedLocation devuele null
+                val finalLocation = fusedLocation ?: getBestLocationFromSystemManager()
+
+                finalLocation?.let {
                     EmergencyLocation(
                         latitude = it.latitude,
                         longitude = it.longitude,
@@ -51,85 +67,22 @@ class EmergencyLocationManager(private val context: Context) {
                 }
             }
         } catch (_: Exception) {
-            null
-        }
-    }
-
-    @SuppressLint("MissingPermission")
-    private suspend fun getFreshLocation(locationManager: LocationManager): Location? {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            return suspendCancellableCoroutine { continuation ->
-                val signal = CancellationSignal()
-                continuation.invokeOnCancellation { signal.cancel() }
-                
-                val provider = when {
-                    locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) -> LocationManager.GPS_PROVIDER
-                    locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) -> LocationManager.NETWORK_PROVIDER
-                    else -> null
-                }
-
-                if (provider == null) {
-                    continuation.resume(null)
-                    return@suspendCancellableCoroutine
-                }
-
-                try {
-                    locationManager.getCurrentLocation(
-                        provider,
-                        signal,
-                        context.mainExecutor
-                    ) { location ->
-                        if (continuation.isActive) {
-                            continuation.resume(location)
-                        }
-                    }
-                } catch (_: Exception) {
-                    if (continuation.isActive) continuation.resume(null)
-                }
-            }
-        } else {
-            return suspendCancellableCoroutine { continuation ->
-                val listener = object : LocationListener {
-                    override fun onLocationChanged(location: Location) {
-                        try { locationManager.removeUpdates(this) } catch (_: Exception) {}
-                        if (continuation.isActive) continuation.resume(location)
-                    }
-                    @Deprecated("Deprecated in Java")
-                    override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
-                    override fun onProviderEnabled(provider: String) {}
-                    override fun onProviderDisabled(provider: String) {
-                        try { locationManager.removeUpdates(this) } catch (_: Exception) {}
-                        if (continuation.isActive) continuation.resume(null)
-                    }
-                }
-
-                continuation.invokeOnCancellation {
-                    try { locationManager.removeUpdates(listener) } catch (_: Exception) {}
-                }
-
-                val provider = when {
-                    locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) -> LocationManager.GPS_PROVIDER
-                    locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) -> LocationManager.NETWORK_PROVIDER
-                    else -> null
-                }
-
-                if (provider != null) {
-                    try {
-                        locationManager.requestSingleUpdate(provider, listener, context.mainLooper)
-                    } catch (_: Exception) {
-                        if (continuation.isActive) continuation.resume(null)
-                    }
-                } else {
-                    continuation.resume(null)
-                }
+            getBestLocationFromSystemManager()?.let {
+                EmergencyLocation(
+                    latitude = it.latitude,
+                    longitude = it.longitude,
+                    accuracy = it.accuracy
+                )
             }
         }
     }
 
     @SuppressLint("MissingPermission")
-    private fun getBestLastKnownLocation(locationManager: LocationManager): Location? {
+    private fun getBestLocationFromSystemManager(): Location? {
+        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager ?: return null
         val providers = locationManager.getProviders(true)
         var bestLocation: Location? = null
+
         for (provider in providers) {
             val l = try { locationManager.getLastKnownLocation(provider) } catch (_: Exception) { null } ?: continue
             if (bestLocation == null || l.accuracy < bestLocation.accuracy) {

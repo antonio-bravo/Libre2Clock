@@ -1,5 +1,8 @@
 package com.tonio.libre2clock.ui.settings
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -20,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tonio.libre2clock.R
 import com.tonio.libre2clock.data.model.EmergencyContact
+import com.tonio.libre2clock.util.EmergencyLocationManager
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,9 +33,34 @@ fun SettingsEmergencyScreen(
     viewModel: SettingsViewModel,
     onBack: () -> Unit
 ) {
+    val context = LocalContext.current
     val emergencyConfig by viewModel.emergencyConfig.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val locationManager = remember(context) { EmergencyLocationManager(context) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val fineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+        val coarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+        if (!fineGranted && !coarseGranted) {
+            scope.launch {
+                snackbarHostState.showSnackbar(context.getString(R.string.emergency_permission_denied_warning))
+            }
+        }
+    }
+
+    LaunchedEffect(emergencyConfig.includeLocation) {
+        if (emergencyConfig.includeLocation && !locationManager.hasLocationPermission()) {
+            permissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
 
     var showContactDialog by remember { mutableStateOf(false) }
     var editingContact by remember { mutableStateOf<EmergencyContact?>(null) }
@@ -368,10 +398,19 @@ fun SettingsEmergencyScreen(
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(
                     onClick = {
-                        isTestingAlert = true
-                        viewModel.testEmergencyAlert { resultMsg ->
-                            isTestingAlert = false
-                            scope.launch { snackbarHostState.showSnackbar(resultMsg) }
+                        if (emergencyConfig.includeLocation && !locationManager.hasLocationPermission()) {
+                            permissionLauncher.launch(
+                                arrayOf(
+                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                                )
+                            )
+                        } else {
+                            isTestingAlert = true
+                            viewModel.testEmergencyAlert { resultMsg ->
+                                isTestingAlert = false
+                                scope.launch { snackbarHostState.showSnackbar(resultMsg) }
+                            }
                         }
                     },
                     modifier = Modifier
