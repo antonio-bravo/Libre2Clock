@@ -1,5 +1,33 @@
 # Changelog
 
+## cba25b1 (Oct 02, 2026 21:33:49)
+SOS Alert GPS — antonio-bravo
+[detail](#cba25b1-details)
+
+<details id='cba25b1-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEmergencyScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/EmergencyLocationManager.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 3d8b130 (Oct 02, 2026 17:42:10)
+Update changelog — github-actions[bot]
+[detail](#3d8b130-details)
+
+<details id='3d8b130-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 41111b5 (Oct 02, 2026 19:41:53)
 SOS Alert — antonio-bravo
 [detail](#41111b5-details)
@@ -771,33 +799,6 @@ Update changelog — github-actions[bot]
 [detail](#af6eaf5-details)
 
 <details id='af6eaf5-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 25303a3 (Sep 20, 2026 00:27:47)
-fix problem add insulin — antonio-bravo
-[detail](#25303a3-details)
-
-<details id='25303a3-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/MainActivity.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 7f1ccbc (Sep 19, 2026 21:58:32)
-Update changelog — github-actions[bot]
-[detail](#7f1ccbc-details)
-
-<details id='7f1ccbc-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
