@@ -1,5 +1,30 @@
 # Changelog
 
+## 09f9e52 (Oct 02, 2026 22:28:05)
+SOS Location — antonio-bravo
+[detail](#09f9e52-details)
+
+<details id='09f9e52-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEmergencyScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+</details>
+
+
+---
+## 3a00a2e (Oct 02, 2026 20:15:08)
+Update changelog — github-actions[bot]
+[detail](#3a00a2e-details)
+
+<details id='3a00a2e-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## e2fd32b (Oct 02, 2026 22:14:55)
 SOS Location — antonio-bravo
 [detail](#e2fd32b-details)
@@ -751,36 +776,6 @@ fix timestap on GlucoseRepositoryImpl — antonio-bravo
 <summary>Changed files</summary>
 
 - app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-</details>
-
-
----
-## b001994 (Sep 20, 2026 09:52:22)
-Update changelog — github-actions[bot]
-[detail](#b001994-details)
-
-<details id='b001994-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 90fcc7e (Sep 20, 2026 11:52:12)
-Merge pull request #3 from antonio-bravo/feature/optmization_20260920
-
-Optimizaciones realizadas para que vaya "Como un Flash" en teléfonos … — antonio-bravo
-[detail](#90fcc7e-details)
-
-<details id='90fcc7e-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/local/SectionCacheDatabaseHelper.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsCacheRepository.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/TimestampParser.kt [Modified]
 </details>
 
 
