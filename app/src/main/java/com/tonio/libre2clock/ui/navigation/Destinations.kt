@@ -18,6 +18,9 @@ sealed interface Destination : NavKey {
     data object SettingsAlerts : Destination
 
     @Serializable
+    data object SettingsEmergency : Destination
+
+    @Serializable
     data object SettingsCalibration : Destination
 
     @Serializable

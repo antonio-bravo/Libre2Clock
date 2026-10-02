@@ -25,11 +25,14 @@ import com.tonio.libre2clock.data.model.InsulinDose
 import com.tonio.libre2clock.data.model.SensorLog
 import com.tonio.libre2clock.data.model.WatchNotificationMode
 import com.tonio.libre2clock.util.TimestampParser
+import com.tonio.libre2clock.data.model.EmergencyConfig
+import com.tonio.libre2clock.data.model.EmergencyContact
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -108,6 +111,17 @@ class PreferenceManager(private val context: Context) {
     private val SENSOR_LOGS_KEY = stringPreferencesKey("sensor_logs")
     private val WATCH_NOTIFICATION_SCHEDULES_KEY = stringPreferencesKey("watch_notification_schedules")
     private val GLUCOSE_ALARM_SCHEDULES_KEY = stringPreferencesKey("glucose_alarm_schedules")
+    private val EMERGENCY_ALERTS_ENABLED_KEY = booleanPreferencesKey("emergency_alerts_enabled")
+    private val EMERGENCY_GLUCOSE_THRESHOLD_KEY = intPreferencesKey("emergency_glucose_threshold")
+    private val EMERGENCY_COOLDOWN_MINUTES_KEY = intPreferencesKey("emergency_cooldown_minutes")
+    private val EMERGENCY_INCLUDE_LOCATION_KEY = booleanPreferencesKey("emergency_include_location")
+    private val EMERGENCY_USE_CALIBRATED_KEY = booleanPreferencesKey("emergency_use_calibrated")
+    private val EMERGENCY_USE_SCHEDULE_KEY = booleanPreferencesKey("emergency_use_schedule")
+    private val EMERGENCY_START_TIME_KEY = stringPreferencesKey("emergency_start_time")
+    private val EMERGENCY_END_TIME_KEY = stringPreferencesKey("emergency_end_time")
+    private val EMERGENCY_TELEGRAM_BOT_TOKEN_KEY = stringPreferencesKey("emergency_telegram_bot_token")
+    private val EMERGENCY_CONTACTS_KEY = stringPreferencesKey("emergency_contacts")
+    private val LAST_EMERGENCY_ALERT_AT_KEY = longPreferencesKey("last_emergency_alert_at")
     private val BATTERY_LOW_THRESHOLD_KEY = intPreferencesKey("battery_low_threshold")
     private val BATTERY_CRITICAL_THRESHOLD_KEY = intPreferencesKey("battery_critical_threshold")
     private val DISABLE_FAST_REFRESH_ON_SLOW_CHARGE_KEY = booleanPreferencesKey("disable_fast_refresh_on_slow_charge")
@@ -260,6 +274,53 @@ class PreferenceManager(private val context: Context) {
         return try { json.decodeFromString(jsonStr) } catch (e: Exception) { emptyList() }
     }
 
+    val emergencyAlertsEnabled: Flow<Boolean> = context.dataStore.data.map { it[EMERGENCY_ALERTS_ENABLED_KEY] ?: false }.distinctUntilChanged()
+    val emergencyGlucoseThreshold: Flow<Int> = context.dataStore.data.map { (it[EMERGENCY_GLUCOSE_THRESHOLD_KEY] ?: 60).coerceIn(30, 100) }.distinctUntilChanged()
+    val emergencyCooldownMinutes: Flow<Int> = context.dataStore.data.map { (it[EMERGENCY_COOLDOWN_MINUTES_KEY] ?: 15).coerceIn(5, 120) }.distinctUntilChanged()
+    val emergencyIncludeLocation: Flow<Boolean> = context.dataStore.data.map { it[EMERGENCY_INCLUDE_LOCATION_KEY] ?: true }.distinctUntilChanged()
+    val emergencyUseCalibratedValue: Flow<Boolean> = context.dataStore.data.map { it[EMERGENCY_USE_CALIBRATED_KEY] ?: true }.distinctUntilChanged()
+    val emergencyUseSchedule: Flow<Boolean> = context.dataStore.data.map { it[EMERGENCY_USE_SCHEDULE_KEY] ?: false }.distinctUntilChanged()
+    val emergencyStartTime: Flow<String> = context.dataStore.data.map { it[EMERGENCY_START_TIME_KEY] ?: "00:00" }.distinctUntilChanged()
+    val emergencyEndTime: Flow<String> = context.dataStore.data.map { it[EMERGENCY_END_TIME_KEY] ?: "23:59" }.distinctUntilChanged()
+    val emergencyTelegramBotToken: Flow<String> = context.dataStore.data.map { it[EMERGENCY_TELEGRAM_BOT_TOKEN_KEY] ?: "" }.distinctUntilChanged()
+    val lastEmergencyAlertAt: Flow<Long> = context.dataStore.data.map { it[LAST_EMERGENCY_ALERT_AT_KEY] ?: 0L }.distinctUntilChanged()
+
+    val emergencyContacts: Flow<List<EmergencyContact>> = context.dataStore.data.map { prefs ->
+        val raw = prefs[EMERGENCY_CONTACTS_KEY] ?: "[]"
+        try {
+            json.decodeFromString<List<EmergencyContact>>(raw)
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }.distinctUntilChanged()
+
+    @Suppress("UNCHECKED_CAST")
+    val emergencyConfig: Flow<EmergencyConfig> = combine(
+        emergencyAlertsEnabled,
+        emergencyGlucoseThreshold,
+        emergencyCooldownMinutes,
+        emergencyIncludeLocation,
+        emergencyUseCalibratedValue,
+        emergencyUseSchedule,
+        emergencyStartTime,
+        emergencyEndTime,
+        emergencyTelegramBotToken,
+        emergencyContacts
+    ) { flows ->
+        EmergencyConfig(
+            enabled = flows[0] as Boolean,
+            thresholdMgDl = flows[1] as Int,
+            cooldownMinutes = flows[2] as Int,
+            includeLocation = flows[3] as Boolean,
+            useCalibratedValue = flows[4] as Boolean,
+            useSchedule = flows[5] as Boolean,
+            startTime = flows[6] as String,
+            endTime = flows[7] as String,
+            telegramBotToken = flows[8] as String,
+            contacts = flows[9] as List<EmergencyContact>
+        )
+    }.distinctUntilChanged()
+
     // --- Guardado (Save) ---
     suspend fun saveAuth(token: String, userId: String) {
         context.dataStore.edit { preferences ->
@@ -274,6 +335,60 @@ class PreferenceManager(private val context: Context) {
 
     suspend fun savePatientId(patientId: String) {
         context.dataStore.edit { it[PATIENT_ID_KEY] = patientId }
+    }
+
+    suspend fun saveEmergencyAlertsEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[EMERGENCY_ALERTS_ENABLED_KEY] = enabled }
+        updateBackupPayload()
+    }
+
+    suspend fun saveEmergencyGlucoseThreshold(threshold: Int) {
+        context.dataStore.edit { it[EMERGENCY_GLUCOSE_THRESHOLD_KEY] = threshold.coerceIn(30, 100) }
+        updateBackupPayload()
+    }
+
+    suspend fun saveEmergencyCooldownMinutes(minutes: Int) {
+        context.dataStore.edit { it[EMERGENCY_COOLDOWN_MINUTES_KEY] = minutes.coerceIn(5, 120) }
+        updateBackupPayload()
+    }
+
+    suspend fun saveEmergencyIncludeLocation(include: Boolean) {
+        context.dataStore.edit { it[EMERGENCY_INCLUDE_LOCATION_KEY] = include }
+        updateBackupPayload()
+    }
+
+    suspend fun saveEmergencyUseCalibratedValue(useCalibrated: Boolean) {
+        context.dataStore.edit { it[EMERGENCY_USE_CALIBRATED_KEY] = useCalibrated }
+        updateBackupPayload()
+    }
+
+    suspend fun saveEmergencyUseSchedule(useSchedule: Boolean) {
+        context.dataStore.edit { it[EMERGENCY_USE_SCHEDULE_KEY] = useSchedule }
+        updateBackupPayload()
+    }
+
+    suspend fun saveEmergencyStartTime(startTime: String) {
+        context.dataStore.edit { it[EMERGENCY_START_TIME_KEY] = startTime }
+        updateBackupPayload()
+    }
+
+    suspend fun saveEmergencyEndTime(endTime: String) {
+        context.dataStore.edit { it[EMERGENCY_END_TIME_KEY] = endTime }
+        updateBackupPayload()
+    }
+
+    suspend fun saveEmergencyTelegramBotToken(token: String) {
+        context.dataStore.edit { it[EMERGENCY_TELEGRAM_BOT_TOKEN_KEY] = token.trim() }
+        updateBackupPayload()
+    }
+
+    suspend fun saveLastEmergencyAlertAt(timestamp: Long) {
+        context.dataStore.edit { it[LAST_EMERGENCY_ALERT_AT_KEY] = timestamp }
+    }
+
+    suspend fun saveEmergencyContacts(contacts: List<EmergencyContact>) {
+        context.dataStore.edit { it[EMERGENCY_CONTACTS_KEY] = json.encodeToString(contacts) }
+        updateBackupPayload()
     }
 
     suspend fun saveGlucoseOffset(offset: Int) {
@@ -902,7 +1017,17 @@ class PreferenceManager(private val context: Context) {
             batteryLowThreshold = prefs[BATTERY_LOW_THRESHOLD_KEY] ?: 15,
             batteryCriticalThreshold = prefs[BATTERY_CRITICAL_THRESHOLD_KEY] ?: 5,
             disableFastRefreshOnSlowCharge = prefs[DISABLE_FAST_REFRESH_ON_SLOW_CHARGE_KEY] ?: true,
-            sensorDurationDays = prefs[SENSOR_DURATION_DAYS_KEY] ?: 15
+            sensorDurationDays = prefs[SENSOR_DURATION_DAYS_KEY] ?: 15,
+            emergencyAlertsEnabled = prefs[EMERGENCY_ALERTS_ENABLED_KEY] ?: false,
+            emergencyGlucoseThreshold = (prefs[EMERGENCY_GLUCOSE_THRESHOLD_KEY] ?: 60).coerceIn(30, 100),
+            emergencyCooldownMinutes = (prefs[EMERGENCY_COOLDOWN_MINUTES_KEY] ?: 15).coerceIn(5, 120),
+            emergencyIncludeLocation = prefs[EMERGENCY_INCLUDE_LOCATION_KEY] ?: true,
+            emergencyUseCalibratedValue = prefs[EMERGENCY_USE_CALIBRATED_KEY] ?: true,
+            emergencyUseSchedule = prefs[EMERGENCY_USE_SCHEDULE_KEY] ?: false,
+            emergencyStartTime = prefs[EMERGENCY_START_TIME_KEY] ?: "00:00",
+            emergencyEndTime = prefs[EMERGENCY_END_TIME_KEY] ?: "23:59",
+            emergencyTelegramBotToken = prefs[EMERGENCY_TELEGRAM_BOT_TOKEN_KEY] ?: "",
+            emergencyContacts = decodeList(prefs, EMERGENCY_CONTACTS_KEY)
         )
     }
 
@@ -939,6 +1064,18 @@ class PreferenceManager(private val context: Context) {
         payload.batteryCriticalThreshold?.let { preferences[BATTERY_CRITICAL_THRESHOLD_KEY] = it }
         payload.disableFastRefreshOnSlowCharge?.let { preferences[DISABLE_FAST_REFRESH_ON_SLOW_CHARGE_KEY] = it }
         payload.sensorDurationDays?.let { preferences[SENSOR_DURATION_DAYS_KEY] = it }
+        payload.emergencyAlertsEnabled?.let { preferences[EMERGENCY_ALERTS_ENABLED_KEY] = it }
+        payload.emergencyGlucoseThreshold?.let { preferences[EMERGENCY_GLUCOSE_THRESHOLD_KEY] = it }
+        payload.emergencyCooldownMinutes?.let { preferences[EMERGENCY_COOLDOWN_MINUTES_KEY] = it }
+        payload.emergencyIncludeLocation?.let { preferences[EMERGENCY_INCLUDE_LOCATION_KEY] = it }
+        payload.emergencyUseCalibratedValue?.let { preferences[EMERGENCY_USE_CALIBRATED_KEY] = it }
+        payload.emergencyUseSchedule?.let { preferences[EMERGENCY_USE_SCHEDULE_KEY] = it }
+        payload.emergencyStartTime?.let { preferences[EMERGENCY_START_TIME_KEY] = it }
+        payload.emergencyEndTime?.let { preferences[EMERGENCY_END_TIME_KEY] = it }
+        payload.emergencyTelegramBotToken?.let { preferences[EMERGENCY_TELEGRAM_BOT_TOKEN_KEY] = it }
+        if (payload.emergencyContacts.isNotEmpty()) {
+            preferences[EMERGENCY_CONTACTS_KEY] = json.encodeToString(payload.emergencyContacts)
+        }
         payload.settingsUpdatedAtMs?.let { preferences[SETTINGS_UPDATED_AT_KEY] = it }
     }
 

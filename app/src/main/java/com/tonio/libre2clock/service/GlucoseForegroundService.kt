@@ -47,6 +47,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import com.tonio.libre2clock.util.EmergencyAlertDispatcher
+import com.tonio.libre2clock.util.EmergencyLocationManager
 import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneId
@@ -59,6 +61,8 @@ class GlucoseForegroundService : Service() {
     private lateinit var repositoryImpl: GlucoseRepositoryImpl
     private lateinit var preferenceManager: PreferenceManager
     private lateinit var eventLogger: EventLogManager
+    private lateinit var locationManager: EmergencyLocationManager
+    private lateinit var emergencyDispatcher: EmergencyAlertDispatcher
     
     private var syncJob: Job? = null
     private var lastWatchAlertEpochMinute: Long = -1L
@@ -136,6 +140,8 @@ class GlucoseForegroundService : Service() {
         preferenceManager = AppContainer.providePreferenceManager(applicationContext)
         repositoryImpl = AppContainer.provideGlucoseRepository(applicationContext)
         eventLogger = AppContainer.provideEventLogManager(applicationContext)
+        locationManager = EmergencyLocationManager(applicationContext)
+        emergencyDispatcher = EmergencyAlertDispatcher(applicationContext)
         repository = repositoryImpl
         
         // ✅ CORRECCIÓN: Se eliminó repositoryImpl.initialize() de aquí porque no es un contexto suspend
@@ -359,6 +365,7 @@ class GlucoseForegroundService : Service() {
                 maybeSendWatchAlert(processed, config)
                 maybeSendGlucoseAlarms(processed, config)
                 maybeSendPredictiveHypoAlert(processed, config)
+                maybeSendEmergencySosAlert(processed)
             } else {
                 fetchResult.exceptionOrNull()?.let { error ->
                     eventLogger.log(LogLevel.WARNING, "ServiceSync", "Fetch failed: ${error.message}")
@@ -568,6 +575,61 @@ class GlucoseForegroundService : Service() {
             }
 
             notificationManager.notify(TEST_NOTIFICATION_ID, notification)
+        }
+    }
+
+    private fun maybeSendEmergencySosAlert(measurement: GlucoseMeasurement) {
+        serviceScope.launch {
+            try {
+                val emergencyConfig = preferenceManager.emergencyConfig.first()
+                if (!emergencyConfig.enabled || emergencyConfig.contacts.isEmpty()) return@launch
+
+                // Comprobar horario si está activado
+                if (emergencyConfig.useSchedule) {
+                    val nowTime = LocalTime.now()
+                    val startTime = try { LocalTime.parse(emergencyConfig.startTime) } catch (_: Exception) { LocalTime.MIN }
+                    val endTime = try { LocalTime.parse(emergencyConfig.endTime) } catch (_: Exception) { LocalTime.MAX }
+                    val isWithinSchedule = if (startTime <= endTime) {
+                        nowTime >= startTime && nowTime <= endTime
+                    } else {
+                        nowTime >= startTime || nowTime <= endTime
+                    }
+                    if (!isWithinSchedule) return@launch
+                }
+
+                val glucoseValue = if (emergencyConfig.useCalibratedValue) measurement.calibratedValue else measurement.value
+                if (glucoseValue <= emergencyConfig.thresholdMgDl) {
+                    val now = System.currentTimeMillis()
+                    val lastAlertAt = preferenceManager.lastEmergencyAlertAt.first()
+                    val cooldownMs = emergencyConfig.cooldownMinutes * 60 * 1000L
+
+                    if (now - lastAlertAt >= cooldownMs) {
+                        preferenceManager.saveLastEmergencyAlertAt(now)
+
+                        val location = if (emergencyConfig.includeLocation) {
+                            locationManager.getCurrentLocation()
+                        } else null
+
+                        val dispatchedCount = emergencyDispatcher.dispatchSosAlert(
+                            glucoseMgDl = glucoseValue,
+                            location = location,
+                            config = emergencyConfig
+                        )
+
+                        eventLogger.log(
+                            LogLevel.WARNING,
+                            "EmergencySOS",
+                            "Alerta SOS despachada para glucosa $glucoseValue mg/dL (${if (emergencyConfig.useCalibratedValue) "Calibrada" else "Raw"}) a $dispatchedCount envíos de contactos."
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                eventLogger.log(
+                    LogLevel.ERROR,
+                    "EmergencySOS",
+                    "Error al enviar Alerta SOS: ${e.message}"
+                )
+            }
         }
     }
 

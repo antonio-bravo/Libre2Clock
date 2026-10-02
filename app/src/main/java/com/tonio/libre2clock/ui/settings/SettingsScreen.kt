@@ -21,6 +21,7 @@ fun SettingsScreen(
     viewModel: SettingsViewModel,
     onBack: () -> Unit,
     onNavigateToAlerts: () -> Unit,
+    onNavigateToEmergency: () -> Unit,
     onNavigateToCalibration: () -> Unit,
     onNavigateToBattery: () -> Unit,
     onNavigateToDevice: () -> Unit,
@@ -76,6 +77,15 @@ fun SettingsScreen(
                     description = stringResource(R.string.settings_watch_notifications_desc),
                     icon = Icons.Default.Notifications,
                     onClick = onNavigateToAlerts
+                )
+            }
+
+            item(key = "emergency") {
+                SettingsCategoryItem(
+                    title = stringResource(R.string.settings_emergency_title),
+                    description = stringResource(R.string.settings_emergency_desc),
+                    icon = Icons.Default.Share,
+                    onClick = onNavigateToEmergency
                 )
             }
 

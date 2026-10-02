@@ -10,6 +10,8 @@ import com.tonio.libre2clock.data.api.LibreService
 import com.tonio.libre2clock.data.model.AlarmSchedule
 import com.tonio.libre2clock.data.model.AutoRangeOffsetMode
 import com.tonio.libre2clock.data.model.CapillaryMeasurement
+import com.tonio.libre2clock.data.model.EmergencyConfig
+import com.tonio.libre2clock.data.model.EmergencyContact
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.GlucoseOffsetRange
 import com.tonio.libre2clock.data.model.InsulinDose
@@ -23,6 +25,8 @@ import com.tonio.libre2clock.data.sync.CloudSyncManager
 import com.tonio.libre2clock.data.sync.RemoteConfigManager
 import com.tonio.libre2clock.di.AppContainer
 import com.tonio.libre2clock.R
+import com.tonio.libre2clock.util.EmergencyAlertDispatcher
+import com.tonio.libre2clock.util.EmergencyLocationManager
 import com.tonio.libre2clock.util.LogEvent
 import com.tonio.libre2clock.util.SectionPerfTelemetry
 import kotlinx.coroutines.flow.Flow
@@ -149,6 +153,7 @@ class SettingsViewModel(
     val watchNotificationSchedules = preferenceManager.watchNotificationSchedules.stateInDefault(emptyList())
     val glucoseAlarmSchedules = preferenceManager.glucoseAlarmSchedules.stateInDefault(emptyList())
     val batteryLowThreshold = preferenceManager.batteryLowThreshold.stateInDefault(15)
+    val emergencyConfig: StateFlow<EmergencyConfig> = preferenceManager.emergencyConfig.stateInDefault(EmergencyConfig())
     val batteryCriticalThreshold = preferenceManager.batteryCriticalThreshold.stateInDefault(5)
     val disableFastRefreshOnSlowCharge = preferenceManager.disableFastRefreshOnSlowCharge.stateInDefault(true)
     val sensorDurationDays = preferenceManager.sensorDurationDays.stateInDefault(15)
@@ -395,6 +400,85 @@ class SettingsViewModel(
         viewModelScope.launch {
             preferenceManager.saveHistoryRetentionDays(days)
             refreshSectionPerfStats()
+        }
+    }
+
+    fun setEmergencyAlertsEnabled(enabled: Boolean) {
+        viewModelScope.launch { preferenceManager.saveEmergencyAlertsEnabled(enabled) }
+    }
+
+    fun setEmergencyGlucoseThreshold(threshold: Int) {
+        viewModelScope.launch { preferenceManager.saveEmergencyGlucoseThreshold(threshold) }
+    }
+
+    fun setEmergencyCooldownMinutes(minutes: Int) {
+        viewModelScope.launch { preferenceManager.saveEmergencyCooldownMinutes(minutes) }
+    }
+
+    fun setEmergencyIncludeLocation(include: Boolean) {
+        viewModelScope.launch { preferenceManager.saveEmergencyIncludeLocation(include) }
+    }
+
+    fun setEmergencyUseCalibratedValue(useCalibrated: Boolean) {
+        viewModelScope.launch { preferenceManager.saveEmergencyUseCalibratedValue(useCalibrated) }
+    }
+
+    fun setEmergencyUseSchedule(useSchedule: Boolean) {
+        viewModelScope.launch { preferenceManager.saveEmergencyUseSchedule(useSchedule) }
+    }
+
+    fun setEmergencyStartTime(startTime: String) {
+        viewModelScope.launch { preferenceManager.saveEmergencyStartTime(startTime) }
+    }
+
+    fun setEmergencyEndTime(endTime: String) {
+        viewModelScope.launch { preferenceManager.saveEmergencyEndTime(endTime) }
+    }
+
+    fun setEmergencyTelegramBotToken(token: String) {
+        viewModelScope.launch { preferenceManager.saveEmergencyTelegramBotToken(token) }
+    }
+
+    fun saveEmergencyContact(contact: EmergencyContact) {
+        viewModelScope.launch {
+            val current = preferenceManager.emergencyConfig.first().contacts.toMutableList()
+            val index = current.indexOfFirst { it.id == contact.id }
+            if (index >= 0) {
+                current[index] = contact
+            } else {
+                current.add(contact)
+            }
+            preferenceManager.saveEmergencyContacts(current)
+        }
+    }
+
+    fun deleteEmergencyContact(contactId: String) {
+        viewModelScope.launch {
+            val current = preferenceManager.emergencyConfig.first().contacts.filter { it.id != contactId }
+            preferenceManager.saveEmergencyContacts(current)
+        }
+    }
+
+    fun testEmergencyAlert(onResult: (String) -> Unit) {
+        viewModelScope.launch {
+            val config = preferenceManager.emergencyConfig.first()
+            val locationManager = EmergencyLocationManager(appContext)
+            val dispatcher = EmergencyAlertDispatcher(appContext)
+
+            val location = if (config.includeLocation) {
+                locationManager.getCurrentLocation(timeoutMillis = 5000L)
+            } else null
+
+            val testGlucose = config.thresholdMgDl
+            val dispatchedCount = dispatcher.dispatchSosAlert(testGlucose, location, config)
+
+            if (dispatchedCount > 0) {
+                onResult(appContext.getString(R.string.emergency_test_sent, dispatchedCount))
+            } else if (config.contacts.isEmpty()) {
+                onResult(appContext.getString(R.string.emergency_test_no_contacts))
+            } else {
+                onResult(appContext.getString(R.string.emergency_test_local_notification))
+            }
         }
     }
 

@@ -136,5 +136,16 @@ data class HistoryBackupPayload(
     val batteryLowThreshold: Int? = null,
     val batteryCriticalThreshold: Int? = null,
     val disableFastRefreshOnSlowCharge: Boolean? = null,
-    val sensorDurationDays: Int? = null
+    val sensorDurationDays: Int? = null,
+    // Emergency SOS Config
+    val emergencyAlertsEnabled: Boolean? = null,
+    val emergencyGlucoseThreshold: Int? = null,
+    val emergencyCooldownMinutes: Int? = null,
+    val emergencyIncludeLocation: Boolean? = null,
+    val emergencyUseCalibratedValue: Boolean? = null,
+    val emergencyUseSchedule: Boolean? = null,
+    val emergencyStartTime: String? = null,
+    val emergencyEndTime: String? = null,
+    val emergencyTelegramBotToken: String? = null,
+    val emergencyContacts: List<EmergencyContact> = emptyList()
 )
