@@ -47,6 +47,12 @@ import java.time.LocalTime
 import java.time.ZoneId
 import kotlin.math.abs
 
+enum class EmergencyLocationTestMode {
+    FULL_PIPELINE,
+    CELLULAR_ONLY,
+    WIFI_ONLY
+}
+
 class SettingsViewModel(
     application: Application,
     private val preferenceManager: PreferenceManager,
@@ -459,26 +465,52 @@ class SettingsViewModel(
         }
     }
 
-    fun testEmergencyAlert(onResult: (String) -> Unit) {
+    fun testEmergencyAlert(
+        testMode: EmergencyLocationTestMode = EmergencyLocationTestMode.FULL_PIPELINE,
+        onResult: (String) -> Unit
+    ) {
         viewModelScope.launch {
             val config = preferenceManager.emergencyConfig.first()
             val locationManager = EmergencyLocationManager(appContext)
             val dispatcher = EmergencyAlertDispatcher(appContext)
 
             val location = if (config.includeLocation) {
-                locationManager.getCurrentLocation(timeoutMillis = 15000L)
+                when (testMode) {
+                    EmergencyLocationTestMode.FULL_PIPELINE -> locationManager.getCurrentLocation(timeoutMillis = 11000L)
+                    EmergencyLocationTestMode.CELLULAR_ONLY -> locationManager.getFreshCellularLocation(timeoutMillis = 5000L)
+                    EmergencyLocationTestMode.WIFI_ONLY -> locationManager.getFreshWifiLocation(timeoutMillis = 5000L)
+                }
             } else null
 
             val testGlucose = config.thresholdMgDl
             val dispatchedCount = dispatcher.dispatchSosAlert(testGlucose, location, config)
 
-            if (dispatchedCount > 0) {
-                onResult(appContext.getString(R.string.emergency_test_sent, dispatchedCount))
+            val locationInfo = if (location != null) {
+                appContext.getString(
+                    R.string.emergency_test_location_success,
+                    location.provider,
+                    location.accuracy.toInt()
+                )
+            } else if (config.includeLocation) {
+                appContext.getString(
+                    R.string.emergency_test_location_failed,
+                    when (testMode) {
+                        EmergencyLocationTestMode.CELLULAR_ONLY -> "Red Móvil"
+                        EmergencyLocationTestMode.WIFI_ONLY -> "Wi-Fi"
+                        else -> "GPS/Red"
+                    }
+                )
+            } else ""
+
+            val baseResult = if (dispatchedCount > 0) {
+                appContext.getString(R.string.emergency_test_sent, dispatchedCount)
             } else if (config.contacts.isEmpty()) {
-                onResult(appContext.getString(R.string.emergency_test_no_contacts))
+                appContext.getString(R.string.emergency_test_no_contacts)
             } else {
-                onResult(appContext.getString(R.string.emergency_test_local_notification))
+                appContext.getString(R.string.emergency_test_local_notification)
             }
+
+            onResult(if (locationInfo.isNotBlank()) "$baseResult\n$locationInfo" else baseResult)
         }
     }
 

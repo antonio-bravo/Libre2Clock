@@ -578,4 +578,9 @@
     <string name="emergency_enable_gps_dialog_title">Ubicación Desactivada</string>
     <string name="emergency_enable_gps_dialog_desc">Para poder enviar tu ubicación en las alertas SOS, necesitas activar la Ubicación en los Ajustes de tu dispositivo.</string>
     <string name="emergency_enable_gps_dialog_btn">Activar Ubicación</string>
+    <string name="emergency_test_full_button">Probar Alerta SOS Completa</string>
+    <string name="emergency_test_cell_button">Probar Red Móvil (Antenas)</string>
+    <string name="emergency_test_wifi_button">Probar Ubicación Wi-Fi</string>
+    <string name="emergency_test_location_success">Ubicación capturada por %1$s (~%2$d m de precisión).</string>
+    <string name="emergency_test_location_failed">No se pudo obtener ubicación por %1$s.</string>
 </resources>

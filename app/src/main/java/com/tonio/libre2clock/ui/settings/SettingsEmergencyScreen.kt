@@ -396,32 +396,74 @@ fun SettingsEmergencyScreen(
 
             item(key = "test_button") {
                 Spacer(modifier = Modifier.height(8.dp))
-                Button(
-                    onClick = {
-                        isTestingAlert = true
-                        viewModel.testEmergencyAlert { resultMsg ->
-                            isTestingAlert = false
-                            scope.launch { snackbarHostState.showSnackbar(resultMsg) }
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp),
-                    enabled = !isTestingAlert,
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    if (isTestingAlert) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = MaterialTheme.colorScheme.onError,
-                            strokeWidth = 2.dp
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(R.string.emergency_testing_button))
-                    } else {
-                        Icon(Icons.Default.Warning, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(R.string.emergency_test_button))
+                    Button(
+                        onClick = {
+                            isTestingAlert = true
+                            viewModel.testEmergencyAlert(EmergencyLocationTestMode.FULL_PIPELINE) { resultMsg ->
+                                isTestingAlert = false
+                                scope.launch { snackbarHostState.showSnackbar(resultMsg) }
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        enabled = !isTestingAlert,
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        if (isTestingAlert) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = MaterialTheme.colorScheme.onError,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(stringResource(R.string.emergency_testing_button))
+                        } else {
+                            Icon(Icons.Default.Warning, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(stringResource(R.string.emergency_test_full_button))
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                isTestingAlert = true
+                                viewModel.testEmergencyAlert(EmergencyLocationTestMode.CELLULAR_ONLY) { resultMsg ->
+                                    isTestingAlert = false
+                                    scope.launch { snackbarHostState.showSnackbar(resultMsg) }
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                            enabled = !isTestingAlert
+                        ) {
+                            Icon(Icons.Default.Phone, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(stringResource(R.string.emergency_test_cell_button), style = MaterialTheme.typography.labelSmall)
+                        }
+
+                        OutlinedButton(
+                            onClick = {
+                                isTestingAlert = true
+                                viewModel.testEmergencyAlert(EmergencyLocationTestMode.WIFI_ONLY) { resultMsg ->
+                                    isTestingAlert = false
+                                    scope.launch { snackbarHostState.showSnackbar(resultMsg) }
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                            enabled = !isTestingAlert
+                        ) {
+                            Icon(Icons.Default.LocationOn, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(stringResource(R.string.emergency_test_wifi_button), style = MaterialTheme.typography.labelSmall)
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.height(24.dp))

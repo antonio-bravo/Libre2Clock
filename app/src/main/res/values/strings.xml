@@ -583,4 +583,9 @@
     <string name="emergency_enable_gps_dialog_title">Location Disabled</string>
     <string name="emergency_enable_gps_dialog_desc">To send your GPS location in SOS alerts, please enable Location Services on your device.</string>
     <string name="emergency_enable_gps_dialog_btn">Enable Location</string>
+    <string name="emergency_test_full_button">Test Full SOS Alert</string>
+    <string name="emergency_test_cell_button">Test Cell Tower Location</string>
+    <string name="emergency_test_wifi_button">Test Wi-Fi Location</string>
+    <string name="emergency_test_location_success">Location captured via %1$s (~%2$d m accuracy).</string>
+    <string name="emergency_test_location_failed">Failed to capture location via %1$s.</string>
 </resources>

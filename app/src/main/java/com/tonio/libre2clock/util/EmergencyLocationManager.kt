@@ -60,6 +60,24 @@ class EmergencyLocationManager(private val context: Context) {
     }
 
     @SuppressLint("MissingPermission")
+    suspend fun getFreshCellularLocation(timeoutMillis: Long = 5000L): EmergencyLocation? = withContext(Dispatchers.IO) {
+        if (!hasLocationPermission()) return@withContext null
+        val loc = withTimeoutOrNull(timeoutMillis) {
+            fetchFreshNetworkLocation()
+        } ?: getBestFreshLastKnownLocation()
+        return@withContext loc?.toEmergencyLocation("Red Móvil (Antenas)")
+    }
+
+    @SuppressLint("MissingPermission")
+    suspend fun getFreshWifiLocation(timeoutMillis: Long = 5000L): EmergencyLocation? = withContext(Dispatchers.IO) {
+        if (!hasLocationPermission()) return@withContext null
+        val loc = withTimeoutOrNull(timeoutMillis) {
+            fetchFusedLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY)
+        } ?: getBestFreshLastKnownLocation()
+        return@withContext loc?.toEmergencyLocation("Wi-Fi / Red Balanceada")
+    }
+
+    @SuppressLint("MissingPermission")
     suspend fun getCurrentLocation(
         timeoutMillis: Long = 11000L
     ): EmergencyLocation? = withContext(Dispatchers.IO) {
