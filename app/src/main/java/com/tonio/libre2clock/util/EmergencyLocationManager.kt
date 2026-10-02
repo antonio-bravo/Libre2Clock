@@ -11,6 +11,7 @@ import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
 import android.os.CancellationSignal
+import android.os.SystemClock
 import android.provider.Settings
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.LocationServices
@@ -46,9 +47,11 @@ class EmergencyLocationManager(private val context: Context) {
                 locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
     }
 
-    /**
-     * Abre la pantalla de configuración de ubicación para que el usuario active la ubicación del sistema si lo desea.
-     */
+    fun isGpsSatelliteEnabled(): Boolean {
+        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager ?: return false
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+    }
+
     fun promptEnableLocation() {
         val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
@@ -58,44 +61,46 @@ class EmergencyLocationManager(private val context: Context) {
 
     @SuppressLint("MissingPermission")
     suspend fun getCurrentLocation(
-        timeoutMillis: Long = 6000L,
-        forceHighAccuracy: Boolean = false
+        timeoutMillis: Long = 11000L
     ): EmergencyLocation? = withContext(Dispatchers.IO) {
         if (!hasLocationPermission()) {
-            return@withContext getBestLastKnownLocation()?.toEmergencyLocation("last_known_no_perm")
+            return@withContext null
         }
 
         return@withContext try {
-            val freshLocation = withTimeoutOrNull(timeoutMillis) {
+            withTimeoutOrNull(timeoutMillis) {
                 var location: Location? = null
 
-                // A) Probar con Fused Location (Google Play Services) - Torres Móviles + Wi-Fi + GPS
-                location = if (forceHighAccuracy) {
-                    fetchFusedLocation(Priority.PRIORITY_HIGH_ACCURACY) 
-                        ?: fetchFusedLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY)
-                } else {
-                    fetchFusedLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY) 
-                        ?: fetchFusedLocation(Priority.PRIORITY_HIGH_ACCURACY)
+                // =========================================================================
+                // PRIORIDAD 1: Satélites GPS (Alta Precisión) si el GPS está activo (hasta 5s)
+                // =========================================================================
+                if (isGpsSatelliteEnabled()) {
+                    location = withTimeoutOrNull(5000L) {
+                        fetchFusedLocation(Priority.PRIORITY_HIGH_ACCURACY) ?: fetchFreshGpsLocation()
+                    }
                 }
 
-                // B) Si Fused Location devuelve nulo, SOLICITAR ACTIVAMENTE A LA RED DE TORRES MÓVILES (NETWORK_PROVIDER)
+                // =========================================================================
+                // PRIORIDAD 2: Antenas Móviles / Wi-Fi si el GPS no está activo o falló (hasta 5s)
+                // =========================================================================
                 if (location == null) {
-                    location = fetchFreshNetworkLocation()
+                    location = withTimeoutOrNull(5000L) {
+                        fetchFusedLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY) ?: fetchFreshNetworkLocation()
+                    }
                 }
 
-                // C) Si sigue siendo nulo, SOLICITAR ACTIVAMENTE AL GPS DE SATÉLITES (GPS_PROVIDER)
+                // =========================================================================
+                // PRIORIDAD 3: Respaldo de última ubicación conocida reciente (< 15 min)
+                // =========================================================================
                 if (location == null) {
-                    location = fetchFreshGpsLocation()
+                    location = getBestFreshLastKnownLocation()
                 }
 
-                location
+                // Si se obtuvo ubicación en cualquiera de las prioridades, retornarla
+                location?.toEmergencyLocation(location.provider ?: "network_cell_fallback")
             }
-
-            // D) Si la captura en tiempo real fue nula o expiró por tiempo, usar la mejor ubicación previa conocida
-            val finalLoc = freshLocation ?: getBestLastKnownLocation()
-            finalLoc?.toEmergencyLocation(finalLoc.provider ?: "network_cell_fallback")
         } catch (_: Exception) {
-            getBestLastKnownLocation()?.toEmergencyLocation("last_known_fallback")
+            null
         }
     }
 
@@ -212,11 +217,16 @@ class EmergencyLocationManager(private val context: Context) {
     }
 
     @SuppressLint("MissingPermission")
-    private suspend fun getBestLastKnownLocation(): Location? {
+    private suspend fun getBestFreshLastKnownLocation(): Location? {
         var bestLocation: Location? = null
+        val maxAgeMs = 15 * 60 * 1000L // Máximo 15 minutos de antigüedad
+
         try {
             val fusedClient = LocationServices.getFusedLocationProviderClient(context)
-            bestLocation = withTimeoutOrNull(2000) { fusedClient.lastLocation.await() }
+            val fusedLast = withTimeoutOrNull(2000) { fusedClient.lastLocation.await() }
+            if (fusedLast != null && isRecentLocation(fusedLast, maxAgeMs)) {
+                bestLocation = fusedLast
+            }
         } catch (_: Exception) { }
 
         val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
@@ -224,12 +234,23 @@ class EmergencyLocationManager(private val context: Context) {
             val providers = locationManager.getProviders(true)
             for (provider in providers) {
                 val l = try { locationManager.getLastKnownLocation(provider) } catch (_: Exception) { null } ?: continue
+                if (!isRecentLocation(l, maxAgeMs)) continue
                 if (bestLocation == null || l.accuracy < bestLocation.accuracy) {
                     bestLocation = l
                 }
             }
         }
         return bestLocation
+    }
+
+    private fun isRecentLocation(location: Location, maxAgeMs: Long): Boolean {
+        val ageMs = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ECLAIR_MR1) {
+            val locationAgeNanos = SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos
+            locationAgeNanos / 1_000_000L
+        } else {
+            System.currentTimeMillis() - location.time
+        }
+        return ageMs in 0..maxAgeMs
     }
 
     private fun Location.toEmergencyLocation(providerName: String): EmergencyLocation {
