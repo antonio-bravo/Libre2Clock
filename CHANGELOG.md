@@ -1,5 +1,34 @@
 # Changelog
 
+## 50b8142 (Oct 02, 2026 22:03:53)
+SOS Location — antonio-bravo
+[detail](#50b8142-details)
+
+<details id='50b8142-details'>
+<summary>Changed files</summary>
+
+- .idea/misc.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEmergencyScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/EmergencyLocationManager.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 7d071fd (Oct 02, 2026 19:34:02)
+Update changelog — github-actions[bot]
+[detail](#7d071fd-details)
+
+<details id='7d071fd-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## cba25b1 (Oct 02, 2026 21:33:49)
 SOS Alert GPS — antonio-bravo
 [detail](#cba25b1-details)
@@ -772,33 +801,6 @@ Update changelog — github-actions[bot]
 [detail](#58c817e-details)
 
 <details id='58c817e-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## e8585bd (Sep 20, 2026 10:56:34)
-added TIR  > 70% & TBR < 5% — antonio-bravo
-[detail](#e8585bd-details)
-
-<details id='e8585bd-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## af6eaf5 (Sep 19, 2026 22:27:58)
-Update changelog — github-actions[bot]
-[detail](#af6eaf5-details)
-
-<details id='af6eaf5-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
