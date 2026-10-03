@@ -1,5 +1,31 @@
 # Changelog
 
+## 81c5655 (Oct 03, 2026 21:31:28)
+SOS — antonio-bravo
+[detail](#81c5655-details)
+
+<details id='81c5655-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/EmergencyAlertDispatcher.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/EmergencyLocationManager.kt [Modified]
+</details>
+
+
+---
+## 63fe922 (Oct 03, 2026 18:40:26)
+Update changelog — github-actions[bot]
+[detail](#63fe922-details)
+
+<details id='63fe922-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## a5db49e (Oct 03, 2026 20:40:13)
 SOS Event Log — antonio-bravo
 [detail](#a5db49e-details)
@@ -745,33 +771,6 @@ Add custom alarm when reach to value > or < — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsAlertsScreen.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## a5b9205 (Sep 20, 2026 13:38:54)
-Update changelog — github-actions[bot]
-[detail](#a5b9205-details)
-
-<details id='a5b9205-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## ca79b14 (Sep 20, 2026 15:38:41)
-fix insulin — antonio-bravo
-[detail](#ca79b14-details)
-
-<details id='ca79b14-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
 - app/src/main/res/values-es/strings.xml [Modified]
 - app/src/main/res/values/strings.xml [Modified]
 </details>
