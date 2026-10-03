@@ -19,6 +19,7 @@ import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -60,20 +61,27 @@ class EmergencyLocationManager(private val context: Context) {
     }
 
     @SuppressLint("MissingPermission")
-    suspend fun getFreshCellularLocation(timeoutMillis: Long = 5000L): EmergencyLocation? = withContext(Dispatchers.IO) {
-        if (!hasLocationPermission()) return@withContext null
+    suspend fun getFreshCellularLocation(timeoutMillis: Long = 10000L): EmergencyLocation? = withContext(Dispatchers.IO) {
+        if (!hasLocationPermission()) return@withContext getBestNetworkLastKnownLocation()?.toEmergencyLocation("last_known_network")
+        
         val loc = withTimeoutOrNull(timeoutMillis) {
-            fetchFreshNetworkLocation()
-        } ?: getBestFreshLastKnownLocation()
+            val fusedDeferred = async { fetchFusedLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY) }
+            val netDeferred = async { fetchFreshNetworkLocation() }
+            
+            fusedDeferred.await() ?: netDeferred.await()
+        } ?: getBestNetworkLastKnownLocation()
+
         return@withContext loc?.toEmergencyLocation("Red Móvil (Antenas)")
     }
 
     @SuppressLint("MissingPermission")
-    suspend fun getFreshWifiLocation(timeoutMillis: Long = 5000L): EmergencyLocation? = withContext(Dispatchers.IO) {
-        if (!hasLocationPermission()) return@withContext null
+    suspend fun getFreshWifiLocation(timeoutMillis: Long = 6000L): EmergencyLocation? = withContext(Dispatchers.IO) {
+        if (!hasLocationPermission()) return@withContext getBestNetworkLastKnownLocation()?.toEmergencyLocation("last_known_wifi")
+        
         val loc = withTimeoutOrNull(timeoutMillis) {
             fetchFusedLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY)
-        } ?: getBestFreshLastKnownLocation()
+        } ?: getBestNetworkLastKnownLocation()
+
         return@withContext loc?.toEmergencyLocation("Wi-Fi / Red Balanceada")
     }
 
@@ -82,7 +90,7 @@ class EmergencyLocationManager(private val context: Context) {
         timeoutMillis: Long = 11000L
     ): EmergencyLocation? = withContext(Dispatchers.IO) {
         if (!hasLocationPermission()) {
-            return@withContext null
+            return@withContext getBestFreshLastKnownLocation()?.toEmergencyLocation("last_known_no_perm")
         }
 
         return@withContext try {
@@ -108,17 +116,16 @@ class EmergencyLocationManager(private val context: Context) {
                 }
 
                 // =========================================================================
-                // PRIORIDAD 3: Respaldo de última ubicación conocida reciente (< 15 min)
+                // PRIORIDAD 3: Respaldo de última ubicación conocida en memoria
                 // =========================================================================
                 if (location == null) {
-                    location = getBestFreshLastKnownLocation()
+                    location = getBestFreshLastKnownLocation() ?: getBestNetworkLastKnownLocation()
                 }
 
-                // Si se obtuvo ubicación en cualquiera de las prioridades, retornarla
                 location?.toEmergencyLocation(location.provider ?: "network_cell_fallback")
             }
         } catch (_: Exception) {
-            null
+            getBestNetworkLastKnownLocation()?.toEmergencyLocation("network_cell_fallback")
         }
     }
 
@@ -259,6 +266,19 @@ class EmergencyLocationManager(private val context: Context) {
             }
         }
         return bestLocation
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun getBestNetworkLastKnownLocation(): Location? {
+        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager ?: return null
+        val networkLoc = try { locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER) } catch (_: Exception) { null }
+        val passiveLoc = try { locationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER) } catch (_: Exception) { null }
+        
+        return when {
+            networkLoc != null && passiveLoc != null -> if (networkLoc.time >= passiveLoc.time) networkLoc else passiveLoc
+            networkLoc != null -> networkLoc
+            else -> passiveLoc
+        }
     }
 
     private fun isRecentLocation(location: Location, maxAgeMs: Long): Boolean {
