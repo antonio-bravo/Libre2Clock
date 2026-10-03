@@ -1,5 +1,30 @@
 # Changelog
 
+## a5db49e (Oct 03, 2026 20:40:13)
+SOS Event Log — antonio-bravo
+[detail](#a5db49e-details)
+
+<details id='a5db49e-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/util/EmergencyAlertDispatcher.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/EmergencyLocationManager.kt [Modified]
+</details>
+
+
+---
+## 218a2af (Oct 03, 2026 18:19:10)
+Update changelog — github-actions[bot]
+[detail](#218a2af-details)
+
+<details id='218a2af-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 72ad2bb (Oct 03, 2026 20:18:55)
 SOS mobile network — antonio-bravo
 [detail](#72ad2bb-details)
@@ -747,31 +772,6 @@ fix insulin — antonio-bravo
 
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 27ed7f0 (Sep 20, 2026 13:01:33)
-Update changelog — github-actions[bot]
-[detail](#27ed7f0-details)
-
-<details id='27ed7f0-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## c50867a (Sep 20, 2026 15:01:22)
-fix text in FS: — antonio-bravo
-[detail](#c50867a-details)
-
-<details id='c50867a-details'>
-<summary>Changed files</summary>
-
 - app/src/main/res/values-es/strings.xml [Modified]
 - app/src/main/res/values/strings.xml [Modified]
 </details>
