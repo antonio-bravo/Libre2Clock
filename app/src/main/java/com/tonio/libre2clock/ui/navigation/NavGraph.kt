@@ -52,6 +52,19 @@ fun NavGraph(
         if (isLoggedIn) Destination.Dashboard else Destination.Login
     )
 
+    fun popBackStack() {
+        if (backStack.size > 1) {
+            backStack.removeAt(backStack.size - 1)
+        }
+    }
+
+    fun resetToDestination(destination: Destination) {
+        backStack.add(destination)
+        while (backStack.size > 1) {
+            backStack.removeAt(0)
+        }
+    }
+
     // Shared ViewModels con Factory explícita, segura y libre de warnings
     val settingsViewModel: SettingsViewModel = viewModel(
         factory = object : ViewModelProvider.Factory {
@@ -111,26 +124,20 @@ fun NavGraph(
         preferenceManager.authToken.collect { token ->
             if (token == null && backStack.lastOrNull() != Destination.Login) {
                 context.stopService(Intent(context, GlucoseForegroundService::class.java))
-                backStack.clear()
-                backStack.add(Destination.Login)
+                resetToDestination(Destination.Login)
             }
         }
     }
 
     NavDisplay(
         backStack = backStack,
-        onBack = {
-            if (backStack.size > 1) {
-                backStack.removeAt(backStack.size - 1)
-            }
-        },
+        onBack = { popBackStack() },
         entryProvider = entryProvider {
             entry<Destination.Login> {
                 LoginScreen(
                     viewModel = loginViewModel,
                     onLoginSuccess = {
-                        backStack.clear()
-                        backStack.add(Destination.Dashboard)
+                        resetToDestination(Destination.Dashboard)
                     }
                 )
             }
@@ -150,7 +157,7 @@ fun NavGraph(
             entry<Destination.Settings> {
                 SettingsScreen(
                     viewModel = settingsViewModel,
-                    onBack = { backStack.removeAt(backStack.size - 1) },
+                    onBack = { popBackStack() },
                     onNavigateToAlerts = { backStack.add(Destination.SettingsAlerts) },
                     onNavigateToEmergency = { backStack.add(Destination.SettingsEmergency) },
                     onNavigateToCalibration = { backStack.add(Destination.SettingsCalibration) },
@@ -164,19 +171,19 @@ fun NavGraph(
             entry<Destination.SettingsEmergency> {
                 SettingsEmergencyScreen(
                     viewModel = settingsViewModel,
-                    onBack = { backStack.removeAt(backStack.size - 1) }
+                    onBack = { popBackStack() }
                 )
             }
             entry<Destination.SettingsBattery> {
                 SettingsBatteryScreen(
                     viewModel = settingsViewModel,
-                    onBack = { backStack.removeAt(backStack.size - 1) }
+                    onBack = { popBackStack() }
                 )
             }
             entry<Destination.SettingsAlerts> {
                 SettingsAlertsScreen(
                     viewModel = settingsViewModel,
-                    onBack = { backStack.removeAt(backStack.size - 1) },
+                    onBack = { popBackStack() },
                     onTestNotification = {
                         val intent = Intent(context, GlucoseForegroundService::class.java).apply {
                             action = "TEST_NOTIFICATION"
@@ -188,75 +195,75 @@ fun NavGraph(
             entry<Destination.SettingsCalibration> {
                 SettingsCalibrationScreen(
                     viewModel = settingsViewModel,
-                    onBack = { backStack.removeAt(backStack.size - 1) }
+                    onBack = { popBackStack() }
                 )
             }
             entry<Destination.SettingsDevice> {
                 SettingsDeviceScreen(
                     viewModel = settingsViewModel,
-                    onBack = { backStack.removeAt(backStack.size - 1) }
+                    onBack = { popBackStack() }
                 )
             }
             entry<Destination.SettingsData> {
                 SettingsDataScreen(
                     viewModel = settingsViewModel,
-                    onBack = { backStack.removeAt(backStack.size - 1) },
+                    onBack = { popBackStack() },
                     onNavigateToCloud = { backStack.add(Destination.SettingsCloud) }
                 )
             }
             entry<Destination.SettingsCloud> {
                 SettingsCloudScreen(
                     viewModel = settingsViewModel,
-                    onBack = { backStack.removeAt(backStack.size - 1) }
+                    onBack = { popBackStack() }
                 )
             }
             entry<Destination.SettingsAdvanced> {
                 SettingsAdvancedScreen(
                     viewModel = settingsViewModel,
-                    onBack = { backStack.removeAt(backStack.size - 1) },
+                    onBack = { popBackStack() },
                     onNavigateToEventLog = { backStack.add(Destination.SettingsEventLog) }
                 )
             }
             entry<Destination.SettingsEventLog> {
                 SettingsEventLogScreen(
                     viewModel = settingsViewModel,
-                    onBack = { backStack.removeAt(backStack.size - 1) }
+                    onBack = { popBackStack() }
                 )
             }
             entry<Destination.Strategy> {
                 StrategyScreen(
-                    onBack = { backStack.removeAt(backStack.size - 1) }
+                    onBack = { popBackStack() }
                 )
             }
             entry<Destination.Capillary> {
                 CapillaryScreen(
                     viewModel = settingsViewModel,
-                    onBack = { backStack.removeAt(backStack.size - 1) }
+                    onBack = { popBackStack() }
                 )
             }
             entry<Destination.SensorLogs> {
                 SensorLogsScreen(
                     viewModel = settingsViewModel,
-                    onBack = { backStack.removeAt(backStack.size - 1) }
+                    onBack = { popBackStack() }
                 )
             }
             entry<Destination.InsulinHub> {
                 InsulinHubScreen(
                     viewModel = settingsViewModel,
-                    onBack = { backStack.removeAt(backStack.size - 1) },
+                    onBack = { popBackStack() },
                     onNavigateToLogs = { backStack.add(Destination.InsulinLogs) }
                 )
             }
             entry<Destination.InsulinLogs> {
                 InsulinLogsScreen(
                     viewModel = settingsViewModel,
-                    onBack = { backStack.removeAt(backStack.size - 1) }
+                    onBack = { popBackStack() }
                 )
             }
             entry<Destination.Reports> {
                 ReportScreen(
                     viewModel = reportViewModel,
-                    onBack = { backStack.removeAt(backStack.size - 1) }
+                    onBack = { popBackStack() }
                 )
             }
         }

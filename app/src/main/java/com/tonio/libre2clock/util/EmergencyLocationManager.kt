@@ -55,6 +55,14 @@ class EmergencyLocationManager(private val context: Context) {
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
     }
 
+    @SuppressLint("MissingPermission")
+    fun getCellOperatorDetails(): String {
+        val telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as? android.telephony.TelephonyManager ?: return "No disponible"
+        val opName = telephonyManager.networkOperatorName
+        val simState = telephonyManager.simState
+        return "Operador: '$opName', SIM State: $simState"
+    }
+
     fun promptEnableLocation() {
         val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
@@ -66,17 +74,18 @@ class EmergencyLocationManager(private val context: Context) {
     suspend fun getFreshCellularLocation(timeoutMillis: Long = 10000L): EmergencyLocation? = withContext(Dispatchers.IO) {
         val hasFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
         val hasCoarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        val gpsEnabled = isGpsSatelliteEnabled()
         val networkEnabled = isLocationEnabled()
 
-        eventLogger.log(
-            LogLevel.INFO,
-            "LocationDiagnostics",
-            "Iniciando captura de Red Móvil (Antenas). Permisos: FINE=$hasFine, COARSE=$hasCoarse. Estado: GPS=$gpsEnabled, NetworkProvider=$networkEnabled"
-        )
+        if (!networkEnabled) {
+            eventLogger.log(
+                LogLevel.WARNING,
+                "LocationDiagnostics",
+                "⚠️ Servicio de Ubicación del sistema APAGADO (NetworkProvider=false). La triangulación por antenas/Wi-Fi está deshabilitada en Ajustes de Android."
+            )
+        }
 
         if (!hasFine && !hasCoarse) {
-            eventLogger.log(LogLevel.WARNING, "LocationDiagnostics", "Fallo Red Móvil: Sin permiso FINE ni COARSE")
+            eventLogger.log(LogLevel.WARNING, "LocationDiagnostics", "Permisos de ubicación denegados")
             val lastKnown = getBestNetworkLastKnownLocation()
             return@withContext lastKnown?.toEmergencyLocation("last_known_no_perm")
         }
@@ -90,19 +99,10 @@ class EmergencyLocationManager(private val context: Context) {
             }
             
             fusedDeferred.await() ?: netDeferred.await()
-        } ?: getBestNetworkLastKnownLocation().also {
-            if (it != null) eventLogger.log(LogLevel.INFO, "LocationDiagnostics", "Red Móvil: Usando última ubicación conocida (accuracy=${it.accuracy}m, provider=${it.provider})")
-            else eventLogger.log(LogLevel.WARNING, "LocationDiagnostics", "Red Móvil: La captura en tiempo real agotó tiempo ($timeoutMillis ms) y no hay ubicación previa en caché.")
-        }
+        } ?: getBestNetworkLastKnownLocation()
 
         val result = loc?.toEmergencyLocation("Red Móvil (Antenas)")
-        if (result != null) {
-            eventLogger.log(
-                LogLevel.INFO,
-                "LocationDiagnostics",
-                "✅ Éxito Red Móvil: Lat=${result.latitude}, Lng=${result.longitude}, Precisión=${result.accuracy}m, Provider=${result.provider}"
-            )
-        } else {
+        if (result == null) {
             eventLogger.log(
                 LogLevel.ERROR,
                 "LocationDiagnostics",
@@ -115,9 +115,8 @@ class EmergencyLocationManager(private val context: Context) {
 
     @SuppressLint("MissingPermission")
     suspend fun getFreshWifiLocation(timeoutMillis: Long = 10000L): EmergencyLocation? = withContext(Dispatchers.IO) {
-        eventLogger.log(LogLevel.INFO, "LocationDiagnostics", "Iniciando captura de Wi-Fi/Red Balanceada.")
         if (!hasLocationPermission()) {
-            eventLogger.log(LogLevel.WARNING, "LocationDiagnostics", "Fallo Wi-Fi: Permisos denegados")
+            eventLogger.log(LogLevel.WARNING, "LocationDiagnostics", "Fallo Wi-Fi: Permisos de ubicación denegados")
             return@withContext getBestNetworkLastKnownLocation()?.toEmergencyLocation("last_known_wifi")
         }
         
@@ -126,13 +125,7 @@ class EmergencyLocationManager(private val context: Context) {
         } ?: getBestNetworkLastKnownLocation()
 
         val result = loc?.toEmergencyLocation("Wi-Fi / Red Balanceada")
-        if (result != null) {
-            eventLogger.log(
-                LogLevel.INFO,
-                "LocationDiagnostics",
-                "✅ Éxito Wi-Fi: Lat=${result.latitude}, Lng=${result.longitude}, Precisión=${result.accuracy}m"
-            )
-        } else {
+        if (result == null) {
             eventLogger.log(LogLevel.ERROR, "LocationDiagnostics", "❌ Fallo Wi-Fi: Imposible obtener coordenadas por Wi-Fi.")
         }
 
@@ -143,9 +136,8 @@ class EmergencyLocationManager(private val context: Context) {
     suspend fun getCurrentLocation(
         timeoutMillis: Long = 11000L
     ): EmergencyLocation? = withContext(Dispatchers.IO) {
-        eventLogger.log(LogLevel.INFO, "LocationDiagnostics", "Iniciando captura completa de ubicación (Pipeline Completo)")
         if (!hasLocationPermission()) {
-            eventLogger.log(LogLevel.WARNING, "LocationDiagnostics", "Fallo Pipeline: Sin permisos de ubicación")
+            eventLogger.log(LogLevel.WARNING, "LocationDiagnostics", "Sin permisos de ubicación")
             return@withContext getBestFreshLastKnownLocation()?.toEmergencyLocation("last_known_no_perm")
         }
 
@@ -154,15 +146,13 @@ class EmergencyLocationManager(private val context: Context) {
                 var location: Location? = null
 
                 if (isGpsSatelliteEnabled()) {
-                    eventLogger.log(LogLevel.INFO, "LocationDiagnostics", "Pipeline: Probando GPS Satelital (Alta Precisión)")
                     location = withTimeoutOrNull(5000L) {
                         fetchFusedLocation(Priority.PRIORITY_HIGH_ACCURACY, "FusedGPS") 
-                            ?: fetchFreshGpsLocation("SystemGPS")
+                            ?: fetchFreshGpsLocation()
                     }
                 }
 
                 if (location == null) {
-                    eventLogger.log(LogLevel.INFO, "LocationDiagnostics", "Pipeline: GPS nulo o inactivo. Probando Red Celular/Wi-Fi")
                     location = withTimeoutOrNull(5000L) {
                         fetchFusedLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, "FusedBalanced") 
                             ?: fetchFreshNetworkLocation("SystemNetwork")
@@ -170,7 +160,6 @@ class EmergencyLocationManager(private val context: Context) {
                 }
 
                 if (location == null) {
-                    eventLogger.log(LogLevel.INFO, "LocationDiagnostics", "Pipeline: Probando ubicación previa guardada en memoria")
                     location = getBestFreshLastKnownLocation()
                 }
 
@@ -179,9 +168,7 @@ class EmergencyLocationManager(private val context: Context) {
 
             val finalLoc = freshLocation ?: getBestFreshLastKnownLocation() ?: getBestNetworkLastKnownLocation()
             val result = finalLoc?.toEmergencyLocation(finalLoc.provider ?: "network_cell_fallback")
-            if (result != null) {
-                eventLogger.log(LogLevel.INFO, "LocationDiagnostics", "✅ Éxito Pipeline Completo: Lat=${result.latitude}, Lng=${result.longitude}, Precisión=${result.accuracy}m, Provider=${result.provider}")
-            } else {
+            if (result == null) {
                 eventLogger.log(LogLevel.ERROR, "LocationDiagnostics", "❌ Fallo Pipeline Completo: No se obtuvieron coordenadas por ninguna vía.")
             }
             result
@@ -197,16 +184,9 @@ class EmergencyLocationManager(private val context: Context) {
         val cancellationSource = CancellationTokenSource()
         
         return try {
-            val loc = fusedClient.getCurrentLocation(priority, cancellationSource.token).await()
-            if (loc != null) {
-                eventLogger.log(LogLevel.INFO, "LocationDiagnostics", "[$label] FusedLocation devolvió: Acc=${loc.accuracy}m, Lat=${loc.latitude}, Lng=${loc.longitude}")
-            } else {
-                eventLogger.log(LogLevel.WARNING, "LocationDiagnostics", "[$label] FusedLocation devolvió NULL")
-            }
-            loc
+            fusedClient.getCurrentLocation(priority, cancellationSource.token).await()
         } catch (e: CancellationException) {
             cancellationSource.cancel()
-            eventLogger.log(LogLevel.WARNING, "LocationDiagnostics", "[$label] FusedLocation Cancelado")
             throw e
         } catch (e: Exception) {
             cancellationSource.cancel()
@@ -219,7 +199,6 @@ class EmergencyLocationManager(private val context: Context) {
     private suspend fun fetchFreshNetworkLocation(label: String = "SystemNetwork"): Location? {
         val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager ?: return null
         if (!locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-            eventLogger.log(LogLevel.WARNING, "LocationDiagnostics", "[$label] LocationManager.NETWORK_PROVIDER está DESACTIVADO en el sistema.")
             return null
         }
 
@@ -233,11 +212,6 @@ class EmergencyLocationManager(private val context: Context) {
                         signal,
                         context.mainExecutor
                     ) { loc ->
-                        if (loc != null) {
-                            eventLogger.log(LogLevel.INFO, "LocationDiagnostics", "[$label] NetworkProvider devolvió: Acc=${loc.accuracy}m, Lat=${loc.latitude}, Lng=${loc.longitude}")
-                        } else {
-                            eventLogger.log(LogLevel.WARNING, "LocationDiagnostics", "[$label] NetworkProvider devolvió NULL")
-                        }
                         if (continuation.isActive) continuation.resume(loc)
                     }
                 } catch (e: Exception) {
@@ -250,7 +224,6 @@ class EmergencyLocationManager(private val context: Context) {
                 val listener = object : LocationListener {
                     override fun onLocationChanged(loc: Location) {
                         try { locationManager.removeUpdates(this) } catch (_: Exception) {}
-                        eventLogger.log(LogLevel.INFO, "LocationDiagnostics", "[$label] NetworkProvider listener devolvió: Acc=${loc.accuracy}m")
                         if (continuation.isActive) continuation.resume(loc)
                     }
                     @Deprecated("Deprecated in Java")
@@ -258,7 +231,6 @@ class EmergencyLocationManager(private val context: Context) {
                     override fun onProviderEnabled(p: String) {}
                     override fun onProviderDisabled(p: String) {
                         try { locationManager.removeUpdates(this) } catch (_: Exception) {}
-                        eventLogger.log(LogLevel.WARNING, "LocationDiagnostics", "[$label] NetworkProvider fue desactivado")
                         if (continuation.isActive) continuation.resume(null)
                     }
                 }
@@ -276,7 +248,7 @@ class EmergencyLocationManager(private val context: Context) {
     }
 
     @SuppressLint("MissingPermission")
-    private suspend fun fetchFreshGpsLocation(label: String = "SystemGPS"): Location? {
+    private suspend fun fetchFreshGpsLocation(): Location? {
         val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager ?: return null
         if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) return null
 
@@ -332,7 +304,6 @@ class EmergencyLocationManager(private val context: Context) {
             val fusedClient = LocationServices.getFusedLocationProviderClient(context)
             val fusedLast = withTimeoutOrNull(2000) { fusedClient.lastLocation.await() }
             if (fusedLast != null && isRecentLocation(fusedLast, maxAgeMs)) {
-                eventLogger.log(LogLevel.INFO, "LocationDiagnostics", "LastKnown: Fused valid (age=${(System.currentTimeMillis()-fusedLast.time)/1000}s, acc=${fusedLast.accuracy}m)")
                 bestLocation = fusedLast
             }
         } catch (_: Exception) { }
@@ -345,7 +316,6 @@ class EmergencyLocationManager(private val context: Context) {
                 if (!isRecentLocation(l, maxAgeMs)) continue
                 if (bestLocation == null || l.accuracy < bestLocation.accuracy) {
                     bestLocation = l
-                    eventLogger.log(LogLevel.INFO, "LocationDiagnostics", "LastKnown: $provider valid (age=${(System.currentTimeMillis()-l.time)/1000}s, acc=${l.accuracy}m)")
                 }
             }
         }
@@ -358,17 +328,11 @@ class EmergencyLocationManager(private val context: Context) {
         val networkLoc = try { locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER) } catch (_: Exception) { null }
         val passiveLoc = try { locationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER) } catch (_: Exception) { null }
         
-        val res = when {
+        return when {
             networkLoc != null && passiveLoc != null -> if (networkLoc.time >= passiveLoc.time) networkLoc else passiveLoc
             networkLoc != null -> networkLoc
             else -> passiveLoc
         }
-        if (res != null) {
-            eventLogger.log(LogLevel.INFO, "LocationDiagnostics", "BestNetworkLastKnown: Prov=${res.provider}, Acc=${res.accuracy}m, Age=${(System.currentTimeMillis()-res.time)/1000}s")
-        } else {
-            eventLogger.log(LogLevel.WARNING, "LocationDiagnostics", "BestNetworkLastKnown: Sin registros en NETWORK_PROVIDER ni PASSIVE_PROVIDER")
-        }
-        return res
     }
 
     private fun isRecentLocation(location: Location, maxAgeMs: Long): Boolean {

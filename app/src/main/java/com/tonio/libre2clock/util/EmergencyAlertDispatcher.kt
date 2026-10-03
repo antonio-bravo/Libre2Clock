@@ -83,12 +83,6 @@ class EmergencyAlertDispatcher(private val context: Context) {
         location: EmergencyLocation?,
         config: EmergencyConfig
     ): Int = withContext(Dispatchers.IO) {
-        eventLogger.log(
-            LogLevel.INFO,
-            "EmergencyDispatch",
-            "Iniciando despacho de alerta SOS. Glucosa=$glucoseMgDl mg/dL. Ubicación: ${location?.mapUrl ?: "No disponible"} (Prov: ${location?.provider}, Acc: ${location?.accuracy}m). Contactos=${config.contacts.size}"
-        )
-
         if (config.contacts.isEmpty()) {
             eventLogger.log(LogLevel.WARNING, "EmergencyDispatch", "Despacho cancelado: Lista de contactos está vacía.")
             return@withContext 0
@@ -100,31 +94,23 @@ class EmergencyAlertDispatcher(private val context: Context) {
         // 1. Enviar vía Telegram Bot API
         if (config.telegramBotToken.isNotBlank()) {
             val telegramContacts = config.contacts.filter { it.sendViaTelegram && it.telegramChatId.isNotBlank() }
-            eventLogger.log(LogLevel.INFO, "EmergencyDispatch", "Procesando Telegram Bot para ${telegramContacts.size} contactos.")
             for (contact in telegramContacts) {
                 val success = sendTelegramBotMessage(config.telegramBotToken, contact.telegramChatId, message)
                 if (success) dispatchedCount++
             }
-        } else {
-            eventLogger.log(LogLevel.INFO, "EmergencyDispatch", "Telegram Bot omitido: Token no configurado.")
         }
 
         // 2. Enviar vía SMS directo si hay permiso
         if (hasSmsPermission()) {
             val smsContacts = config.contacts.filter { it.sendViaSms && it.phoneNumber.isNotBlank() }
-            eventLogger.log(LogLevel.INFO, "EmergencyDispatch", "Procesando SMS directo para ${smsContacts.size} contactos.")
             for (contact in smsContacts) {
                 val success = sendSmsMessage(contact.phoneNumber, message)
                 if (success) dispatchedCount++
             }
-        } else {
-            eventLogger.log(LogLevel.INFO, "EmergencyDispatch", "SMS directo omitido: Permiso SEND_SMS no concedido.")
         }
 
         // 3. Mostrar Notificación de Máxima Prioridad para WhatsApp e Intents
         showEmergencyNotification(glucoseMgDl, message, config.contacts)
-
-        eventLogger.log(LogLevel.INFO, "EmergencyDispatch", "✅ Despacho completado. Envíos directos exitosos: $dispatchedCount.")
 
         return@withContext dispatchedCount
     }
@@ -151,9 +137,7 @@ class EmergencyAlertDispatcher(private val context: Context) {
             val isSuccess = response.isSuccessful
             response.close()
 
-            if (isSuccess) {
-                eventLogger.log(LogLevel.INFO, "EmergencyDispatch", "✅ Telegram enviado con éxito a Chat ID: $chatId")
-            } else {
+            if (!isSuccess) {
                 eventLogger.log(LogLevel.ERROR, "EmergencyDispatch", "❌ Telegram error HTTP ${response.code} para Chat ID $chatId: $responseBodyStr")
             }
 
@@ -189,7 +173,6 @@ class EmergencyAlertDispatcher(private val context: Context) {
             } else {
                 smsManager.sendTextMessage(cleanPhone, null, message, null, null)
             }
-            eventLogger.log(LogLevel.INFO, "EmergencyDispatch", "✅ SMS enviado con éxito a $cleanPhone")
             true
         } catch (e: Exception) {
             eventLogger.log(LogLevel.ERROR, "EmergencyDispatch", "❌ SMS error para $phoneNumber: ${e.message}")
