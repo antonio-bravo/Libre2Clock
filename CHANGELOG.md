@@ -1,5 +1,29 @@
 # Changelog
 
+## 72ad2bb (Oct 03, 2026 20:18:55)
+SOS mobile network — antonio-bravo
+[detail](#72ad2bb-details)
+
+<details id='72ad2bb-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/util/EmergencyLocationManager.kt [Modified]
+</details>
+
+
+---
+## 554833b (Oct 02, 2026 21:14:21)
+Update changelog — github-actions[bot]
+[detail](#554833b-details)
+
+<details id='554833b-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## f17df46 (Oct 02, 2026 23:14:02)
 3 test buttons SOS — antonio-bravo
 [detail](#f17df46-details)
@@ -750,33 +774,6 @@ fix text in FS: — antonio-bravo
 
 - app/src/main/res/values-es/strings.xml [Modified]
 - app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## d0dcae3 (Sep 20, 2026 12:48:01)
-Update changelog — github-actions[bot]
-[detail](#d0dcae3-details)
-
-<details id='d0dcae3-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 8e4e7c1 (Sep 20, 2026 14:47:49)
-Merge pull request #5 from antonio-bravo/feature/timestamp_parser
-
-fix — antonio-bravo
-[detail](#8e4e7c1-details)
-
-<details id='8e4e7c1-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEventLogScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/EventLogManager.kt [Modified]
 </details>
 
 
