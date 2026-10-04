@@ -1,5 +1,30 @@
 # Changelog
 
+## 7df19fb (Oct 04, 2026 14:45:48)
+whatsapp bot — antonio-bravo
+[detail](#7df19fb-details)
+
+<details id='7df19fb-details'>
+<summary>Changed files</summary>
+
+- whatsapp-bot/index.js [Modified]
+- whatsapp-bot/package.json [Modified]
+</details>
+
+
+---
+## ed8657b (Oct 04, 2026 12:40:47)
+Update changelog — github-actions[bot]
+[detail](#ed8657b-details)
+
+<details id='ed8657b-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## b1f314f (Oct 04, 2026 14:40:28)
 whatsapp bot — antonio-bravo
 [detail](#b1f314f-details)
@@ -737,30 +762,6 @@ build.gradle.kts Minify and Shrink — antonio-bravo
 <summary>Changed files</summary>
 
 - app/build.gradle.kts [Modified]
-</details>
-
-
----
-## a7e9c4b (Sep 30, 2026 10:47:15)
-Update changelog — github-actions[bot]
-[detail](#a7e9c4b-details)
-
-<details id='a7e9c4b-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## c3cc954 (Sep 30, 2026 12:46:55)
-fix CapillariyScreen — antonio-bravo
-[detail](#c3cc954-details)
-
-<details id='c3cc954-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/capillary/CapillaryScreen.kt [Modified]
 </details>
 
 
