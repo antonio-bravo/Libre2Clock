@@ -142,10 +142,14 @@ class EmergencyAlertDispatcher(private val context: Context) {
 
     suspend fun sendCallMeBotWhatsAppMessage(phoneNumber: String, apiKey: String, message: String): Boolean = withContext(Dispatchers.IO) {
         return@withContext try {
-            val cleanPhone = phoneNumber.replace("[^0-9+]".toRegex(), "")
-            val formattedPhone = if (!cleanPhone.startsWith("+")) "+$cleanPhone" else cleanPhone
+            val phoneDigits = phoneNumber.replace("[^0-9]".toRegex(), "")
+            if (phoneDigits.isBlank()) {
+                eventLogger.log(LogLevel.WARNING, "EmergencyDispatch", "CallMeBot cancelado: Número de teléfono inválido ($phoneNumber)")
+                return@withContext false
+            }
+
             val encodedMessage = java.net.URLEncoder.encode(message, "UTF-8")
-            val url = "https://api.callmebot.com/whatsapp.php?phone=$formattedPhone&text=$encodedMessage&apikey=${apiKey.trim()}"
+            val url = "https://api.callmebot.com/whatsapp.php?phone=$phoneDigits&text=$encodedMessage&apikey=${apiKey.trim()}"
 
             val request = Request.Builder()
                 .url(url)
@@ -153,14 +157,14 @@ class EmergencyAlertDispatcher(private val context: Context) {
                 .build()
 
             val response = httpClient.newCall(request).execute()
-            val isSuccess = response.isSuccessful
             val bodyStr = response.body?.string() ?: ""
+            val isSuccess = response.isSuccessful && !bodyStr.contains("ERROR:", ignoreCase = true)
             response.close()
 
             if (!isSuccess) {
-                eventLogger.log(LogLevel.ERROR, "EmergencyDispatch", "❌ CallMeBot WhatsApp error HTTP ${response.code} para $formattedPhone: $bodyStr")
+                eventLogger.log(LogLevel.ERROR, "EmergencyDispatch", "❌ CallMeBot WhatsApp error para $phoneDigits: $bodyStr")
             } else {
-                eventLogger.log(LogLevel.INFO, "EmergencyDispatch", "✅ CallMeBot WhatsApp enviado automáticamente a $formattedPhone")
+                eventLogger.log(LogLevel.INFO, "EmergencyDispatch", "✅ CallMeBot WhatsApp enviado automáticamente a $phoneDigits")
             }
 
             isSuccess
