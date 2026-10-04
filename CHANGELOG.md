@@ -1,5 +1,29 @@
 # Changelog
 
+## 486e01c (Oct 04, 2026 14:30:19)
+Heath bot — antonio-bravo
+[detail](#486e01c-details)
+
+<details id='486e01c-details'>
+<summary>Changed files</summary>
+
+- whatsapp-bot/index.js [Modified]
+</details>
+
+
+---
+## 9aa7bb6 (Oct 04, 2026 12:24:37)
+Update changelog — github-actions[bot]
+[detail](#9aa7bb6-details)
+
+<details id='9aa7bb6-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## ab88056 (Oct 04, 2026 14:24:22)
 whatsapp bot in Render — antonio-bravo
 [detail](#ab88056-details)
@@ -736,39 +760,6 @@ fix CapillaryScreen default value — antonio-bravo
 <summary>Changed files</summary>
 
 - app/src/main/java/com/tonio/libre2clock/ui/capillary/CapillaryScreen.kt [Modified]
-</details>
-
-
----
-## ceb36c7 (Sep 29, 2026 20:07:14)
-Update changelog — github-actions[bot]
-[detail](#ceb36c7-details)
-
-<details id='ceb36c7-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 953fe6d (Sep 29, 2026 22:06:59)
-optimize speed and ram — antonio-bravo
-[detail](#953fe6d-details)
-
-<details id='953fe6d-details'>
-<summary>Changed files</summary>
-
-- .idea/misc.xml [Modified]
-- app/build.gradle.kts [Modified]
-- app/proguard-rules.pro [Modified]
-- app/src/main/AndroidManifest.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/MainActivity.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/local/GlucoseHistoryDatabaseHelper.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-- gradle.properties [Modified]
-- verify_optimizations.sh [Deleted]
 </details>
 
 
