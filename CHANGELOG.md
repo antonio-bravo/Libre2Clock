@@ -1,5 +1,30 @@
 # Changelog
 
+## 1989b56 (Oct 04, 2026 14:58:35)
+Add HD web QR code page — antonio-bravo
+[detail](#1989b56-details)
+
+<details id='1989b56-details'>
+<summary>Changed files</summary>
+
+- whatsapp-bot/index.js [Modified]
+- whatsapp-bot/package.json [Modified]
+</details>
+
+
+---
+## 55a6afa (Oct 04, 2026 12:53:29)
+Update changelog — github-actions[bot]
+[detail](#55a6afa-details)
+
+<details id='55a6afa-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 528a115 (Oct 04, 2026 14:53:14)
 whatsapp bot — antonio-bravo
 [detail](#528a115-details)
@@ -713,38 +738,6 @@ Se estableció un umbral de seguridad (1.8 MB). Si tras la compresión un payloa
 <summary>Changed files</summary>
 
 - app/src/main/java/com/tonio/libre2clock/data/local/SectionCacheDatabaseHelper.kt [Modified]
-</details>
-
-
----
-## 44f20d7 (Sep 30, 2026 16:05:51)
-Update changelog — github-actions[bot]
-[detail](#44f20d7-details)
-
-<details id='44f20d7-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 119f7ef (Sep 30, 2026 18:05:38)
-added firebase-config to limit Clould Sync users — antonio-bravo
-[detail](#119f7ef-details)
-
-<details id='119f7ef-details'>
-<summary>Changed files</summary>
-
-- app/build.gradle.kts [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/sync/AuthManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/sync/RemoteConfigManager.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-- gradle/libs.versions.toml [Modified]
 </details>
 
 
