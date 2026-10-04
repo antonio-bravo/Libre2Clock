@@ -1,5 +1,31 @@
 # Changelog
 
+## 018bb7d (Oct 04, 2026 22:45:28)
+Fix TrendGraph future — antonio-bravo
+[detail](#018bb7d-details)
+
+<details id='018bb7d-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 6e9ace0 (Oct 04, 2026 13:07:14)
+Update changelog — github-actions[bot]
+[detail](#6e9ace0-details)
+
+<details id='6e9ace0-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## eb5a542 (Oct 04, 2026 15:07:02)
 group — antonio-bravo
 [detail](#eb5a542-details)
@@ -644,76 +670,6 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com> — antonio-bravo
 <details id='da77b1e-details'>
 <summary>Changed files</summary>
 
-- app/src/main/java/com/tonio/libre2clock/util/PdfReportGenerator.kt [Modified]
-</details>
-
-
----
-## 66460c1 (Oct 01, 2026 22:29:13)
-Mejoras al informe AGP Complete: barras verticales, hipoglucemias y estadísticas horarias
-
-Cambios implementados:
-- Reemplazado gráfico circular por barras verticales en tiempo en rangos
-- Agregado contador de hipoglucemias por día en resumen mensual
-- Agregado máximo/mínimo mg/dL por hora en registro diario (24 horas)
-- Mejorado diseño de tarjetas de instantánea
-- Agregado clase HourlyStats para cálculos por hora
-- Optimizado espacio en gráficos diarios para mostrar estadísticas
-
-Pendiente:
-- Completar rediseño de página Instantánea
-- Mejorar patrones hora de comidas
-- Mejorar resumen semanal
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com> — antonio-bravo
-[detail](#66460c1-details)
-
-<details id='66460c1-details'>
-<summary>Changed files</summary>
-
-- .idea/misc.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/report/ReportScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/PdfReportGenerator.kt [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 23a5835 (Oct 01, 2026 22:29:13)
-Mejorado generador de informes AGP con diseño profesional idéntico a FreeStyle Libre
-
-- Añadido gráfico circular de tiempo en rangos (pie chart)
-- Implementadas 9 páginas de informe completo:
-  * Informe AGP principal con bandas de percentiles
-  * Visualización del patrón de glucosa ampliado
-  * Resumen mensual tipo calendario
-  * Registro diario detallado (3 días por página)
-  * Instantánea con layout de 3 columnas
-  * Patrones de hora de comidas
-  * Resumen semanal con sparklines
-  * Configuración del dispositivo
-  * Patrones diarios promedio
-
-Características:
-- Comparación directa RAW vs Calibrado en todas las visualizaciones
-- Colores profesionales idénticos a FreeStyle Libre
-- Bandas de percentiles (10-90%, 25-75%)
-- Líneas discontinuas para valores RAW
-- Grid de referencia con líneas punteadas
-- Sparklines en calendarios y resúmenes
-- Personalizable por rango de fechas
-- 3 layouts: Snapshot, Daily Log, Full Report
-- Compatible con sistema de caché existente
-- Optimizado para grandes volúmenes de datos
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com> — antonio-bravo
-[detail](#23a5835-details)
-
-<details id='23a5835-details'>
-<summary>Changed files</summary>
-
-- INFORME_AGP_MEJORADO.md [Deleted]
 - app/src/main/java/com/tonio/libre2clock/util/PdfReportGenerator.kt [Modified]
 </details>
 
