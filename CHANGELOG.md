@@ -1,5 +1,30 @@
 # Changelog
 
+## b1f314f (Oct 04, 2026 14:40:28)
+whatsapp bot — antonio-bravo
+[detail](#b1f314f-details)
+
+<details id='b1f314f-details'>
+<summary>Changed files</summary>
+
+- whatsapp-bot/index.js [Modified]
+- whatsapp-bot/package.json [Modified]
+</details>
+
+
+---
+## 6342f27 (Oct 04, 2026 12:30:35)
+Update changelog — github-actions[bot]
+[detail](#6342f27-details)
+
+<details id='6342f27-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 486e01c (Oct 04, 2026 14:30:19)
 Heath bot — antonio-bravo
 [detail](#486e01c-details)
@@ -733,30 +758,6 @@ fix CapillariyScreen — antonio-bravo
 [detail](#c3cc954-details)
 
 <details id='c3cc954-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/capillary/CapillaryScreen.kt [Modified]
-</details>
-
-
----
-## 02f8522 (Sep 30, 2026 10:05:00)
-Update changelog — github-actions[bot]
-[detail](#02f8522-details)
-
-<details id='02f8522-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## a790584 (Sep 30, 2026 12:04:41)
-fix CapillaryScreen default value — antonio-bravo
-[detail](#a790584-details)
-
-<details id='a790584-details'>
 <summary>Changed files</summary>
 
 - app/src/main/java/com/tonio/libre2clock/ui/capillary/CapillaryScreen.kt [Modified]
