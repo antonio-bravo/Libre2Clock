@@ -1,5 +1,39 @@
 # Changelog
 
+## ab88056 (Oct 04, 2026 14:24:22)
+whatsapp bot in Render — antonio-bravo
+[detail](#ab88056-details)
+
+<details id='ab88056-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/model/EmergencyModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEmergencyScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/EmergencyAlertDispatcher.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+- whatsapp-bot/.gitignore [Deleted]
+- whatsapp-bot/README.md [Deleted]
+- whatsapp-bot/index.js [Deleted]
+- whatsapp-bot/package.json [Deleted]
+</details>
+
+
+---
+## ec7e47c (Oct 04, 2026 11:18:28)
+Update changelog — github-actions[bot]
+[detail](#ec7e47c-details)
+
+<details id='ec7e47c-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 2e36238 (Oct 04, 2026 13:18:15)
 CallMeBot — antonio-bravo
 [detail](#2e36238-details)
@@ -735,34 +769,6 @@ optimize speed and ram — antonio-bravo
 - app/src/main/res/values/strings.xml [Modified]
 - gradle.properties [Modified]
 - verify_optimizations.sh [Deleted]
-</details>
-
-
----
-## 3ca1f98 (Sep 23, 2026 08:43:19)
-Update changelog — github-actions[bot]
-[detail](#3ca1f98-details)
-
-<details id='3ca1f98-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 5f02581 (Sep 23, 2026 10:43:07)
-remove checkbox on main screen and fix merge insulin logs — antonio-bravo
-[detail](#5f02581-details)
-
-<details id='5f02581-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
 </details>
 
 
