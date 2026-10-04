@@ -1,5 +1,29 @@
 # Changelog
 
+## 528a115 (Oct 04, 2026 14:53:14)
+whatsapp bot — antonio-bravo
+[detail](#528a115-details)
+
+<details id='528a115-details'>
+<summary>Changed files</summary>
+
+- whatsapp-bot/package.json [Modified]
+</details>
+
+
+---
+## c8c9bbc (Oct 04, 2026 12:48:48)
+Update changelog — github-actions[bot]
+[detail](#c8c9bbc-details)
+
+<details id='c8c9bbc-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 6068e4e (Oct 04, 2026 14:48:35)
 whatsapp bot — antonio-bravo
 [detail](#6068e4e-details)
@@ -721,48 +745,6 @@ added firebase-config to limit Clould Sync users — antonio-bravo
 - app/src/main/res/values-es/strings.xml [Modified]
 - app/src/main/res/values/strings.xml [Modified]
 - gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## c34c801 (Sep 30, 2026 15:47:36)
-Update changelog — github-actions[bot]
-[detail](#c34c801-details)
-
-<details id='c34c801-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## b4f0a1a (Sep 30, 2026 17:47:20)
-remove unnecessary packages — antonio-bravo
-[detail](#b4f0a1a-details)
-
-<details id='b4f0a1a-details'>
-<summary>Changed files</summary>
-
-- app/build.gradle.kts [Modified]
-- app/proguard-rules.pro [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/components/DateTimeEntryFields.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/icons/CustomIcons.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/login/LoginScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/report/ReportScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/sensor/SensorLogsScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsAdvancedScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsAlertsScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsBatteryScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCalibrationScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsComponents.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEventLogScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/strategy/StrategyScreen.kt [Modified]
-- app/src/main/res/values/themes.xml [Modified]
 </details>
 
 
