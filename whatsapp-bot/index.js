@@ -51,8 +51,28 @@ client.on('ready', () => {
     console.log('✅ Bot de WhatsApp listo, conectado y en línea!');
 });
 
-// Health Check & Página Web para ver e ingresar el Código QR perfectamente
-app.get(['/', '/qr', '/health'], async (req, res) => {
+// Endpoint API JSON para listar grupos
+app.get('/api/groups', async (req, res) => {
+    if (!client.info) {
+        return res.status(503).json({ error: 'WhatsApp no está conectado aún' });
+    }
+    try {
+        const chats = await client.getChats();
+        const groups = chats
+            .filter(c => c.isGroup)
+            .map(g => ({
+                name: g.name,
+                id: g.id._serialized,
+                unread: g.unreadCount
+            }));
+        res.json(groups);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Health Check & Página Web con Estado, Código QR y Lista de Grupos
+app.get(['/', '/qr', '/groups', '/health'], async (req, res) => {
     // Petición API JSON si solicitan /health
     if (req.path === '/health') {
         return res.status(200).json({
@@ -64,27 +84,58 @@ app.get(['/', '/qr', '/health'], async (req, res) => {
         });
     }
 
-    // Si ya está conectado y listo
+    // Si ya está conectado y listo -> Mostrar lista de grupos
     if (!latestQR && client.info) {
+        let groupsHtml = '<p style="color: #666;">Cargando lista de grupos de WhatsApp...</p>';
+        try {
+            const chats = await client.getChats();
+            const groups = chats.filter(c => c.isGroup);
+
+            if (groups.length === 0) {
+                groupsHtml = `
+                    <div style="background: #fff3cd; color: #856404; padding: 12px; border-radius: 8px; font-size: 14px; margin-top: 15px;">
+                        ⚠️ No se encontraron grupos de WhatsApp en esta cuenta.<br>Crea o únete a un grupo de WhatsApp y recarga esta página.
+                    </div>
+                `;
+            } else {
+                groupsHtml = `
+                    <div style="text-align: left; margin-top: 20px;">
+                        <h3 style="color: #075e54; font-size: 16px; margin-bottom: 10px;">📋 Tus Grupos de WhatsApp:</h3>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            ${groups.map(g => `
+                                <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 12px;">
+                                    <div style="font-weight: bold; font-size: 15px; color: #212529;">👥 ${g.name}</div>
+                                    <div style="font-family: monospace; font-size: 13px; color: #1e88e5; word-break: break-all; margin-top: 4px;">${g.id._serialized}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+        } catch (e) {
+            groupsHtml = `<p style="color: red;">Error al obtener grupos: ${e.message}</p>`;
+        }
+
         return res.send(`
             <!DOCTYPE html>
             <html>
             <head>
-                <title>Libre2Clock Bot - Estado</title>
+                <title>Libre2Clock Bot - Grupos</title>
                 <meta name="viewport" content="width=device-width, initial-scale=1">
                 <style>
-                    body { font-family: system-ui, -apple-system, sans-serif; text-align: center; padding: 40px 15px; background: #eef2f5; color: #333; }
-                    .card { background: white; max-width: 420px; margin: 0 auto; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
-                    .status-icon { font-size: 48px; margin-bottom: 10px; }
-                    h2 { color: #1e88e5; margin-bottom: 10px; }
-                    p { color: #555; line-height: 1.5; }
+                    body { font-family: system-ui, -apple-system, sans-serif; text-align: center; padding: 30px 15px; background: #eef2f5; color: #333; }
+                    .card { background: white; max-width: 480px; margin: 0 auto; padding: 25px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+                    .status-icon { font-size: 40px; margin-bottom: 5px; }
+                    h2 { color: #075e54; margin-bottom: 5px; font-size: 20px; }
+                    p { color: #555; line-height: 1.4; font-size: 14px; margin-top: 5px; }
                 </style>
             </head>
             <body>
                 <div class="card">
                     <div class="status-icon">✅</div>
                     <h2>Bot Conectado y En Línea</h2>
-                    <p>El bot de WhatsApp está vinculado correctamente y listo para enviar alertas SOS desde Libre2Clock.</p>
+                    <p>Copia el ID del grupo que quieras utilizar y pégalo en la app Libre2Clock en <b>Ajustes ➔ Contactos y Alertas SOS</b>.</p>
+                    ${groupsHtml}
                 </div>
             </body>
             </html>
@@ -156,21 +207,25 @@ app.get(['/', '/qr', '/health'], async (req, res) => {
     }
 });
 
-// Comando de ayuda: Si escribes "/id" o "/grupo" dentro de cualquier grupo de WhatsApp,
-// el bot te responderá automáticamente con el ID exacto de ese grupo.
+// Comando de ayuda en WhatsApp
 client.on('message', async (msg) => {
-    if (msg.body === '/id' || msg.body === '/grupo') {
-        const chat = await msg.getChat();
-        if (chat.isGroup) {
-            msg.reply(`📍 *ID de este Grupo de WhatsApp:*\n\`${chat.id._serialized}\``);
-        } else {
-            msg.reply(`📍 Tu Chat ID individual es:\n\`${msg.from}\``);
+    const text = (msg.body || '').trim().toLowerCase();
+    if (text === '/id' || text === '/grupo' || text === '!id' || text === '!grupo') {
+        try {
+            const chat = await msg.getChat();
+            if (chat.isGroup) {
+                msg.reply(`📍 *ID de este Grupo de WhatsApp:*\n\`${chat.id._serialized}\``);
+            } else {
+                msg.reply(`📍 Tu Chat ID individual es:\n\`${msg.from}\``);
+            }
+        } catch (e) {
+            console.error('Error al responder /id:', e);
         }
     }
 });
 
 // Endpoint Webhook que recibe las alertas SOS enviadas desde la app Libre2Clock
-app.post('/sos-webhook', async (req, res) => {
+app.post(['/', '/sos-webhook'], async (req, res) => {
     try {
         const { message, glucose, group_id, contacts } = req.body;
         console.log(`\n⚠️ [SOS] Alerta recibida para glucosa ${glucose} mg/dL`);
