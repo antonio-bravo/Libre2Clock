@@ -588,4 +588,12 @@
     <string name="emergency_test_wifi_button">Test Wi-Fi Location</string>
     <string name="emergency_test_location_success">Location captured via %1$s (~%2$d m accuracy).</string>
     <string name="emergency_test_location_failed">Failed to capture location via %1$s.</string>
+    <string name="emergency_sms_permission_title">SMS Permission Required</string>
+    <string name="emergency_sms_permission_warning">To send SMS alerts to your contacts, you need to grant the SMS sending permission to the application.</string>
+    <string name="emergency_grant_sms_permission">Grant Permission</string>
+    <string name="emergency_contact_phone_hint">E.g., +15551234567 (Include country code with +)</string>
+    <string name="emergency_contact_whatsapp_apikey_label">CallMeBot WhatsApp API Key (Optional)</string>
+    <string name="emergency_contact_whatsapp_apikey_hint">Enables 100% automatic background WhatsApp sending without user touch.</string>
+    <string name="emergency_whatsapp_help_title">100% Automatic Background WhatsApp</string>
+    <string name="emergency_whatsapp_help_content">To send WhatsApp messages 100% automatically in the background (without user intervention or touching the screen):\n\n1. Add CallMeBot phone number to your contact\'s WhatsApp contacts: +34 644 10 55 84 (or visit callmebot.com).\n2. Your contact sends \"I allow callmebot to send me messages\" to that number via WhatsApp.\n3. They will receive an apikey (e.g., 123456).\n4. Enter that apikey in the contact field above.\n\nNote: SMS and Telegram Bot are already 100% automatic in the background by default.</string>
 </resources>

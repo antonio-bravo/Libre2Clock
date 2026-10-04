@@ -483,7 +483,12 @@ class SettingsViewModel(
             } else null
 
             val testGlucose = config.thresholdMgDl
-            val dispatchedCount = dispatcher.dispatchSosAlert(testGlucose, location, config)
+            val dispatchedCount = dispatcher.dispatchSosAlert(
+                glucoseMgDl = testGlucose,
+                location = location,
+                config = config,
+                launchWhatsAppDirectly = true
+            )
 
             val locationInfo = if (location != null) {
                 appContext.getString(

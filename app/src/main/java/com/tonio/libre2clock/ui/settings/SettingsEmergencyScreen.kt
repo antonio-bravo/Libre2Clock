@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.core.content.ContextCompat
 import com.tonio.libre2clock.R
 import com.tonio.libre2clock.data.model.EmergencyContact
 import com.tonio.libre2clock.util.EmergencyLocationManager
@@ -39,26 +40,40 @@ fun SettingsEmergencyScreen(
     val scope = rememberCoroutineScope()
     val locationManager = remember(context) { EmergencyLocationManager(context) }
 
+    val hasSmsPermission = remember(context, emergencyConfig) {
+        ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS) == android.content.pm.PackageManager.PERMISSION_GRANTED
+    }
+
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         val fineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
         val coarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
-        if (!fineGranted && !coarseGranted) {
+        val smsGranted = permissions[Manifest.permission.SEND_SMS] ?: false
+
+        if (!fineGranted && !coarseGranted && emergencyConfig.includeLocation) {
             scope.launch {
                 snackbarHostState.showSnackbar(context.getString(R.string.emergency_permission_denied_warning))
             }
         }
+        if (!smsGranted && emergencyConfig.contacts.any { it.sendViaSms }) {
+            scope.launch {
+                snackbarHostState.showSnackbar(context.getString(R.string.emergency_sms_permission_warning))
+            }
+        }
     }
 
-    LaunchedEffect(emergencyConfig.includeLocation) {
+    LaunchedEffect(emergencyConfig.includeLocation, emergencyConfig.contacts) {
+        val permissionsToRequest = mutableListOf<String>()
         if (emergencyConfig.includeLocation && !locationManager.hasLocationPermission()) {
-            permissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
-            )
+            permissionsToRequest.add(Manifest.permission.ACCESS_FINE_LOCATION)
+            permissionsToRequest.add(Manifest.permission.ACCESS_COARSE_LOCATION)
+        }
+        if (emergencyConfig.contacts.any { it.sendViaSms } && !hasSmsPermission) {
+            permissionsToRequest.add(Manifest.permission.SEND_SMS)
+        }
+        if (permissionsToRequest.isNotEmpty()) {
+            permissionLauncher.launch(permissionsToRequest.toTypedArray())
         }
     }
 
@@ -337,6 +352,42 @@ fun SettingsEmergencyScreen(
                 }
             }
 
+            if (emergencyConfig.contacts.any { it.sendViaSms } && !hasSmsPermission) {
+                item(key = "sms_permission_warning") {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.emergency_sms_permission_title),
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                                Text(
+                                    text = stringResource(R.string.emergency_sms_permission_warning),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(
+                                onClick = { permissionLauncher.launch(arrayOf(Manifest.permission.SEND_SMS)) },
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                            ) {
+                                Text(stringResource(R.string.emergency_grant_sms_permission))
+                            }
+                        }
+                    }
+                }
+            }
+
             item(key = "contacts_header") {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -582,9 +633,11 @@ fun EmergencyContactDialog(
     var name by remember { mutableStateOf(contact.name) }
     var phone by remember { mutableStateOf(contact.phoneNumber) }
     var telegramChatId by remember { mutableStateOf(contact.telegramChatId) }
+    var whatsAppApiKey by remember { mutableStateOf(contact.whatsAppApiKey) }
     var sendViaWhatsApp by remember { mutableStateOf(contact.sendViaWhatsApp) }
     var sendViaTelegram by remember { mutableStateOf(contact.sendViaTelegram) }
     var sendViaSms by remember { mutableStateOf(contact.sendViaSms) }
+    var showWhatsAppHelpDialog by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -611,10 +664,40 @@ fun EmergencyContactDialog(
                     onValueChange = { phone = it },
                     label = { Text(stringResource(R.string.emergency_contact_phone_label)) },
                     placeholder = { Text("Ej: +34612345678") },
+                    supportingText = { Text(stringResource(R.string.emergency_contact_phone_hint)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
+                if (sendViaWhatsApp) {
+                    OutlinedTextField(
+                        value = whatsAppApiKey,
+                        onValueChange = { whatsAppApiKey = it },
+                        label = { Text(stringResource(R.string.emergency_contact_whatsapp_apikey_label)) },
+                        placeholder = { Text("Ej: 123456") },
+                        supportingText = {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.emergency_contact_whatsapp_apikey_hint),
+                                    modifier = Modifier.weight(1f)
+                                )
+                                TextButton(
+                                    onClick = { showWhatsAppHelpDialog = true },
+                                    contentPadding = PaddingValues(0.dp)
+                                ) {
+                                    Text("¿Cómo obtener?", style = MaterialTheme.typography.labelSmall)
+                                }
+                            }
+                        },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
                 OutlinedTextField(
                     value = telegramChatId,
                     onValueChange = { telegramChatId = it },
@@ -654,6 +737,7 @@ fun EmergencyContactDialog(
                             name = name.trim(),
                             phoneNumber = phone.trim(),
                             telegramChatId = telegramChatId.trim(),
+                            whatsAppApiKey = whatsAppApiKey.trim(),
                             sendViaWhatsApp = sendViaWhatsApp,
                             sendViaTelegram = sendViaTelegram,
                             sendViaSms = sendViaSms
@@ -670,4 +754,23 @@ fun EmergencyContactDialog(
             }
         }
     )
+
+    if (showWhatsAppHelpDialog) {
+        AlertDialog(
+            onDismissRequest = { showWhatsAppHelpDialog = false },
+            icon = { Icon(Icons.Default.Info, contentDescription = null) },
+            title = { Text(stringResource(R.string.emergency_whatsapp_help_title)) },
+            text = {
+                Text(
+                    text = stringResource(R.string.emergency_whatsapp_help_content),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = {
+                Button(onClick = { showWhatsAppHelpDialog = false }) {
+                    Text(stringResource(R.string.emergency_btn_close))
+                }
+            }
+        )
+    }
 }

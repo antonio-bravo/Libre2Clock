@@ -81,7 +81,8 @@ class EmergencyAlertDispatcher(private val context: Context) {
     suspend fun dispatchSosAlert(
         glucoseMgDl: Int,
         location: EmergencyLocation?,
-        config: EmergencyConfig
+        config: EmergencyConfig,
+        launchWhatsAppDirectly: Boolean = false
     ): Int = withContext(Dispatchers.IO) {
         if (config.contacts.isEmpty()) {
             eventLogger.log(LogLevel.WARNING, "EmergencyDispatch", "Despacho cancelado: Lista de contactos está vacía.")
@@ -101,18 +102,72 @@ class EmergencyAlertDispatcher(private val context: Context) {
         }
 
         // 2. Enviar vía SMS directo si hay permiso
-        if (hasSmsPermission()) {
-            val smsContacts = config.contacts.filter { it.sendViaSms && it.phoneNumber.isNotBlank() }
-            for (contact in smsContacts) {
-                val success = sendSmsMessage(contact.phoneNumber, message)
-                if (success) dispatchedCount++
+        val smsContacts = config.contacts.filter { it.sendViaSms && it.phoneNumber.isNotBlank() }
+        if (smsContacts.isNotEmpty()) {
+            if (hasSmsPermission()) {
+                for (contact in smsContacts) {
+                    val success = sendSmsMessage(contact.phoneNumber, message)
+                    if (success) dispatchedCount++
+                }
+            } else {
+                eventLogger.log(
+                    LogLevel.ERROR,
+                    "EmergencyDispatch",
+                    "❌ SMS cancelado para ${smsContacts.size} contacto(s): Falta el permiso SEND_SMS en la aplicación."
+                )
             }
         }
 
-        // 3. Mostrar Notificación de Máxima Prioridad para WhatsApp e Intents
+        // 3. WhatsApp (CallMeBot HTTP API automático de fondo o Intent directo)
+        val whatsAppContacts = config.contacts.filter { it.sendViaWhatsApp && it.phoneNumber.isNotBlank() }
+        for (contact in whatsAppContacts) {
+            if (contact.whatsAppApiKey.isNotBlank()) {
+                val success = sendCallMeBotWhatsAppMessage(contact.phoneNumber, contact.whatsAppApiKey, message)
+                if (success) dispatchedCount++
+            } else if (launchWhatsAppDirectly) {
+                withContext(Dispatchers.Main) {
+                    launchWhatsApp(contact.phoneNumber, message)
+                }
+                dispatchedCount++
+            } else {
+                dispatchedCount++
+            }
+        }
+
+        // 4. Mostrar Notificación de Máxima Prioridad con accesos directos a WhatsApp e Intents
         showEmergencyNotification(glucoseMgDl, message, config.contacts)
 
         return@withContext dispatchedCount
+    }
+
+    suspend fun sendCallMeBotWhatsAppMessage(phoneNumber: String, apiKey: String, message: String): Boolean = withContext(Dispatchers.IO) {
+        return@withContext try {
+            val cleanPhone = phoneNumber.replace("[^0-9+]".toRegex(), "")
+            val formattedPhone = if (!cleanPhone.startsWith("+")) "+$cleanPhone" else cleanPhone
+            val encodedMessage = java.net.URLEncoder.encode(message, "UTF-8")
+            val url = "https://api.callmebot.com/whatsapp.php?phone=$formattedPhone&text=$encodedMessage&apikey=${apiKey.trim()}"
+
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .build()
+
+            val response = httpClient.newCall(request).execute()
+            val isSuccess = response.isSuccessful
+            val bodyStr = response.body?.string() ?: ""
+            response.close()
+
+            if (!isSuccess) {
+                eventLogger.log(LogLevel.ERROR, "EmergencyDispatch", "❌ CallMeBot WhatsApp error HTTP ${response.code} para $formattedPhone: $bodyStr")
+            } else {
+                eventLogger.log(LogLevel.INFO, "EmergencyDispatch", "✅ CallMeBot WhatsApp enviado automáticamente a $formattedPhone")
+            }
+
+            isSuccess
+        } catch (e: Exception) {
+            eventLogger.log(LogLevel.ERROR, "EmergencyDispatch", "❌ CallMeBot WhatsApp excepción para $phoneNumber: ${e.message}")
+            false
+        }
     }
 
     suspend fun sendTelegramBotMessage(botToken: String, chatId: String, message: String): Boolean = withContext(Dispatchers.IO) {
@@ -148,11 +203,16 @@ class EmergencyAlertDispatcher(private val context: Context) {
         }
     }
 
-    private fun hasSmsPermission(): Boolean {
+    fun hasSmsPermission(): Boolean {
         return ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED
     }
 
-    private fun sendSmsMessage(phoneNumber: String, message: String): Boolean {
+    fun sendSmsMessage(phoneNumber: String, message: String): Boolean {
+        if (!hasSmsPermission()) {
+            eventLogger.log(LogLevel.ERROR, "EmergencyDispatch", "❌ SMS cancelado: Permiso SEND_SMS no concedido.")
+            return false
+        }
+
         return try {
             val smsManager = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 context.getSystemService(SmsManager::class.java)
@@ -173,9 +233,24 @@ class EmergencyAlertDispatcher(private val context: Context) {
             } else {
                 smsManager.sendTextMessage(cleanPhone, null, message, null, null)
             }
+            eventLogger.log(LogLevel.INFO, "EmergencyDispatch", "✅ SMS enviado correctamente a $cleanPhone")
             true
         } catch (e: Exception) {
             eventLogger.log(LogLevel.ERROR, "EmergencyDispatch", "❌ SMS error para $phoneNumber: ${e.message}")
+            false
+        }
+    }
+
+    fun isPackageInstalled(packageName: String): Boolean {
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.packageManager.getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(0))
+            } else {
+                @Suppress("DEPRECATION")
+                context.packageManager.getPackageInfo(packageName, 0)
+            }
+            true
+        } catch (_: Exception) {
             false
         }
     }
@@ -206,10 +281,8 @@ class EmergencyAlertDispatcher(private val context: Context) {
 
         // Añadir acciones de WhatsApp si hay contactos habilitados
         val whatsAppContacts = contacts.filter { it.sendViaWhatsApp && it.phoneNumber.isNotBlank() }
-        for ((index, contact) in whatsAppContacts.take(2).withIndex()) {
-            val cleanPhone = contact.phoneNumber.replace("[^0-9+]".toRegex(), "")
-            val waUri = Uri.parse("https://api.whatsapp.com/send?phone=$cleanPhone&text=${Uri.encode(message)}")
-            val waIntent = Intent(Intent.ACTION_VIEW, waUri)
+        for ((index, contact) in whatsAppContacts.take(3).withIndex()) {
+            val waIntent = createWhatsAppIntent(contact.phoneNumber, message)
             val waPendingIntent = PendingIntent.getActivity(
                 context,
                 100 + index,
@@ -228,10 +301,56 @@ class EmergencyAlertDispatcher(private val context: Context) {
     }
 
     fun createWhatsAppIntent(phoneNumber: String, message: String): Intent {
-        val cleanPhone = phoneNumber.replace("[^0-9+]".toRegex(), "")
-        val uri = Uri.parse("https://api.whatsapp.com/send?phone=$cleanPhone&text=${Uri.encode(message)}")
-        return Intent(Intent.ACTION_VIEW, uri).apply {
+        val cleanDigits = phoneNumber.replace("[^0-9]".toRegex(), "")
+        val waUri = Uri.parse("https://wa.me/$cleanDigits?text=${Uri.encode(message)}")
+        
+        val intent = Intent(Intent.ACTION_VIEW, waUri).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        if (isPackageInstalled("com.whatsapp")) {
+            intent.setPackage("com.whatsapp")
+        } else if (isPackageInstalled("com.whatsapp.w4b")) {
+            intent.setPackage("com.whatsapp.w4b")
+        }
+        return intent
+    }
+
+    fun launchWhatsApp(phoneNumber: String, message: String): Boolean {
+        val cleanDigits = phoneNumber.replace("[^0-9]".toRegex(), "")
+        if (cleanDigits.isBlank()) return false
+
+        val waUri = Uri.parse("https://wa.me/$cleanDigits?text=${Uri.encode(message)}")
+
+        // Intento 1: com.whatsapp directo
+        try {
+            val intent = Intent(Intent.ACTION_VIEW, waUri).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                setPackage("com.whatsapp")
+            }
+            context.startActivity(intent)
+            return true
+        } catch (_: Exception) {}
+
+        // Intento 2: com.whatsapp.w4b (Business)
+        try {
+            val intent = Intent(Intent.ACTION_VIEW, waUri).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                setPackage("com.whatsapp.w4b")
+            }
+            context.startActivity(intent)
+            return true
+        } catch (_: Exception) {}
+
+        // Intento 3: Intent implícito ACTION_VIEW sin paquete fijo
+        return try {
+            val intent = Intent(Intent.ACTION_VIEW, waUri).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            context.startActivity(intent)
+            true
+        } catch (e: Exception) {
+            eventLogger.log(LogLevel.ERROR, "EmergencyDispatch", "❌ No se pudo abrir WhatsApp: ${e.message}")
+            false
         }
     }
 

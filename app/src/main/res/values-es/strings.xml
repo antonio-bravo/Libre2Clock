@@ -583,4 +583,12 @@
     <string name="emergency_test_wifi_button">Probar Ubicación Wi-Fi</string>
     <string name="emergency_test_location_success">Ubicación capturada por %1$s (~%2$d m de precisión).</string>
     <string name="emergency_test_location_failed">No se pudo obtener ubicación por %1$s.</string>
+    <string name="emergency_sms_permission_title">Permiso de SMS Requerido</string>
+    <string name="emergency_sms_permission_warning">Para enviar alertas por SMS a tus contactos, es necesario conceder el permiso de envío de SMS a la aplicación.</string>
+    <string name="emergency_grant_sms_permission">Conceder Permiso</string>
+    <string name="emergency_contact_phone_hint">Ej: +34612345678 (Incluye el prefijo de país con +)</string>
+    <string name="emergency_contact_whatsapp_apikey_label">API Key de WhatsApp CallMeBot (Opcional)</string>
+    <string name="emergency_contact_whatsapp_apikey_hint">Permite envíos 100% automáticos de fondo a WhatsApp sin tocar la pantalla.</string>
+    <string name="emergency_whatsapp_help_title">WhatsApp 100% Automático en 2º Plano</string>
+    <string name="emergency_whatsapp_help_content">Para enviar mensajes de WhatsApp de forma 100% automática en segundo plano (sin intervención del usuario ni tocar la pantalla):\n\n1. Añade el número de CallMeBot a la agenda de WhatsApp de tu contacto: +34 644 10 55 84 (o consulta callmebot.com).\n2. El contacto debe enviar el mensaje \"I allow callmebot to send me messages\" a ese número por WhatsApp.\n3. Recibirá un mensaje de respuesta con su apikey (ej: 123456).\n4. Pega esa apikey en el contacto arriba.\n\nNota: Los SMS y Telegram Bot ya son 100% automáticos de fondo por defecto.</string>
 </resources>

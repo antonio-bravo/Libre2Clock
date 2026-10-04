@@ -9,6 +9,7 @@ data class EmergencyContact(
     val name: String,
     val phoneNumber: String = "",
     val telegramChatId: String = "",
+    val whatsAppApiKey: String = "",
     val sendViaWhatsApp: Boolean = true,
     val sendViaTelegram: Boolean = true,
     val sendViaSms: Boolean = false
