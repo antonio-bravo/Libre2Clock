@@ -15,6 +15,16 @@ const client = new Client({
     }
 });
 
+// Health Check Endpoint para Render.com
+app.get(['/', '/health'], (req, res) => {
+    res.status(200).json({
+        status: 'ok',
+        service: 'Libre2Clock WhatsApp Webhook Bot',
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString()
+    });
+});
+
 // Generar código QR en la consola la primera vez que se inicia
 client.on('qr', (qr) => {
     console.log('\n======================================================');
