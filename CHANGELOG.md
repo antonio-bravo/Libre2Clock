@@ -1,5 +1,35 @@
 # Changelog
 
+## d32fd68 (Oct 04, 2026 12:54:14)
+SOS SMS + WhatsApp — antonio-bravo
+[detail](#d32fd68-details)
+
+<details id='d32fd68-details'>
+<summary>Changed files</summary>
+
+- app/src/main/AndroidManifest.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/model/EmergencyModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEmergencyScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/EmergencyAlertDispatcher.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 059a634 (Oct 03, 2026 19:31:49)
+Update changelog — github-actions[bot]
+[detail](#059a634-details)
+
+<details id='059a634-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 81c5655 (Oct 03, 2026 21:31:28)
 SOS — antonio-bravo
 [detail](#81c5655-details)
@@ -739,36 +769,6 @@ notify once on custom + availability to discount active insulin — antonio-brav
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsAlertsScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 48c60fc (Sep 21, 2026 11:39:44)
-Update changelog — github-actions[bot]
-[detail](#48c60fc-details)
-
-<details id='48c60fc-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 552957c (Sep 21, 2026 13:39:30)
-Add custom alarm when reach to value > or < — antonio-bravo
-[detail](#552957c-details)
-
-<details id='552957c-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsAlertsScreen.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
 - app/src/main/res/values-es/strings.xml [Modified]
