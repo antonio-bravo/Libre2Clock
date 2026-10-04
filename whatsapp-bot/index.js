@@ -1,6 +1,12 @@
+const path = require('path');
 const express = require('express');
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
+
+// Definir la ruta de caché de Puppeteer dentro de la carpeta del proyecto para Render
+const cacheDir = path.join(__dirname, '.cache', 'puppeteer');
+process.env.PUPPETEER_CACHE_DIR = cacheDir;
+
 const puppeteer = require('puppeteer');
 
 const app = express();
