@@ -4,15 +4,12 @@ import android.graphics.Paint
 import android.text.format.DateFormat
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -67,9 +64,11 @@ private data class NormalizedPoint(
 
 private data class NormalizedPredPoint(
     val relX: Float,
-    val relY: Float,
+    val relRawY: Float,
+    val relCalY: Float,
     val epoch: Long,
-    val glucoseValue: Int
+    val calibratedValue: Int,
+    val rawValue: Int
 )
 
 @Composable
@@ -88,7 +87,6 @@ fun InteractiveTrendGraph(
     
     val scrollState = rememberScrollState()
     var selectedMeasurement by remember { mutableStateOf<GlucoseMeasurement?>(null) }
-    var zoomFactor by remember { mutableFloatStateOf(1f) }
 
     // 1. PRE-CÁLCULO DE DIBUJO Y RUTAS EN PÍXELES REALES
     val graphData = remember(measurements, predictedPoints, screenWidth, density, targetLow, targetHigh) {
@@ -142,23 +140,46 @@ fun InteractiveTrendGraph(
         }
 
         val normalizedPredPoints = ArrayList<NormalizedPredPoint>()
-        if (validPredicted.isNotEmpty()) {
+        if (validPredicted.isNotEmpty() && downsampled.isNotEmpty()) {
             val lastDataPoint = downsampled.last()
             val startInstant = lastDataPoint.first
-            val startCalValue = lastDataPoint.second.calibratedValue
+            val lastRawValue = lastDataPoint.second.value
+            val lastCalValue = lastDataPoint.second.calibratedValue
+            
+            // Diferencia entre calibrado y original (offset) al momento de la última lectura
+            val offset = lastCalValue - lastRawValue
 
             val startRelX = ((startInstant.epochSecond - firstInstant.epochSecond).toFloat() / totalSeconds).coerceIn(0f, 1f)
-            val startRelY = (1f - ((startCalValue - minGlucose) / range)).coerceIn(0f, 1f)
+            val startRelRawY = (1f - ((lastRawValue - minGlucose) / range)).coerceIn(0f, 1f)
+            val startRelCalY = (1f - ((lastCalValue - minGlucose) / range)).coerceIn(0f, 1f)
 
             normalizedPredPoints.add(
-                NormalizedPredPoint(startRelX, startRelY, startInstant.epochSecond, startCalValue)
+                NormalizedPredPoint(
+                    relX = startRelX,
+                    relRawY = startRelRawY,
+                    relCalY = startRelCalY,
+                    epoch = startInstant.epochSecond,
+                    calibratedValue = lastCalValue,
+                    rawValue = lastRawValue
+                )
             )
 
-            validPredicted.forEach { (instant, value) ->
+            validPredicted.forEach { (instant, predCalValue) ->
+                val predRawValue = (predCalValue - offset).coerceAtLeast(40)
+
                 val relX = ((instant.epochSecond - firstInstant.epochSecond).toFloat() / totalSeconds).coerceIn(0f, 1f)
-                val relY = (1f - ((value - minGlucose) / range)).coerceIn(0f, 1f)
+                val relRawY = (1f - ((predRawValue - minGlucose) / range)).coerceIn(0f, 1f)
+                val relCalY = (1f - ((predCalValue - minGlucose) / range)).coerceIn(0f, 1f)
+
                 normalizedPredPoints.add(
-                    NormalizedPredPoint(relX, relY, instant.epochSecond, value)
+                    NormalizedPredPoint(
+                        relX = relX,
+                        relRawY = relRawY,
+                        relCalY = relCalY,
+                        epoch = instant.epochSecond,
+                        calibratedValue = predCalValue,
+                        rawValue = predRawValue
+                    )
                 )
             }
         }
@@ -175,7 +196,7 @@ fun InteractiveTrendGraph(
         return
     }
 
-    val pixelsPerHour = (screenWidth / 8f) * zoomFactor
+    val pixelsPerHour = screenWidth / 6f
     val totalDurationHours = graphData.totalSeconds / 3600.0
     val graphWidth = (totalDurationHours * pixelsPerHour.value).dp.coerceAtLeast(screenWidth)
 
@@ -204,16 +225,6 @@ fun InteractiveTrendGraph(
         }
     }
 
-    val valuePaint = remember(density) {
-        Paint().apply {
-            color = android.graphics.Color.LTGRAY
-            textSize = with(density) { 9.sp.toPx() }
-            textAlign = Paint.Align.CENTER
-            isAntiAlias = true
-            isFakeBoldText = true
-        }
-    }
-
     val hourFormatter = remember(is24Hour) {
         DateTimeFormatter.ofPattern(if (is24Hour) "HH:mm" else "h a")
     }
@@ -231,7 +242,7 @@ fun InteractiveTrendGraph(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.weight(1f)) {
+                Column {
                     Text(text = "Glucose Trend", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     
                     // Leyenda explicativa de colores
@@ -271,56 +282,6 @@ fun InteractiveTrendGraph(
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(stringResource(R.string.graph_legend_low, targetLow), style = MaterialTheme.typography.labelSmall)
                         }
-                    }
-                }
-
-                // Controles de zoom
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
-                    if (zoomFactor > 1f) {
-                        IconButton(
-                            onClick = { zoomFactor = 1f },
-                            modifier = Modifier.size(28.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Refresh,
-                                contentDescription = "Reset Zoom",
-                                modifier = Modifier.size(16.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-                    IconButton(
-                        onClick = { zoomFactor = (zoomFactor - 0.5f).coerceAtLeast(1f) },
-                        enabled = zoomFactor > 1f,
-                        modifier = Modifier.size(28.dp)
-                    ) {
-                        Text(
-                            text = "-",
-                            fontWeight = FontWeight.ExtraBold,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = if (zoomFactor > 1f) MaterialTheme.colorScheme.primary else Color.Gray
-                        )
-                    }
-                    Text(
-                        text = "${(zoomFactor * 100).toInt()}%",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    IconButton(
-                        onClick = { zoomFactor = (zoomFactor + 0.5f).coerceAtMost(4f) },
-                        enabled = zoomFactor < 4f,
-                        modifier = Modifier.size(28.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Zoom In",
-                            modifier = Modifier.size(18.dp),
-                            tint = if (zoomFactor < 4f) MaterialTheme.colorScheme.primary else Color.Gray
-                        )
                     }
                 }
             }
@@ -390,11 +351,13 @@ fun InteractiveTrendGraph(
                                     selectedMeasurement = graphData.normalizedPoints[targetIndex].measurement
                                 }
                             }
-                            .pointerInput(Unit) {
-                                detectTransformGestures { _, _, zoom, _ ->
-                                    if (zoom != 1f) {
-                                        zoomFactor = (zoomFactor * zoom).coerceIn(1f, 4f)
-                                    }
+                            .pointerInput(graphData) {
+                                detectHorizontalDragGestures { change, _ ->
+                                    val tapRatio = (change.position.x / size.width).coerceIn(0f, 1f)
+                                    val targetIndex = (tapRatio * (graphData.normalizedPoints.size - 1))
+                                        .toInt()
+                                        .coerceIn(0, graphData.normalizedPoints.size - 1)
+                                    selectedMeasurement = graphData.normalizedPoints[targetIndex].measurement
                                 }
                             }
                     ) {
@@ -495,42 +458,69 @@ fun InteractiveTrendGraph(
                             style = Stroke(width = 3.5.dp.toPx())
                         )
 
-                        // Predicción futura (Proyección de Insulina / IOB)
+                        // Predicción futura (Proyección de Insulina / IOB) con ambas curvas (Raw y Calibrada) suaves
                         if (graphData.normalizedPredPoints.size >= 2) {
-                            val predPath = Path()
-                            var isFirstPred = true
-                            graphData.normalizedPredPoints.forEach { pt ->
-                                val ptX = pt.relX * width
-                                val ptY = topPadding + (pt.relY * plotHeight)
-                                if (isFirstPred) {
-                                    predPath.moveTo(ptX, ptY)
-                                    isFirstPred = false
-                                } else {
-                                    predPath.lineTo(ptX, ptY)
-                                }
+                            val predCalPath = Path()
+                            val predRawPath = Path()
+
+                            val calPoints = graphData.normalizedPredPoints.map { 
+                                Offset(it.relX * width, topPadding + (it.relCalY * plotHeight)) 
+                            }
+                            val rawPoints = graphData.normalizedPredPoints.map { 
+                                Offset(it.relX * width, topPadding + (it.relRawY * plotHeight)) 
+                            }
+
+                            // 1. Línea predicha sin calibrar (Raw): Gris Punteada suave (Bézier)
+                            predRawPath.moveTo(rawPoints[0].x, rawPoints[0].y)
+                            for (i in 0 until rawPoints.size - 1) {
+                                val p0 = rawPoints[i]
+                                val p1 = rawPoints[i + 1]
+                                val controlX1 = (p0.x + p1.x) / 2f
+                                val controlX2 = (p0.x + p1.x) / 2f
+                                predRawPath.cubicTo(controlX1, p0.y, controlX2, p1.y, p1.x, p1.y)
                             }
 
                             drawPath(
-                                path = predPath,
-                                color = CALIBRATED_LINE_COLOR.copy(alpha = 0.8f),
+                                path = predRawPath,
+                                color = RAW_LINE_COLOR.copy(alpha = 0.6f),
+                                style = Stroke(
+                                    width = 1.5.dp.toPx(),
+                                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(8.dp.toPx(), 6.dp.toPx()), 0f)
+                                )
+                            )
+
+                            // 2. Línea predicha calibrada con offset: Cyan Punteada suave (Bézier)
+                            predCalPath.moveTo(calPoints[0].x, calPoints[0].y)
+                            for (i in 0 until calPoints.size - 1) {
+                                val p0 = calPoints[i]
+                                val p1 = calPoints[i + 1]
+                                val controlX1 = (p0.x + p1.x) / 2f
+                                val controlX2 = (p0.x + p1.x) / 2f
+                                predCalPath.cubicTo(controlX1, p0.y, controlX2, p1.y, p1.x, p1.y)
+                            }
+
+                            drawPath(
+                                path = predCalPath,
+                                color = CALIBRATED_LINE_COLOR.copy(alpha = 0.85f),
                                 style = Stroke(
                                     width = 2.5.dp.toPx(),
                                     pathEffect = PathEffect.dashPathEffect(floatArrayOf(8.dp.toPx(), 6.dp.toPx()), 0f)
                                 )
                             )
 
+                            // Puntos destacados predichos
                             graphData.normalizedPredPoints.drop(1).forEach { pt ->
                                 val ptX = pt.relX * width
-                                val ptY = topPadding + (pt.relY * plotHeight)
+                                val ptCalY = topPadding + (pt.relCalY * plotHeight)
                                 drawCircle(
                                     color = CALIBRATED_LINE_COLOR.copy(alpha = 0.9f),
                                     radius = 3.dp.toPx(),
-                                    center = Offset(ptX, ptY)
+                                    center = Offset(ptX, ptCalY)
                                 )
                                 drawCircle(
                                     color = Color.White,
                                     radius = 1.2.dp.toPx(),
-                                    center = Offset(ptX, ptY)
+                                    center = Offset(ptX, ptCalY)
                                 )
                             }
                         }
@@ -546,31 +536,6 @@ fun InteractiveTrendGraph(
                             } else if (pt.isHigh) {
                                 drawCircle(color = HIGH_GLUCOSE_COLOR, radius = 3.5.dp.toPx(), center = Offset(ptX, ptCalY))
                                 drawCircle(color = Color.White, radius = 1.5.dp.toPx(), center = Offset(ptX, ptCalY))
-                            }
-
-                            // Mostrar valores numéricos encima de cada punto cuando el zoom está activado (>= 150%)
-                            if (zoomFactor >= 1.5f) {
-                                val valText = pt.measurement.calibratedValue.toString()
-                                drawContext.canvas.nativeCanvas.drawText(
-                                    valText,
-                                    ptX,
-                                    ptCalY - 6.dp.toPx(),
-                                    valuePaint
-                                )
-                            }
-                        }
-
-                        if (zoomFactor >= 1.5f) {
-                            graphData.normalizedPredPoints.drop(1).forEach { pt ->
-                                val ptX = pt.relX * width
-                                val ptY = topPadding + (pt.relY * plotHeight)
-                                val valText = pt.glucoseValue.toString()
-                                drawContext.canvas.nativeCanvas.drawText(
-                                    valText,
-                                    ptX,
-                                    ptY - 6.dp.toPx(),
-                                    valuePaint
-                                )
                             }
                         }
 
@@ -631,17 +596,31 @@ fun InteractiveTrendGraph(
                             cursor = cursor.plusSeconds(intervalSeconds)
                         }
 
-                        // Indicador de selección al hacer tap
+                        // Indicador de selección al hacer tap o arrastrar
                         selectedMeasurement?.let { selected ->
                             measurementInstant(selected)?.let { selInstant ->
                                 val selRelX = ((selInstant.epochSecond - graphData.firstInstant.epochSecond).toFloat() / graphData.totalSeconds).coerceIn(0f, 1f)
                                 val selX = selRelX * width
+                                val selCalY = topPadding + ((1f - ((selected.calibratedValue - 40f) / 310f)).coerceIn(0f, 1f) * plotHeight)
+
                                 drawLine(
                                     color = primaryColor.copy(alpha = 0.7f),
                                     start = Offset(selX, topPadding),
                                     end = Offset(selX, topPadding + plotHeight),
                                     strokeWidth = 1.5.dp.toPx(),
                                     pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 4.dp.toPx()), 0f)
+                                )
+
+                                // Anillo de resalte en el punto seleccionado
+                                drawCircle(
+                                    color = primaryColor,
+                                    radius = 6.dp.toPx(),
+                                    center = Offset(selX, selCalY)
+                                )
+                                drawCircle(
+                                    color = Color.White,
+                                    radius = 3.dp.toPx(),
+                                    center = Offset(selX, selCalY)
                                 )
                             }
                         }
