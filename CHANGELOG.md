@@ -1,5 +1,29 @@
 # Changelog
 
+## b040078 (Oct 04, 2026 23:00:09)
+Trend graph dual — antonio-bravo
+[detail](#b040078-details)
+
+<details id='b040078-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
+</details>
+
+
+---
+## 44134bf (Oct 04, 2026 20:45:43)
+Update changelog — github-actions[bot]
+[detail](#44134bf-details)
+
+<details id='44134bf-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 018bb7d (Oct 04, 2026 22:45:28)
 Fix TrendGraph future — antonio-bravo
 [detail](#018bb7d-details)
@@ -630,47 +654,6 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
-</details>
-
-
----
-## df2dbda (Oct 01, 2026 22:29:13)
-Fix Reports — antonio-bravo
-[detail](#df2dbda-details)
-
-<details id='df2dbda-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/icons/CustomIcons.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/report/AgpChartComponent.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/report/PdfViewerDialog.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/ui/report/ReportScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/strategy/StrategyScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/PdfReportGenerator.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/ReportCalculator.kt [Deleted]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## da77b1e (Oct 01, 2026 22:29:13)
-Corregir error de sintaxis: eliminar código duplicado en PdfReportGenerator
-
-- Eliminado código duplicado de 'Plot Raw Glucose' y leyendas (líneas 834-864)
-- El código estaba fuera de su contexto correcto causando errores de compilación
-- Compilación exitosa verificada
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com> — antonio-bravo
-[detail](#da77b1e-details)
-
-<details id='da77b1e-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/util/PdfReportGenerator.kt [Modified]
 </details>
 
 
