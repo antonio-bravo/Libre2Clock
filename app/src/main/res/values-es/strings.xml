@@ -346,6 +346,7 @@
     <string name="settings_target_high_label">Glucosa Máxima Saludable (mg/dL)</string>
     <string name="graph_legend_raw">Sin calibrar</string>
     <string name="graph_legend_calibrated">Calibrada</string>
+    <string name="graph_legend_projection">Proyección</string>
     <string name="graph_legend_target">Rango saludable (%1$d-%2$d)</string>
     <string name="graph_legend_low">Baja (&lt; %1$d)</string>
     <string name="graph_status_low">🔴 Baja (&lt; %1$d mg/dL)</string>

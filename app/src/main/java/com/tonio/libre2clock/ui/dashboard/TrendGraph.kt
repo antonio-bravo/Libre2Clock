@@ -5,10 +5,14 @@ import android.text.format.DateFormat
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -61,6 +65,13 @@ private data class NormalizedPoint(
     val isHigh: Boolean
 )
 
+private data class NormalizedPredPoint(
+    val relX: Float,
+    val relY: Float,
+    val epoch: Long,
+    val glucoseValue: Int
+)
+
 @Composable
 fun InteractiveTrendGraph(
     measurements: List<GlucoseMeasurement>,
@@ -77,6 +88,7 @@ fun InteractiveTrendGraph(
     
     val scrollState = rememberScrollState()
     var selectedMeasurement by remember { mutableStateOf<GlucoseMeasurement?>(null) }
+    var zoomFactor by remember { mutableFloatStateOf(1f) }
 
     // 1. PRE-CÁLCULO DE DIBUJO Y RUTAS EN PÍXELES REALES
     val graphData = remember(measurements, predictedPoints, screenWidth, density, targetLow, targetHigh) {
@@ -104,13 +116,11 @@ fun InteractiveTrendGraph(
 
         val firstInstant = downsampled.first().first
         val lastDataInstant = downsampled.last().first
-        val lastInstant = predictedPoints.lastOrNull()?.first ?: lastDataInstant
+
+        val validPredicted = predictedPoints.filter { !it.first.isBefore(lastDataInstant) }
+        val lastInstant = validPredicted.lastOrNull()?.first ?: lastDataInstant
         
         val totalSeconds = max(1L, lastInstant.epochSecond - firstInstant.epochSecond)
-
-        val pixelsPerHourPx = with(density) { (screenWidth.value / 8f).dp.toPx() }
-        val totalDurationHours = totalSeconds / 3600.0
-        val totalWidthPx = (totalDurationHours * pixelsPerHourPx).toFloat().coerceAtLeast(with(density) { screenWidth.toPx() })
 
         val normalizedPoints = ArrayList<NormalizedPoint>(downsampled.size)
 
@@ -131,7 +141,29 @@ fun InteractiveTrendGraph(
             )
         }
 
-        GraphData(normalizedPoints, Path(), Path(), Path(), null, firstInstant, lastInstant, totalSeconds)
+        val normalizedPredPoints = ArrayList<NormalizedPredPoint>()
+        if (validPredicted.isNotEmpty()) {
+            val lastDataPoint = downsampled.last()
+            val startInstant = lastDataPoint.first
+            val startCalValue = lastDataPoint.second.calibratedValue
+
+            val startRelX = ((startInstant.epochSecond - firstInstant.epochSecond).toFloat() / totalSeconds).coerceIn(0f, 1f)
+            val startRelY = (1f - ((startCalValue - minGlucose) / range)).coerceIn(0f, 1f)
+
+            normalizedPredPoints.add(
+                NormalizedPredPoint(startRelX, startRelY, startInstant.epochSecond, startCalValue)
+            )
+
+            validPredicted.forEach { (instant, value) ->
+                val relX = ((instant.epochSecond - firstInstant.epochSecond).toFloat() / totalSeconds).coerceIn(0f, 1f)
+                val relY = (1f - ((value - minGlucose) / range)).coerceIn(0f, 1f)
+                normalizedPredPoints.add(
+                    NormalizedPredPoint(relX, relY, instant.epochSecond, value)
+                )
+            }
+        }
+
+        GraphData(normalizedPoints, normalizedPredPoints, firstInstant, lastInstant, totalSeconds)
     }
 
     if (graphData == null) {
@@ -143,7 +175,7 @@ fun InteractiveTrendGraph(
         return
     }
 
-    val pixelsPerHour = screenWidth / 8f
+    val pixelsPerHour = (screenWidth / 8f) * zoomFactor
     val totalDurationHours = graphData.totalSeconds / 3600.0
     val graphWidth = (totalDurationHours * pixelsPerHour.value).dp.coerceAtLeast(screenWidth)
 
@@ -172,6 +204,16 @@ fun InteractiveTrendGraph(
         }
     }
 
+    val valuePaint = remember(density) {
+        Paint().apply {
+            color = android.graphics.Color.LTGRAY
+            textSize = with(density) { 9.sp.toPx() }
+            textAlign = Paint.Align.CENTER
+            isAntiAlias = true
+            isFakeBoldText = true
+        }
+    }
+
     val hourFormatter = remember(is24Hour) {
         DateTimeFormatter.ofPattern(if (is24Hour) "HH:mm" else "h a")
     }
@@ -189,7 +231,7 @@ fun InteractiveTrendGraph(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(text = "Glucose Trend", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     
                     // Leyenda explicativa de colores
@@ -207,6 +249,18 @@ fun InteractiveTrendGraph(
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(stringResource(R.string.graph_legend_calibrated), style = MaterialTheme.typography.labelSmall)
                         }
+                        if (predictedPoints.isNotEmpty()) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .width(12.dp)
+                                        .height(3.dp)
+                                        .background(CALIBRATED_LINE_COLOR.copy(alpha = 0.8f))
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(stringResource(R.string.graph_legend_projection), style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(modifier = Modifier.size(8.dp).background(Color(0xFF4CAF50).copy(alpha = 0.4f)))
                             Spacer(modifier = Modifier.width(4.dp))
@@ -217,6 +271,56 @@ fun InteractiveTrendGraph(
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(stringResource(R.string.graph_legend_low, targetLow), style = MaterialTheme.typography.labelSmall)
                         }
+                    }
+                }
+
+                // Controles de zoom
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    if (zoomFactor > 1f) {
+                        IconButton(
+                            onClick = { zoomFactor = 1f },
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Reset Zoom",
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                    IconButton(
+                        onClick = { zoomFactor = (zoomFactor - 0.5f).coerceAtLeast(1f) },
+                        enabled = zoomFactor > 1f,
+                        modifier = Modifier.size(28.dp)
+                    ) {
+                        Text(
+                            text = "-",
+                            fontWeight = FontWeight.ExtraBold,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = if (zoomFactor > 1f) MaterialTheme.colorScheme.primary else Color.Gray
+                        )
+                    }
+                    Text(
+                        text = "${(zoomFactor * 100).toInt()}%",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    IconButton(
+                        onClick = { zoomFactor = (zoomFactor + 0.5f).coerceAtMost(4f) },
+                        enabled = zoomFactor < 4f,
+                        modifier = Modifier.size(28.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Zoom In",
+                            modifier = Modifier.size(18.dp),
+                            tint = if (zoomFactor < 4f) MaterialTheme.colorScheme.primary else Color.Gray
+                        )
                     }
                 }
             }
@@ -284,6 +388,13 @@ fun InteractiveTrendGraph(
                                         .toInt()
                                         .coerceIn(0, graphData.normalizedPoints.size - 1)
                                     selectedMeasurement = graphData.normalizedPoints[targetIndex].measurement
+                                }
+                            }
+                            .pointerInput(Unit) {
+                                detectTransformGestures { _, _, zoom, _ ->
+                                    if (zoom != 1f) {
+                                        zoomFactor = (zoomFactor * zoom).coerceIn(1f, 4f)
+                                    }
                                 }
                             }
                     ) {
@@ -384,16 +495,44 @@ fun InteractiveTrendGraph(
                             style = Stroke(width = 3.5.dp.toPx())
                         )
 
-                        // Predicción futura
-                        if (graphData.predPath != null) {
+                        // Predicción futura (Proyección de Insulina / IOB)
+                        if (graphData.normalizedPredPoints.size >= 2) {
+                            val predPath = Path()
+                            var isFirstPred = true
+                            graphData.normalizedPredPoints.forEach { pt ->
+                                val ptX = pt.relX * width
+                                val ptY = topPadding + (pt.relY * plotHeight)
+                                if (isFirstPred) {
+                                    predPath.moveTo(ptX, ptY)
+                                    isFirstPred = false
+                                } else {
+                                    predPath.lineTo(ptX, ptY)
+                                }
+                            }
+
                             drawPath(
-                                path = graphData.predPath,
-                                color = CALIBRATED_LINE_COLOR.copy(alpha = 0.6f),
+                                path = predPath,
+                                color = CALIBRATED_LINE_COLOR.copy(alpha = 0.8f),
                                 style = Stroke(
-                                    width = 2.dp.toPx(),
-                                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(8.dp.toPx(), 8.dp.toPx()), 0f)
+                                    width = 2.5.dp.toPx(),
+                                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(8.dp.toPx(), 6.dp.toPx()), 0f)
                                 )
                             )
+
+                            graphData.normalizedPredPoints.drop(1).forEach { pt ->
+                                val ptX = pt.relX * width
+                                val ptY = topPadding + (pt.relY * plotHeight)
+                                drawCircle(
+                                    color = CALIBRATED_LINE_COLOR.copy(alpha = 0.9f),
+                                    radius = 3.dp.toPx(),
+                                    center = Offset(ptX, ptY)
+                                )
+                                drawCircle(
+                                    color = Color.White,
+                                    radius = 1.2.dp.toPx(),
+                                    center = Offset(ptX, ptY)
+                                )
+                            }
                         }
 
                         // 3. DIBUJO DE PUNTOS DESTACADOS (Rojo para glucosa baja)
@@ -407,6 +546,31 @@ fun InteractiveTrendGraph(
                             } else if (pt.isHigh) {
                                 drawCircle(color = HIGH_GLUCOSE_COLOR, radius = 3.5.dp.toPx(), center = Offset(ptX, ptCalY))
                                 drawCircle(color = Color.White, radius = 1.5.dp.toPx(), center = Offset(ptX, ptCalY))
+                            }
+
+                            // Mostrar valores numéricos encima de cada punto cuando el zoom está activado (>= 150%)
+                            if (zoomFactor >= 1.5f) {
+                                val valText = pt.measurement.calibratedValue.toString()
+                                drawContext.canvas.nativeCanvas.drawText(
+                                    valText,
+                                    ptX,
+                                    ptCalY - 6.dp.toPx(),
+                                    valuePaint
+                                )
+                            }
+                        }
+
+                        if (zoomFactor >= 1.5f) {
+                            graphData.normalizedPredPoints.drop(1).forEach { pt ->
+                                val ptX = pt.relX * width
+                                val ptY = topPadding + (pt.relY * plotHeight)
+                                val valText = pt.glucoseValue.toString()
+                                drawContext.canvas.nativeCanvas.drawText(
+                                    valText,
+                                    ptX,
+                                    ptY - 6.dp.toPx(),
+                                    valuePaint
+                                )
                             }
                         }
 
@@ -527,10 +691,7 @@ fun InteractiveTrendGraph(
 
 private data class GraphData(
     val normalizedPoints: List<NormalizedPoint>,
-    val rawPath: Path,
-    val calPath: Path,
-    val lowPath: Path,
-    val predPath: Path?,
+    val normalizedPredPoints: List<NormalizedPredPoint>,
     val firstInstant: Instant,
     val lastInstant: Instant,
     val totalSeconds: Long

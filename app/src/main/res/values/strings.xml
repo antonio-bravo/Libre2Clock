@@ -347,6 +347,7 @@
     <string name="settings_target_high_label">Target High (mg/dL)</string>
     <string name="graph_legend_raw">Original (Raw)</string>
     <string name="graph_legend_calibrated">Calibrated</string>
+    <string name="graph_legend_projection">Projection</string>
     <string name="graph_legend_target">Target Range (%1$d-%2$d)</string>
     <string name="graph_legend_low">Low (&lt; %1$d)</string>
     <string name="graph_status_low">🔴 Low (&lt; %1$d mg/dL)</string>
