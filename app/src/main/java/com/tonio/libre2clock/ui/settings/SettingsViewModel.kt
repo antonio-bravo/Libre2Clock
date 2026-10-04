@@ -445,6 +445,10 @@ class SettingsViewModel(
         viewModelScope.launch { preferenceManager.saveEmergencyTelegramBotToken(token) }
     }
 
+    fun setEmergencyCustomWebhookUrl(url: String) {
+        viewModelScope.launch { preferenceManager.saveEmergencyCustomWebhookUrl(url) }
+    }
+
     fun saveEmergencyContact(contact: EmergencyContact) {
         viewModelScope.launch {
             val current = preferenceManager.emergencyConfig.first().contacts.toMutableList()

@@ -137,6 +137,12 @@ class EmergencyAlertDispatcher(private val context: Context) {
         // 4. Mostrar Notificación de Máxima Prioridad con accesos directos a WhatsApp e Intents
         showEmergencyNotification(glucoseMgDl, message, config.contacts)
 
+        // 5. Enviar vía Webhook Personalizado (WASender API, IFTTT, Make, servidor propio)
+        if (config.customWebhookUrl.isNotBlank()) {
+            val success = sendCustomWebhook(config.customWebhookUrl, glucoseMgDl, location, message, config.contacts)
+            if (success) dispatchedCount++
+        }
+
         return@withContext dispatchedCount
     }
 
@@ -170,6 +176,61 @@ class EmergencyAlertDispatcher(private val context: Context) {
             isSuccess
         } catch (e: Exception) {
             eventLogger.log(LogLevel.ERROR, "EmergencyDispatch", "❌ CallMeBot WhatsApp excepción para $phoneNumber: ${e.message}")
+            false
+        }
+    }
+
+    suspend fun sendCustomWebhook(
+        url: String,
+        glucoseMgDl: Int,
+        location: EmergencyLocation?,
+        message: String,
+        contacts: List<EmergencyContact> = emptyList()
+    ): Boolean = withContext(Dispatchers.IO) {
+        return@withContext try {
+            val primaryGroupId = contacts.firstOrNull { it.whatsAppGroupId.isNotBlank() }?.whatsAppGroupId ?: ""
+            val jsonBody = JSONObject().apply {
+                put("glucose", glucoseMgDl)
+                put("message", message)
+                put("group_id", primaryGroupId)
+                put("timestamp", System.currentTimeMillis())
+                put("latitude", location?.latitude ?: 0.0)
+                put("longitude", location?.longitude ?: 0.0)
+                put("map_url", location?.mapUrl ?: "")
+                put("contacts", org.json.JSONArray().apply {
+                    contacts.forEach { c ->
+                        put(JSONObject().apply {
+                            put("name", c.name)
+                            put("phone", c.phoneNumber)
+                            put("telegram_chat_id", c.telegramChatId)
+                            put("whatsapp_api_key", c.whatsAppApiKey)
+                            put("whatsapp_group_id", c.whatsAppGroupId)
+                        })
+                    }
+                })
+            }
+
+            val mediaType = "application/json; charset=utf-8".toMediaType()
+            val requestBody = jsonBody.toString().toRequestBody(mediaType)
+
+            val request = Request.Builder()
+                .url(url.trim())
+                .post(requestBody)
+                .build()
+
+            val response = httpClient.newCall(request).execute()
+            val isSuccess = response.isSuccessful
+            response.close()
+
+            if (!isSuccess) {
+                eventLogger.log(LogLevel.ERROR, "EmergencyDispatch", "❌ Webhook error HTTP ${response.code} para $url")
+            } else {
+                eventLogger.log(LogLevel.INFO, "EmergencyDispatch", "✅ Webhook personalizado enviado a $url")
+            }
+
+            isSuccess
+        } catch (e: Exception) {
+            eventLogger.log(LogLevel.ERROR, "EmergencyDispatch", "❌ Webhook excepción para $url: ${e.message}")
             false
         }
     }

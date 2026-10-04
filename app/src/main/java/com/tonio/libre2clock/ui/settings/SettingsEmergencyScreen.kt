@@ -352,6 +352,44 @@ fun SettingsEmergencyScreen(
                 }
             }
 
+            item(key = "custom_webhook_url") {
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.Share,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = stringResource(R.string.emergency_webhook_title),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Text(
+                            text = stringResource(R.string.emergency_webhook_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        OutlinedTextField(
+                            value = emergencyConfig.customWebhookUrl,
+                            onValueChange = { viewModel.setEmergencyCustomWebhookUrl(it) },
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = { Text("https://wasenderapi.com/... ó tu webhook") },
+                            singleLine = true
+                        )
+                    }
+                }
+            }
+
             if (emergencyConfig.contacts.any { it.sendViaSms } && !hasSmsPermission) {
                 item(key = "sms_permission_warning") {
                     Card(
@@ -634,6 +672,7 @@ fun EmergencyContactDialog(
     var phone by remember { mutableStateOf(contact.phoneNumber) }
     var telegramChatId by remember { mutableStateOf(contact.telegramChatId) }
     var whatsAppApiKey by remember { mutableStateOf(contact.whatsAppApiKey) }
+    var whatsAppGroupId by remember { mutableStateOf(contact.whatsAppGroupId) }
     var sendViaWhatsApp by remember { mutableStateOf(contact.sendViaWhatsApp) }
     var sendViaTelegram by remember { mutableStateOf(contact.sendViaTelegram) }
     var sendViaSms by remember { mutableStateOf(contact.sendViaSms) }
@@ -697,6 +736,16 @@ fun EmergencyContactDialog(
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
+
+                    OutlinedTextField(
+                        value = whatsAppGroupId,
+                        onValueChange = { whatsAppGroupId = it },
+                        label = { Text(stringResource(R.string.emergency_contact_whatsapp_group_id_label)) },
+                        placeholder = { Text("Ej: 120363012345678901@g.us") },
+                        supportingText = { Text(stringResource(R.string.emergency_contact_whatsapp_group_id_hint)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
                 OutlinedTextField(
                     value = telegramChatId,
@@ -738,6 +787,7 @@ fun EmergencyContactDialog(
                             phoneNumber = phone.trim(),
                             telegramChatId = telegramChatId.trim(),
                             whatsAppApiKey = whatsAppApiKey.trim(),
+                            whatsAppGroupId = whatsAppGroupId.trim(),
                             sendViaWhatsApp = sendViaWhatsApp,
                             sendViaTelegram = sendViaTelegram,
                             sendViaSms = sendViaSms

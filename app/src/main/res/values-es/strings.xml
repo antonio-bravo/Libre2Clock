@@ -591,4 +591,8 @@
     <string name="emergency_contact_whatsapp_apikey_hint">Permite envíos 100% automáticos de fondo a WhatsApp sin tocar la pantalla.</string>
     <string name="emergency_whatsapp_help_title">WhatsApp 100% Automático en 2º Plano</string>
     <string name="emergency_whatsapp_help_content">Para enviar mensajes de WhatsApp de forma 100% automática en segundo plano (sin intervención del usuario ni tocar la pantalla):\n\n1. Añade el número de CallMeBot a la agenda de WhatsApp de tu contacto: +34 644 10 55 84 (o consulta callmebot.com).\n2. El contacto debe enviar el mensaje \"I allow callmebot to send me messages\" a ese número por WhatsApp.\n3. Recibirá un mensaje de respuesta con su apikey (ej: 123456).\n4. Pega esa apikey en el contacto arriba.\n\nNota: Los SMS y Telegram Bot ya son 100% automáticos de fondo por defecto.</string>
+    <string name="emergency_webhook_title">URL de Webhook Personalizado (Opcional)</string>
+    <string name="emergency_webhook_desc">Envía una petición HTTP POST en segundo plano a cualquier API (WASender, IFTTT, Zapier, Make, servidor propio) con los datos del SOS.</string>
+    <string name="emergency_contact_whatsapp_group_id_label">ID de Grupo de WhatsApp (Opcional)</string>
+    <string name="emergency_contact_whatsapp_group_id_hint">Ej: 120363012345678901@g.us (Se obtiene escribiendo /id en el grupo)</string>
 </resources>

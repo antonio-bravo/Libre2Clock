@@ -120,6 +120,7 @@ class PreferenceManager(private val context: Context) {
     private val EMERGENCY_START_TIME_KEY = stringPreferencesKey("emergency_start_time")
     private val EMERGENCY_END_TIME_KEY = stringPreferencesKey("emergency_end_time")
     private val EMERGENCY_TELEGRAM_BOT_TOKEN_KEY = stringPreferencesKey("emergency_telegram_bot_token")
+    private val EMERGENCY_CUSTOM_WEBHOOK_URL_KEY = stringPreferencesKey("emergency_custom_webhook_url")
     private val EMERGENCY_CONTACTS_KEY = stringPreferencesKey("emergency_contacts")
     private val LAST_EMERGENCY_ALERT_AT_KEY = longPreferencesKey("last_emergency_alert_at")
     private val BATTERY_LOW_THRESHOLD_KEY = intPreferencesKey("battery_low_threshold")
@@ -283,6 +284,7 @@ class PreferenceManager(private val context: Context) {
     val emergencyStartTime: Flow<String> = context.dataStore.data.map { it[EMERGENCY_START_TIME_KEY] ?: "00:00" }.distinctUntilChanged()
     val emergencyEndTime: Flow<String> = context.dataStore.data.map { it[EMERGENCY_END_TIME_KEY] ?: "23:59" }.distinctUntilChanged()
     val emergencyTelegramBotToken: Flow<String> = context.dataStore.data.map { it[EMERGENCY_TELEGRAM_BOT_TOKEN_KEY] ?: "" }.distinctUntilChanged()
+    val emergencyCustomWebhookUrl: Flow<String> = context.dataStore.data.map { it[EMERGENCY_CUSTOM_WEBHOOK_URL_KEY] ?: "" }.distinctUntilChanged()
     val lastEmergencyAlertAt: Flow<Long> = context.dataStore.data.map { it[LAST_EMERGENCY_ALERT_AT_KEY] ?: 0L }.distinctUntilChanged()
 
     val emergencyContacts: Flow<List<EmergencyContact>> = context.dataStore.data.map { prefs ->
@@ -296,28 +298,34 @@ class PreferenceManager(private val context: Context) {
 
     @Suppress("UNCHECKED_CAST")
     val emergencyConfig: Flow<EmergencyConfig> = combine(
-        emergencyAlertsEnabled,
-        emergencyGlucoseThreshold,
-        emergencyCooldownMinutes,
-        emergencyIncludeLocation,
-        emergencyUseCalibratedValue,
-        emergencyUseSchedule,
-        emergencyStartTime,
-        emergencyEndTime,
-        emergencyTelegramBotToken,
-        emergencyContacts
-    ) { flows ->
+        combine(
+            emergencyAlertsEnabled,
+            emergencyGlucoseThreshold,
+            emergencyCooldownMinutes,
+            emergencyIncludeLocation,
+            emergencyUseCalibratedValue,
+            emergencyUseSchedule,
+            emergencyStartTime,
+            emergencyEndTime
+        ) { a -> a },
+        combine(
+            emergencyTelegramBotToken,
+            emergencyCustomWebhookUrl,
+            emergencyContacts
+        ) { b -> b }
+    ) { first8, last3 ->
         EmergencyConfig(
-            enabled = flows[0] as Boolean,
-            thresholdMgDl = flows[1] as Int,
-            cooldownMinutes = flows[2] as Int,
-            includeLocation = flows[3] as Boolean,
-            useCalibratedValue = flows[4] as Boolean,
-            useSchedule = flows[5] as Boolean,
-            startTime = flows[6] as String,
-            endTime = flows[7] as String,
-            telegramBotToken = flows[8] as String,
-            contacts = flows[9] as List<EmergencyContact>
+            enabled = first8[0] as Boolean,
+            thresholdMgDl = first8[1] as Int,
+            cooldownMinutes = first8[2] as Int,
+            includeLocation = first8[3] as Boolean,
+            useCalibratedValue = first8[4] as Boolean,
+            useSchedule = first8[5] as Boolean,
+            startTime = first8[6] as String,
+            endTime = first8[7] as String,
+            telegramBotToken = last3[0] as String,
+            customWebhookUrl = last3[1] as String,
+            contacts = last3[2] as List<EmergencyContact>
         )
     }.distinctUntilChanged()
 
@@ -379,6 +387,11 @@ class PreferenceManager(private val context: Context) {
 
     suspend fun saveEmergencyTelegramBotToken(token: String) {
         context.dataStore.edit { it[EMERGENCY_TELEGRAM_BOT_TOKEN_KEY] = token.trim() }
+        updateBackupPayload()
+    }
+
+    suspend fun saveEmergencyCustomWebhookUrl(url: String) {
+        context.dataStore.edit { it[EMERGENCY_CUSTOM_WEBHOOK_URL_KEY] = url.trim() }
         updateBackupPayload()
     }
 

@@ -10,6 +10,7 @@ data class EmergencyContact(
     val phoneNumber: String = "",
     val telegramChatId: String = "",
     val whatsAppApiKey: String = "",
+    val whatsAppGroupId: String = "",
     val sendViaWhatsApp: Boolean = true,
     val sendViaTelegram: Boolean = true,
     val sendViaSms: Boolean = false
@@ -26,5 +27,6 @@ data class EmergencyConfig(
     val startTime: String = "00:00",
     val endTime: String = "23:59",
     val telegramBotToken: String = "",
+    val customWebhookUrl: String = "",
     val contacts: List<EmergencyContact> = emptyList()
 )
