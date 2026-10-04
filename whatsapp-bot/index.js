@@ -1,16 +1,18 @@
 const express = require('express');
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
+const puppeteer = require('puppeteer');
 
 const app = express();
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
-// Inicializar cliente de WhatsApp Web para entornos en la nube (Linux / Render)
+// Inicializar cliente de WhatsApp Web con la ruta ejecutable de Puppeteer
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
+        executablePath: puppeteer.executablePath(),
         headless: true,
         args: [
             '--no-sandbox',
