@@ -4,7 +4,8 @@
   "description": "Bot Webhook de WhatsApp para Alertas SOS de Libre2Clock",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "postinstall": "npx puppeteer browsers install chrome"
   },
   "dependencies": {
     "express": "^4.18.2",
