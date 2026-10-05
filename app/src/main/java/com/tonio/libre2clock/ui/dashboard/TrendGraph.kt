@@ -4,7 +4,7 @@ import android.graphics.Paint
 import android.text.format.DateFormat
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -29,6 +29,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.tonio.libre2clock.R
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.repository.GlucoseProcessor
@@ -77,6 +79,8 @@ fun InteractiveTrendGraph(
     predictedPoints: List<Pair<Instant, Int>> = emptyList(),
     targetLow: Int = 70,
     targetHigh: Int = 180,
+    isFullScreen: Boolean = false,
+    onCloseFullScreen: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -87,6 +91,11 @@ fun InteractiveTrendGraph(
     
     val scrollState = rememberScrollState()
     var selectedMeasurement by remember { mutableStateOf<GlucoseMeasurement?>(null) }
+    var selectedWindowHours by remember { mutableIntStateOf(6) }
+    var showFullScreenDialog by remember { mutableStateOf(false) }
+
+    val defaultHeight = if (isFullScreen) 340.dp else 220.dp
+    var graphHeightDp by remember(isFullScreen) { mutableStateOf(defaultHeight) }
 
     // 1. PRE-CÁLCULO DE DIBUJO Y RUTAS EN PÍXELES REALES
     val graphData = remember(measurements, predictedPoints, screenWidth, density, targetLow, targetHigh) {
@@ -146,7 +155,6 @@ fun InteractiveTrendGraph(
             val lastRawValue = lastDataPoint.second.value
             val lastCalValue = lastDataPoint.second.calibratedValue
             
-            // Diferencia entre calibrado y original (offset) al momento de la última lectura
             val offset = lastCalValue - lastRawValue
 
             val startRelX = ((startInstant.epochSecond - firstInstant.epochSecond).toFloat() / totalSeconds).coerceIn(0f, 1f)
@@ -196,7 +204,9 @@ fun InteractiveTrendGraph(
         return
     }
 
-    val pixelsPerHour = screenWidth / 6f
+    val pixelsPerHour = remember(screenWidth, selectedWindowHours) {
+        screenWidth / selectedWindowHours.toFloat()
+    }
     val totalDurationHours = graphData.totalSeconds / 3600.0
     val graphWidth = (totalDurationHours * pixelsPerHour.value).dp.coerceAtLeast(screenWidth)
 
@@ -236,51 +246,110 @@ fun InteractiveTrendGraph(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // --- Cabecera con Leyenda y Detalles del Punto Seleccionado ---
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(text = "Glucose Trend", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    
-                    // Leyenda explicativa de colores
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalArrangement = Arrangement.Center
+            // --- Cabecera con Controles de Escala Temporal y Detalles ---
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (isFullScreen) "Glucose Trend (HD)" else "Glucose Trend",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(modifier = Modifier.size(10.dp, 3.dp).background(RAW_LINE_COLOR))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(stringResource(R.string.graph_legend_raw), style = MaterialTheme.typography.labelSmall)
+                        listOf(3, 6, 12, 24).forEach { hours ->
+                            FilterChip(
+                                selected = selectedWindowHours == hours,
+                                onClick = { selectedWindowHours = hours },
+                                label = { Text("${hours}h", style = MaterialTheme.typography.labelSmall) },
+                                modifier = Modifier.height(28.dp)
+                            )
                         }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(modifier = Modifier.size(10.dp, 3.dp).background(CALIBRATED_LINE_COLOR))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(stringResource(R.string.graph_legend_calibrated), style = MaterialTheme.typography.labelSmall)
-                        }
-                        if (predictedPoints.isNotEmpty()) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .width(12.dp)
-                                        .height(3.dp)
-                                        .background(CALIBRATED_LINE_COLOR.copy(alpha = 0.8f))
+
+                        if (!isFullScreen) {
+                            IconButton(
+                                onClick = { showFullScreenDialog = true },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Text(
+                                    text = "⛶",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
                                 )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(stringResource(R.string.graph_legend_projection), style = MaterialTheme.typography.labelSmall)
+                            }
+                        } else {
+                            IconButton(
+                                onClick = { onCloseFullScreen?.invoke() },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Text(
+                                    text = "✕",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.error
+                                )
                             }
                         }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // Leyenda explicativa de colores
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(modifier = Modifier.size(10.dp, 3.dp).background(RAW_LINE_COLOR))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(stringResource(R.string.graph_legend_raw), style = MaterialTheme.typography.labelSmall)
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(modifier = Modifier.size(10.dp, 3.dp).background(CALIBRATED_LINE_COLOR))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(stringResource(R.string.graph_legend_calibrated), style = MaterialTheme.typography.labelSmall)
+                    }
+                    if (predictedPoints.isNotEmpty()) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(modifier = Modifier.size(8.dp).background(Color(0xFF4CAF50).copy(alpha = 0.4f)))
+                            Box(
+                                modifier = Modifier
+                                    .width(12.dp)
+                                    .height(3.dp)
+                                    .background(CALIBRATED_LINE_COLOR.copy(alpha = 0.8f))
+                            )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(stringResource(R.string.graph_legend_target, targetLow, targetHigh), style = MaterialTheme.typography.labelSmall)
+                            Text(stringResource(R.string.graph_legend_projection), style = MaterialTheme.typography.labelSmall)
                         }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(modifier = Modifier.size(8.dp).background(LOW_GLUCOSE_COLOR))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(stringResource(R.string.graph_legend_low, targetLow), style = MaterialTheme.typography.labelSmall)
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(modifier = Modifier.size(8.dp).background(Color(0xFF4CAF50).copy(alpha = 0.4f)))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(stringResource(R.string.graph_legend_target, targetLow, targetHigh), style = MaterialTheme.typography.labelSmall)
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(modifier = Modifier.size(8.dp).background(LOW_GLUCOSE_COLOR))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(stringResource(R.string.graph_legend_low, targetLow), style = MaterialTheme.typography.labelSmall)
+                    }
+
+                    if (graphHeightDp != defaultHeight) {
+                        TextButton(
+                            onClick = { graphHeightDp = defaultHeight },
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp)
+                        ) {
+                            Text(
+                                text = "Reset Alto",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary
+                            )
                         }
                     }
                 }
@@ -294,6 +363,23 @@ fun InteractiveTrendGraph(
                     selected.calibratedValue < targetLow -> stringResource(R.string.graph_status_low, targetLow)
                     selected.calibratedValue > targetHigh -> stringResource(R.string.graph_status_high, targetHigh)
                     else -> stringResource(R.string.graph_status_in_range)
+                }
+
+                val selectedIndex = remember(selected, graphData.normalizedPoints) {
+                    graphData.normalizedPoints.indexOfFirst { it.measurement == selected }
+                }
+
+                val deltaText = remember(selectedIndex, graphData.normalizedPoints) {
+                    if (selectedIndex > 0) {
+                        val prevVal = graphData.normalizedPoints[selectedIndex - 1].measurement.calibratedValue
+                        val currVal = selected.calibratedValue
+                        val diff = currVal - prevVal
+                        when {
+                            diff > 0 -> "▲ +$diff"
+                            diff < 0 -> "▼ $diff"
+                            else -> "► 0"
+                        }
+                    } else null
                 }
 
                 Surface(
@@ -311,7 +397,7 @@ fun InteractiveTrendGraph(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "$formattedTimestamp  •  $dualValue mg/dL",
+                            text = "$formattedTimestamp  •  $dualValue mg/dL ${deltaText?.let { " ($it)" } ?: ""}",
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Bold
                         )
@@ -330,7 +416,7 @@ fun InteractiveTrendGraph(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(220.dp)
+                    .height(graphHeightDp)
             ) {
                 // Lienzo Desplazable Horizontalmente para el Gráfico
                 Box(
@@ -343,21 +429,32 @@ fun InteractiveTrendGraph(
                             .width(graphWidth)
                             .fillMaxHeight()
                             .pointerInput(graphData) {
-                                detectTapGestures { offset ->
-                                    val tapRatio = (offset.x / size.width).coerceIn(0f, 1f)
-                                    val targetIndex = (tapRatio * (graphData.normalizedPoints.size - 1))
-                                        .toInt()
-                                        .coerceIn(0, graphData.normalizedPoints.size - 1)
-                                    selectedMeasurement = graphData.normalizedPoints[targetIndex].measurement
-                                }
+                                detectTapGestures(
+                                    onDoubleTap = {
+                                        graphHeightDp = defaultHeight
+                                    },
+                                    onTap = { offset ->
+                                        val tapRatio = (offset.x / size.width).coerceIn(0f, 1f)
+                                        val targetIndex = (tapRatio * (graphData.normalizedPoints.size - 1))
+                                            .toInt()
+                                            .coerceIn(0, graphData.normalizedPoints.size - 1)
+                                        selectedMeasurement = graphData.normalizedPoints[targetIndex].measurement
+                                    }
+                                )
                             }
                             .pointerInput(graphData) {
-                                detectHorizontalDragGestures { change, _ ->
-                                    val tapRatio = (change.position.x / size.width).coerceIn(0f, 1f)
-                                    val targetIndex = (tapRatio * (graphData.normalizedPoints.size - 1))
-                                        .toInt()
-                                        .coerceIn(0, graphData.normalizedPoints.size - 1)
-                                    selectedMeasurement = graphData.normalizedPoints[targetIndex].measurement
+                                detectDragGestures { change, dragAmount ->
+                                    change.consume()
+                                    if (kotlin.math.abs(dragAmount.y) > kotlin.math.abs(dragAmount.x) * 1.1f) {
+                                        val deltaDp = (dragAmount.y / density.density).dp
+                                        graphHeightDp = (graphHeightDp - deltaDp).coerceIn(160.dp, 500.dp)
+                                    } else {
+                                        val tapRatio = (change.position.x / size.width).coerceIn(0f, 1f)
+                                        val targetIndex = (tapRatio * (graphData.normalizedPoints.size - 1))
+                                            .toInt()
+                                            .coerceIn(0, graphData.normalizedPoints.size - 1)
+                                        selectedMeasurement = graphData.normalizedPoints[targetIndex].measurement
+                                    }
                                 }
                             }
                     ) {
@@ -662,6 +759,48 @@ fun InteractiveTrendGraph(
                             paintToUse
                         )
                     }
+                }
+            }
+
+            // Indicador de tirador para ajustar altura
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 6.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(36.dp)
+                        .height(4.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f),
+                            shape = RoundedCornerShape(2.dp)
+                        )
+                )
+            }
+        }
+    }
+
+    if (showFullScreenDialog) {
+        Dialog(
+            onDismissRequest = { showFullScreenDialog = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = MaterialTheme.colorScheme.background
+            ) {
+                Box(modifier = Modifier.fillMaxSize().padding(12.dp)) {
+                    InteractiveTrendGraph(
+                        measurements = measurements,
+                        predictedPoints = predictedPoints,
+                        targetLow = targetLow,
+                        targetHigh = targetHigh,
+                        isFullScreen = true,
+                        onCloseFullScreen = { showFullScreenDialog = false },
+                        modifier = Modifier.fillMaxSize()
+                    )
                 }
             }
         }
