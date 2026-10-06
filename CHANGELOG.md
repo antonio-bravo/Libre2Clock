@@ -1,5 +1,31 @@
 # Changelog
 
+## a91e58c (Oct 06, 2026 10:43:28)
+graph multilanguage — antonio-bravo
+[detail](#a91e58c-details)
+
+<details id='a91e58c-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## d4cd0f1 (Oct 06, 2026 07:38:01)
+Update changelog — github-actions[bot]
+[detail](#d4cd0f1-details)
+
+<details id='d4cd0f1-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 07ad5f9 (Oct 06, 2026 09:37:48)
 graph zoom — antonio-bravo
 [detail](#07ad5f9-details)
@@ -627,32 +653,6 @@ Added a step-by-step guide for creating a Telegram Bot to obtain necessary data 
 <summary>Changed files</summary>
 
 - telegram_glucose_SOS.md [Deleted]
-</details>
-
-
----
-## c0bdc1b (Oct 01, 2026 21:16:12)
-Update changelog — github-actions[bot]
-[detail](#c0bdc1b-details)
-
-<details id='c0bdc1b-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## f3bc027 (Oct 01, 2026 23:15:58)
-fix hbaqc órmula oficial internacional del Consenso ADA / Bergenstal (2018):
-\text{GMI (%)} = (\text{Glucosa Promedio (mg/dL)} + 46.7)/(28.7)
-Por ejemplo, con una glucosa promedio calibrada de 125 mg/dL: \text{GMI} = (125 + 46.7)/(28.7) = (171.7)/(28.7) = \mathbf{5.98% ≈ 6.0%} — antonio-bravo
-[detail](#f3bc027-details)
-
-<details id='f3bc027-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
 </details>
 
 
