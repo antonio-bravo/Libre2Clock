@@ -353,6 +353,12 @@
     <string name="graph_status_low">🔴 Low (&lt; %1$d mg/dL)</string>
     <string name="graph_status_high">🟧 High (&gt; %1$d mg/dL)</string>
     <string name="graph_status_in_range">🟢 In Range</string>
+    <string name="graph_title">Glucose Trend</string>
+    <string name="graph_title_hd">Glucose Trend (HD)</string>
+    <string name="graph_btn_expand">⛶ Expand</string>
+    <string name="graph_btn_exit">Exit</string>
+    <string name="graph_btn_reset_height">Reset Height</string>
+    <string name="graph_no_data">No data available</string>
     <string name="glucose_raw_subtitle">Sin calibrar: %1$d mg/dL</string>
     <string name="settings_range_total_tests">Total comparable tests: %1$d</string>
     <string name="settings_range_based_offsets_desc">Define specific offsets for different glucose ranges.</string>

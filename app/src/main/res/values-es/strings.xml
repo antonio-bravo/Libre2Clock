@@ -352,6 +352,12 @@
     <string name="graph_status_low">🔴 Baja (&lt; %1$d mg/dL)</string>
     <string name="graph_status_high">🟧 Alta (&gt; %1$d mg/dL)</string>
     <string name="graph_status_in_range">🟢 En Rango</string>
+    <string name="graph_title">Tendencia de Glucosa</string>
+    <string name="graph_title_hd">Tendencia de Glucosa (HD)</string>
+    <string name="graph_btn_expand">⛶ Ampliar</string>
+    <string name="graph_btn_exit">Salir</string>
+    <string name="graph_btn_reset_height">Reset Alto</string>
+    <string name="graph_no_data">No hay datos disponibles</string>
     <string name="glucose_raw_subtitle">Sin calibrar: %1$d mg/dL</string>
     <string name="settings_range_total_tests">Total pruebas comparables: %1$d</string>
     <string name="settings_range_based_offsets_desc">Define offsets específicos para diferentes rangos de glucosa.</string>

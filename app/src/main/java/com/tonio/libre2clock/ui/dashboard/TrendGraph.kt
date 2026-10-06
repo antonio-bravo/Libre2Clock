@@ -201,7 +201,7 @@ fun InteractiveTrendGraph(
     if (graphData == null) {
         Card(modifier = modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
             Box(modifier = Modifier.fillMaxWidth().height(220.dp), contentAlignment = Alignment.Center) {
-                Text("No data available", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.graph_no_data), style = MaterialTheme.typography.bodyMedium)
             }
         }
         return
@@ -256,7 +256,7 @@ fun InteractiveTrendGraph(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = if (isFullScreen) "Glucose Trend (HD)" else "Glucose Trend",
+                        text = if (isFullScreen) stringResource(R.string.graph_title_hd) else stringResource(R.string.graph_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -268,7 +268,7 @@ fun InteractiveTrendGraph(
                             modifier = Modifier.height(30.dp)
                         ) {
                             Text(
-                                text = "⛶ Ampliar",
+                                text = stringResource(R.string.graph_btn_expand),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold
                             )
@@ -285,12 +285,12 @@ fun InteractiveTrendGraph(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Close,
-                                contentDescription = "Cerrar",
+                                contentDescription = stringResource(R.string.graph_btn_exit),
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "Salir",
+                                text = stringResource(R.string.graph_btn_exit),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold
                             )
@@ -381,7 +381,7 @@ fun InteractiveTrendGraph(
                             contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp)
                         ) {
                             Text(
-                                text = "Reset Alto",
+                                text = stringResource(R.string.graph_btn_reset_height),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary
                             )
