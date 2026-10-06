@@ -4,12 +4,15 @@ import android.graphics.Paint
 import android.text.format.DateFormat
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -210,10 +213,8 @@ fun InteractiveTrendGraph(
     val totalDurationHours = graphData.totalSeconds / 3600.0
     val graphWidth = (totalDurationHours * pixelsPerHour.value).dp.coerceAtLeast(screenWidth)
 
-    LaunchedEffect(graphData.normalizedPoints.size) {
-        if (!scrollState.isScrollInProgress) {
-            scrollState.animateScrollTo(scrollState.maxValue)
-        }
+    LaunchedEffect(graphData.normalizedPoints.size, selectedWindowHours, graphWidth) {
+        scrollState.scrollTo(scrollState.maxValue)
     }
 
     val tickPaint = remember(density) {
@@ -246,8 +247,9 @@ fun InteractiveTrendGraph(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // --- Cabecera con Controles de Escala Temporal y Detalles ---
-            Column {
+            // --- Cabecera con Controles Responsivos ---
+            Column(modifier = Modifier.fillMaxWidth()) {
+                // Fila 1: Título y Botón Ampliar/Salir
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -259,50 +261,83 @@ fun InteractiveTrendGraph(
                         fontWeight = FontWeight.Bold
                     )
 
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        listOf(3, 6, 12, 24).forEach { hours ->
-                            FilterChip(
-                                selected = selectedWindowHours == hours,
-                                onClick = { selectedWindowHours = hours },
-                                label = { Text("${hours}h", style = MaterialTheme.typography.labelSmall) },
-                                modifier = Modifier.height(28.dp)
+                    if (!isFullScreen) {
+                        OutlinedButton(
+                            onClick = { showFullScreenDialog = true },
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                            modifier = Modifier.height(30.dp)
+                        ) {
+                            Text(
+                                text = "⛶ Ampliar",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold
                             )
                         }
+                    } else {
+                        Button(
+                            onClick = { onCloseFullScreen?.invoke() },
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 2.dp),
+                            modifier = Modifier.height(32.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer,
+                                contentColor = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Cerrar",
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Salir",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
 
-                        if (!isFullScreen) {
-                            IconButton(
-                                onClick = { showFullScreenDialog = true },
-                                modifier = Modifier.size(28.dp)
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Fila 2: Selector de Ventana Temporal en Segmentos (4 partes iguales)
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    modifier = Modifier.fillMaxWidth().height(32.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        listOf(3, 6, 12, 24).forEach { hours ->
+                            val isSelected = selectedWindowHours == hours
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                                    .padding(2.dp)
+                                    .background(
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                        shape = RoundedCornerShape(6.dp)
+                                    )
+                                    .clickable { selectedWindowHours = hours },
+                                contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "⛶",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        } else {
-                            IconButton(
-                                onClick = { onCloseFullScreen?.invoke() },
-                                modifier = Modifier.size(28.dp)
-                            ) {
-                                Text(
-                                    text = "✕",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.error
+                                    text = "${hours}h",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-                // Leyenda explicativa de colores
+                // Fila 3: Leyenda explicativa de colores
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalArrangement = Arrangement.Center
@@ -441,21 +476,6 @@ fun InteractiveTrendGraph(
                                         selectedMeasurement = graphData.normalizedPoints[targetIndex].measurement
                                     }
                                 )
-                            }
-                            .pointerInput(graphData) {
-                                detectDragGestures { change, dragAmount ->
-                                    change.consume()
-                                    if (kotlin.math.abs(dragAmount.y) > kotlin.math.abs(dragAmount.x) * 1.1f) {
-                                        val deltaDp = (dragAmount.y / density.density).dp
-                                        graphHeightDp = (graphHeightDp - deltaDp).coerceIn(160.dp, 500.dp)
-                                    } else {
-                                        val tapRatio = (change.position.x / size.width).coerceIn(0f, 1f)
-                                        val targetIndex = (tapRatio * (graphData.normalizedPoints.size - 1))
-                                            .toInt()
-                                            .coerceIn(0, graphData.normalizedPoints.size - 1)
-                                        selectedMeasurement = graphData.normalizedPoints[targetIndex].measurement
-                                    }
-                                }
                             }
                     ) {
                         val width = size.width
@@ -766,16 +786,23 @@ fun InteractiveTrendGraph(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 6.dp),
+                    .padding(vertical = 6.dp)
+                    .pointerInput(Unit) {
+                        detectDragGestures { change, dragAmount ->
+                            change.consume()
+                            val deltaDp = (dragAmount.y / density.density).dp
+                            graphHeightDp = (graphHeightDp - deltaDp).coerceIn(160.dp, 500.dp)
+                        }
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 Box(
                     modifier = Modifier
-                        .width(36.dp)
-                        .height(4.dp)
+                        .width(40.dp)
+                        .height(6.dp)
                         .background(
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f),
-                            shape = RoundedCornerShape(2.dp)
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f),
+                            shape = RoundedCornerShape(3.dp)
                         )
                 )
             }
@@ -785,13 +812,22 @@ fun InteractiveTrendGraph(
     if (showFullScreenDialog) {
         Dialog(
             onDismissRequest = { showFullScreenDialog = false },
-            properties = DialogProperties(usePlatformDefaultWidth = false)
+            properties = DialogProperties(
+                usePlatformDefaultWidth = false,
+                decorFitsSystemWindows = false
+            )
         ) {
             Surface(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .systemBarsPadding(),
                 color = MaterialTheme.colorScheme.background
             ) {
-                Box(modifier = Modifier.fillMaxSize().padding(12.dp)) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(8.dp)
+                ) {
                     InteractiveTrendGraph(
                         measurements = measurements,
                         predictedPoints = predictedPoints,
