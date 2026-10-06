@@ -1,5 +1,41 @@
 # Changelog
 
+## 07ad5f9 (Oct 06, 2026 09:37:48)
+graph zoom — antonio-bravo
+[detail](#07ad5f9-details)
+
+<details id='07ad5f9-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
+</details>
+
+
+---
+## 5b229ba (Oct 05, 2026 21:41:19)
+graph Zoom — antonio-bravo
+[detail](#5b229ba-details)
+
+<details id='5b229ba-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
+</details>
+
+
+---
+## 870f64a (Oct 04, 2026 21:00:24)
+Update changelog — github-actions[bot]
+[detail](#870f64a-details)
+
+<details id='870f64a-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## b040078 (Oct 04, 2026 23:00:09)
 Trend graph dual — antonio-bravo
 [detail](#b040078-details)
@@ -617,43 +653,6 @@ Por ejemplo, con una glucosa promedio calibrada de 125 mg/dL: \text{GMI} = (125 
 <summary>Changed files</summary>
 
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardMetricsModels.kt [Modified]
-</details>
-
-
----
-## da3f1cf (Oct 01, 2026 20:54:23)
-Update changelog — github-actions[bot]
-[detail](#da3f1cf-details)
-
-<details id='da3f1cf-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## c2d7fe4 (Oct 01, 2026 22:54:08)
-fix report — antonio-bravo
-[detail](#c2d7fe4-details)
-
-<details id='c2d7fe4-details'>
-<summary>Changed files</summary>
-
-- .idea/misc.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/PdfReportGenerator.kt [Modified]
-</details>
-
-
----
-## 6b12813 (Oct 01, 2026 20:29:30)
-Update changelog — github-actions[bot]
-[detail](#6b12813-details)
-
-<details id='6b12813-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
 </details>
 
 
