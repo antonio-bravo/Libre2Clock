@@ -365,8 +365,25 @@ class EmergencyAlertDispatcher(private val context: Context) {
         notificationManager.notify(EMERGENCY_NOTIFICATION_ID, builder.build())
     }
 
-    fun createWhatsAppIntent(phoneNumber: String, message: String): Intent {
-        val cleanDigits = phoneNumber.replace("[^0-9]".toRegex(), "")
+    fun createWhatsAppIntent(target: String, message: String): Intent {
+        val trimmedTarget = target.trim()
+        
+        // Si es un enlace de grupo o URL de WhatsApp (ej: https://chat.whatsapp.com/...)
+        if (trimmedTarget.contains("chat.whatsapp.com") || trimmedTarget.contains("http")) {
+            return Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, message)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                if (isPackageInstalled("com.whatsapp")) {
+                    setPackage("com.whatsapp")
+                } else if (isPackageInstalled("com.whatsapp.w4b")) {
+                    setPackage("com.whatsapp.w4b")
+                }
+            }
+        }
+
+        // Si es un número de teléfono individual
+        val cleanDigits = trimmedTarget.replace("[^0-9]".toRegex(), "")
         val waUri = Uri.parse("https://wa.me/$cleanDigits?text=${Uri.encode(message)}")
         
         val intent = Intent(Intent.ACTION_VIEW, waUri).apply {
@@ -380,8 +397,33 @@ class EmergencyAlertDispatcher(private val context: Context) {
         return intent
     }
 
-    fun launchWhatsApp(phoneNumber: String, message: String): Boolean {
-        val cleanDigits = phoneNumber.replace("[^0-9]".toRegex(), "")
+    fun launchWhatsApp(target: String, message: String): Boolean {
+        val trimmedTarget = target.trim()
+        if (trimmedTarget.isBlank()) return false
+
+        // Caso 1: Enlace de grupo o URL (chat.whatsapp.com)
+        if (trimmedTarget.contains("chat.whatsapp.com") || trimmedTarget.contains("http")) {
+            return try {
+                val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, message)
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    if (isPackageInstalled("com.whatsapp")) {
+                        setPackage("com.whatsapp")
+                    } else if (isPackageInstalled("com.whatsapp.w4b")) {
+                        setPackage("com.whatsapp.w4b")
+                    }
+                }
+                context.startActivity(sendIntent)
+                true
+            } catch (e: Exception) {
+                eventLogger.log(LogLevel.ERROR, "EmergencyDispatch", "❌ Error al abrir grupo de WhatsApp: ${e.message}")
+                false
+            }
+        }
+
+        // Caso 2: Número de teléfono directo
+        val cleanDigits = trimmedTarget.replace("[^0-9]".toRegex(), "")
         if (cleanDigits.isBlank()) return false
 
         val waUri = Uri.parse("https://wa.me/$cleanDigits?text=${Uri.encode(message)}")
