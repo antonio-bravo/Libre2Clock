@@ -614,9 +614,15 @@ fun EmergencyContactCard(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
+                if (contact.whatsAppGroupId.isNotBlank()) {
+                    Text(
+                        text = "Enlace de Grupo: ${contact.whatsAppGroupId}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
                 if (contact.phoneNumber.isNotBlank()) {
                     Text(
-                        text = "Tel: ${contact.phoneNumber}",
+                        text = "Teléfono SMS: ${contact.phoneNumber}",
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -691,6 +697,7 @@ fun EmergencyContactDialog(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
+                // 1. Nombre del contacto
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -698,17 +705,43 @@ fun EmergencyContactDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
-                OutlinedTextField(
-                    value = phone,
-                    onValueChange = { phone = it },
-                    label = { Text(stringResource(R.string.emergency_contact_phone_label)) },
-                    placeholder = { Text("Ej: +34612345678") },
-                    supportingText = { Text(stringResource(R.string.emergency_contact_phone_hint)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+
+                // 2. Selección de Canales
+                Text(
+                    text = stringResource(R.string.emergency_contact_channels),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold
                 )
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = sendViaWhatsApp, onCheckedChange = { sendViaWhatsApp = it })
+                    Text(stringResource(R.string.emergency_channel_whatsapp))
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = sendViaTelegram, onCheckedChange = { sendViaTelegram = it })
+                    Text(stringResource(R.string.emergency_channel_telegram))
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = sendViaSms, onCheckedChange = { sendViaSms = it })
+                    Text(stringResource(R.string.emergency_channel_sms))
+                }
+
+                HorizontalDivider()
+
+                // 3. Campos dinámicos según los canales seleccionados
                 if (sendViaWhatsApp) {
+                    OutlinedTextField(
+                        value = whatsAppGroupId,
+                        onValueChange = { whatsAppGroupId = it },
+                        label = { Text(stringResource(R.string.emergency_contact_whatsapp_group_id_label)) },
+                        placeholder = { Text("Ej: https://chat.whatsapp.com/FQQU79KAs4G9WUytG7tLgZ") },
+                        supportingText = { Text(stringResource(R.string.emergency_contact_whatsapp_group_id_hint)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
                     OutlinedTextField(
                         value = whatsAppApiKey,
                         onValueChange = { whatsAppApiKey = it },
@@ -736,44 +769,31 @@ fun EmergencyContactDialog(
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
+                }
 
+                if (sendViaTelegram) {
                     OutlinedTextField(
-                        value = whatsAppGroupId,
-                        onValueChange = { whatsAppGroupId = it },
-                        label = { Text(stringResource(R.string.emergency_contact_whatsapp_group_id_label)) },
-                        placeholder = { Text("Ej: 120363012345678901@g.us") },
-                        supportingText = { Text(stringResource(R.string.emergency_contact_whatsapp_group_id_hint)) },
+                        value = telegramChatId,
+                        onValueChange = { telegramChatId = it },
+                        label = { Text(stringResource(R.string.emergency_contact_telegram_label)) },
+                        placeholder = { Text("Ej: 987654321") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
-                OutlinedTextField(
-                    value = telegramChatId,
-                    onValueChange = { telegramChatId = it },
-                    label = { Text(stringResource(R.string.emergency_contact_telegram_label)) },
-                    placeholder = { Text("Ej: 987654321") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
 
-                Text(
-                    text = stringResource(R.string.emergency_contact_channels),
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = sendViaWhatsApp, onCheckedChange = { sendViaWhatsApp = it })
-                    Text(stringResource(R.string.emergency_channel_whatsapp))
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = sendViaTelegram, onCheckedChange = { sendViaTelegram = it })
-                    Text(stringResource(R.string.emergency_channel_telegram))
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Checkbox(checked = sendViaSms, onCheckedChange = { sendViaSms = it })
-                    Text(stringResource(R.string.emergency_channel_sms))
+                if (sendViaSms) {
+                    OutlinedTextField(
+                        value = phone,
+                        onValueChange = { phone = it },
+                        label = { Text(stringResource(R.string.emergency_contact_phone_label)) },
+                        placeholder = { Text("Ej: +34612345678") },
+                        supportingText = { Text(stringResource(R.string.emergency_contact_phone_hint)) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
         },

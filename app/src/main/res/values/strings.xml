@@ -565,7 +565,7 @@
     <string name="emergency_dialog_add_title">Add SOS Contact</string>
     <string name="emergency_dialog_edit_title">Edit SOS Contact</string>
     <string name="emergency_contact_name_label">Contact Name *</string>
-    <string name="emergency_contact_phone_label">Phone (for WhatsApp / SMS)</string>
+    <string name="emergency_contact_phone_label">Phone or WhatsApp Group Link *</string>
     <string name="emergency_contact_telegram_label">Telegram Chat ID (Optional)</string>
     <string name="emergency_contact_channels">Delivery Channels:</string>
     <string name="emergency_channel_whatsapp">WhatsApp (Notification/Intent)</string>
@@ -605,6 +605,6 @@
     <string name="emergency_whatsapp_help_content">To send WhatsApp messages 100% automatically in the background (without user intervention or touching the screen):\n\n1. Add CallMeBot phone number to your contact\'s WhatsApp contacts: +34 644 10 55 84 (or visit callmebot.com).\n2. Your contact sends \"I allow callmebot to send me messages\" to that number via WhatsApp.\n3. They will receive an apikey (e.g., 123456).\n4. Enter that apikey in the contact field above.\n\nNote: SMS and Telegram Bot are already 100% automatic in the background by default.</string>
     <string name="emergency_webhook_title">Custom Webhook URL (Optional)</string>
     <string name="emergency_webhook_desc">Sends a background HTTP POST request to any API (WASender, IFTTT, Zapier, Make, or custom server) with the SOS alert payload.</string>
-    <string name="emergency_contact_whatsapp_group_id_label">WhatsApp Group ID (Optional)</string>
-    <string name="emergency_contact_whatsapp_group_id_hint">E.g., 120363012345678901@g.us (Get it by typing /id in group)</string>
+    <string name="emergency_contact_whatsapp_group_id_label">WhatsApp Group Invite Link</string>
+    <string name="emergency_contact_whatsapp_group_id_hint">Paste group invite link (e.g. https://chat.whatsapp.com/...)</string>
 </resources>
