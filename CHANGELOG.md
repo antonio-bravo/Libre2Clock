@@ -1,5 +1,36 @@
 # Changelog
 
+## fa062b7 (Oct 07, 2026 21:33:41)
+Add Accessibility service for Whatsapp — antonio-bravo
+[detail](#fa062b7-details)
+
+<details id='fa062b7-details'>
+<summary>Changed files</summary>
+
+- app/src/main/AndroidManifest.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEmergencyScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/EmergencyAccessibilityService.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/util/EmergencyAlertDispatcher.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+- app/src/main/res/xml/emergency_accessibility_service_config.xml [Deleted]
+</details>
+
+
+---
+## 19ab140 (Oct 07, 2026 15:50:47)
+Update changelog — github-actions[bot]
+[detail](#19ab140-details)
+
+<details id='19ab140-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 930f4fc (Oct 07, 2026 17:50:34)
 Whatsapp group SOS — antonio-bravo
 [detail](#930f4fc-details)
@@ -606,34 +637,6 @@ SOS Location — antonio-bravo
 <summary>Changed files</summary>
 
 - .idea/misc.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEmergencyScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/EmergencyLocationManager.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 7d071fd (Oct 02, 2026 19:34:02)
-Update changelog — github-actions[bot]
-[detail](#7d071fd-details)
-
-<details id='7d071fd-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## cba25b1 (Oct 02, 2026 21:33:49)
-SOS Alert GPS — antonio-bravo
-[detail](#cba25b1-details)
-
-<details id='cba25b1-details'>
-<summary>Changed files</summary>
-
 - app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEmergencyScreen.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/util/EmergencyLocationManager.kt [Modified]
