@@ -1,5 +1,31 @@
 # Changelog
 
+## 930f4fc (Oct 07, 2026 17:50:34)
+Whatsapp group SOS — antonio-bravo
+[detail](#930f4fc-details)
+
+<details id='930f4fc-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEmergencyScreen.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 9e3dd5d (Oct 07, 2026 15:21:36)
+Update changelog — github-actions[bot]
+[detail](#9e3dd5d-details)
+
+<details id='9e3dd5d-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## b545715 (Oct 07, 2026 17:12:09)
 Whatsapp group SOS — antonio-bravo
 [detail](#b545715-details)
@@ -611,44 +637,6 @@ SOS Alert GPS — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEmergencyScreen.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/util/EmergencyLocationManager.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 3d8b130 (Oct 02, 2026 17:42:10)
-Update changelog — github-actions[bot]
-[detail](#3d8b130-details)
-
-<details id='3d8b130-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 41111b5 (Oct 02, 2026 19:41:53)
-SOS Alert — antonio-bravo
-[detail](#41111b5-details)
-
-<details id='41111b5-details'>
-<summary>Changed files</summary>
-
-- app/build.gradle.kts [Modified]
-- app/src/main/AndroidManifest.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/model/EmergencyModels.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/navigation/Destinations.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEmergencyScreen.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/EmergencyAlertDispatcher.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/util/EmergencyLocationManager.kt [Deleted]
 - app/src/main/res/values-es/strings.xml [Modified]
 - app/src/main/res/values/strings.xml [Modified]
 </details>
