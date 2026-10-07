@@ -1,5 +1,31 @@
 # Changelog
 
+## 050ddb0 (Oct 07, 2026 21:53:17)
+Emegercy SOS WhatsApp — antonio-bravo
+[detail](#050ddb0-details)
+
+<details id='050ddb0-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEmergencyScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/EmergencyAccessibilityService.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/EmergencyAlertDispatcher.kt [Modified]
+</details>
+
+
+---
+## 84fdb9d (Oct 07, 2026 19:33:56)
+Update changelog — github-actions[bot]
+[detail](#84fdb9d-details)
+
+<details id='84fdb9d-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## fa062b7 (Oct 07, 2026 21:33:41)
 Add Accessibility service for Whatsapp — antonio-bravo
 [detail](#fa062b7-details)
@@ -613,35 +639,6 @@ SOS Location — antonio-bravo
 <summary>Changed files</summary>
 
 - app/src/main/java/com/tonio/libre2clock/util/EmergencyLocationManager.kt [Modified]
-</details>
-
-
----
-## ca7ca5d (Oct 02, 2026 20:04:16)
-Update changelog — github-actions[bot]
-[detail](#ca7ca5d-details)
-
-<details id='ca7ca5d-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 50b8142 (Oct 02, 2026 22:03:53)
-SOS Location — antonio-bravo
-[detail](#50b8142-details)
-
-<details id='50b8142-details'>
-<summary>Changed files</summary>
-
-- .idea/misc.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEmergencyScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/EmergencyLocationManager.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
 </details>
 
 
