@@ -1,5 +1,29 @@
 # Changelog
 
+## b545715 (Oct 07, 2026 17:12:09)
+Whatsapp group SOS — antonio-bravo
+[detail](#b545715-details)
+
+<details id='b545715-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/util/EmergencyAlertDispatcher.kt [Modified]
+</details>
+
+
+---
+## 917d0a4 (Oct 06, 2026 08:43:41)
+Update changelog — github-actions[bot]
+[detail](#917d0a4-details)
+
+<details id='917d0a4-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## a91e58c (Oct 06, 2026 10:43:28)
 graph multilanguage — antonio-bravo
 [detail](#a91e58c-details)
@@ -627,32 +651,6 @@ SOS Alert — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/util/EmergencyLocationManager.kt [Deleted]
 - app/src/main/res/values-es/strings.xml [Modified]
 - app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 3a27b82 (Oct 02, 2026 17:18:25)
-Update changelog — github-actions[bot]
-[detail](#3a27b82-details)
-
-<details id='3a27b82-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## a21fd1c (Oct 02, 2026 19:18:14)
-Create guide for Telegram Bot setup in Libre2Clock
-
-Added a step-by-step guide for creating a Telegram Bot to obtain necessary data for Libre2Clock. — antonio-bravo
-[detail](#a21fd1c-details)
-
-<details id='a21fd1c-details'>
-<summary>Changed files</summary>
-
-- telegram_glucose_SOS.md [Deleted]
 </details>
 
 
