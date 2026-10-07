@@ -398,7 +398,7 @@ fun SettingsEmergencyScreen(
                 }
             }
 
-            if (emergencyConfig.contacts.any { it.sendViaWhatsApp } && !isAccessibilityEnabled) {
+            if (!isAccessibilityEnabled) {
                 item(key = "accessibility_service_card") {
                     Card(
                         modifier = Modifier.fillMaxWidth(),

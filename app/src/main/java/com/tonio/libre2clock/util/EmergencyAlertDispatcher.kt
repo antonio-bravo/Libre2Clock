@@ -118,7 +118,7 @@ class EmergencyAlertDispatcher(private val context: Context) {
             }
         }
 
-        // 3. WhatsApp (CallMeBot HTTP API automático de fondo o Intent directo)
+        // 3. WhatsApp (CallMeBot HTTP API automático de fondo o Intent directo local)
         val whatsAppContacts = config.contacts.filter { 
             it.sendViaWhatsApp && (it.phoneNumber.isNotBlank() || it.whatsAppGroupId.isNotBlank()) 
         }
@@ -127,12 +127,10 @@ class EmergencyAlertDispatcher(private val context: Context) {
             if (contact.whatsAppApiKey.isNotBlank()) {
                 val success = sendCallMeBotWhatsAppMessage(target, contact.whatsAppApiKey, message)
                 if (success) dispatchedCount++
-            } else if (launchWhatsAppDirectly) {
+            } else {
                 withContext(Dispatchers.Main) {
                     launchWhatsApp(target, message)
                 }
-                dispatchedCount++
-            } else {
                 dispatchedCount++
             }
         }

@@ -32,7 +32,7 @@ class EmergencyAccessibilityService : AccessibilityService() {
     private fun autoClickSendButton(rootNode: AccessibilityNodeInfo?) {
         if (rootNode == null) return
 
-        // 1. Buscar botón de envío por IDs conocidos de WhatsApp
+        // 1. Buscar botón de envío por IDs de vista conocidos de WhatsApp
         val sendButtonNodeIds = listOf(
             "com.whatsapp:id/send",
             "com.whatsapp.w4b:id/send",
@@ -43,33 +43,48 @@ class EmergencyAccessibilityService : AccessibilityService() {
             val nodes = rootNode.findAccessibilityNodeInfosByViewId(nodeId)
             if (!nodes.isNullOrEmpty()) {
                 for (node in nodes) {
-                    if (node.isClickable) {
-                        node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-                        return
-                    } else if (node.parent != null && node.parent.isClickable) {
-                        node.parent.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-                        return
-                    }
+                    if (clickNodeOrParent(node)) return
                 }
             }
         }
 
-        // 2. Buscar por descripción o texto "Enviar" / "Send"
-        val sendKeywords = listOf("Enviar", "Send", "enviar", "send")
-        for (keyword in sendKeywords) {
-            val nodes = rootNode.findAccessibilityNodeInfosByText(keyword)
-            if (!nodes.isNullOrEmpty()) {
-                for (node in nodes) {
-                    if (node.isClickable) {
-                        node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-                        return
-                    } else if (node.parent != null && node.parent.isClickable) {
-                        node.parent.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-                        return
-                    }
-                }
-            }
+        // 2. Búsqueda recursiva por descripción o texto "Enviar" / "Send"
+        findAndClickSendByDescription(rootNode)
+    }
+
+    private fun clickNodeOrParent(node: AccessibilityNodeInfo?): Boolean {
+        if (node == null) return false
+        if (node.isClickable) {
+            node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+            return true
         }
+        var parent = node.parent
+        while (parent != null) {
+            if (parent.isClickable) {
+                parent.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                return true
+            }
+            parent = parent.parent
+        }
+        return false
+    }
+
+    private fun findAndClickSendByDescription(node: AccessibilityNodeInfo?): Boolean {
+        if (node == null) return false
+
+        val desc = node.contentDescription?.toString()?.lowercase() ?: ""
+        val text = node.text?.toString()?.lowercase() ?: ""
+
+        if (desc.contains("enviar") || desc.contains("send") || text == "enviar" || text == "send") {
+            if (clickNodeOrParent(node)) return true
+        }
+
+        for (i in 0 until node.childCount) {
+            val child = node.getChild(i) ?: continue
+            if (findAndClickSendByDescription(child)) return true
+        }
+
+        return false
     }
 
     override fun onInterrupt() {}
