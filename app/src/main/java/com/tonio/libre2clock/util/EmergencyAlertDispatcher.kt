@@ -119,14 +119,17 @@ class EmergencyAlertDispatcher(private val context: Context) {
         }
 
         // 3. WhatsApp (CallMeBot HTTP API automático de fondo o Intent directo)
-        val whatsAppContacts = config.contacts.filter { it.sendViaWhatsApp && it.phoneNumber.isNotBlank() }
+        val whatsAppContacts = config.contacts.filter { 
+            it.sendViaWhatsApp && (it.phoneNumber.isNotBlank() || it.whatsAppGroupId.isNotBlank()) 
+        }
         for (contact in whatsAppContacts) {
+            val target = contact.whatsAppGroupId.ifBlank { contact.phoneNumber }
             if (contact.whatsAppApiKey.isNotBlank()) {
-                val success = sendCallMeBotWhatsAppMessage(contact.phoneNumber, contact.whatsAppApiKey, message)
+                val success = sendCallMeBotWhatsAppMessage(target, contact.whatsAppApiKey, message)
                 if (success) dispatchedCount++
             } else if (launchWhatsAppDirectly) {
                 withContext(Dispatchers.Main) {
-                    launchWhatsApp(contact.phoneNumber, message)
+                    launchWhatsApp(target, message)
                 }
                 dispatchedCount++
             } else {
@@ -367,98 +370,121 @@ class EmergencyAlertDispatcher(private val context: Context) {
 
     fun createWhatsAppIntent(target: String, message: String): Intent {
         val trimmedTarget = target.trim()
-        
-        // Si es un enlace de grupo o URL de WhatsApp (ej: https://chat.whatsapp.com/...)
+        val paquetesWhatsApp = listOf("com.whatsapp", "com.whatsapp.w4b", "com.whatsappdual")
+        val availablePackage = paquetesWhatsApp.firstOrNull { isPackageInstalled(it) }
+
         if (trimmedTarget.contains("chat.whatsapp.com") || trimmedTarget.contains("http")) {
             return Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
                 putExtra(Intent.EXTRA_TEXT, message)
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                if (isPackageInstalled("com.whatsapp")) {
-                    setPackage("com.whatsapp")
-                } else if (isPackageInstalled("com.whatsapp.w4b")) {
-                    setPackage("com.whatsapp.w4b")
-                }
+                availablePackage?.let { setPackage(it) }
             }
         }
 
-        // Si es un número de teléfono individual
-        val cleanDigits = trimmedTarget.replace("[^0-9]".toRegex(), "")
-        val waUri = Uri.parse("https://wa.me/$cleanDigits?text=${Uri.encode(message)}")
-        
-        val intent = Intent(Intent.ACTION_VIEW, waUri).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        val jid = when {
+            trimmedTarget.contains("@g.us") || trimmedTarget.contains("@s.whatsapp.net") -> trimmedTarget
+            trimmedTarget.all { it.isDigit() } || trimmedTarget.startsWith("+") -> {
+                val cleanDigits = trimmedTarget.replace("[^0-9]".toRegex(), "")
+                if (cleanDigits.length > 11) "$cleanDigits@g.us" else "$cleanDigits@s.whatsapp.net"
+            }
+            else -> "$trimmedTarget@g.us"
         }
-        if (isPackageInstalled("com.whatsapp")) {
-            intent.setPackage("com.whatsapp")
-        } else if (isPackageInstalled("com.whatsapp.w4b")) {
-            intent.setPackage("com.whatsapp.w4b")
+
+        return Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, message)
+            putExtra("jid", jid)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            availablePackage?.let { setPackage(it) }
         }
-        return intent
     }
 
     fun launchWhatsApp(target: String, message: String): Boolean {
         val trimmedTarget = target.trim()
         if (trimmedTarget.isBlank()) return false
 
-        // Caso 1: Enlace de grupo o URL (chat.whatsapp.com)
+        val paquetesWhatsApp = listOf(
+            "com.whatsapp",
+            "com.whatsapp.w4b",
+            "com.whatsappdual"
+        )
+
+        // Si es un enlace HTTP de grupo (chat.whatsapp.com)
         if (trimmedTarget.contains("chat.whatsapp.com") || trimmedTarget.contains("http")) {
-            return try {
-                val sendIntent = Intent(Intent.ACTION_SEND).apply {
+            var enviado = false
+            for (pkg in paquetesWhatsApp) {
+                try {
+                    val intent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, message)
+                        setPackage(pkg)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context.startActivity(intent)
+                    enviado = true
+                    break
+                } catch (_: Exception) {}
+            }
+
+            if (!enviado) {
+                try {
+                    val intent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, message)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context.startActivity(intent)
+                    enviado = true
+                } catch (e: Exception) {
+                    eventLogger.log(LogLevel.ERROR, "EmergencyDispatch", "❌ Error al abrir grupo: ${e.message}")
+                }
+            }
+            return enviado
+        }
+
+        // Determinar JID (Grupo @g.us o Usuario @s.whatsapp.net)
+        val jid = when {
+            trimmedTarget.contains("@g.us") || trimmedTarget.contains("@s.whatsapp.net") -> trimmedTarget
+            trimmedTarget.all { it.isDigit() } || trimmedTarget.startsWith("+") -> {
+                val cleanDigits = trimmedTarget.replace("[^0-9]".toRegex(), "")
+                if (cleanDigits.length > 11) "$cleanDigits@g.us" else "$cleanDigits@s.whatsapp.net"
+            }
+            else -> "$trimmedTarget@g.us"
+        }
+
+        var enviado = false
+        for (pkg in paquetesWhatsApp) {
+            try {
+                val intent = Intent(Intent.ACTION_SEND).apply {
                     type = "text/plain"
                     putExtra(Intent.EXTRA_TEXT, message)
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                    if (isPackageInstalled("com.whatsapp")) {
-                        setPackage("com.whatsapp")
-                    } else if (isPackageInstalled("com.whatsapp.w4b")) {
-                        setPackage("com.whatsapp.w4b")
-                    }
+                    putExtra("jid", jid)
+                    setPackage(pkg)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
-                context.startActivity(sendIntent)
-                true
+                context.startActivity(intent)
+                enviado = true
+                break
+            } catch (_: Exception) {}
+        }
+
+        if (!enviado) {
+            try {
+                val intent = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, message)
+                    putExtra("jid", jid)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(intent)
+                enviado = true
             } catch (e: Exception) {
-                eventLogger.log(LogLevel.ERROR, "EmergencyDispatch", "❌ Error al abrir grupo de WhatsApp: ${e.message}")
-                false
+                eventLogger.log(LogLevel.ERROR, "EmergencyDispatch", "❌ Error al enviar mensaje por JID: ${e.message}")
             }
         }
 
-        // Caso 2: Número de teléfono directo
-        val cleanDigits = trimmedTarget.replace("[^0-9]".toRegex(), "")
-        if (cleanDigits.isBlank()) return false
-
-        val waUri = Uri.parse("https://wa.me/$cleanDigits?text=${Uri.encode(message)}")
-
-        // Intento 1: com.whatsapp directo
-        try {
-            val intent = Intent(Intent.ACTION_VIEW, waUri).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                setPackage("com.whatsapp")
-            }
-            context.startActivity(intent)
-            return true
-        } catch (_: Exception) {}
-
-        // Intento 2: com.whatsapp.w4b (Business)
-        try {
-            val intent = Intent(Intent.ACTION_VIEW, waUri).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                setPackage("com.whatsapp.w4b")
-            }
-            context.startActivity(intent)
-            return true
-        } catch (_: Exception) {}
-
-        // Intento 3: Intent implícito ACTION_VIEW sin paquete fijo
-        return try {
-            val intent = Intent(Intent.ACTION_VIEW, waUri).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            }
-            context.startActivity(intent)
-            true
-        } catch (e: Exception) {
-            eventLogger.log(LogLevel.ERROR, "EmergencyDispatch", "❌ No se pudo abrir WhatsApp: ${e.message}")
-            false
-        }
+        return enviado
     }
 
     fun createTelegramIntent(message: String): Intent {

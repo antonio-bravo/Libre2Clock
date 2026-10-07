@@ -504,9 +504,9 @@ class SettingsViewModel(
                 appContext.getString(
                     R.string.emergency_test_location_failed,
                     when (testMode) {
-                        EmergencyLocationTestMode.CELLULAR_ONLY -> "Red Móvil"
-                        EmergencyLocationTestMode.WIFI_ONLY -> "Wi-Fi"
-                        else -> "GPS/Red"
+                        EmergencyLocationTestMode.CELLULAR_ONLY -> appContext.getString(R.string.emergency_test_mode_cellular)
+                        EmergencyLocationTestMode.WIFI_ONLY -> appContext.getString(R.string.emergency_test_mode_wifi)
+                        else -> appContext.getString(R.string.emergency_test_mode_gps_net)
                     }
                 )
             } else ""

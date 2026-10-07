@@ -600,6 +600,29 @@
     <string name="emergency_whatsapp_help_content">Para enviar mensajes de WhatsApp de forma 100% automática en segundo plano (sin intervención del usuario ni tocar la pantalla):\n\n1. Añade el número de CallMeBot a la agenda de WhatsApp de tu contacto: +34 644 10 55 84 (o consulta callmebot.com).\n2. El contacto debe enviar el mensaje \"I allow callmebot to send me messages\" a ese número por WhatsApp.\n3. Recibirá un mensaje de respuesta con su apikey (ej: 123456).\n4. Pega esa apikey en el contacto arriba.\n\nNota: Los SMS y Telegram Bot ya son 100% automáticos de fondo por defecto.</string>
     <string name="emergency_webhook_title">URL de Webhook Personalizado (Opcional)</string>
     <string name="emergency_webhook_desc">Envía una petición HTTP POST en segundo plano a cualquier API (WASender, IFTTT, Zapier, Make, servidor propio) con los datos del SOS.</string>
-    <string name="emergency_contact_whatsapp_group_id_label">Enlace de invitación del grupo de WhatsApp</string>
-    <string name="emergency_contact_whatsapp_group_id_hint">Pega el enlace de invitación (ej: https://chat.whatsapp.com/...)</string>
+    <string name="emergency_contact_whatsapp_group_id_label">ID de Grupo de WhatsApp (@g.us)</string>
+    <string name="emergency_contact_whatsapp_group_id_hint">Ej: 120363410417355783@g.us</string>
+    <string name="emergency_whatsapp_group_help_title">Cómo Obtener el Group ID de WhatsApp</string>
+    <string name="emergency_whatsapp_group_help_content">El Group ID de WhatsApp tiene el formato 120363...@g.us. Puedes obtenerlo en 10 segundos desde WhatsApp Web (web.whatsapp.com) en tu ordenador:\n\n1. Abre web.whatsapp.com en el navegador de tu PC y entra al grupo del que quieres el ID.\n2. Pulsa F12 o Ctrl+Shift+J para abrir la Consola de desarrollo.\n3. Pega alguno de estos comandos y pulsa Enter:\n\nComando 1 (Grupo Activo):\nwindow.require("WAWebCollections").Chat.getActive().attributes.id._serialized\n\nComando 2 (Ver Todos tus Grupos):\nwindow.require("WAWebCollections").Chat.map(c => c.attributes).filter(c => c.isGroup).map(c => `${c.name}: ${c.id._serialized}`)</string>
+    <string name="emergency_copy_command_1">Copiar Comando Grupo Activo</string>
+    <string name="emergency_copy_command_2">Copiar Comando Listar Grupos</string>
+    <string name="emergency_copied_to_clipboard">Comando copiado al portapapeles</string>
+    <string name="emergency_accessibility_service_name">Libre2Clock - Envío Automático WhatsApp SOS</string>
+    <string name="emergency_accessibility_service_desc">Presiona automáticamente el botón Enviar de WhatsApp al abrir una alerta de emergencia SOS de hipoglucemia.</string>
+    <string name="emergency_accessibility_card_title">Envío Automático de WhatsApp (Sin Tocar Pantalla)</string>
+    <string name="emergency_accessibility_card_desc">Activa el Servicio de Accesibilidad para que la app presione automáticamente el botón Enviar en WhatsApp sin intervención.</string>
+    <string name="emergency_enable_accessibility_btn">Activar Accesibilidad</string>
+    <string name="emergency_how_to_get">¿Cómo obtener?</string>
+    <string name="emergency_card_group_link">Grupo WhatsApp: %1$s</string>
+    <string name="emergency_card_sms_phone">Teléfono SMS: %1$s</string>
+    <string name="emergency_card_telegram_id">Telegram Chat ID: %1$s</string>
+    <string name="emergency_test_mode_cellular">Red Móvil</string>
+    <string name="emergency_test_mode_wifi">Wi-Fi</string>
+    <string name="emergency_test_mode_gps_net">GPS/Red</string>
+    <string name="emergency_placeholder_telegram_bot">Ej: 123456789:ABCdefGHIjklMNOpqrsTUVwxyZ</string>
+    <string name="emergency_placeholder_group_id">Ej: 120363410417355783@g.us</string>
+    <string name="emergency_placeholder_apikey">Ej: 123456</string>
+    <string name="emergency_placeholder_chat_id">Ej: 987654321</string>
+    <string name="emergency_placeholder_phone">Ej: +34612345678</string>
+    <string name="emergency_placeholder_webhook">https://wasenderapi.com/... ó tu webhook</string>
 </resources>

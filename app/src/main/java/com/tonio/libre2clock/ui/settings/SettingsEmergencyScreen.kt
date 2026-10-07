@@ -1,6 +1,8 @@
 package com.tonio.libre2clock.ui.settings
 
 import android.Manifest
+import android.content.Intent
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -16,8 +18,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -42,6 +46,10 @@ fun SettingsEmergencyScreen(
 
     val hasSmsPermission = remember(context, emergencyConfig) {
         ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS) == android.content.pm.PackageManager.PERMISSION_GRANTED
+    }
+
+    val isAccessibilityEnabled = remember(context, emergencyConfig) {
+        com.tonio.libre2clock.util.EmergencyAccessibilityService.isServiceEnabled(context)
     }
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -337,7 +345,7 @@ fun SettingsEmergencyScreen(
                             value = emergencyConfig.telegramBotToken,
                             onValueChange = { viewModel.setEmergencyTelegramBotToken(it) },
                             modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("Ej: 123456789:ABCdefGHIjklMNOpqrsTUVwxyZ") },
+                            placeholder = { Text(stringResource(R.string.emergency_placeholder_telegram_bot)) },
                             singleLine = true
                         )
                         TextButton(
@@ -383,9 +391,49 @@ fun SettingsEmergencyScreen(
                             value = emergencyConfig.customWebhookUrl,
                             onValueChange = { viewModel.setEmergencyCustomWebhookUrl(it) },
                             modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("https://wasenderapi.com/... ó tu webhook") },
+                            placeholder = { Text(stringResource(R.string.emergency_placeholder_webhook)) },
                             singleLine = true
                         )
+                    }
+                }
+            }
+
+            if (emergencyConfig.contacts.any { it.sendViaWhatsApp } && !isAccessibilityEnabled) {
+                item(key = "accessibility_service_card") {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f))
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.emergency_accessibility_card_title),
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                                Text(
+                                    text = stringResource(R.string.emergency_accessibility_card_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(
+                                onClick = {
+                                    val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
+                                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                    }
+                                    context.startActivity(intent)
+                                }
+                            ) {
+                                Text(stringResource(R.string.emergency_enable_accessibility_btn))
+                            }
+                        }
                     }
                 }
             }
@@ -478,7 +526,13 @@ fun SettingsEmergencyScreen(
                             editingContact = contact
                             showContactDialog = true
                         },
-                        onDelete = { viewModel.deleteEmergencyContact(contact.id) }
+                        onDelete = { viewModel.deleteEmergencyContact(contact.id) },
+                        onTestWhatsApp = {
+                            val dispatcher = com.tonio.libre2clock.util.EmergencyAlertDispatcher(context)
+                            val target = contact.whatsAppGroupId.ifBlank { contact.phoneNumber }
+                            val testMsg = dispatcher.formatSosMessage(emergencyConfig.thresholdMgDl, null)
+                            dispatcher.launchWhatsApp(target, testMsg)
+                        }
                     )
                 }
             }
@@ -595,7 +649,8 @@ fun SettingsEmergencyScreen(
 fun EmergencyContactCard(
     contact: EmergencyContact,
     onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onTestWhatsApp: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -616,19 +671,19 @@ fun EmergencyContactCard(
                 )
                 if (contact.whatsAppGroupId.isNotBlank()) {
                     Text(
-                        text = "Enlace de Grupo: ${contact.whatsAppGroupId}",
+                        text = stringResource(R.string.emergency_card_group_link, contact.whatsAppGroupId),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
                 if (contact.phoneNumber.isNotBlank()) {
                     Text(
-                        text = "Teléfono SMS: ${contact.phoneNumber}",
+                        text = stringResource(R.string.emergency_card_sms_phone, contact.phoneNumber),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
                 if (contact.telegramChatId.isNotBlank()) {
                     Text(
-                        text = "Telegram Chat ID: ${contact.telegramChatId}",
+                        text = stringResource(R.string.emergency_card_telegram_id, contact.telegramChatId),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -638,8 +693,8 @@ fun EmergencyContactCard(
                 ) {
                     if (contact.sendViaWhatsApp) {
                         AssistChip(
-                            onClick = {},
-                            label = { Text("WhatsApp", style = MaterialTheme.typography.labelSmall) }
+                            onClick = onTestWhatsApp,
+                            label = { Text("WhatsApp ↗", style = MaterialTheme.typography.labelSmall) }
                         )
                     }
                     if (contact.sendViaTelegram) {
@@ -656,7 +711,16 @@ fun EmergencyContactCard(
                     }
                 }
             }
-            Row {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (contact.sendViaWhatsApp) {
+                    IconButton(onClick = onTestWhatsApp) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.Send,
+                            contentDescription = "Probar WhatsApp",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
                 IconButton(onClick = onEdit) {
                     Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.emergency_btn_edit))
                 }
@@ -683,6 +747,7 @@ fun EmergencyContactDialog(
     var sendViaTelegram by remember { mutableStateOf(contact.sendViaTelegram) }
     var sendViaSms by remember { mutableStateOf(contact.sendViaSms) }
     var showWhatsAppHelpDialog by remember { mutableStateOf(false) }
+    var showWhatsAppGroupHelpDialog by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -736,8 +801,25 @@ fun EmergencyContactDialog(
                         value = whatsAppGroupId,
                         onValueChange = { whatsAppGroupId = it },
                         label = { Text(stringResource(R.string.emergency_contact_whatsapp_group_id_label)) },
-                        placeholder = { Text("Ej: https://chat.whatsapp.com/FQQU79KAs4G9WUytG7tLgZ") },
-                        supportingText = { Text(stringResource(R.string.emergency_contact_whatsapp_group_id_hint)) },
+                        placeholder = { Text(stringResource(R.string.emergency_placeholder_group_id)) },
+                        supportingText = {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.emergency_contact_whatsapp_group_id_hint),
+                                    modifier = Modifier.weight(1f)
+                                )
+                                TextButton(
+                                    onClick = { showWhatsAppGroupHelpDialog = true },
+                                    contentPadding = PaddingValues(0.dp)
+                                ) {
+                                    Text(stringResource(R.string.emergency_how_to_get), style = MaterialTheme.typography.labelSmall)
+                                }
+                            }
+                        },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -746,7 +828,7 @@ fun EmergencyContactDialog(
                         value = whatsAppApiKey,
                         onValueChange = { whatsAppApiKey = it },
                         label = { Text(stringResource(R.string.emergency_contact_whatsapp_apikey_label)) },
-                        placeholder = { Text("Ej: 123456") },
+                        placeholder = { Text(stringResource(R.string.emergency_placeholder_apikey)) },
                         supportingText = {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -761,7 +843,7 @@ fun EmergencyContactDialog(
                                     onClick = { showWhatsAppHelpDialog = true },
                                     contentPadding = PaddingValues(0.dp)
                                 ) {
-                                    Text("¿Cómo obtener?", style = MaterialTheme.typography.labelSmall)
+                                    Text(stringResource(R.string.emergency_how_to_get), style = MaterialTheme.typography.labelSmall)
                                 }
                             }
                         },
@@ -776,7 +858,7 @@ fun EmergencyContactDialog(
                         value = telegramChatId,
                         onValueChange = { telegramChatId = it },
                         label = { Text(stringResource(R.string.emergency_contact_telegram_label)) },
-                        placeholder = { Text("Ej: 987654321") },
+                        placeholder = { Text(stringResource(R.string.emergency_placeholder_chat_id)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
@@ -788,7 +870,7 @@ fun EmergencyContactDialog(
                         value = phone,
                         onValueChange = { phone = it },
                         label = { Text(stringResource(R.string.emergency_contact_phone_label)) },
-                        placeholder = { Text("Ej: +34612345678") },
+                        placeholder = { Text(stringResource(R.string.emergency_placeholder_phone)) },
                         supportingText = { Text(stringResource(R.string.emergency_contact_phone_hint)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                         singleLine = true,
@@ -838,6 +920,56 @@ fun EmergencyContactDialog(
             },
             confirmButton = {
                 Button(onClick = { showWhatsAppHelpDialog = false }) {
+                    Text(stringResource(R.string.emergency_btn_close))
+                }
+            }
+        )
+    }
+
+    if (showWhatsAppGroupHelpDialog) {
+        val clipboardManager = LocalClipboardManager.current
+        val context = LocalContext.current
+        val cmd1 = "window.require(\"WAWebCollections\").Chat.getActive().attributes.id._serialized"
+        val cmd2 = "window.require(\"WAWebCollections\").Chat.map(c => c.attributes).filter(c => c.isGroup).map(c => `\${c.name}: \${c.id._serialized}`)"
+
+        AlertDialog(
+            onDismissRequest = { showWhatsAppGroupHelpDialog = false },
+            icon = { Icon(Icons.Default.Info, contentDescription = null) },
+            title = { Text(stringResource(R.string.emergency_whatsapp_group_help_title)) },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.emergency_whatsapp_group_help_content),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    OutlinedButton(
+                        onClick = {
+                            clipboardManager.setText(AnnotatedString(cmd1))
+                            android.widget.Toast.makeText(context, context.getString(R.string.emergency_copied_to_clipboard), android.widget.Toast.LENGTH_SHORT).show()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(stringResource(R.string.emergency_copy_command_1), style = MaterialTheme.typography.labelSmall)
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            clipboardManager.setText(AnnotatedString(cmd2))
+                            android.widget.Toast.makeText(context, context.getString(R.string.emergency_copied_to_clipboard), android.widget.Toast.LENGTH_SHORT).show()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(stringResource(R.string.emergency_copy_command_2), style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+            },
+            confirmButton = {
+                Button(onClick = { showWhatsAppGroupHelpDialog = false }) {
                     Text(stringResource(R.string.emergency_btn_close))
                 }
             }
