@@ -1,5 +1,43 @@
 # Changelog
 
+## 0caff6b (Oct 08, 2026 22:22:16)
+Add target insulin with current active insulin — antonio-bravo
+[detail](#0caff6b-details)
+
+<details id='0caff6b-details'>
+<summary>Changed files</summary>
+
+- app/src/main/AndroidManifest.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/InsulinProcessor.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEmergencyScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/EmergencyAlertDispatcher.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/EmergencyLocationManager.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+- app/src/main/res/xml/emergency_accessibility_service_config.xml [Modified]
+- gradle.properties [Modified]
+- gradle/wrapper/gradle-wrapper.jar [Modified]
+- gradle/wrapper/gradle-wrapper.properties [Modified]
+- gradlew.bat [Modified]
+</details>
+
+
+---
+## 45aded5 (Oct 07, 2026 19:53:32)
+Update changelog — github-actions[bot]
+[detail](#45aded5-details)
+
+<details id='45aded5-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 050ddb0 (Oct 07, 2026 21:53:17)
 Emegercy SOS WhatsApp — antonio-bravo
 [detail](#050ddb0-details)
@@ -615,30 +653,6 @@ SOS Location — antonio-bravo
 
 - app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEmergencyScreen.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-</details>
-
-
----
-## 3a00a2e (Oct 02, 2026 20:15:08)
-Update changelog — github-actions[bot]
-[detail](#3a00a2e-details)
-
-<details id='3a00a2e-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## e2fd32b (Oct 02, 2026 22:14:55)
-SOS Location — antonio-bravo
-[detail](#e2fd32b-details)
-
-<details id='e2fd32b-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/util/EmergencyLocationManager.kt [Modified]
 </details>
 
 
