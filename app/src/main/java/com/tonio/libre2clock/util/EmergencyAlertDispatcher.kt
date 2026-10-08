@@ -371,28 +371,24 @@ class EmergencyAlertDispatcher(private val context: Context) {
         val paquetesWhatsApp = listOf("com.whatsapp", "com.whatsapp.w4b", "com.whatsappdual")
         val availablePackage = paquetesWhatsApp.firstOrNull { isPackageInstalled(it) }
 
-        if (trimmedTarget.contains("chat.whatsapp.com") || trimmedTarget.contains("http")) {
+        if (trimmedTarget.contains("chat.whatsapp.com") || trimmedTarget.contains("http") || trimmedTarget.contains("@g.us")) {
+            val jid = if (trimmedTarget.contains("@g.us")) trimmedTarget else "$trimmedTarget@g.us"
             return Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
                 putExtra(Intent.EXTRA_TEXT, message)
+                putExtra("jid", jid)
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                 availablePackage?.let { setPackage(it) }
             }
         }
 
-        val jid = when {
-            trimmedTarget.contains("@g.us") || trimmedTarget.contains("@s.whatsapp.net") -> trimmedTarget
-            trimmedTarget.all { it.isDigit() } || trimmedTarget.startsWith("+") -> {
-                val cleanDigits = trimmedTarget.replace("[^0-9]".toRegex(), "")
-                if (cleanDigits.length > 11) "$cleanDigits@g.us" else "$cleanDigits@s.whatsapp.net"
-            }
-            else -> "$trimmedTarget@g.us"
-        }
-
-        return Intent(Intent.ACTION_SEND).apply {
+        val cleanDigits = trimmedTarget.replace("[^0-9]".toRegex(), "")
+        val jid = if (cleanDigits.isNotBlank()) "$cleanDigits@s.whatsapp.net" else ""
+        val uri = Uri.parse("https://api.whatsapp.com/send?phone=$cleanDigits&text=${Uri.encode(message)}")
+        return Intent(Intent.ACTION_SEND, uri).apply {
             type = "text/plain"
             putExtra(Intent.EXTRA_TEXT, message)
-            putExtra("jid", jid)
+            if (jid.isNotBlank()) putExtra("jid", jid)
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             availablePackage?.let { setPackage(it) }
         }
@@ -408,14 +404,16 @@ class EmergencyAlertDispatcher(private val context: Context) {
             "com.whatsappdual"
         )
 
-        // Si es un enlace HTTP de grupo (chat.whatsapp.com)
-        if (trimmedTarget.contains("chat.whatsapp.com") || trimmedTarget.contains("http")) {
+        // Si es un enlace HTTP de grupo o JID de grupo
+        if (trimmedTarget.contains("chat.whatsapp.com") || trimmedTarget.contains("http") || trimmedTarget.contains("@g.us")) {
+            val jid = if (trimmedTarget.contains("@g.us")) trimmedTarget else "$trimmedTarget@g.us"
             var enviado = false
             for (pkg in paquetesWhatsApp) {
                 try {
                     val intent = Intent(Intent.ACTION_SEND).apply {
                         type = "text/plain"
                         putExtra(Intent.EXTRA_TEXT, message)
+                        putExtra("jid", jid)
                         setPackage(pkg)
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     }
@@ -430,6 +428,7 @@ class EmergencyAlertDispatcher(private val context: Context) {
                     val intent = Intent(Intent.ACTION_SEND).apply {
                         type = "text/plain"
                         putExtra(Intent.EXTRA_TEXT, message)
+                        putExtra("jid", jid)
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     }
                     context.startActivity(intent)
@@ -441,23 +440,18 @@ class EmergencyAlertDispatcher(private val context: Context) {
             return enviado
         }
 
-        // Determinar JID (Grupo @g.us o Usuario @s.whatsapp.net)
-        val jid = when {
-            trimmedTarget.contains("@g.us") || trimmedTarget.contains("@s.whatsapp.net") -> trimmedTarget
-            trimmedTarget.all { it.isDigit() } || trimmedTarget.startsWith("+") -> {
-                val cleanDigits = trimmedTarget.replace("[^0-9]".toRegex(), "")
-                if (cleanDigits.length > 11) "$cleanDigits@g.us" else "$cleanDigits@s.whatsapp.net"
-            }
-            else -> "$trimmedTarget@g.us"
-        }
-
+        // Determinar número directo (Usuario)
+        val cleanDigits = trimmedTarget.replace("[^0-9]".toRegex(), "")
+        val jid = if (cleanDigits.isNotBlank()) "$cleanDigits@s.whatsapp.net" else ""
+        val uri = Uri.parse("https://api.whatsapp.com/send?phone=$cleanDigits&text=${Uri.encode(message)}")
+        
         var enviado = false
         for (pkg in paquetesWhatsApp) {
             try {
-                val intent = Intent(Intent.ACTION_SEND).apply {
+                val intent = Intent(Intent.ACTION_SEND, uri).apply {
                     type = "text/plain"
                     putExtra(Intent.EXTRA_TEXT, message)
-                    putExtra("jid", jid)
+                    if (jid.isNotBlank()) putExtra("jid", jid)
                     setPackage(pkg)
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
@@ -472,13 +466,13 @@ class EmergencyAlertDispatcher(private val context: Context) {
                 val intent = Intent(Intent.ACTION_SEND).apply {
                     type = "text/plain"
                     putExtra(Intent.EXTRA_TEXT, message)
-                    putExtra("jid", jid)
+                    if (jid.isNotBlank()) putExtra("jid", jid)
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
                 context.startActivity(intent)
                 enviado = true
             } catch (e: Exception) {
-                eventLogger.log(LogLevel.ERROR, "EmergencyDispatch", "❌ Error al enviar mensaje por JID: ${e.message}")
+                eventLogger.log(LogLevel.ERROR, "EmergencyDispatch", "❌ Error al enviar mensaje: ${e.message}")
             }
         }
 

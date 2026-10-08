@@ -23,7 +23,9 @@ import com.tonio.libre2clock.R
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.InsulinDose
 import com.tonio.libre2clock.data.model.InsulinType
+import com.tonio.libre2clock.data.repository.GlucoseProcessor
 import com.tonio.libre2clock.data.repository.InsulinProcessor
+import kotlin.math.roundToInt
 import com.tonio.libre2clock.ui.components.DateHourMinuteInput
 import com.tonio.libre2clock.ui.settings.SettingsViewModel
 import com.tonio.libre2clock.util.SectionPerfTelemetry
@@ -233,6 +235,7 @@ fun InsulinHubScreen(
             suggestedUnits = suggestedUnitsRaw,
             suggestedUnitsCal = suggestedUnitsCal,
             isf = isf,
+            currentGlucose = currentGlucoseData,
             isBasalExpiringSoon = isBasalExpiringSoon,
             rapidIOB = rapidIOB,
             deductIobForBolus = deductIobForBolus,
@@ -486,6 +489,7 @@ fun BolusCalculatorCard(
                         suggestedUnits = bReal.total,
                         suggestedUnitsCal = bCal.total,
                         isf = isf,
+                        currentGlucose = currentGlucose,
                         isBasalExpiringSoon = isBasalExpiringSoon,
                         rapidIOB = rapidIOB,
                         deductIobForBolus = deductIobForBolus,
@@ -689,6 +693,7 @@ fun InsulinDoseDialog(
     suggestedUnits: Double? = null,
     suggestedUnitsCal: Double? = null,
     isf: Double? = null,
+    currentGlucose: GlucoseMeasurement? = null,
     isBasalExpiringSoon: Boolean = false,
     rapidIOB: Double = 0.0,
     deductIobForBolus: Boolean = false,
@@ -699,6 +704,23 @@ fun InsulinDoseDialog(
     var unitsText by remember { mutableStateOf(initialDose?.units?.toString() ?: "") }
     var carbsText by remember { mutableStateOf(initialDose?.carbs?.toString() ?: "") }
     var type by remember { mutableStateOf(initialDose?.type ?: InsulinType.RAPID) }
+
+    val unitsEntered = unitsText.toDoubleOrNull() ?: 0.0
+    val totalRapidUnits = rapidIOB + (if (type == InsulinType.RAPID) unitsEntered else 0.0)
+
+    val projectedGlucoseText = remember(currentGlucose, totalRapidUnits, isf) {
+        val gRaw = currentGlucose?.let { if (it.value > 0) it.value else it.valueInMgPerDl } ?: 0
+        val gCal = currentGlucose?.let { if (it.calibratedValue > 0) it.calibratedValue else gRaw } ?: 0
+
+        if (gRaw > 0 && isf != null && isf > 0.0) {
+            val totalDrop = totalRapidUnits * isf
+            val predRaw = (gRaw - totalDrop).roundToInt()
+            val predCal = (gCal - totalDrop).roundToInt()
+            GlucoseProcessor.formatDualValue(predRaw, predCal)
+        } else {
+            null
+        }
+    }
     
     val zone = ZoneId.systemDefault()
     val now = Instant.now().atZone(zone)
@@ -765,6 +787,37 @@ fun InsulinDoseDialog(
                         }
                     }
 
+                    if (isBasalExpiringSoon) {
+                        Text(text = stringResource(R.string.calc_basal_expiring_warning_short), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                if (projectedGlucoseText != null) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+                        shape = MaterialTheme.shapes.small,
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.predicted_glucose_label),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = projectedGlucoseText,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
                     if (isBasalExpiringSoon) {
                         Text(text = stringResource(R.string.calc_basal_expiring_warning_short), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
                     }

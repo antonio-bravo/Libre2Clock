@@ -9,7 +9,6 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Build
-import android.os.Bundle
 import android.os.CancellationSignal
 import android.os.SystemClock
 import android.provider.Settings
@@ -196,6 +195,7 @@ class EmergencyLocationManager(private val context: Context) {
     }
 
     @SuppressLint("MissingPermission")
+    @Suppress("DEPRECATION")
     private suspend fun fetchFreshNetworkLocation(label: String = "SystemNetwork"): Location? {
         val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager ?: return null
         if (!locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
@@ -221,14 +221,13 @@ class EmergencyLocationManager(private val context: Context) {
             }
         } else {
             suspendCancellableCoroutine { continuation ->
+                @Suppress("OVERRIDE_DEPRECATION", "DEPRECATION")
                 val listener = object : LocationListener {
                     override fun onLocationChanged(loc: Location) {
                         try { locationManager.removeUpdates(this) } catch (_: Exception) {}
                         if (continuation.isActive) continuation.resume(loc)
                     }
                     @Deprecated("Deprecated in Java")
-                    override fun onStatusChanged(p: String?, s: Int, e: Bundle?) {}
-                    override fun onProviderEnabled(p: String) {}
                     override fun onProviderDisabled(p: String) {
                         try { locationManager.removeUpdates(this) } catch (_: Exception) {}
                         if (continuation.isActive) continuation.resume(null)
@@ -248,6 +247,7 @@ class EmergencyLocationManager(private val context: Context) {
     }
 
     @SuppressLint("MissingPermission")
+    @Suppress("DEPRECATION")
     private suspend fun fetchFreshGpsLocation(): Location? {
         val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager ?: return null
         if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) return null
@@ -270,14 +270,13 @@ class EmergencyLocationManager(private val context: Context) {
             }
         } else {
             suspendCancellableCoroutine { continuation ->
+                @Suppress("OVERRIDE_DEPRECATION", "DEPRECATION")
                 val listener = object : LocationListener {
                     override fun onLocationChanged(loc: Location) {
                         try { locationManager.removeUpdates(this) } catch (_: Exception) {}
                         if (continuation.isActive) continuation.resume(loc)
                     }
                     @Deprecated("Deprecated in Java")
-                    override fun onStatusChanged(p: String?, s: Int, e: Bundle?) {}
-                    override fun onProviderEnabled(p: String) {}
                     override fun onProviderDisabled(p: String) {
                         try { locationManager.removeUpdates(this) } catch (_: Exception) {}
                         if (continuation.isActive) continuation.resume(null)

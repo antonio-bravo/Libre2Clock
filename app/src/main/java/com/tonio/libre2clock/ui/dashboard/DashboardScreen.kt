@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import kotlin.math.roundToInt
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tonio.libre2clock.R
@@ -488,7 +489,15 @@ fun InsulinHealthCard(
     val calculatedTdi = remember(doses) { InsulinProcessor.calculateAverageDaily(doses, 30) }
     val tdi = manualTdi ?: calculatedTdi
     val currentIsf = InsulinProcessor.calculateISF(tdi, isfRuleConstant, manualIsf)
-    
+
+    val formattedIsf = remember(currentIsf) {
+        if (currentIsf > 0.0) {
+            if (currentIsf % 1.0 == 0.0) String.format(Locale.US, "%.0f", currentIsf) else String.format(Locale.US, "%.1f", currentIsf)
+        } else {
+            "--"
+        }
+    }
+
     val yesterdaySplit = remember(doses) { InsulinProcessor.calculateDailyTotalSplit(doses, yesterday) }
     
     val rapidDoses = remember(doses) { doses.filter { it.type == InsulinType.RAPID } }
@@ -497,6 +506,20 @@ fun InsulinHealthCard(
     val totalIOB = remember(doses, nowTick) { InsulinProcessor.calculateTotalIOB(doses) }
     val rapidIOB = remember(rapidDoses, nowTick) { InsulinProcessor.calculateTotalIOB(rapidDoses) }
     val slowIOB = remember(slowDoses, nowTick) { InsulinProcessor.calculateTotalIOB(slowDoses) }
+
+    val predictedGlucoseText = remember(currentGlucose, rapidIOB, currentIsf) {
+        val gRaw = currentGlucose?.let { if (it.value > 0) it.value else it.valueInMgPerDl } ?: 0
+        val gCal = currentGlucose?.let { if (it.calibratedValue > 0) it.calibratedValue else gRaw } ?: 0
+
+        if (gRaw > 0 && currentIsf > 0.0) {
+            val drop = rapidIOB * currentIsf
+            val predRaw = (gRaw - drop).roundToInt()
+            val predCal = (gCal - drop).roundToInt()
+            GlucoseProcessor.formatDualValue(predRaw, predCal)
+        } else {
+            "--"
+        }
+    }
     
     val weekAvg = remember(doses) { InsulinProcessor.calculateAverageDailySplit(doses, 7) }
     val monthAvg = remember(doses) { InsulinProcessor.calculateAverageDailySplit(doses, 30) }
@@ -509,8 +532,8 @@ fun InsulinHealthCard(
     }
 
     val (suggestedUnitsRaw, suggestedUnitsCal) = remember(currentGlucose, tdi, currentIsf, targetGlucose, isBasalExpiringSoon, rapidIOB, deductIobForBolus) {
-        val rawG = currentGlucose?.value
-        val calG = currentGlucose?.calibratedValue ?: rawG
+        val rawG = currentGlucose?.let { if (it.value > 0) it.value else (if (it.valueInMgPerDl > 0) it.valueInMgPerDl else null) }
+        val calG = currentGlucose?.let { if (it.calibratedValue > 0) it.calibratedValue else rawG }
 
         val rawUnits = rawG?.let {
             InsulinProcessor.getSuggestedBolusDetailed(
@@ -556,7 +579,7 @@ fun InsulinHealthCard(
                 Column {
                     Text(text = stringResource(R.string.insulin_info), style = MaterialTheme.typography.titleMedium)
                     Text(
-                        text = stringResource(R.string.insulin_header_breakdown, totalToday, todayRapid, todaySlow),
+                        text = stringResource(R.string.insulin_header_breakdown, totalToday, todayRapid, todaySlow, formattedIsf),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -573,12 +596,18 @@ fun InsulinHealthCard(
             
             Spacer(modifier = Modifier.height(12.dp))
 
-            HorizontalPager(state = pagerState, modifier = Modifier.height(80.dp)) { page ->
+            HorizontalPager(state = pagerState, modifier = Modifier.height(85.dp)) { page ->
                 when (page) {
                     0 -> Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = predictedGlucoseText,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
                             Text(text = stringResource(R.string.insulin_active_rapid), style = MaterialTheme.typography.labelSmall)
-                            Text(text = String.format(Locale.US, "%.2f U", rapidIOB), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                            Text(text = String.format(Locale.US, "%.2f U", rapidIOB), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         }
                         VerticalDivider(modifier = Modifier.height(40.dp).padding(horizontal = 8.dp))
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -589,11 +618,6 @@ fun InsulinHealthCard(
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(text = stringResource(R.string.total_iob), style = MaterialTheme.typography.labelSmall)
                             Text(text = String.format(Locale.US, "%.2f U", totalIOB), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
-                            val formattedIsf = if (currentIsf > 0.0) {
-                                if (currentIsf % 1.0 == 0.0) String.format(Locale.US, "%.0f", currentIsf) else String.format(Locale.US, "%.1f", currentIsf)
-                            } else {
-                                "--"
-                            }
                             Text(
                                 text = stringResource(R.string.dash_fs_label, formattedIsf) + if (manualIsf != null) " (M)" else " (C)",
                                 style = MaterialTheme.typography.labelSmall,
@@ -643,6 +667,7 @@ fun InsulinHealthCard(
             suggestedUnits = suggestedUnitsRaw,
             suggestedUnitsCal = suggestedUnitsCal,
             isf = currentIsf,
+            currentGlucose = currentGlucose,
             isBasalExpiringSoon = isBasalExpiringSoon,
             rapidIOB = rapidIOB,
             deductIobForBolus = deductIobForBolus,

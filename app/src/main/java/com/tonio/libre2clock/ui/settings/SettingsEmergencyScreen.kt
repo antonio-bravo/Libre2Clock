@@ -18,10 +18,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
+import android.content.ClipData
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -927,7 +928,8 @@ fun EmergencyContactDialog(
     }
 
     if (showWhatsAppGroupHelpDialog) {
-        val clipboardManager = LocalClipboardManager.current
+        val clipboard = LocalClipboard.current
+        val coroutineScope = rememberCoroutineScope()
         val context = LocalContext.current
         val cmd1 = "window.require(\"WAWebCollections\").Chat.getActive().attributes.id._serialized"
         val cmd2 = "window.require(\"WAWebCollections\").Chat.map(c => c.attributes).filter(c => c.isGroup).map(c => `\${c.name}: \${c.id._serialized}`)"
@@ -946,7 +948,9 @@ fun EmergencyContactDialog(
                     )
                     OutlinedButton(
                         onClick = {
-                            clipboardManager.setText(AnnotatedString(cmd1))
+                            coroutineScope.launch {
+                                clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("cmd1", cmd1)))
+                            }
                             android.widget.Toast.makeText(context, context.getString(R.string.emergency_copied_to_clipboard), android.widget.Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier.fillMaxWidth()
@@ -957,7 +961,9 @@ fun EmergencyContactDialog(
                     }
                     OutlinedButton(
                         onClick = {
-                            clipboardManager.setText(AnnotatedString(cmd2))
+                            coroutineScope.launch {
+                                clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("cmd2", cmd2)))
+                            }
                             android.widget.Toast.makeText(context, context.getString(R.string.emergency_copied_to_clipboard), android.widget.Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier.fillMaxWidth()

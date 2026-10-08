@@ -67,7 +67,7 @@
     <string name="insulin_recent_activity">Actividad Reciente</string>
     <string name="insulin_view_logs">Historial Completo</string>
     <string name="insulin_total_breakdown">TDI: %1$.1f U (%2$.1f R + %3$.1f S)</string>
-    <string name="insulin_header_breakdown">Total: %1$.1f U (%2$.1f R + %3$.1f S)</string>
+    <string name="insulin_header_breakdown">Total: %1$.1f U (%2$.1f R + %3$.1f S) FS: %4$s</string>
     <string name="add_insulin_dose">Añadir dosis de insulina</string>
     <string name="edit_insulin_dose">Editar dosis de insulina</string>
     <string name="update">Actualizar</string>
@@ -86,6 +86,7 @@
     <string name="calc_formula_label">Fórmula: %1$d / TDI</string>
     <string name="calc_manual_label">Valor Manual</string>
     <string name="dash_fs_label">FS: %1$s</string>
+    <string name="predicted_glucose_label">Glucosa estimada:</string>
     <string name="calc_bolus_helper">Asistente de Bolo</string>
     <string name="calc_carbs_label">HC (g)</string>
     <string name="calc_glucose_label">Glucosa Actual (mg/dL)</string>

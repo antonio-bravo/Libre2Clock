@@ -7,6 +7,7 @@ import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 import java.util.Locale
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -94,13 +95,22 @@ object InsulinProcessor {
         val endInstant = now.plusDays(1).atStartOfDay(zone).toInstant()
 
         var total = 0.0
+        var earliestDoseDate: LocalDate? = null
+
         for (dose in doses) {
             val instant = TimestampParser.parseFlexibleInstant(dose.timestamp) ?: continue
             if (!instant.isBefore(cutoffInstant) && instant.isBefore(endInstant)) {
                 total += dose.units
+                val doseDate = instant.atZone(zone).toLocalDate()
+                if (earliestDoseDate == null || doseDate.isBefore(earliestDoseDate)) {
+                    earliestDoseDate = doseDate
+                }
             }
         }
-        return total / days
+        if (total <= 0.0 || earliestDoseDate == null) return 0.0
+
+        val actualDays = (ChronoUnit.DAYS.between(earliestDoseDate, now) + 1).toInt().coerceIn(1, days)
+        return total / actualDays
     }
 
     data class SplitTotal(val rapid: Double, val slow: Double) {
@@ -145,6 +155,7 @@ object InsulinProcessor {
 
         var rapidSum = 0.0
         var slowSum = 0.0
+        var earliestDoseDate: LocalDate? = null
 
         for (dose in doses) {
             val instant = TimestampParser.parseFlexibleInstant(dose.timestamp) ?: continue
@@ -154,15 +165,24 @@ object InsulinProcessor {
                 } else if (dose.type == InsulinType.SLOW) {
                     slowSum += dose.units
                 }
+                val doseDate = instant.atZone(zone).toLocalDate()
+                if (earliestDoseDate == null || doseDate.isBefore(earliestDoseDate)) {
+                    earliestDoseDate = doseDate
+                }
             }
         }
-        return SplitTotal(rapidSum / days, slowSum / days)
+        if (earliestDoseDate == null) return SplitTotal(0.0, 0.0)
+
+        val actualDays = (ChronoUnit.DAYS.between(earliestDoseDate, now) + 1).toInt().coerceIn(1, days)
+        return SplitTotal(rapidSum / actualDays, slowSum / actualDays)
     }
 
     fun calculateISF(tdi: Double, isfConstant: Int, manualIsf: Double?): Double {
-        if (manualIsf != null) return manualIsf
-        if (tdi <= 0.0) return 0.0
-        return isfConstant.toDouble() / tdi
+        if (manualIsf != null && manualIsf > 0.0) return manualIsf
+        if (tdi <= 0.0) return 40.0
+        val effectiveTdi = maxOf(tdi, 30.0)
+        val calculated = isfConstant.toDouble() / effectiveTdi
+        return calculated.coerceIn(10.0, 150.0)
     }
 
     data class BolusBreakdown(

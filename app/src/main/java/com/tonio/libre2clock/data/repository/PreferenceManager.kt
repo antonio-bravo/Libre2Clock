@@ -298,7 +298,7 @@ class PreferenceManager(private val context: Context) {
 
     @Suppress("UNCHECKED_CAST")
     val emergencyConfig: Flow<EmergencyConfig> = combine(
-        combine(
+        combine<Any, Array<Any>>(
             emergencyAlertsEnabled,
             emergencyGlucoseThreshold,
             emergencyCooldownMinutes,
@@ -308,7 +308,7 @@ class PreferenceManager(private val context: Context) {
             emergencyStartTime,
             emergencyEndTime
         ) { a -> a },
-        combine(
+        combine<Any, Array<Any>>(
             emergencyTelegramBotToken,
             emergencyCustomWebhookUrl,
             emergencyContacts
