@@ -745,6 +745,15 @@ fun InsulinDoseDialog(
         title = { Text(stringResource(if (initialDose == null) R.string.add_insulin_dose else R.string.edit_insulin_dose)) },
         text = {
             Column {
+                if (isBasalExpiringSoon) {
+                    Text(
+                        text = stringResource(R.string.calc_basal_expiring_warning_short),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
                 if (suggestedUnits != null) {
                     val formatValue = { v: Double -> (Math.floor(v * 100) / 100.0) }
                     val rawVal = maxOf(0.0, suggestedUnits)
@@ -786,10 +795,6 @@ fun InsulinDoseDialog(
                             Text(stringResource(R.string.insulin_use_suggested))
                         }
                     }
-
-                    if (isBasalExpiringSoon) {
-                        Text(text = stringResource(R.string.calc_basal_expiring_warning_short), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
-                    }
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
@@ -817,9 +822,6 @@ fun InsulinDoseDialog(
                                 color = MaterialTheme.colorScheme.primary
                             )
                         }
-                    }
-                    if (isBasalExpiringSoon) {
-                        Text(text = stringResource(R.string.calc_basal_expiring_warning_short), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error)
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                 }
