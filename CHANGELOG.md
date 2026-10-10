@@ -1,5 +1,46 @@
 # Changelog
 
+## 38aad17 (Oct 10, 2026 21:42:23)
+fix double text expiring soon — antonio-bravo
+[detail](#38aad17-details)
+
+<details id='38aad17-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
+</details>
+
+
+---
+## fc9a449 (Oct 10, 2026 21:42:23)
+re-login — antonio-bravo
+[detail](#fc9a449-details)
+
+<details id='fc9a449-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/api/LibreAuthenticator.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/data/api/LibreService.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/SecureCredentialStore.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/di/AppContainer.kt [Modified]
+</details>
+
+
+---
+## ee991bc (Oct 08, 2026 20:22:30)
+Update changelog — github-actions[bot]
+[detail](#ee991bc-details)
+
+<details id='ee991bc-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 0caff6b (Oct 08, 2026 22:22:16)
 Add target insulin with current active insulin — antonio-bravo
 [detail](#0caff6b-details)
@@ -616,43 +657,6 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
-</details>
-
-
----
-## dfb4c08 (Oct 02, 2026 22:47:45)
-SOS Location order — antonio-bravo
-[detail](#dfb4c08-details)
-
-<details id='dfb4c08-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/util/EmergencyLocationManager.kt [Modified]
-</details>
-
-
----
-## 37dbca9 (Oct 02, 2026 20:28:17)
-Update changelog — github-actions[bot]
-[detail](#37dbca9-details)
-
-<details id='37dbca9-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 09f9e52 (Oct 02, 2026 22:28:05)
-SOS Location — antonio-bravo
-[detail](#09f9e52-details)
-
-<details id='09f9e52-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEmergencyScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
 </details>
 
 
