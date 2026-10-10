@@ -69,6 +69,7 @@ class PreferenceManager(private val context: Context) {
     private val TOKEN_KEY = stringPreferencesKey("auth_token")
     private val USER_ID_KEY = stringPreferencesKey("user_id")
     private val PATIENT_ID_KEY = stringPreferencesKey("patient_id")
+    private val REGION_KEY = stringPreferencesKey("libre_link_up_region")
     private val LIBRE_LINK_UP_EMAIL_KEY = stringPreferencesKey("libre_link_up_email")
     private val GLUCOSE_OFFSET_KEY = intPreferencesKey("glucose_offset")
     private val GLUCOSE_OFFSET_RANGES_KEY = stringPreferencesKey("glucose_offset_ranges")
@@ -136,6 +137,7 @@ class PreferenceManager(private val context: Context) {
     val authToken: Flow<String?> = context.dataStore.data.map { it[TOKEN_KEY] }.distinctUntilChanged()
     val userId: Flow<String?> = context.dataStore.data.map { it[USER_ID_KEY] }.distinctUntilChanged()
     val patientId: Flow<String?> = context.dataStore.data.map { it[PATIENT_ID_KEY] }.distinctUntilChanged()
+    val region: Flow<String?> = context.dataStore.data.map { it[REGION_KEY] }.distinctUntilChanged()
     val libreLinkUpEmail: Flow<String?> = context.dataStore.data.map { it[LIBRE_LINK_UP_EMAIL_KEY] }.distinctUntilChanged()
     val glucoseOffset: Flow<Int> = context.dataStore.data.map { it[GLUCOSE_OFFSET_KEY] ?: 0 }.distinctUntilChanged()
     
@@ -336,6 +338,14 @@ class PreferenceManager(private val context: Context) {
             preferences[USER_ID_KEY] = userId
         }
     }
+
+    suspend fun saveRegion(region: String) {
+        context.dataStore.edit { it[REGION_KEY] = region }
+    }
+
+    suspend fun getAuthTokenSync(): String? = context.dataStore.data.first()[TOKEN_KEY]
+    suspend fun getUserIdSync(): String? = context.dataStore.data.first()[USER_ID_KEY]
+    suspend fun getRegionSync(): String? = context.dataStore.data.first()[REGION_KEY]
 
     suspend fun saveLibreLinkUpEmail(email: String) {
         context.dataStore.edit { it[LIBRE_LINK_UP_EMAIL_KEY] = email }
@@ -841,6 +851,7 @@ class PreferenceManager(private val context: Context) {
             preferences.remove(TOKEN_KEY)
             preferences.remove(USER_ID_KEY)
             preferences.remove(PATIENT_ID_KEY)
+            preferences.remove(REGION_KEY)
         }
     }
 

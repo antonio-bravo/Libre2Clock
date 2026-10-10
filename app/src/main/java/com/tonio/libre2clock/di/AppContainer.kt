@@ -1,8 +1,10 @@
 package com.tonio.libre2clock.di
 
 import android.content.Context
+import com.tonio.libre2clock.data.api.LibreService
 import com.tonio.libre2clock.data.repository.GlucoseRepositoryImpl
 import com.tonio.libre2clock.data.repository.PreferenceManager
+import com.tonio.libre2clock.data.repository.SecureCredentialStore
 import com.tonio.libre2clock.data.sync.AuthManager
 import com.tonio.libre2clock.data.sync.CloudSyncManager
 import com.tonio.libre2clock.util.EventLogManager
@@ -84,11 +86,20 @@ object AppContainer {
         return synchronized(this) {
             val cached = glucoseRepository
             if (cached != null) cached
-            else GlucoseRepositoryImpl(
-                context = context.applicationContext,
-                preferenceManager = providePreferenceManager(context)
-            ).also {
-                glucoseRepository = it
+            else {
+                val appContext = context.applicationContext
+                val prefManager = providePreferenceManager(appContext)
+                val credStore = SecureCredentialStore(appContext)
+                val logManager = provideEventLogManager(appContext)
+
+                LibreService.init(appContext, prefManager, credStore, logManager)
+
+                GlucoseRepositoryImpl(
+                    context = appContext,
+                    preferenceManager = prefManager
+                ).also {
+                    glucoseRepository = it
+                }
             }
         }
     }

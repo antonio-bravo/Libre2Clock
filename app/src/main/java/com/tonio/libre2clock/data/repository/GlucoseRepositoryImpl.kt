@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import retrofit2.HttpException
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -29,8 +28,9 @@ class GlucoseRepositoryImpl(
     private val preferenceManager: PreferenceManager
 ) : GlucoseRepository {
 
-    private val historyDb = GlucoseHistoryDatabaseHelper(context.applicationContext)
-    private val credentialStore = SecureCredentialStore(context.applicationContext)
+    private val appContext = context.applicationContext
+    private val historyDb = GlucoseHistoryDatabaseHelper(appContext)
+    private val credentialStore = SecureCredentialStore(appContext)
     private val historicalState = MutableStateFlow<List<GlucoseMeasurement>>(emptyList())
     private val _dataVersion = MutableStateFlow(0L)
     override val dataVersion: Flow<Long> = _dataVersion.asStateFlow()
@@ -172,7 +172,7 @@ class GlucoseRepositoryImpl(
         }
     }
 
-    private suspend fun fetchLatestGlucoseInternal(persistArchive: Boolean, allowReauth: Boolean = true): Result<GlucoseMeasurement> {
+    private suspend fun fetchLatestGlucoseInternal(persistArchive: Boolean): Result<GlucoseMeasurement> {
         val demoEnabled = preferenceManager.isDemoMode.first()
         if (demoEnabled) {
             val now = Instant.now()
@@ -284,40 +284,20 @@ class GlucoseRepositoryImpl(
                 Result.failure(Exception("No glucose data found in response"))
             }
         } catch (e: Exception) {
-            if (e is HttpException && e.code() == 401) {
-                // Session expired: try a silent re-login with the stored credentials before giving up.
-                val credentials = if (allowReauth) credentialStore.getCredentials() else null
-                if (credentials != null) {
-                    val loginResult = login(credentials.first, credentials.second)
-                    if (loginResult.isSuccess) {
-                        return fetchLatestGlucoseInternal(persistArchive, allowReauth = false)
-                    } else {
-                        val loginError = loginResult.exceptionOrNull()
-                        // Solo hacemos logout si es un error de credenciales explícito (401)
-                        // Si es error de red (IOException), NO hacemos logout para evitar perder la sesión de noche.
-                        if (loginError is HttpException && loginError.code() == 401) {
-                            logout()
-                        }
-                    }
-                } else {
-                    logout()
-                }
-            }
             Result.failure(e)
         }
     }
 
     suspend fun initialize() {
+        LibreService.init(
+            appContext,
+            preferenceManager,
+            credentialStore,
+            com.tonio.libre2clock.di.AppContainer.provideEventLogManager(appContext)
+        )
         initializeLocalHistoryIfNeeded()
 
-        val token = preferenceManager.authToken.first()
-        val userId = preferenceManager.userId.first()
-
         preferenceManager.requestHistoryCloudBackupIfDue()
-
-        if (token != null && userId != null) {
-            LibreService.setAuth(token, userId)
-        }
 
         // Ensure current active sensor from preferences is in the logs
         val sn = preferenceManager.activeSensorSerialNumber.first()
