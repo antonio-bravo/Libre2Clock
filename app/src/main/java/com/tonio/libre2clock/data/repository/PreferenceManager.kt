@@ -18,8 +18,10 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.tonio.libre2clock.data.model.AlarmSchedule
 import com.tonio.libre2clock.data.model.AutoRangeOffsetMode
 import com.tonio.libre2clock.data.model.CapillaryMeasurement
+import com.tonio.libre2clock.data.model.DexcomServerRegion
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.GlucoseOffsetRange
+import com.tonio.libre2clock.data.model.GlucoseSourceProvider
 import com.tonio.libre2clock.data.model.HistoryBackupPayload
 import com.tonio.libre2clock.data.model.InsulinDose
 import com.tonio.libre2clock.data.model.SensorLog
@@ -132,8 +134,31 @@ class PreferenceManager(private val context: Context) {
     private val CLOUD_SYNC_LAST_SUCCESS_AT_KEY = longPreferencesKey("cloud_sync_last_success_at")
     private val SETTINGS_UPDATED_AT_KEY = longPreferencesKey("settings_updated_at")
     private val PREDICTIVE_ALARMS_ENABLED_KEY = booleanPreferencesKey("predictive_alarms_enabled")
+    private val GLUCOSE_SOURCE_PROVIDER_KEY = stringPreferencesKey("glucose_source_provider")
+    private val DEXCOM_SERVER_REGION_KEY = stringPreferencesKey("dexcom_server_region")
+    private val DEXCOM_ACCOUNT_NAME_KEY = stringPreferencesKey("dexcom_account_name")
 
     // --- Flows ---
+    val glucoseSourceProvider: Flow<GlucoseSourceProvider> = context.dataStore.data.map { prefs ->
+        val raw = prefs[GLUCOSE_SOURCE_PROVIDER_KEY]
+        if (!raw.isNullOrBlank()) {
+            GlucoseSourceProvider.entries.firstOrNull { it.name == raw } ?: GlucoseSourceProvider.LIBRE_LINK_UP
+        } else {
+            GlucoseSourceProvider.LIBRE_LINK_UP
+        }
+    }.distinctUntilChanged()
+
+    val dexcomServerRegion: Flow<DexcomServerRegion> = context.dataStore.data.map { prefs ->
+        val raw = prefs[DEXCOM_SERVER_REGION_KEY]
+        if (!raw.isNullOrBlank()) {
+            DexcomServerRegion.entries.firstOrNull { it.name == raw } ?: DexcomServerRegion.OUS
+        } else {
+            DexcomServerRegion.OUS
+        }
+    }.distinctUntilChanged()
+
+    val dexcomAccountName: Flow<String?> = context.dataStore.data.map { it[DEXCOM_ACCOUNT_NAME_KEY] }.distinctUntilChanged()
+
     val authToken: Flow<String?> = context.dataStore.data.map { it[TOKEN_KEY] }.distinctUntilChanged()
     val userId: Flow<String?> = context.dataStore.data.map { it[USER_ID_KEY] }.distinctUntilChanged()
     val patientId: Flow<String?> = context.dataStore.data.map { it[PATIENT_ID_KEY] }.distinctUntilChanged()
@@ -332,6 +357,18 @@ class PreferenceManager(private val context: Context) {
     }.distinctUntilChanged()
 
     // --- Guardado (Save) ---
+    suspend fun saveGlucoseSourceProvider(provider: GlucoseSourceProvider) {
+        context.dataStore.edit { it[GLUCOSE_SOURCE_PROVIDER_KEY] = provider.name }
+    }
+
+    suspend fun saveDexcomServerRegion(region: DexcomServerRegion) {
+        context.dataStore.edit { it[DEXCOM_SERVER_REGION_KEY] = region.name }
+    }
+
+    suspend fun saveDexcomAccountName(accountName: String) {
+        context.dataStore.edit { it[DEXCOM_ACCOUNT_NAME_KEY] = accountName }
+    }
+
     suspend fun saveAuth(token: String, userId: String) {
         context.dataStore.edit { preferences ->
             preferences[TOKEN_KEY] = token

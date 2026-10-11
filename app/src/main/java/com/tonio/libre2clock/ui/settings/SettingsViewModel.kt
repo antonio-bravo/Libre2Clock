@@ -61,6 +61,7 @@ class SettingsViewModel(
 ) : AndroidViewModel(application) {
 
     private val appContext: Context = getApplication()
+    private val credentialStore = com.tonio.libre2clock.data.repository.SecureCredentialStore(appContext)
     
     private val sharingStrategy = SharingStarted.WhileSubscribed(5000)
     
@@ -718,77 +719,124 @@ class SettingsViewModel(
             _isApiDebugLoading.value = true
             _apiDebugOutput.value = null
             try {
+                val activeProvider = preferenceManager.glucoseSourceProvider.first()
                 val startedAt = Instant.now().toString()
-                val report = buildString {
-                    appendLine("=== LibreLinkUp API Diagnostic ===")
-                    appendLine("Started at: $startedAt")
+                val report = if (activeProvider == com.tonio.libre2clock.data.model.GlucoseSourceProvider.DEXCOM_SHARE) {
+                    buildString {
+                        appendLine("=== Dexcom Share API Diagnostic ===")
+                        appendLine("Started at: $startedAt")
 
-                    val token = preferenceManager.authToken.first()
-                    val userId = preferenceManager.userId.first()
-                    val storedPatientId = preferenceManager.patientId.first()
-                    val demoEnabled = preferenceManager.isDemoMode.first()
+                        val region = preferenceManager.dexcomServerRegion.first()
+                        val creds = credentialStore.getDexcomCredentials()
+                        val accountName = creds?.first ?: preferenceManager.dexcomAccountName.first() ?: ""
+                        val password = creds?.second ?: ""
 
-                    appendLine("Demo mode: $demoEnabled")
-                    appendLine("Has token: ${!token.isNullOrBlank()}")
-                    appendLine("Has userId: ${!userId.isNullOrBlank()}")
-                    appendLine("Stored patientId: ${storedPatientId ?: "<none>"}")
+                        appendLine("Region: ${region.displayName}")
+                        appendLine("Account name: ${if (accountName.isNotBlank()) accountName else "<none>"}")
+                        appendLine("Has password: ${password.isNotBlank()}")
 
-                    if (token.isNullOrBlank() || userId.isNullOrBlank()) {
-                        appendLine("\nResult: FAIL\nReason: Missing credentials. Please login again.")
-                        return@buildString
+                        if (accountName.isBlank() || password.isBlank()) {
+                            appendLine("\nResult: FAIL\nReason: Credenciales de Dexcom no encontradas.")
+                            return@buildString
+                        }
+
+                        appendLine("\nPrueba de autenticación Dexcom Share...")
+                        val authResult = com.tonio.libre2clock.data.api.DexcomService.login(accountName, password, region)
+                        if (authResult.isFailure) {
+                            appendLine("Result: FAIL\nReason: ${authResult.exceptionOrNull()?.message}")
+                            return@buildString
+                        }
+
+                        val sid = authResult.getOrNull()
+                        appendLine("Auth Status: OK (sessionId: ${sid?.take(8)}...)")
+
+                        appendLine("\nObteniendo lecturas recientes de glucosa...")
+                        val readingsRes = com.tonio.libre2clock.data.api.DexcomService.fetchReadings(accountName, password)
+                        if (readingsRes.isFailure) {
+                            appendLine("Result: FAIL\nReason: ${readingsRes.exceptionOrNull()?.message}")
+                            return@buildString
+                        }
+
+                        val readings = readingsRes.getOrNull() ?: emptyList()
+                        appendLine("Readings count: ${readings.size}")
+
+                        val latest = readings.lastOrNull()
+                        if (latest != null) {
+                            appendLine("\nÚltima lectura Dexcom:")
+                            appendLine("Valor: ${latest.value} mg/dL")
+                            appendLine("Flecha tendencia: ${latest.trendArrow}")
+                            appendLine("Timestamp: ${latest.timestamp}")
+                            appendLine("Epoch seconds: ${latest.epochSeconds}")
+                            appendLine("Result: OK")
+                        } else {
+                            appendLine("Result: FAIL\nReason: Dexcom no devolvió lecturas de glucosa.")
+                        }
                     }
+                } else {
+                    buildString {
+                        appendLine("=== LibreLinkUp API Diagnostic ===")
+                        appendLine("Started at: $startedAt")
 
-                    LibreService.setAuth(token, userId)
-                    val connectionsResponse = LibreService.api.getConnections()
-                    val connections = connectionsResponse.data ?: emptyList()
-                    val firstConnectionPatientId = connections.firstOrNull()?.patientId
+                        val token = preferenceManager.authToken.first()
+                        val userId = preferenceManager.userId.first()
+                        val storedPatientId = preferenceManager.patientId.first()
+                        val demoEnabled = preferenceManager.isDemoMode.first()
 
-                    appendLine("\nGET /llu/connections")
-                    appendLine("status: ${connectionsResponse.status}")
-                    appendLine("connectionsCount: ${connections.size}")
-                    appendLine("firstConnectionPatientId: ${firstConnectionPatientId ?: "<none>"}")
+                        appendLine("Demo mode: $demoEnabled")
+                        appendLine("Has token: ${!token.isNullOrBlank()}")
+                        appendLine("Has userId: ${!userId.isNullOrBlank()}")
+                        appendLine("Stored patientId: ${storedPatientId ?: "<none>"}")
 
-                    val patientId = storedPatientId ?: firstConnectionPatientId
-                    if (patientId.isNullOrBlank()) {
-                        appendLine("\nResult: FAIL\nReason: No patientId available.\nRaw connections: $connectionsResponse")
-                        return@buildString
-                    }
+                        if (token.isNullOrBlank() || userId.isNullOrBlank()) {
+                            appendLine("\nResult: FAIL\nReason: Missing credentials. Please login again.")
+                            return@buildString
+                        }
 
-                    val graphResponse = LibreService.api.getGlucoseGraph(patientId)
-                    val measurement = graphResponse.data?.connection?.glucoseMeasurement
-                    val graphData = graphResponse.data?.graphData ?: emptyList()
-                    val latestFromGraph = graphData.lastOrNull()
+                        LibreService.setAuth(token, userId)
+                        val connectionsResponse = LibreService.api.getConnections()
+                        val connections = connectionsResponse.data ?: emptyList()
+                        val firstConnectionPatientId = connections.firstOrNull()?.patientId
 
-                    appendLine("\nGET /llu/connections/{patientId}/graph")
-                    appendLine("patientId used: $patientId")
-                    appendLine("status: ${graphResponse.status}")
-                    appendLine("graphDataCount: ${graphData.size}")
-                    appendLine("\nconnection.glucoseMeasurement: ${measurement ?: "<null>"}")
-                    appendLine("latest graphData item: ${latestFromGraph ?: "<null>"}")
+                        appendLine("\nGET /llu/connections")
+                        appendLine("status: ${connectionsResponse.status}")
+                        appendLine("connectionsCount: ${connections.size}")
+                        appendLine("firstConnectionPatientId: ${firstConnectionPatientId ?: "<none>"}")
 
-                    val effective = measurement ?: latestFromGraph
-                    appendLine("\neffective value used by app:")
-                    if (effective != null) {
-                        appendLine("Value: ${effective.value}")
-                        appendLine("ValueInMgPerDl: ${effective.valueInMgPerDl}")
-                        appendLine("TrendArrow: ${effective.trendArrow}")
-                        appendLine("FactoryTimestamp: ${effective.factoryTimestamp}")
-                        appendLine("Timestamp: ${effective.timestamp}")
-                        appendLine("Result: OK")
-                    } else {
-                        appendLine("<null>\nResult: FAIL\nReason: API returned no glucoseMeasurement and empty graphData.")
+                        val patientId = storedPatientId ?: firstConnectionPatientId
+                        if (patientId.isNullOrBlank()) {
+                            appendLine("\nResult: FAIL\nReason: No patientId available.\nRaw connections: $connectionsResponse")
+                            return@buildString
+                        }
+
+                        val graphResponse = LibreService.api.getGlucoseGraph(patientId)
+                        val measurement = graphResponse.data?.connection?.glucoseMeasurement
+                        val graphData = graphResponse.data?.graphData ?: emptyList()
+                        val latestFromGraph = graphData.lastOrNull()
+
+                        appendLine("\nGET /llu/connections/{patientId}/graph")
+                        appendLine("patientId used: $patientId")
+                        appendLine("status: ${graphResponse.status}")
+                        appendLine("graphDataCount: ${graphData.size}")
+                        appendLine("\nconnection.glucoseMeasurement: ${measurement ?: "<null>"}")
+                        appendLine("latest graphData item: ${latestFromGraph ?: "<null>"}")
+
+                        val effective = measurement ?: latestFromGraph
+                        appendLine("\neffective value used by app:")
+                        if (effective != null) {
+                            appendLine("Value: ${effective.value}")
+                            appendLine("ValueInMgPerDl: ${effective.valueInMgPerDl}")
+                            appendLine("TrendArrow: ${effective.trendArrow}")
+                            appendLine("FactoryTimestamp: ${effective.factoryTimestamp}")
+                            appendLine("Timestamp: ${effective.timestamp}")
+                            appendLine("Result: OK")
+                        } else {
+                            appendLine("<null>\nResult: FAIL\nReason: API returned no glucoseMeasurement and empty graphData.")
+                        }
                     }
                 }
                 _apiDebugOutput.value = report
             } catch (e: Exception) {
-                _apiDebugOutput.value = buildString {
-                    appendLine("=== LibreLinkUp API Diagnostic ===")
-                    appendLine("Result: FAIL")
-                    appendLine("Exception: ${e::class.java.simpleName}")
-                    appendLine("Message: ${e.message ?: "<no message>"}")
-                    appendLine("Stack (top 8):")
-                    e.stackTrace.take(8).forEach { appendLine("  at $it") }
-                }
+                _apiDebugOutput.value = "Diagnostic failed: ${e.message}"
             } finally {
                 _isApiDebugLoading.value = false
             }

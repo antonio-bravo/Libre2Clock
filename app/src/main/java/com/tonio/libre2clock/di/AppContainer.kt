@@ -93,6 +93,7 @@ object AppContainer {
                 val logManager = provideEventLogManager(appContext)
 
                 LibreService.init(appContext, prefManager, credStore, logManager)
+                com.tonio.libre2clock.data.api.DexcomService.init(appContext, prefManager, credStore, logManager)
 
                 GlucoseRepositoryImpl(
                     context = appContext,

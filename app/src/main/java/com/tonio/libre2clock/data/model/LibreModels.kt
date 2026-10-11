@@ -28,56 +28,56 @@ data class LoginData(
 
 @JsonClass(generateAdapter = false)
 data class User(
-    @param:Json(name = "id") val id: String,
-    @param:Json(name = "email") val email: String
+    @param:Json(name = "id") val id: String? = null,
+    @param:Json(name = "email") val email: String? = null
 )
 
 @JsonClass(generateAdapter = false)
 data class AuthTicket(
-    @param:Json(name = "token") val token: String,
-    @param:Json(name = "expires") val expires: Long
+    @param:Json(name = "token") val token: String? = null,
+    @param:Json(name = "expires") val expires: Long? = null
 )
 
 @JsonClass(generateAdapter = false)
 data class ConnectionsResponse(
-    @param:Json(name = "status") val status: Int,
+    @param:Json(name = "status") val status: Int = 0,
     @param:Json(name = "data") val data: List<Connection>? = null,
     @param:Json(name = "ticket") val ticket: AuthTicket? = null
 )
 
 @JsonClass(generateAdapter = false)
 data class Connection(
-    @param:Json(name = "patientId") val patientId: String,
-    @param:Json(name = "firstName") val firstName: String,
-    @param:Json(name = "lastName") val lastName: String,
+    @param:Json(name = "patientId") val patientId: String? = null,
+    @param:Json(name = "firstName") val firstName: String? = null,
+    @param:Json(name = "lastName") val lastName: String? = null,
     @param:Json(name = "glucoseMeasurement") val glucoseMeasurement: GlucoseMeasurement? = null,
     @param:Json(name = "sensor") val sensor: Sensor? = null
 )
 
 @JsonClass(generateAdapter = false)
 data class GlucoseResponse(
-    @param:Json(name = "status") val status: Int,
+    @param:Json(name = "status") val status: Int = 0,
     @param:Json(name = "data") val data: GlucoseData? = null,
     @param:Json(name = "ticket") val ticket: AuthTicket? = null
 )
 
 @JsonClass(generateAdapter = false)
 data class GlucoseData(
-    @param:Json(name = "connection") val connection: Connection,
-    @param:Json(name = "activeSensors") val activeSensors: List<ActiveSensor>?,
-    @param:Json(name = "graphData") val graphData: List<GlucoseMeasurement>
+    @param:Json(name = "connection") val connection: Connection? = null,
+    @param:Json(name = "activeSensors") val activeSensors: List<ActiveSensor>? = null,
+    @param:Json(name = "graphData") val graphData: List<GlucoseMeasurement>? = null
 )
 
 @JsonClass(generateAdapter = false)
 data class ActiveSensor(
-    @param:Json(name = "sensor") val sensor: Sensor
+    @param:Json(name = "sensor") val sensor: Sensor? = null
 )
 
 @JsonClass(generateAdapter = false)
 data class Sensor(
-    @param:Json(name = "sn") val serialNumber: String,
-    @param:Json(name = "a") val activationTimestamp: Long, // Unix epoch seconds
-    @param:Json(name = "w") val warmupMinutes: Int
+    @param:Json(name = "sn") val serialNumber: String? = null,
+    @param:Json(name = "a") val activationTimestamp: Long? = null, // Unix epoch seconds
+    @param:Json(name = "w") val warmupMinutes: Int? = null
 )
 
 data class ActiveSensorInfo(

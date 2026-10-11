@@ -208,8 +208,10 @@ object LibreService {
                     data = response.data
                 }
 
-                if (response.status == 0 && data != null && data.authTicket != null && data.user != null) {
-                    setAuth(data.authTicket.token, data.user.id)
+                val token = data?.authTicket?.token
+                val userId = data?.user?.id
+                if (response.status == 0 && data != null && !token.isNullOrEmpty() && !userId.isNullOrEmpty()) {
+                    setAuth(token, userId)
                     Result.success(data)
                 } else {
                     Result.failure(Exception("Silent reauth failed with status ${response.status}"))

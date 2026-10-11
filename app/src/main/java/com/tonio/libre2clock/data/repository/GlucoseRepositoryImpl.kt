@@ -54,6 +54,7 @@ class GlucoseRepositoryImpl(
     }
 
     override val isDemoMode: Flow<Boolean> = preferenceManager.isDemoMode
+    override val selectedProvider: Flow<com.tonio.libre2clock.data.model.GlucoseSourceProvider> = preferenceManager.glucoseSourceProvider
 
     private var patientId: String? = null
     private var lastSnapshotMirrorEpochMs: Long = 0L
@@ -83,10 +84,11 @@ class GlucoseRepositoryImpl(
                 data = response.data
             }
 
-            if (response.status == 0 && data != null && data.authTicket != null && data.user != null) {
-                val token = data.authTicket.token
-                val userId = data.user.id
+            val token = data?.authTicket?.token
+            val userId = data?.user?.id
+            if (response.status == 0 && !token.isNullOrEmpty() && !userId.isNullOrEmpty()) {
                 LibreService.setAuth(token, userId)
+                preferenceManager.saveGlucoseSourceProvider(com.tonio.libre2clock.data.model.GlucoseSourceProvider.LIBRE_LINK_UP)
                 preferenceManager.saveAuth(token, userId)
                 preferenceManager.saveLibreLinkUpEmail(email)
                 preferenceManager.saveDemoMode(false)
@@ -101,6 +103,28 @@ class GlucoseRepositoryImpl(
         }
     }
 
+    override suspend fun loginDexcom(
+        accountName: String,
+        password: String,
+        region: com.tonio.libre2clock.data.model.DexcomServerRegion
+    ): Result<Unit> {
+        return try {
+            val res = com.tonio.libre2clock.data.api.DexcomService.login(accountName, password, region)
+            if (res.isSuccess) {
+                preferenceManager.saveGlucoseSourceProvider(com.tonio.libre2clock.data.model.GlucoseSourceProvider.DEXCOM_SHARE)
+                preferenceManager.saveDexcomServerRegion(region)
+                preferenceManager.saveDexcomAccountName(accountName)
+                preferenceManager.saveDemoMode(false)
+                credentialStore.saveDexcomCredentials(accountName, password)
+                Result.success(Unit)
+            } else {
+                Result.failure(res.exceptionOrNull() ?: Exception("Dexcom login failed"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override suspend fun fetchLatestGlucose(): Result<GlucoseMeasurement> {
         return fetchLatestGlucoseInternal(persistArchive = true)
     }
@@ -108,8 +132,10 @@ class GlucoseRepositoryImpl(
     override suspend fun logout() {
         patientId = null
         LibreService.clearAuth()
+        com.tonio.libre2clock.data.api.DexcomService.clearSession()
         preferenceManager.clearAuth()
         credentialStore.clearCredentials()
+        credentialStore.clearDexcomCredentials()
     }
 
     override suspend fun refreshHistoricalGlucoseWindow(): Result<GlucoseMeasurement> {
@@ -208,6 +234,11 @@ class GlucoseRepositoryImpl(
             return Result.success(measurement)
         }
 
+        val activeProvider = preferenceManager.glucoseSourceProvider.first()
+        if (activeProvider == com.tonio.libre2clock.data.model.GlucoseSourceProvider.DEXCOM_SHARE) {
+            return fetchDexcomGlucoseInternal(persistArchive)
+        }
+
         return try {
             if (patientId == null) {
                 patientId = preferenceManager.patientId.first()
@@ -223,24 +254,39 @@ class GlucoseRepositoryImpl(
             }
 
             val id = patientId ?: return Result.failure(Exception("No patient found"))
-            val response = LibreService.api.getGlucoseGraph(id)
+            var response = LibreService.api.getGlucoseGraph(id)
             
+            if (response.data?.connection == null) {
+                // Patient ID may be invalid or stale; try refreshing patient connections
+                val connectionsResponse = LibreService.api.getConnections()
+                val refreshedPatientId = connectionsResponse.data?.firstOrNull()?.patientId
+                if (!refreshedPatientId.isNullOrBlank() && refreshedPatientId != id) {
+                    patientId = refreshedPatientId
+                    preferenceManager.savePatientId(refreshedPatientId)
+                    response = LibreService.api.getGlucoseGraph(refreshedPatientId)
+                }
+            }
+
             val measurement = response.data?.connection?.glucoseMeasurement
             val activeSensors = response.data?.activeSensors
             val connectionSensor = response.data?.connection?.sensor
             
             // Try picking the newest sensor from activeSensors, fallback to connection sensor
-            val sensor = activeSensors?.map { it.sensor }?.maxByOrNull { it.activationTimestamp }
+            val sensor = activeSensors?.mapNotNull { it.sensor }?.maxByOrNull { it.activationTimestamp ?: 0L }
                 ?: connectionSensor
             
             if (sensor != null) {
-                val activationTime = if (sensor.activationTimestamp > 10_000_000_000L) 
-                    sensor.activationTimestamp / 1000 
-                else 
-                    sensor.activationTimestamp
-                    
-                preferenceManager.saveActiveSensorInfo(sensor.serialNumber, activationTime)
-                autoLogSensor(sensor.serialNumber, activationTime)
+                val serialNumber = sensor.serialNumber
+                val actTimestamp = sensor.activationTimestamp ?: 0L
+                if (!serialNumber.isNullOrEmpty()) {
+                    val activationTime = if (actTimestamp > 10_000_000_000L) 
+                        actTimestamp / 1000 
+                    else 
+                        actTimestamp
+                        
+                    preferenceManager.saveActiveSensorInfo(serialNumber, activationTime)
+                    autoLogSensor(serialNumber, activationTime)
+                }
             }
 
             val historicalMeasurements = response.data?.graphData ?: emptyList()
@@ -248,6 +294,10 @@ class GlucoseRepositoryImpl(
                 historicalMeasurements + measurement
             } else {
                 historicalMeasurements
+            }
+
+            if (incomingList.isEmpty() && response.data?.connection == null) {
+                return Result.failure(Exception("LibreLinkUp returned no connection or glucose data (status=${response.status})"))
             }
 
             val currentHistory = withContext(Dispatchers.IO) { historyDb.readAllNewestFirst() }
@@ -282,6 +332,56 @@ class GlucoseRepositoryImpl(
                 Result.success(resultMeasurement)
             } else {
                 Result.failure(Exception("No glucose data found in response"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    private suspend fun fetchDexcomGlucoseInternal(persistArchive: Boolean): Result<GlucoseMeasurement> {
+        return try {
+            val dexcomCreds = credentialStore.getDexcomCredentials()
+            val accountName = dexcomCreds?.first ?: preferenceManager.dexcomAccountName.first()
+            val password = dexcomCreds?.second
+
+            val result = com.tonio.libre2clock.data.api.DexcomService.fetchReadings(accountName, password)
+            if (result.isFailure) {
+                return Result.failure(result.exceptionOrNull() ?: Exception("Failed to fetch Dexcom glucose"))
+            }
+
+            val incomingList = result.getOrNull() ?: emptyList()
+            val measurement = incomingList.lastOrNull()
+
+            if (incomingList.isEmpty()) {
+                return Result.failure(Exception("Dexcom returned no glucose readings"))
+            }
+
+            val currentHistory = withContext(Dispatchers.IO) { historyDb.readAllNewestFirst() }
+            val mergedHistory = mergeAndPruneHistory(
+                existing = currentHistory,
+                incoming = incomingList
+            )
+
+            if (persistArchive) {
+                withContext(Dispatchers.IO) {
+                    historyDb.replaceAll(mergedHistory)
+                }
+                historicalWindowCache.clear()
+                historicalState.value = mergedHistory
+                _dataVersion.value++
+                mirrorSnapshotIfNeeded(mergedHistory)
+            }
+
+            val resultMeasurement = mergedHistory.firstOrNull { 
+                val instant = parseMeasurementInstant(it)
+                val targetInstant = measurement?.let { m -> parseMeasurementInstant(m) }
+                instant != null && instant == targetInstant
+            } ?: measurement ?: mergedHistory.firstOrNull()
+
+            if (resultMeasurement != null) {
+                Result.success(resultMeasurement)
+            } else {
+                Result.failure(Exception("No glucose data found in Dexcom response"))
             }
         } catch (e: Exception) {
             Result.failure(e)

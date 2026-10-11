@@ -11,7 +11,9 @@ interface GlucoseRepository {
     val dataVersion: Flow<Long> // Increments every time historical data changes
     val activeSensorInfo: Flow<ActiveSensorInfo?>
     val isDemoMode: Flow<Boolean>
+    val selectedProvider: Flow<com.tonio.libre2clock.data.model.GlucoseSourceProvider>
     suspend fun login(email: String, password: String): Result<Unit>
+    suspend fun loginDexcom(accountName: String, password: String, region: com.tonio.libre2clock.data.model.DexcomServerRegion = com.tonio.libre2clock.data.model.DexcomServerRegion.OUS): Result<Unit>
     suspend fun logout()
     suspend fun fetchLatestGlucose(): Result<GlucoseMeasurement>
     suspend fun refreshHistoricalGlucoseWindow(): Result<GlucoseMeasurement>

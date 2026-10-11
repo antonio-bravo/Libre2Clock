@@ -85,9 +85,48 @@ class SecureCredentialStore(private val context: Context) {
         }
     }
 
+    fun saveDexcomCredentials(accountName: String, password: String) {
+        try {
+            prefs?.edit()
+                ?.putString(KEY_DEXCOM_ACCOUNT_NAME, accountName)
+                ?.putString(KEY_DEXCOM_PASSWORD, password)
+                ?.apply()
+        } catch (e: Exception) {
+            Log.e("SecureCredentialStore", "Failed to save Dexcom credentials", e)
+        }
+    }
+
+    fun getDexcomCredentials(): Pair<String, String>? {
+        return try {
+            val accountName = prefs?.getString(KEY_DEXCOM_ACCOUNT_NAME, null)
+            val password = prefs?.getString(KEY_DEXCOM_PASSWORD, null)
+            if (!accountName.isNullOrBlank() && !password.isNullOrBlank()) {
+                accountName to password
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("SecureCredentialStore", "Failed to read Dexcom credentials", e)
+            null
+        }
+    }
+
+    fun clearDexcomCredentials() {
+        try {
+            prefs?.edit()
+                ?.remove(KEY_DEXCOM_ACCOUNT_NAME)
+                ?.remove(KEY_DEXCOM_PASSWORD)
+                ?.apply()
+        } catch (e: Exception) {
+            Log.e("SecureCredentialStore", "Failed to clear Dexcom credentials", e)
+        }
+    }
+
     private companion object {
         const val PREFS_FILE_NAME = "secure_credentials"
         const val KEY_EMAIL = "email"
         const val KEY_PASSWORD = "password"
+        const val KEY_DEXCOM_ACCOUNT_NAME = "dexcom_account_name"
+        const val KEY_DEXCOM_PASSWORD = "dexcom_password"
     }
 }
