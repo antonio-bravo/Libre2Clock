@@ -913,8 +913,13 @@ class SettingsViewModel(
     fun addInsulinDose(dose: InsulinDose) {
         viewModelScope.launch {
             val allDoses = preferenceManager.insulinDoses.first().toMutableList()
-                
-            allDoses.add(dose.copy(updatedAtMs = System.currentTimeMillis()))
+            val index = allDoses.indexOfFirst { it.id == dose.id }
+            val updatedDose = dose.copy(updatedAtMs = System.currentTimeMillis())
+            if (index != -1) {
+                allDoses[index] = updatedDose
+            } else {
+                allDoses.add(updatedDose)
+            }
             allDoses.sortByDescending { it.timestamp }
             preferenceManager.saveInsulinDoses(allDoses)
         }
@@ -934,12 +939,20 @@ class SettingsViewModel(
     fun updateInsulinDose(oldDose: InsulinDose, newDose: InsulinDose) {
         viewModelScope.launch {
             val allDoses = preferenceManager.insulinDoses.first().toMutableList()
-            val index = allDoses.indexOfFirst { it.id == oldDose.id }
+            val targetId = oldDose.id
+            val index = allDoses.indexOfFirst { it.id == targetId }
+            val updatedDose = newDose.copy(
+                id = targetId,
+                isDeleted = false,
+                updatedAtMs = System.currentTimeMillis()
+            )
             if (index != -1) {
-                allDoses[index] = newDose.copy(updatedAtMs = System.currentTimeMillis())
-                allDoses.sortByDescending { it.timestamp }
-                preferenceManager.saveInsulinDoses(allDoses)
+                allDoses[index] = updatedDose
+            } else {
+                allDoses.add(updatedDose)
             }
+            allDoses.sortByDescending { it.timestamp }
+            preferenceManager.saveInsulinDoses(allDoses)
         }
     }
 

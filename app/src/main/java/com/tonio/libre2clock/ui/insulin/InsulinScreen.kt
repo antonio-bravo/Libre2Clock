@@ -890,15 +890,27 @@ fun InsulinDoseDialog(
                 val m = doseMinute.padStart(2, '0').ifBlank { "00" }
                 val timestamp = "${doseDate.format(DateTimeFormatter.ISO_LOCAL_DATE)} $h:$m"
                 
-                onConfirm(
+                val doseToConfirm = if (initialDose != null) {
+                    initialDose.copy(
+                        units = units,
+                        timestamp = timestamp,
+                        type = type,
+                        durationMinutes = if (type == InsulinType.RAPID) rapidDuration else slowDuration,
+                        carbs = carbs,
+                        updatedAtMs = System.currentTimeMillis()
+                    )
+                } else {
                     InsulinDose(
                         units = units,
                         timestamp = timestamp,
                         type = type,
                         durationMinutes = if (type == InsulinType.RAPID) rapidDuration else slowDuration,
-                        carbs = carbs
+                        carbs = carbs,
+                        updatedAtMs = System.currentTimeMillis()
                     )
-                )
+                }
+
+                onConfirm(doseToConfirm)
             }) {
                 Text(stringResource(if (initialDose == null) android.R.string.ok else R.string.update))
             }

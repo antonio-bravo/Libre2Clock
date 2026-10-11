@@ -447,10 +447,14 @@ class DashboardViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val allDoses = preferenceManager.insulinDoses.first().toMutableList()
-                
-                allDoses.add(dose.copy(updatedAtMs = System.currentTimeMillis()))
+                val index = allDoses.indexOfFirst { it.id == dose.id }
+                val updatedDose = dose.copy(updatedAtMs = System.currentTimeMillis())
+                if (index != -1) {
+                    allDoses[index] = updatedDose
+                } else {
+                    allDoses.add(updatedDose)
+                }
                 allDoses.sortByDescending { it.timestamp }
-                
                 preferenceManager.saveInsulinDoses(allDoses)
             } catch (e: Exception) {
                 // Log and swallow exception to prevent app crash

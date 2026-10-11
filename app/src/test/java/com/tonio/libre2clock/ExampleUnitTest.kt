@@ -142,4 +142,23 @@ class ExampleUnitTest {
         assertEquals(15, risk.minutesUntilHypo)
         assertEquals(60, risk.projectedValue)
     }
+
+    @Test
+    fun insulinDoseCopyPreservesIdWhenEditing() {
+        val original = com.tonio.libre2clock.data.model.InsulinDose(
+            units = 4.0,
+            timestamp = "2024-01-01 12:00",
+            type = com.tonio.libre2clock.data.model.InsulinType.RAPID
+        )
+
+        val edited = original.copy(
+            units = 6.0,
+            timestamp = "2024-01-01 12:05",
+            updatedAtMs = System.currentTimeMillis()
+        )
+
+        assertEquals(original.id, edited.id)
+        assertEquals(6.0, edited.units, 0.01)
+        assertEquals("2024-01-01 12:05", edited.timestamp)
+    }
 }
