@@ -1,5 +1,59 @@
 # Changelog
 
+## 92b6a6f (Oct 11, 2026 14:53:15)
+Fix update insulin dosis — antonio-bravo
+[detail](#92b6a6f-details)
+
+<details id='92b6a6f-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/test/java/com/tonio/libre2clock/ExampleUnitTest.kt [Modified]
+</details>
+
+
+---
+## 199d412 (Oct 11, 2026 14:53:15)
+Dexcom stuff — antonio-bravo
+[detail](#199d412-details)
+
+<details id='199d412-details'>
+<summary>Changed files</summary>
+
+- app/build.gradle.kts [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/api/DexcomService.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/data/api/DexcomShareApi.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/data/api/LibreService.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/model/DexcomModels.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/data/model/LibreModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepository.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/SecureCredentialStore.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/di/AppContainer.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/login/LoginScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/login/LoginViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/test/java/com/tonio/libre2clock/DexcomServiceTest.kt [Deleted]
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## a2c01fa (Oct 10, 2026 19:42:34)
+Update changelog — github-actions[bot]
+[detail](#a2c01fa-details)
+
+<details id='a2c01fa-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 38aad17 (Oct 10, 2026 21:42:23)
 fix double text expiring soon — antonio-bravo
 [detail](#38aad17-details)
@@ -617,46 +671,6 @@ SOS mobile network — antonio-bravo
 <summary>Changed files</summary>
 
 - app/src/main/java/com/tonio/libre2clock/util/EmergencyLocationManager.kt [Modified]
-</details>
-
-
----
-## 554833b (Oct 02, 2026 21:14:21)
-Update changelog — github-actions[bot]
-[detail](#554833b-details)
-
-<details id='554833b-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## f17df46 (Oct 02, 2026 23:14:02)
-3 test buttons SOS — antonio-bravo
-[detail](#f17df46-details)
-
-<details id='f17df46-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEmergencyScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/EmergencyLocationManager.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 902ce40 (Oct 02, 2026 20:47:58)
-Update changelog — github-actions[bot]
-[detail](#902ce40-details)
-
-<details id='902ce40-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
 </details>
 
 
