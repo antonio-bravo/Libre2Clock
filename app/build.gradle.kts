@@ -16,7 +16,7 @@ kotlin {
         // Optimizaciones del compilador de Kotlin para mejor rendimiento
         freeCompilerArgs.addAll(
             "-opt-in=kotlin.RequiresOptIn",
-            "-Xjvm-default=all",
+            "-jvm-default=no-compatibility",
             "-Xbackend-threads=0"
         )
     }

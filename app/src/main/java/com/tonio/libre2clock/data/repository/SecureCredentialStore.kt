@@ -10,6 +10,7 @@ import androidx.security.crypto.MasterKey
  * Stores LibreLinkUp credentials encrypted at rest (Android Keystore-backed),
  * used only to silently re-authenticate when the session token expires.
  */
+@Suppress("DEPRECATION")
 class SecureCredentialStore(private val context: Context) {
 
     private val prefs: SharedPreferences? by lazy {

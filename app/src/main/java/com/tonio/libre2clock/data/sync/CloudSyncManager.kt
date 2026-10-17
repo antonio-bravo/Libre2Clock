@@ -6,7 +6,6 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
 import android.util.Log
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldPath
@@ -255,12 +254,12 @@ class CloudSyncManager(
                     currentStep = "Refreshing auth token"
                     log("2c. $currentStep...")
                     try {
-                        val firebaseUser = authManager.user.value as? FirebaseUser
+                        val firebaseUser = authManager.user.value
                         if (firebaseUser != null) {
                             retryWithBackoff(currentStep) { firebaseUser.getIdToken(true).await() }
                             log("  -> Token refrescado OK")
                         } else {
-                            log("  -> No se pudo castear a FirebaseUser, se omite refresh explícito")
+                            log("  -> No hay usuario Firebase activo, se omite refresh explícito")
                         }
                     } catch (e: Exception) {
                         log("  -> WARNING: fallo al refrescar token: ${e.javaClass.simpleName} - ${e.message}")
@@ -553,7 +552,7 @@ class CloudSyncManager(
                     for (change in snapshots.documentChanges) {
                         when (change.type) {
                             DocumentChange.Type.ADDED, DocumentChange.Type.MODIFIED -> {
-                                val dose = change.document.toObject(InsulinDose::class.java) ?: continue
+                                val dose = change.document.toObject(InsulinDose::class.java)
                                 val existing = localDoses[dose.id]
                                 if (existing == null || dose.updatedAtMs > existing.updatedAtMs) {
                                     localDoses[dose.id] = dose
@@ -587,7 +586,7 @@ class CloudSyncManager(
                     for (change in snapshots.documentChanges) {
                         when (change.type) {
                             DocumentChange.Type.ADDED, DocumentChange.Type.MODIFIED -> {
-                                val reading = change.document.toObject(CapillaryMeasurement::class.java) ?: continue
+                                val reading = change.document.toObject(CapillaryMeasurement::class.java)
                                 val existing = localReadings[reading.id]
                                 if (existing == null || reading.updatedAtMs > existing.updatedAtMs) {
                                     localReadings[reading.id] = reading
@@ -621,7 +620,7 @@ class CloudSyncManager(
                     for (change in snapshots.documentChanges) {
                         when (change.type) {
                             DocumentChange.Type.ADDED, DocumentChange.Type.MODIFIED -> {
-                                val logItem = change.document.toObject(SensorLog::class.java) ?: continue
+                                val logItem = change.document.toObject(SensorLog::class.java)
                                 val existing = localLogs[logItem.serialNumber]
                                 // Nota: Asumimos que SensorLog también tiene updatedAtMs. Si no, quita esa condición.
                                 if (existing == null || logItem.updatedAtMs > existing.updatedAtMs) {

@@ -80,7 +80,7 @@ echo ""
 echo "📦 Verificando Build.gradle.kts..."
 echo "----------------------------------"
 check_content "app/build.gradle.kts" "freeCompilerArgs" "Kotlin compiler optimizations"
-check_content "app/build.gradle.kts" "-Xjvm-default=all" "JVM default methods habilitado"
+check_content "app/build.gradle.kts" "-jvm-default=no-compatibility" "JVM default methods habilitado"
 check_content "app/build.gradle.kts" "aidl = false" "Features innecesarias deshabilitadas"
 echo ""
 

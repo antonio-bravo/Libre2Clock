@@ -115,11 +115,9 @@ class ReportSectionCacheRepository(
             if (cached != null) {
                 try {
                     result = json.decodeFromString<List<DailySummaryCacheItem>>(cached)
-                        ?.map { it.toDailySummary() }
-                    if (result != null) {
-                        cacheHit = true
-                        return@measureTimeMillis
-                    }
+                        .map { it.toDailySummary() }
+                    cacheHit = true
+                    return@measureTimeMillis
                 } catch (e: Exception) {
                     // Ignorar
                 }
