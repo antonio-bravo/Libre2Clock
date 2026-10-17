@@ -1,5 +1,31 @@
 # Changelog
 
+## dcbb127 (Oct 17, 2026 17:22:54)
+Merge pull request #45 from antonio-bravo/renovate/major-okhttp
+
+Update dependency com.squareup.okhttp3:okhttp to v5 — antonio-bravo
+[detail](#dcbb127-details)
+
+<details id='dcbb127-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 592ecfb (Oct 17, 2026 15:22:47)
+Update changelog — github-actions[bot]
+[detail](#592ecfb-details)
+
+<details id='592ecfb-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 21e7fba (Oct 17, 2026 17:22:37)
 Merge pull request #41 from antonio-bravo/renovate/actions-setup-python-7.x
 
@@ -10,6 +36,18 @@ Update actions/setup-python action to v7 — antonio-bravo
 <summary>Changed files</summary>
 
 - .github/workflows/changelog.yml [Modified]
+</details>
+
+
+---
+## 52f1a5a (Oct 17, 2026 15:17:19)
+Update dependency com.squareup.okhttp3:okhttp to v5 — renovate[bot]
+[detail](#52f1a5a-details)
+
+<details id='52f1a5a-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
 </details>
 
 
@@ -591,44 +629,6 @@ Update dependency com.google.firebase:firebase-bom to v34.19.0 — antonio-bravo
 [detail](#f4bdf31-details)
 
 <details id='f4bdf31-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 56df877 (Oct 17, 2026 14:58:02)
-Update changelog — github-actions[bot]
-[detail](#56df877-details)
-
-<details id='56df877-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 2d9cc9f (Oct 17, 2026 16:57:51)
-Merge pull request #35 from antonio-bravo/renovate/okhttp
-
-Update dependency com.squareup.okhttp3:okhttp to v4.12.0 — antonio-bravo
-[detail](#2d9cc9f-details)
-
-<details id='2d9cc9f-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## c883680 (Oct 17, 2026 14:43:45)
-Update dependency com.squareup.okhttp3:okhttp to v4.12.0 — renovate[bot]
-[detail](#c883680-details)
-
-<details id='c883680-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
