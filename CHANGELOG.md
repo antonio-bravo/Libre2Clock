@@ -1,5 +1,31 @@
 # Changelog
 
+## 21e7fba (Oct 17, 2026 17:22:37)
+Merge pull request #41 from antonio-bravo/renovate/actions-setup-python-7.x
+
+Update actions/setup-python action to v7 — antonio-bravo
+[detail](#21e7fba-details)
+
+<details id='21e7fba-details'>
+<summary>Changed files</summary>
+
+- .github/workflows/changelog.yml [Modified]
+</details>
+
+
+---
+## 801e521 (Oct 17, 2026 15:17:01)
+Update changelog — github-actions[bot]
+[detail](#801e521-details)
+
+<details id='801e521-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## f87c9ea (Oct 17, 2026 17:16:50)
 Merge pull request #44 from antonio-bravo/renovate/major-logginginterceptor
 
@@ -306,6 +332,18 @@ Update dependency com.squareup.okhttp3:logging-interceptor to v4.12.0 — renova
 
 
 ---
+## 9cd01a5 (Oct 17, 2026 15:04:34)
+Update actions/setup-python action to v7 — renovate[bot]
+[detail](#9cd01a5-details)
+
+<details id='9cd01a5-details'>
+<summary>Changed files</summary>
+
+- .github/workflows/changelog.yml [Modified]
+</details>
+
+
+---
 ## 7fd17b1 (Oct 17, 2026 15:04:12)
 Update changelog — github-actions[bot]
 [detail](#7fd17b1-details)
@@ -594,42 +632,6 @@ Update dependency com.squareup.okhttp3:okhttp to v4.12.0 — renovate[bot]
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## fa685fa (Oct 17, 2026 14:43:32)
-Update dependency com.google.firebase:firebase-bom to v34.19.0 — renovate[bot]
-[detail](#fa685fa-details)
-
-<details id='fa685fa-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## f395882 (Oct 17, 2026 14:43:19)
-Update dependency com.google.android.gms:play-services-location to v21.4.0 — renovate[bot]
-[detail](#f395882-details)
-
-<details id='f395882-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 7a06baf (Oct 17, 2026 14:42:15)
-Update changelog — github-actions[bot]
-[detail](#7a06baf-details)
-
-<details id='7a06baf-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
 </details>
 
 
