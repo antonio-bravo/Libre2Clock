@@ -1,5 +1,31 @@
 # Changelog
 
+## 0bb107a (Oct 17, 2026 15:26:04)
+Merge pull request #18 from antonio-bravo/renovate/corektx
+
+Update dependency androidx.core:core-ktx to v1.19.1 — antonio-bravo
+[detail](#0bb107a-details)
+
+<details id='0bb107a-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 7073445 (Oct 17, 2026 13:26:02)
+Update changelog — github-actions[bot]
+[detail](#7073445-details)
+
+<details id='7073445-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 31bb7f7 (Oct 17, 2026 15:25:50)
 Merge pull request #20 from antonio-bravo/renovate/lifecycleruntimecompose
 
@@ -109,6 +135,18 @@ Update dependency androidx.datastore:datastore-preferences to v1.2.1 — renovat
 [detail](#97c1ea1-details)
 
 <details id='97c1ea1-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## d1f7f9e (Oct 17, 2026 13:25:00)
+Update dependency androidx.core:core-ktx to v1.19.1 — renovate[bot]
+[detail](#d1f7f9e-details)
+
+<details id='d1f7f9e-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
@@ -635,44 +673,6 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
-</details>
-
-
----
-## a91e58c (Oct 06, 2026 10:43:28)
-graph multilanguage — antonio-bravo
-[detail](#a91e58c-details)
-
-<details id='a91e58c-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## d4cd0f1 (Oct 06, 2026 07:38:01)
-Update changelog — github-actions[bot]
-[detail](#d4cd0f1-details)
-
-<details id='d4cd0f1-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 07ad5f9 (Oct 06, 2026 09:37:48)
-graph zoom — antonio-bravo
-[detail](#07ad5f9-details)
-
-<details id='07ad5f9-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
 </details>
 
 
