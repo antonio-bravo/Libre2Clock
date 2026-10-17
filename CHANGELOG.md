@@ -1,5 +1,43 @@
 # Changelog
 
+## 679e9cc (Oct 17, 2026 15:25:09)
+Merge pull request #17 from antonio-bravo/renovate/composebom
+
+Update dependency androidx.compose:compose-bom to v2024.12.01 — antonio-bravo
+[detail](#679e9cc-details)
+
+<details id='679e9cc-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## a9148ea (Oct 17, 2026 13:24:55)
+Update dependency androidx.compose:compose-bom to v2024.12.01 — renovate[bot]
+[detail](#a9148ea-details)
+
+<details id='a9148ea-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 769436a (Oct 17, 2026 13:23:02)
+Update changelog — github-actions[bot]
+[detail](#769436a-details)
+
+<details id='769436a-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## b19de7c (Oct 17, 2026 15:22:49)
 Merge pull request #9 from antonio-bravo/renovate/googleid
 
@@ -631,43 +669,6 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
-</details>
-
-
----
-## 1989b56 (Oct 04, 2026 14:58:35)
-Add HD web QR code page — antonio-bravo
-[detail](#1989b56-details)
-
-<details id='1989b56-details'>
-<summary>Changed files</summary>
-
-- whatsapp-bot/index.js [Modified]
-- whatsapp-bot/package.json [Modified]
-</details>
-
-
----
-## 55a6afa (Oct 04, 2026 12:53:29)
-Update changelog — github-actions[bot]
-[detail](#55a6afa-details)
-
-<details id='55a6afa-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 528a115 (Oct 04, 2026 14:53:14)
-whatsapp bot — antonio-bravo
-[detail](#528a115-details)
-
-<details id='528a115-details'>
-<summary>Changed files</summary>
-
-- whatsapp-bot/package.json [Modified]
 </details>
 
 
