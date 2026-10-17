@@ -1,5 +1,43 @@
 # Changelog
 
+## 90c037b (Oct 17, 2026 17:03:44)
+Merge pull request #38 from antonio-bravo/renovate/kotlin-monorepo
+
+Update kotlin monorepo to v2.4.21 — antonio-bravo
+[detail](#90c037b-details)
+
+<details id='90c037b-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## c78e392 (Oct 17, 2026 15:03:04)
+Update kotlin monorepo to v2.4.21 — renovate[bot]
+[detail](#c78e392-details)
+
+<details id='c78e392-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 8eb290c (Oct 17, 2026 15:02:14)
+Update changelog — github-actions[bot]
+[detail](#8eb290c-details)
+
+<details id='8eb290c-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## ec1e5f7 (Oct 17, 2026 17:01:54)
 Merge pull request #29 from antonio-bravo/renovate/core
 
@@ -589,44 +627,6 @@ Update dependency androidx.lifecycle:lifecycle-viewmodel-navigation3 to v2.11.0 
 [detail](#207b77a-details)
 
 <details id='207b77a-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 279f1da (Oct 17, 2026 13:26:24)
-Update changelog — github-actions[bot]
-[detail](#279f1da-details)
-
-<details id='279f1da-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## aea6534 (Oct 17, 2026 13:26:22)
-Update actions/checkout action to v7.0.1 — renovate[bot]
-[detail](#aea6534-details)
-
-<details id='aea6534-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/changelog.yml [Modified]
-</details>
-
-
----
-## f741340 (Oct 17, 2026 15:26:15)
-Merge pull request #16 from antonio-bravo/renovate/cameraview
-
-Update dependency androidx.camera:camera-view to v1.6.2 — antonio-bravo
-[detail](#f741340-details)
-
-<details id='f741340-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
