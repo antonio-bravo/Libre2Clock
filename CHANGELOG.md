@@ -1,5 +1,43 @@
 # Changelog
 
+## fe3caaa (Oct 17, 2026 15:26:43)
+Merge pull request #8 from antonio-bravo/renovate/securitycrypto
+
+Update dependency androidx.security:security-crypto to v1.1.0 — antonio-bravo
+[detail](#fe3caaa-details)
+
+<details id='fe3caaa-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## d5c5c57 (Oct 17, 2026 13:26:33)
+Update dependency androidx.security:security-crypto to v1.1.0 — renovate[bot]
+[detail](#d5c5c57-details)
+
+<details id='d5c5c57-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 279f1da (Oct 17, 2026 13:26:24)
+Update changelog — github-actions[bot]
+[detail](#279f1da-details)
+
+<details id='279f1da-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## f741340 (Oct 17, 2026 15:26:15)
 Merge pull request #16 from antonio-bravo/renovate/cameraview
 
@@ -630,51 +668,6 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
-</details>
-
-
----
-## fa062b7 (Oct 07, 2026 21:33:41)
-Add Accessibility service for Whatsapp — antonio-bravo
-[detail](#fa062b7-details)
-
-<details id='fa062b7-details'>
-<summary>Changed files</summary>
-
-- app/src/main/AndroidManifest.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEmergencyScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/EmergencyAccessibilityService.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/util/EmergencyAlertDispatcher.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-- app/src/main/res/xml/emergency_accessibility_service_config.xml [Deleted]
-</details>
-
-
----
-## 19ab140 (Oct 07, 2026 15:50:47)
-Update changelog — github-actions[bot]
-[detail](#19ab140-details)
-
-<details id='19ab140-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 930f4fc (Oct 07, 2026 17:50:34)
-Whatsapp group SOS — antonio-bravo
-[detail](#930f4fc-details)
-
-<details id='930f4fc-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEmergencyScreen.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
 </details>
 
 
