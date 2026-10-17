@@ -1,5 +1,45 @@
 # Changelog
 
+## d966639 (Oct 17, 2026 15:27:11)
+Merge pull request #6 from antonio-bravo/renovate/actions-checkout-7.x
+
+Update actions/checkout action to v7.0.1 — antonio-bravo
+[detail](#d966639-details)
+
+<details id='d966639-details'>
+<summary>Changed files</summary>
+
+- .github/workflows/changelog.yml [Modified]
+</details>
+
+
+---
+## 475e573 (Oct 17, 2026 15:26:59)
+Merge pull request #7 from antonio-bravo/renovate/lifecycleviewmodelnavigation3
+
+Update dependency androidx.lifecycle:lifecycle-viewmodel-navigation3 to v2.11.0 — antonio-bravo
+[detail](#475e573-details)
+
+<details id='475e573-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## b08cc80 (Oct 17, 2026 13:26:53)
+Update changelog — github-actions[bot]
+[detail](#b08cc80-details)
+
+<details id='b08cc80-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## fe3caaa (Oct 17, 2026 15:26:43)
 Merge pull request #8 from antonio-bravo/renovate/securitycrypto
 
@@ -26,6 +66,18 @@ Update dependency androidx.security:security-crypto to v1.1.0 — renovate[bot]
 
 
 ---
+## 207b77a (Oct 17, 2026 13:26:28)
+Update dependency androidx.lifecycle:lifecycle-viewmodel-navigation3 to v2.11.0 — renovate[bot]
+[detail](#207b77a-details)
+
+<details id='207b77a-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
 ## 279f1da (Oct 17, 2026 13:26:24)
 Update changelog — github-actions[bot]
 [detail](#279f1da-details)
@@ -34,6 +86,18 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
+</details>
+
+
+---
+## aea6534 (Oct 17, 2026 13:26:22)
+Update actions/checkout action to v7.0.1 — renovate[bot]
+[detail](#aea6534-details)
+
+<details id='aea6534-details'>
+<summary>Changed files</summary>
+
+- .github/workflows/changelog.yml [Modified]
 </details>
 
 
@@ -592,82 +656,6 @@ re-login — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/data/repository/SecureCredentialStore.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/di/AppContainer.kt [Modified]
-</details>
-
-
----
-## ee991bc (Oct 08, 2026 20:22:30)
-Update changelog — github-actions[bot]
-[detail](#ee991bc-details)
-
-<details id='ee991bc-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 0caff6b (Oct 08, 2026 22:22:16)
-Add target insulin with current active insulin — antonio-bravo
-[detail](#0caff6b-details)
-
-<details id='0caff6b-details'>
-<summary>Changed files</summary>
-
-- app/src/main/AndroidManifest.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/InsulinProcessor.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEmergencyScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/EmergencyAlertDispatcher.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/EmergencyLocationManager.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-- app/src/main/res/xml/emergency_accessibility_service_config.xml [Modified]
-- gradle.properties [Modified]
-- gradle/wrapper/gradle-wrapper.jar [Modified]
-- gradle/wrapper/gradle-wrapper.properties [Modified]
-- gradlew.bat [Modified]
-</details>
-
-
----
-## 45aded5 (Oct 07, 2026 19:53:32)
-Update changelog — github-actions[bot]
-[detail](#45aded5-details)
-
-<details id='45aded5-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 050ddb0 (Oct 07, 2026 21:53:17)
-Emegercy SOS WhatsApp — antonio-bravo
-[detail](#050ddb0-details)
-
-<details id='050ddb0-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEmergencyScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/EmergencyAccessibilityService.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/EmergencyAlertDispatcher.kt [Modified]
-</details>
-
-
----
-## 84fdb9d (Oct 07, 2026 19:33:56)
-Update changelog — github-actions[bot]
-[detail](#84fdb9d-details)
-
-<details id='84fdb9d-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
 </details>
 
 
