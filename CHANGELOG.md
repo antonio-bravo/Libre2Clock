@@ -1,5 +1,29 @@
 # Changelog
 
+## 0b43673 (Oct 17, 2026 20:09:48)
+update documentation — antonio-bravo
+[detail](#0b43673-details)
+
+<details id='0b43673-details'>
+<summary>Changed files</summary>
+
+- README.md [Modified]
+</details>
+
+
+---
+## 70b40d5 (Oct 17, 2026 17:50:33)
+Update changelog — github-actions[bot]
+[detail](#70b40d5-details)
+
+<details id='70b40d5-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 4dc8752 (Oct 17, 2026 19:50:21)
 widget options — antonio-bravo
 [detail](#4dc8752-details)
@@ -623,32 +647,6 @@ Update actions/setup-java action to v6 — renovate[bot]
 <summary>Changed files</summary>
 
 - .github/workflows/build-release.yml [Modified]
-</details>
-
-
----
-## ec1e5f7 (Oct 17, 2026 17:01:54)
-Merge pull request #29 from antonio-bravo/renovate/core
-
-Update dependency androidx.test:core to v1.7.0 — antonio-bravo
-[detail](#ec1e5f7-details)
-
-<details id='ec1e5f7-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 988a129 (Oct 17, 2026 15:01:46)
-Update changelog — github-actions[bot]
-[detail](#988a129-details)
-
-<details id='988a129-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
 </details>
 
 
