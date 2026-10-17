@@ -1,5 +1,39 @@
 # Changelog
 
+## 51271b0 (Oct 17, 2026 18:18:04)
+widget — antonio-bravo
+[detail](#51271b0-details)
+
+<details id='51271b0-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/navigation/Destinations.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsWidgetScreen.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/widget/GlucoseWidgetProvider.kt [Modified]
+- app/src/main/res/layout/widget_glucose.xml [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+- app/src/main/res/xml/glucose_widget_info.xml [Modified]
+</details>
+
+
+---
+## 606ed81 (Oct 17, 2026 15:37:19)
+Update changelog — github-actions[bot]
+[detail](#606ed81-details)
+
+<details id='606ed81-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 7929263 (Oct 17, 2026 17:37:02)
 fix warning — antonio-bravo
 [detail](#7929263-details)
@@ -609,32 +643,6 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
-</details>
-
-
----
-## fc87ba9 (Oct 17, 2026 17:00:20)
-Merge pull request #27 from antonio-bravo/renovate/roomktx
-
-Update dependency androidx.room:room-ktx to v2.8.5 — antonio-bravo
-[detail](#fc87ba9-details)
-
-<details id='fc87ba9-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## c72c0da (Oct 17, 2026 15:00:02)
-Update dependency androidx.room:room-ktx to v2.8.5 — renovate[bot]
-[detail](#c72c0da-details)
-
-<details id='c72c0da-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
 </details>
 
 
