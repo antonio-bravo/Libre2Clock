@@ -1,5 +1,43 @@
 # Changelog
 
+## de54b23 (Oct 17, 2026 17:13:26)
+Merge pull request #30 from antonio-bravo/renovate/runner
+
+Update dependency androidx.test:runner to v1.7.0 — antonio-bravo
+[detail](#de54b23-details)
+
+<details id='de54b23-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## fcd5f7b (Oct 17, 2026 15:13:18)
+Update changelog — github-actions[bot]
+[detail](#fcd5f7b-details)
+
+<details id='fcd5f7b-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
+## 7da393d (Oct 17, 2026 15:13:10)
+Update dependency androidx.test:runner to v1.7.0 — renovate[bot]
+[detail](#7da393d-details)
+
+<details id='7da393d-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
 ## 328890c (Oct 17, 2026 17:13:07)
 Merge pull request #36 from antonio-bravo/renovate/kotlinxserializationcore
 
@@ -589,44 +627,6 @@ Update dependency androidx.lifecycle:lifecycle-viewmodel-compose to v2.11.0 — 
 [detail](#3363cf4-details)
 
 <details id='3363cf4-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## beb1a78 (Oct 17, 2026 13:31:39)
-Update dependency androidx.lifecycle:lifecycle-viewmodel-compose to v2.11.0 — renovate[bot]
-[detail](#beb1a78-details)
-
-<details id='beb1a78-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 40ac51d (Oct 17, 2026 13:30:48)
-Update changelog — github-actions[bot]
-[detail](#40ac51d-details)
-
-<details id='40ac51d-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## e39a746 (Oct 17, 2026 15:30:38)
-Merge pull request #13 from antonio-bravo/renovate/cameracamera2
-
-Update dependency androidx.camera:camera-camera2 to v1.6.2 — antonio-bravo
-[detail](#e39a746-details)
-
-<details id='e39a746-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
