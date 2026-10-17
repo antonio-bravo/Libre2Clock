@@ -1,5 +1,43 @@
 # Changelog
 
+## 3363cf4 (Oct 17, 2026 15:32:01)
+Merge pull request #22 from antonio-bravo/renovate/lifecycleviewmodelcompose
+
+Update dependency androidx.lifecycle:lifecycle-viewmodel-compose to v2.11.0 — antonio-bravo
+[detail](#3363cf4-details)
+
+<details id='3363cf4-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## beb1a78 (Oct 17, 2026 13:31:39)
+Update dependency androidx.lifecycle:lifecycle-viewmodel-compose to v2.11.0 — renovate[bot]
+[detail](#beb1a78-details)
+
+<details id='beb1a78-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 40ac51d (Oct 17, 2026 13:30:48)
+Update changelog — github-actions[bot]
+[detail](#40ac51d-details)
+
+<details id='40ac51d-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## e39a746 (Oct 17, 2026 15:30:38)
 Merge pull request #13 from antonio-bravo/renovate/cameracamera2
 
@@ -595,44 +633,6 @@ Update dependency androidx.activity:activity-compose to v1.13.0 — antonio-brav
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## c0ef27b (Oct 17, 2026 13:21:31)
-Update changelog — github-actions[bot]
-[detail](#c0ef27b-details)
-
-<details id='c0ef27b-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 48edc17 (Oct 17, 2026 15:21:21)
-Merge pull request #14 from antonio-bravo/renovate/cameracore
-
-Update dependency androidx.camera:camera-core to v1.6.2 — antonio-bravo
-[detail](#48edc17-details)
-
-<details id='48edc17-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 25afcf8 (Oct 17, 2026 13:21:20)
-Update changelog — github-actions[bot]
-[detail](#25afcf8-details)
-
-<details id='25afcf8-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
 </details>
 
 
