@@ -482,6 +482,11 @@ class GlucoseForegroundService : Service() {
         val dualValue = GlucoseProcessor.formatDualValue(measurement.value, measurement.calibratedValue)
         val content = "$dualValue mg/dL $trendStr"
         
+        // Notify widget to update regardless of content change
+        val widgetIntent = Intent("com.tonio.libre2clock.ACTION_UPDATE_WIDGET")
+        widgetIntent.setPackage(packageName)
+        sendBroadcast(widgetIntent)
+        
         if (content == lastForegroundNotificationContent) return
         
         lastForegroundNotificationContent = content

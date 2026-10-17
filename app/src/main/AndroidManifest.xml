@@ -53,6 +53,18 @@
             android:enabled="true"
             android:exported="false" />
 
+        <receiver
+            android:name=".widget.GlucoseWidgetProvider"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.tonio.libre2clock.ACTION_UPDATE_WIDGET" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/glucose_widget_info" />
+        </receiver>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
