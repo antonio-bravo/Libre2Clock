@@ -1,5 +1,29 @@
 # Changelog
 
+## b841a95 (Oct 17, 2026 15:28:16)
+fix bot.yml — antonio-bravo
+[detail](#b841a95-details)
+
+<details id='b841a95-details'>
+<summary>Changed files</summary>
+
+- .github/workflows/bot.yml [Modified]
+</details>
+
+
+---
+## 5474f54 (Oct 17, 2026 13:27:34)
+Update changelog — github-actions[bot]
+[detail](#5474f54-details)
+
+<details id='5474f54-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## d966639 (Oct 17, 2026 15:27:11)
 Merge pull request #6 from antonio-bravo/renovate/actions-checkout-7.x
 
@@ -627,35 +651,6 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
-</details>
-
-
----
-## 38aad17 (Oct 10, 2026 21:42:23)
-fix double text expiring soon — antonio-bravo
-[detail](#38aad17-details)
-
-<details id='38aad17-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
-</details>
-
-
----
-## fc9a449 (Oct 10, 2026 21:42:23)
-re-login — antonio-bravo
-[detail](#fc9a449-details)
-
-<details id='fc9a449-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/api/LibreAuthenticator.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/data/api/LibreService.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/SecureCredentialStore.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/di/AppContainer.kt [Modified]
 </details>
 
 
