@@ -1,5 +1,31 @@
 # Changelog
 
+## 8028644 (Oct 17, 2026 17:11:19)
+Merge pull request #42 from antonio-bravo/renovate/major-composebom
+
+Update dependency androidx.compose:compose-bom to v2026 — antonio-bravo
+[detail](#8028644-details)
+
+<details id='8028644-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## e8a31d4 (Oct 17, 2026 15:11:11)
+Update changelog — github-actions[bot]
+[detail](#e8a31d4-details)
+
+<details id='e8a31d4-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## a0bd340 (Oct 17, 2026 17:11:00)
 Merge pull request #34 from antonio-bravo/renovate/logginginterceptor
 
@@ -36,6 +62,18 @@ Update actions/setup-java action to v6 — antonio-bravo
 <summary>Changed files</summary>
 
 - .github/workflows/build-release.yml [Modified]
+</details>
+
+
+---
+## f6547fb (Oct 17, 2026 15:05:43)
+Update dependency androidx.compose:compose-bom to v2026 — renovate[bot]
+[detail](#f6547fb-details)
+
+<details id='f6547fb-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
 </details>
 
 
@@ -592,42 +630,6 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
-</details>
-
-
----
-## b841a95 (Oct 17, 2026 15:28:16)
-fix bot.yml — antonio-bravo
-[detail](#b841a95-details)
-
-<details id='b841a95-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/bot.yml [Modified]
-</details>
-
-
----
-## 5474f54 (Oct 17, 2026 13:27:34)
-Update changelog — github-actions[bot]
-[detail](#5474f54-details)
-
-<details id='5474f54-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 482dcf1 (Oct 17, 2026 13:27:14)
-Update dependency androidx.room:room-compiler to v2.8.5 — renovate[bot]
-[detail](#482dcf1-details)
-
-<details id='482dcf1-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
 </details>
 
 
