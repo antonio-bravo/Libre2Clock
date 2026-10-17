@@ -1,5 +1,35 @@
 # Changelog
 
+## 4dc8752 (Oct 17, 2026 19:50:21)
+widget options — antonio-bravo
+[detail](#4dc8752-details)
+
+<details id='4dc8752-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsWidgetScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/widget/GlucoseWidgetProvider.kt [Modified]
+- app/src/main/res/layout/widget_glucose.xml [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 16ca45f (Oct 17, 2026 16:49:54)
+Update changelog — github-actions[bot]
+[detail](#16ca45f-details)
+
+<details id='16ca45f-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 684d1fe (Oct 17, 2026 18:49:42)
 fix widget — antonio-bravo
 [detail](#684d1fe-details)
@@ -619,32 +649,6 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
-</details>
-
-
----
-## 1f20327 (Oct 17, 2026 17:01:34)
-Merge pull request #28 from antonio-bravo/renovate/roomruntime
-
-Update dependency androidx.room:room-runtime to v2.8.5 — antonio-bravo
-[detail](#1f20327-details)
-
-<details id='1f20327-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 9ee84cf (Oct 17, 2026 15:01:16)
-Update dependency androidx.test:core to v1.7.0 — renovate[bot]
-[detail](#9ee84cf-details)
-
-<details id='9ee84cf-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
 </details>
 
 
