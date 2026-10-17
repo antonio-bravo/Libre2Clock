@@ -1,5 +1,31 @@
 # Changelog
 
+## a64e9e0 (Oct 17, 2026 15:21:11)
+Merge pull request #15 from antonio-bravo/renovate/cameralifecycle
+
+Update dependency androidx.camera:camera-lifecycle to v1.6.2 — antonio-bravo
+[detail](#a64e9e0-details)
+
+<details id='a64e9e0-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## b3efb1c (Oct 17, 2026 13:19:45)
+Update changelog — github-actions[bot]
+[detail](#b3efb1c-details)
+
+<details id='b3efb1c-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 924cf25 (Oct 17, 2026 15:19:33)
 add widget — antonio-bravo
 [detail](#924cf25-details)
@@ -13,6 +39,18 @@ add widget — antonio-bravo
 - app/src/main/res/drawable/widget_background.xml [Deleted]
 - app/src/main/res/layout/widget_glucose.xml [Deleted]
 - app/src/main/res/xml/glucose_widget_info.xml [Deleted]
+</details>
+
+
+---
+## 345c324 (Oct 11, 2026 12:56:59)
+Update dependency androidx.camera:camera-lifecycle to v1.6.2 — renovate[bot]
+[detail](#345c324-details)
+
+<details id='345c324-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
 </details>
 
 
@@ -637,45 +675,6 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
-</details>
-
-
----
-## 81c5655 (Oct 03, 2026 21:31:28)
-SOS — antonio-bravo
-[detail](#81c5655-details)
-
-<details id='81c5655-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/EmergencyAlertDispatcher.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/EmergencyLocationManager.kt [Modified]
-</details>
-
-
----
-## 63fe922 (Oct 03, 2026 18:40:26)
-Update changelog — github-actions[bot]
-[detail](#63fe922-details)
-
-<details id='63fe922-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## a5db49e (Oct 03, 2026 20:40:13)
-SOS Event Log — antonio-bravo
-[detail](#a5db49e-details)
-
-<details id='a5db49e-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/util/EmergencyAlertDispatcher.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/EmergencyLocationManager.kt [Modified]
 </details>
 
 
