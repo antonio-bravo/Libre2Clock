@@ -1,5 +1,31 @@
 # Changelog
 
+## a0bd340 (Oct 17, 2026 17:11:00)
+Merge pull request #34 from antonio-bravo/renovate/logginginterceptor
+
+Update dependency com.squareup.okhttp3:logging-interceptor to v4.12.0 — antonio-bravo
+[detail](#a0bd340-details)
+
+<details id='a0bd340-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 39ffb34 (Oct 17, 2026 15:10:51)
+Update changelog — github-actions[bot]
+[detail](#39ffb34-details)
+
+<details id='39ffb34-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 76f9946 (Oct 17, 2026 17:10:43)
 Merge pull request #40 from antonio-bravo/renovate/actions-setup-java-6.x
 
@@ -10,6 +36,18 @@ Update actions/setup-java action to v6 — antonio-bravo
 <summary>Changed files</summary>
 
 - .github/workflows/build-release.yml [Modified]
+</details>
+
+
+---
+## de4d443 (Oct 17, 2026 15:05:22)
+Update dependency com.squareup.okhttp3:logging-interceptor to v4.12.0 — renovate[bot]
+[detail](#de4d443-details)
+
+<details id='de4d443-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
 </details>
 
 
@@ -590,46 +628,6 @@ Update dependency androidx.room:room-compiler to v2.8.5 — renovate[bot]
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## d966639 (Oct 17, 2026 15:27:11)
-Merge pull request #6 from antonio-bravo/renovate/actions-checkout-7.x
-
-Update actions/checkout action to v7.0.1 — antonio-bravo
-[detail](#d966639-details)
-
-<details id='d966639-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/changelog.yml [Modified]
-</details>
-
-
----
-## 475e573 (Oct 17, 2026 15:26:59)
-Merge pull request #7 from antonio-bravo/renovate/lifecycleviewmodelnavigation3
-
-Update dependency androidx.lifecycle:lifecycle-viewmodel-navigation3 to v2.11.0 — antonio-bravo
-[detail](#475e573-details)
-
-<details id='475e573-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## b08cc80 (Oct 17, 2026 13:26:53)
-Update changelog — github-actions[bot]
-[detail](#b08cc80-details)
-
-<details id='b08cc80-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
 </details>
 
 
