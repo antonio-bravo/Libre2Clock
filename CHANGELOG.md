@@ -1,5 +1,31 @@
 # Changelog
 
+## 76f9946 (Oct 17, 2026 17:10:43)
+Merge pull request #40 from antonio-bravo/renovate/actions-setup-java-6.x
+
+Update actions/setup-java action to v6 — antonio-bravo
+[detail](#76f9946-details)
+
+<details id='76f9946-details'>
+<summary>Changed files</summary>
+
+- .github/workflows/build-release.yml [Modified]
+</details>
+
+
+---
+## 7fd17b1 (Oct 17, 2026 15:04:12)
+Update changelog — github-actions[bot]
+[detail](#7fd17b1-details)
+
+<details id='7fd17b1-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 90c037b (Oct 17, 2026 17:03:44)
 Merge pull request #38 from antonio-bravo/renovate/kotlin-monorepo
 
@@ -34,6 +60,18 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
+</details>
+
+
+---
+## 2297545 (Oct 17, 2026 15:02:01)
+Update actions/setup-java action to v6 — renovate[bot]
+[detail](#2297545-details)
+
+<details id='2297545-details'>
+<summary>Changed files</summary>
+
+- .github/workflows/build-release.yml [Modified]
 </details>
 
 
@@ -592,44 +630,6 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
-</details>
-
-
----
-## fe3caaa (Oct 17, 2026 15:26:43)
-Merge pull request #8 from antonio-bravo/renovate/securitycrypto
-
-Update dependency androidx.security:security-crypto to v1.1.0 — antonio-bravo
-[detail](#fe3caaa-details)
-
-<details id='fe3caaa-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## d5c5c57 (Oct 17, 2026 13:26:33)
-Update dependency androidx.security:security-crypto to v1.1.0 — renovate[bot]
-[detail](#d5c5c57-details)
-
-<details id='d5c5c57-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 207b77a (Oct 17, 2026 13:26:28)
-Update dependency androidx.lifecycle:lifecycle-viewmodel-navigation3 to v2.11.0 — renovate[bot]
-[detail](#207b77a-details)
-
-<details id='207b77a-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
 </details>
 
 
