@@ -1,5 +1,31 @@
 # Changelog
 
+## 48edc17 (Oct 17, 2026 15:21:21)
+Merge pull request #14 from antonio-bravo/renovate/cameracore
+
+Update dependency androidx.camera:camera-core to v1.6.2 — antonio-bravo
+[detail](#48edc17-details)
+
+<details id='48edc17-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 25afcf8 (Oct 17, 2026 13:21:20)
+Update changelog — github-actions[bot]
+[detail](#25afcf8-details)
+
+<details id='25afcf8-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## a64e9e0 (Oct 17, 2026 15:21:11)
 Merge pull request #15 from antonio-bravo/renovate/cameralifecycle
 
@@ -48,6 +74,18 @@ Update dependency androidx.camera:camera-lifecycle to v1.6.2 — renovate[bot]
 [detail](#345c324-details)
 
 <details id='345c324-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 0b2dcb6 (Oct 11, 2026 12:56:54)
+Update dependency androidx.camera:camera-core to v1.6.2 — renovate[bot]
+[detail](#0b2dcb6-details)
+
+<details id='0b2dcb6-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
@@ -633,48 +671,6 @@ CallMeBot — antonio-bravo
 <summary>Changed files</summary>
 
 - app/src/main/java/com/tonio/libre2clock/util/EmergencyAlertDispatcher.kt [Modified]
-</details>
-
-
----
-## 99aec5a (Oct 04, 2026 10:54:26)
-Update changelog — github-actions[bot]
-[detail](#99aec5a-details)
-
-<details id='99aec5a-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## d32fd68 (Oct 04, 2026 12:54:14)
-SOS SMS + WhatsApp — antonio-bravo
-[detail](#d32fd68-details)
-
-<details id='d32fd68-details'>
-<summary>Changed files</summary>
-
-- app/src/main/AndroidManifest.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/model/EmergencyModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEmergencyScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/EmergencyAlertDispatcher.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 059a634 (Oct 03, 2026 19:31:49)
-Update changelog — github-actions[bot]
-[detail](#059a634-details)
-
-<details id='059a634-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
 </details>
 
 
