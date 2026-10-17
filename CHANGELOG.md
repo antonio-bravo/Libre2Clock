@@ -1,5 +1,31 @@
 # Changelog
 
+## 31bb7f7 (Oct 17, 2026 15:25:50)
+Merge pull request #20 from antonio-bravo/renovate/lifecycleruntimecompose
+
+Update dependency androidx.lifecycle:lifecycle-runtime-compose to v2.11.0 — antonio-bravo
+[detail](#31bb7f7-details)
+
+<details id='31bb7f7-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## f8baa9c (Oct 17, 2026 13:25:44)
+Update changelog — github-actions[bot]
+[detail](#f8baa9c-details)
+
+<details id='f8baa9c-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## e79989b (Oct 17, 2026 15:25:33)
 Merge pull request #21 from antonio-bravo/renovate/lifecycleruntimektx
 
@@ -45,6 +71,18 @@ Update dependency androidx.lifecycle:lifecycle-runtime-ktx to v2.11.0 — renova
 [detail](#5474d69-details)
 
 <details id='5474d69-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## bc55cf6 (Oct 17, 2026 13:25:11)
+Update dependency androidx.lifecycle:lifecycle-runtime-compose to v2.11.0 — renovate[bot]
+[detail](#bc55cf6-details)
+
+<details id='bc55cf6-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
@@ -632,42 +670,6 @@ graph zoom — antonio-bravo
 [detail](#07ad5f9-details)
 
 <details id='07ad5f9-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
-</details>
-
-
----
-## 5b229ba (Oct 05, 2026 21:41:19)
-graph Zoom — antonio-bravo
-[detail](#5b229ba-details)
-
-<details id='5b229ba-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
-</details>
-
-
----
-## 870f64a (Oct 04, 2026 21:00:24)
-Update changelog — github-actions[bot]
-[detail](#870f64a-details)
-
-<details id='870f64a-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## b040078 (Oct 04, 2026 23:00:09)
-Trend graph dual — antonio-bravo
-[detail](#b040078-details)
-
-<details id='b040078-details'>
 <summary>Changed files</summary>
 
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
