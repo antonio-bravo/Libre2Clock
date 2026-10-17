@@ -626,4 +626,22 @@
     <string name="emergency_placeholder_chat_id">Ej: 987654321</string>
     <string name="emergency_placeholder_phone">Ej: +34612345678</string>
     <string name="emergency_placeholder_webhook">https://wasenderapi.com/... ó tu webhook</string>
+
+    <!-- Widget Settings -->
+    <string name="settings_widget_title">Ajustes del Widget</string>
+    <string name="settings_widget_desc">Personaliza la transparencia, tamaño y elementos visibles del widget en tu pantalla de inicio.</string>
+    <string name="widget_preview_title">Vista Previa del Widget</string>
+    <string name="widget_compact_mode_title">Modo Compacto (1x1 / 2x1)</string>
+    <string name="widget_compact_mode_desc">Oculta insulina y líneas separadoras para encajar en widgets de tamaño pequeño.</string>
+    <string name="widget_opacity_title">Opacidad de Fondo (%1$d%%)</string>
+    <string name="widget_opacity_desc">Ajusta la transparencia (0%% = transparente tipo IP Widget cristal, 100%% = opaco).</string>
+    <string name="widget_use_target_color_title">Color según Rango de Glucosa</string>
+    <string name="widget_use_target_color_desc">Cambia el color de fondo según el nivel de glucosa (Rojo/Naranja/Verde) o usa un tono oscuro neutro.</string>
+    <string name="widget_show_insulin_title">Mostrar Insulina Activa (IOB)</string>
+    <string name="widget_show_insulin_desc">Muestra unidades de insulina rápida y lenta activas si hay espacio suficiente.</string>
+    <string name="widget_show_last_update_title">Mostrar Hora de Última Lectura</string>
+    <string name="widget_show_last_update_desc">Muestra la hora de la última medición sincronizada en el widget.</string>
+    <string name="widget_tap_action_title">Acción al Tocar el Widget</string>
+    <string name="widget_tap_action_desc">Al pulsar el widget en la pantalla de inicio se abre directamente Libre2Clock.</string>
+    <string name="widget_description">Muestra la glucosa en tiempo real, flecha de tendencia e insulina activa en tu pantalla de inicio.</string>
 </resources>

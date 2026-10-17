@@ -2,6 +2,7 @@ package com.tonio.libre2clock.ui.settings
 
 import android.app.Application
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
@@ -164,6 +165,12 @@ class SettingsViewModel(
     val batteryCriticalThreshold = preferenceManager.batteryCriticalThreshold.stateInDefault(5)
     val disableFastRefreshOnSlowCharge = preferenceManager.disableFastRefreshOnSlowCharge.stateInDefault(true)
     val sensorDurationDays = preferenceManager.sensorDurationDays.stateInDefault(15)
+
+    val widgetCompactMode = preferenceManager.widgetCompactMode.stateInDefault(false)
+    val widgetShowInsulin = preferenceManager.widgetShowInsulin.stateInDefault(true)
+    val widgetShowLastUpdate = preferenceManager.widgetShowLastUpdate.stateInDefault(true)
+    val widgetBackgroundOpacity = preferenceManager.widgetBackgroundOpacity.stateInDefault(80)
+    val widgetUseTargetColorBg = preferenceManager.widgetUseTargetColorBg.stateInDefault(true)
 
     // MEJORA: Usamos 'this.capillaryReadings' (que ya está filtrado) en lugar del raw de preferenceManager
     val currentGlucose: StateFlow<GlucoseMeasurement?> = combine(
@@ -1025,6 +1032,47 @@ class SettingsViewModel(
         viewModelScope.launch {
             val current = glucoseAlarmSchedules.value.toMutableList().apply { removeIf { it.id == schedule.id } }
             preferenceManager.saveGlucoseAlarmSchedules(current)
+        }
+    }
+
+    private fun sendWidgetUpdateBroadcast() {
+        val intent = Intent("com.tonio.libre2clock.ACTION_UPDATE_WIDGET")
+        intent.setPackage(appContext.packageName)
+        appContext.sendBroadcast(intent)
+    }
+
+    fun setWidgetCompactMode(enabled: Boolean) {
+        viewModelScope.launch {
+            preferenceManager.saveWidgetCompactMode(enabled)
+            sendWidgetUpdateBroadcast()
+        }
+    }
+
+    fun setWidgetShowInsulin(enabled: Boolean) {
+        viewModelScope.launch {
+            preferenceManager.saveWidgetShowInsulin(enabled)
+            sendWidgetUpdateBroadcast()
+        }
+    }
+
+    fun setWidgetShowLastUpdate(enabled: Boolean) {
+        viewModelScope.launch {
+            preferenceManager.saveWidgetShowLastUpdate(enabled)
+            sendWidgetUpdateBroadcast()
+        }
+    }
+
+    fun setWidgetBackgroundOpacity(opacity: Int) {
+        viewModelScope.launch {
+            preferenceManager.saveWidgetBackgroundOpacity(opacity)
+            sendWidgetUpdateBroadcast()
+        }
+    }
+
+    fun setWidgetUseTargetColorBg(enabled: Boolean) {
+        viewModelScope.launch {
+            preferenceManager.saveWidgetUseTargetColorBg(enabled)
+            sendWidgetUpdateBroadcast()
         }
     }
 }

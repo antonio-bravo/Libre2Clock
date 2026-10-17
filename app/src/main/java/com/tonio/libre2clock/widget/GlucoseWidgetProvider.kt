@@ -1,12 +1,17 @@
 package com.tonio.libre2clock.widget
 
+import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.widget.RemoteViews
 import android.graphics.Color
-import android.content.ComponentName
+import android.os.Bundle
+import android.util.TypedValue
+import android.view.View
+import android.widget.RemoteViews
+import com.tonio.libre2clock.MainActivity
 import com.tonio.libre2clock.R
 import com.tonio.libre2clock.data.model.InsulinType
 import com.tonio.libre2clock.data.repository.GlucoseProcessor
@@ -54,12 +59,45 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
         // Handled by onReceive to ensure goAsync() works correctly with coroutines
     }
 
+    override fun onAppWidgetOptionsChanged(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetId: Int,
+        newOptions: Bundle
+    ) {
+        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
+        val pendingResult = goAsync()
+        scope.launch {
+            try {
+                updateAppWidgetSuspend(context, appWidgetManager, appWidgetId)
+            } finally {
+                pendingResult.finish()
+            }
+        }
+    }
+
     private suspend fun updateAppWidgetSuspend(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
         val views = RemoteViews(context.packageName, R.layout.widget_glucose)
 
         try {
             val repository = AppContainer.provideGlucoseRepository(context)
             val preferenceManager = AppContainer.providePreferenceManager(context)
+
+            // Preferences
+            val compactModePref = preferenceManager.widgetCompactMode.first()
+            val showInsulinPref = preferenceManager.widgetShowInsulin.first()
+            val showLastUpdatePref = preferenceManager.widgetShowLastUpdate.first()
+            val opacityPercent = preferenceManager.widgetBackgroundOpacity.first()
+            val useTargetColor = preferenceManager.widgetUseTargetColorBg.first()
+            val targetLow = preferenceManager.lowGlucoseThreshold.first()
+            val targetHigh = preferenceManager.highGlucoseThreshold.first()
+
+            // Dimensions from Widget options
+            val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
+            val minHeightDp = options?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT) ?: 110
+            val minWidthDp = options?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH) ?: 250
+
+            val isSmallLayout = compactModePref || minHeightDp < 90 || minWidthDp < 180
 
             // Fetch latest data
             val measurement = repository.currentGlucose.first()
@@ -75,23 +113,25 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
             
             val trend = measurement?.trendArrow
 
-            // Determine color
-            val targetLow = 70
-            val targetHigh = 180
-            
             val isStale = if (measurement != null) {
                 val instant = TimestampParser.parseMeasurementInstant(measurement)
                 java.time.Duration.between(instant, Instant.now()).toMinutes() > 15
             } else true
-            
-            val bgColor = when {
-                isStale -> Color.parseColor("#444444") // Dark grey if stale
-                evalVal < targetLow -> Color.parseColor("#C83B34") // Red
-                evalVal > targetHigh -> Color.parseColor("#E89940") // Orange
-                else -> Color.parseColor("#9DCA44") // Green
+
+            // Base RGB Color
+            val baseRgb = when {
+                !useTargetColor -> Color.parseColor("#1E1E1E")
+                isStale -> Color.parseColor("#444444")
+                evalVal < targetLow -> Color.parseColor("#C83B34")
+                evalVal > targetHigh -> Color.parseColor("#E89940")
+                else -> Color.parseColor("#9DCA44")
             }
-            
-            // Update UI elements
+
+            // Alpha calculation
+            val alpha = (opacityPercent * 255) / 100
+            val finalBgColor = (alpha shl 24) or (baseRgb and 0x00FFFFFF)
+
+            // Update Glucose and Trend text
             if (measurement != null) {
                 views.setTextViewText(R.id.tv_glucose_value, dualValueStr)
                 views.setTextViewText(R.id.tv_glucose_trend, GlucoseProcessor.getTrendArrowSymbol(trend ?: 0))
@@ -104,7 +144,24 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
                 views.setTextViewText(R.id.tv_last_update, "----")
             }
 
-            views.setInt(R.id.widget_root, "setBackgroundColor", bgColor)
+            // Visibility based on size and user settings
+            val showLastUpdate = showLastUpdatePref && !isSmallLayout
+            val showInsulin = showInsulinPref && !isSmallLayout
+
+            views.setViewVisibility(R.id.tv_last_update, if (showLastUpdate) View.VISIBLE else View.GONE)
+            views.setViewVisibility(R.id.ll_insulin_container, if (showInsulin) View.VISIBLE else View.GONE)
+            views.setViewVisibility(R.id.divider_line, if (showInsulin) View.VISIBLE else View.GONE)
+
+            // Responsive Text Sizes
+            if (isSmallLayout) {
+                views.setTextViewTextSize(R.id.tv_glucose_value, TypedValue.COMPLEX_UNIT_SP, 32f)
+                views.setTextViewTextSize(R.id.tv_glucose_trend, TypedValue.COMPLEX_UNIT_SP, 26f)
+            } else {
+                views.setTextViewTextSize(R.id.tv_glucose_value, TypedValue.COMPLEX_UNIT_SP, 40f)
+                views.setTextViewTextSize(R.id.tv_glucose_trend, TypedValue.COMPLEX_UNIT_SP, 32f)
+            }
+
+            views.setInt(R.id.widget_root, "setBackgroundColor", finalBgColor)
             
             // Calculate Insulin
             val rapidDoses = insulinDoses.filter { it.type == InsulinType.RAPID }
@@ -115,6 +172,18 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
 
             views.setTextViewText(R.id.tv_insulin_rapid, String.format(Locale.getDefault(), "Rápida: %.1f U", rapidIOB))
             views.setTextViewText(R.id.tv_insulin_slow, String.format(Locale.getDefault(), "Lenta: %.1f U", slowIOB))
+
+            // Pending Intent to launch App on click
+            val mainIntent = Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+            val pendingIntent = PendingIntent.getActivity(
+                context,
+                0,
+                mainIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
 
             appWidgetManager.updateAppWidget(appWidgetId, views)
 

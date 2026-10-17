@@ -631,4 +631,22 @@
     <string name="emergency_placeholder_chat_id">E.g., 987654321</string>
     <string name="emergency_placeholder_phone">E.g., +15551234567</string>
     <string name="emergency_placeholder_webhook">https://wasenderapi.com/... or custom webhook</string>
+
+    <!-- Widget Settings -->
+    <string name="settings_widget_title">Widget Settings</string>
+    <string name="settings_widget_desc">Customize background transparency, sizes, and layout for your home screen widget.</string>
+    <string name="widget_preview_title">Live Widget Preview</string>
+    <string name="widget_compact_mode_title">Compact Mode (1x1 / 2x1)</string>
+    <string name="widget_compact_mode_desc">Hide insulin and separator lines to fit nicely in small widget tiles.</string>
+    <string name="widget_opacity_title">Background Opacity (%1$d%%)</string>
+    <string name="widget_opacity_desc">Adjust background transparency (0%% = fully transparent IP Widget style, 100%% = fully opaque).</string>
+    <string name="widget_use_target_color_title">Color by Glucose Target Range</string>
+    <string name="widget_use_target_color_desc">Color background based on current glucose range (Red/Orange/Green) or neutral dark glass.</string>
+    <string name="widget_show_insulin_title">Show Active Insulin (IOB)</string>
+    <string name="widget_show_insulin_desc">Displays Rapid and Slow active insulin units if space permits.</string>
+    <string name="widget_show_last_update_title">Show Last Update Time</string>
+    <string name="widget_show_last_update_desc">Displays the timestamp of the last reading on the widget.</string>
+    <string name="widget_tap_action_title">Widget Tap Action</string>
+    <string name="widget_tap_action_desc">Tapping the widget on your home screen opens Libre2Clock directly.</string>
+    <string name="widget_description">Shows real-time glucose, trend arrow, and active insulin on home screen.</string>
 </resources>

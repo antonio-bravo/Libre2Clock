@@ -39,6 +39,9 @@ sealed interface Destination : NavKey {
     data object SettingsCloud : Destination
 
     @Serializable
+    data object SettingsWidget : Destination
+
+    @Serializable
     data object SettingsEventLog : Destination
 
     @Serializable

@@ -25,6 +25,7 @@ fun SettingsScreen(
     onNavigateToCalibration: () -> Unit,
     onNavigateToBattery: () -> Unit,
     onNavigateToDevice: () -> Unit,
+    onNavigateToWidget: () -> Unit,
     onNavigateToData: () -> Unit,
     onNavigateToCloud: () -> Unit,
     onNavigateToAdvanced: () -> Unit
@@ -114,6 +115,15 @@ fun SettingsScreen(
                     description = stringResource(R.string.settings_device_desc),
                     icon = Icons.Default.Phone,
                     onClick = onNavigateToDevice
+                )
+            }
+
+            item(key = "widget") {
+                SettingsCategoryItem(
+                    title = stringResource(R.string.settings_widget_title),
+                    description = stringResource(R.string.settings_widget_desc),
+                    icon = Icons.Default.Build,
+                    onClick = onNavigateToWidget
                 )
             }
 

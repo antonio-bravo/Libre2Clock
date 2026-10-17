@@ -137,6 +137,11 @@ class PreferenceManager(private val context: Context) {
     private val GLUCOSE_SOURCE_PROVIDER_KEY = stringPreferencesKey("glucose_source_provider")
     private val DEXCOM_SERVER_REGION_KEY = stringPreferencesKey("dexcom_server_region")
     private val DEXCOM_ACCOUNT_NAME_KEY = stringPreferencesKey("dexcom_account_name")
+    private val WIDGET_COMPACT_MODE_KEY = booleanPreferencesKey("widget_compact_mode")
+    private val WIDGET_SHOW_INSULIN_KEY = booleanPreferencesKey("widget_show_insulin")
+    private val WIDGET_SHOW_LAST_UPDATE_KEY = booleanPreferencesKey("widget_show_last_update")
+    private val WIDGET_BACKGROUND_OPACITY_KEY = intPreferencesKey("widget_background_opacity")
+    private val WIDGET_USE_TARGET_COLOR_BG_KEY = booleanPreferencesKey("widget_use_target_color_bg")
 
     // --- Flows ---
     val glucoseSourceProvider: Flow<GlucoseSourceProvider> = context.dataStore.data.map { prefs ->
@@ -228,6 +233,12 @@ class PreferenceManager(private val context: Context) {
     val customGlucoseValueType: Flow<String> = context.dataStore.data.map { it[CUSTOM_GLUCOSE_VALUE_TYPE_KEY] ?: "CALIBRATED" }.distinctUntilChanged()
     val customGlucoseOnlyOnCrossing: Flow<Boolean> = context.dataStore.data.map { it[CUSTOM_GLUCOSE_ONLY_ON_CROSSING_KEY] ?: true }.distinctUntilChanged()
     val lastCustomGlucoseValue: Flow<Int?> = context.dataStore.data.map { it[LAST_CUSTOM_GLUCOSE_VALUE_KEY] }.distinctUntilChanged()
+
+    val widgetCompactMode: Flow<Boolean> = context.dataStore.data.map { it[WIDGET_COMPACT_MODE_KEY] ?: false }.distinctUntilChanged()
+    val widgetShowInsulin: Flow<Boolean> = context.dataStore.data.map { it[WIDGET_SHOW_INSULIN_KEY] ?: true }.distinctUntilChanged()
+    val widgetShowLastUpdate: Flow<Boolean> = context.dataStore.data.map { it[WIDGET_SHOW_LAST_UPDATE_KEY] ?: true }.distinctUntilChanged()
+    val widgetBackgroundOpacity: Flow<Int> = context.dataStore.data.map { (it[WIDGET_BACKGROUND_OPACITY_KEY] ?: 80).coerceIn(0, 100) }.distinctUntilChanged()
+    val widgetUseTargetColorBg: Flow<Boolean> = context.dataStore.data.map { it[WIDGET_USE_TARGET_COLOR_BG_KEY] ?: true }.distinctUntilChanged()
     val deductIobForBolus: Flow<Boolean> = context.dataStore.data.map { it[DEDUCT_IOB_FOR_BOLUS_KEY] ?: false }.distinctUntilChanged()
     val useCalibratedForAlarms: Flow<Boolean> = context.dataStore.data.map { it[USE_CALIBRATED_FOR_ALARMS_KEY] ?: true }.distinctUntilChanged()
 
@@ -709,6 +720,31 @@ class PreferenceManager(private val context: Context) {
 
     suspend fun saveSensorDurationDays(days: Int) {
         context.dataStore.edit { it[SENSOR_DURATION_DAYS_KEY] = days.coerceIn(1, 30) }
+        updateBackupPayload()
+    }
+
+    suspend fun saveWidgetCompactMode(enabled: Boolean) {
+        context.dataStore.edit { it[WIDGET_COMPACT_MODE_KEY] = enabled }
+        updateBackupPayload()
+    }
+
+    suspend fun saveWidgetShowInsulin(enabled: Boolean) {
+        context.dataStore.edit { it[WIDGET_SHOW_INSULIN_KEY] = enabled }
+        updateBackupPayload()
+    }
+
+    suspend fun saveWidgetShowLastUpdate(enabled: Boolean) {
+        context.dataStore.edit { it[WIDGET_SHOW_LAST_UPDATE_KEY] = enabled }
+        updateBackupPayload()
+    }
+
+    suspend fun saveWidgetBackgroundOpacity(opacity: Int) {
+        context.dataStore.edit { it[WIDGET_BACKGROUND_OPACITY_KEY] = opacity.coerceIn(0, 100) }
+        updateBackupPayload()
+    }
+
+    suspend fun saveWidgetUseTargetColorBg(enabled: Boolean) {
+        context.dataStore.edit { it[WIDGET_USE_TARGET_COLOR_BG_KEY] = enabled }
         updateBackupPayload()
     }
 

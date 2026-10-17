@@ -36,6 +36,7 @@ import com.tonio.libre2clock.ui.settings.SettingsEmergencyScreen
 import com.tonio.libre2clock.ui.settings.SettingsEventLogScreen
 import com.tonio.libre2clock.ui.settings.SettingsScreen
 import com.tonio.libre2clock.ui.settings.SettingsViewModel
+import com.tonio.libre2clock.ui.settings.SettingsWidgetScreen
 import com.tonio.libre2clock.ui.strategy.StrategyScreen
 
 @Composable
@@ -163,9 +164,16 @@ fun NavGraph(
                     onNavigateToCalibration = { backStack.add(Destination.SettingsCalibration) },
                     onNavigateToBattery = { backStack.add(Destination.SettingsBattery) },
                     onNavigateToDevice = { backStack.add(Destination.SettingsDevice) },
+                    onNavigateToWidget = { backStack.add(Destination.SettingsWidget) },
                     onNavigateToData = { backStack.add(Destination.SettingsData) },
                     onNavigateToCloud = { backStack.add(Destination.SettingsCloud) },
                     onNavigateToAdvanced = { backStack.add(Destination.SettingsAdvanced) }
+                )
+            }
+            entry<Destination.SettingsWidget> {
+                SettingsWidgetScreen(
+                    viewModel = settingsViewModel,
+                    onBack = { popBackStack() }
                 )
             }
             entry<Destination.SettingsEmergency> {
