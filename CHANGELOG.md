@@ -1,5 +1,31 @@
 # Changelog
 
+## e39a746 (Oct 17, 2026 15:30:38)
+Merge pull request #13 from antonio-bravo/renovate/cameracamera2
+
+Update dependency androidx.camera:camera-camera2 to v1.6.2 — antonio-bravo
+[detail](#e39a746-details)
+
+<details id='e39a746-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 77d4714 (Oct 17, 2026 13:30:08)
+Update changelog — github-actions[bot]
+[detail](#77d4714-details)
+
+<details id='77d4714-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 5a2f242 (Oct 17, 2026 15:29:55)
 Merge pull request #23 from antonio-bravo/renovate/navigation3runtime
 
@@ -19,6 +45,18 @@ Update dependency androidx.navigation3:navigation3-runtime to v1.2.0 — renovat
 [detail](#d016f91-details)
 
 <details id='d016f91-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## eb58588 (Oct 17, 2026 13:29:32)
+Update dependency androidx.camera:camera-camera2 to v1.6.2 — renovate[bot]
+[detail](#eb58588-details)
+
+<details id='eb58588-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
@@ -595,49 +633,6 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
-</details>
-
-
----
-## a64e9e0 (Oct 17, 2026 15:21:11)
-Merge pull request #15 from antonio-bravo/renovate/cameralifecycle
-
-Update dependency androidx.camera:camera-lifecycle to v1.6.2 — antonio-bravo
-[detail](#a64e9e0-details)
-
-<details id='a64e9e0-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## b3efb1c (Oct 17, 2026 13:19:45)
-Update changelog — github-actions[bot]
-[detail](#b3efb1c-details)
-
-<details id='b3efb1c-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 924cf25 (Oct 17, 2026 15:19:33)
-add widget — antonio-bravo
-[detail](#924cf25-details)
-
-<details id='924cf25-details'>
-<summary>Changed files</summary>
-
-- app/src/main/AndroidManifest.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/widget/GlucoseWidgetProvider.kt [Deleted]
-- app/src/main/res/drawable/widget_background.xml [Deleted]
-- app/src/main/res/layout/widget_glucose.xml [Deleted]
-- app/src/main/res/xml/glucose_widget_info.xml [Deleted]
 </details>
 
 
