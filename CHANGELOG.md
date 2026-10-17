@@ -1,5 +1,31 @@
 # Changelog
 
+## 9f10b6f (Oct 17, 2026 16:58:38)
+Merge pull request #31 from antonio-bravo/renovate/playserviceslocation
+
+Update dependency com.google.android.gms:play-services-location to v21.4.0 — antonio-bravo
+[detail](#9f10b6f-details)
+
+<details id='9f10b6f-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 5116c23 (Oct 17, 2026 14:58:22)
+Update changelog — github-actions[bot]
+[detail](#5116c23-details)
+
+<details id='5116c23-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## f4bdf31 (Oct 17, 2026 16:58:10)
 Merge pull request #33 from antonio-bravo/renovate/firebasebom
 
@@ -57,6 +83,18 @@ Update dependency com.google.firebase:firebase-bom to v34.19.0 — renovate[bot]
 [detail](#fa685fa-details)
 
 <details id='fa685fa-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## f395882 (Oct 17, 2026 14:43:19)
+Update dependency com.google.android.gms:play-services-location to v21.4.0 — renovate[bot]
+[detail](#f395882-details)
+
+<details id='f395882-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
@@ -591,42 +629,6 @@ Update dependency androidx.datastore:datastore-preferences to v1.2.1 — renovat
 [detail](#97c1ea1-details)
 
 <details id='97c1ea1-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## d1f7f9e (Oct 17, 2026 13:25:00)
-Update dependency androidx.core:core-ktx to v1.19.1 — renovate[bot]
-[detail](#d1f7f9e-details)
-
-<details id='d1f7f9e-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## a9148ea (Oct 17, 2026 13:24:55)
-Update dependency androidx.compose:compose-bom to v2024.12.01 — renovate[bot]
-[detail](#a9148ea-details)
-
-<details id='a9148ea-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## da6fbd6 (Oct 17, 2026 13:24:51)
-Update dependency androidx.camera:camera-view to v1.6.2 — renovate[bot]
-[detail](#da6fbd6-details)
-
-<details id='da6fbd6-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
