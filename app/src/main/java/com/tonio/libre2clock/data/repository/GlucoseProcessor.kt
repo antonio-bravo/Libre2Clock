@@ -307,9 +307,15 @@ object GlucoseProcessor {
 
     /**
      * Formats the glucose display as original(calibrated).
+     * If calibrated is equal to raw or invalid, displays single value.
      */
     fun formatDualValue(rawValue: Int, calibratedValue: Int): String {
-        return "$rawValue($calibratedValue)"
+        if (rawValue <= 0) return "---"
+        return if (rawValue == calibratedValue || calibratedValue <= 0) {
+            "$rawValue"
+        } else {
+            "$rawValue($calibratedValue)"
+        }
     }
 
     /**

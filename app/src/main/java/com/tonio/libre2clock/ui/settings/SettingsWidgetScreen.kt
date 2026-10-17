@@ -293,9 +293,9 @@ private fun WidgetLivePreviewCard(
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "→",
-                        fontSize = if (compactMode) 22.sp else 28.sp,
+                        fontSize = if (compactMode) 24.sp else 28.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = Color(0xFF81C784)
                     )
                 }
 

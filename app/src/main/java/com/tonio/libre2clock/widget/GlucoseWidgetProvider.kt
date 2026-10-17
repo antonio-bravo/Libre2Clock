@@ -33,7 +33,7 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
     private val job = SupervisorJob()
     private val scope = CoroutineScope(Dispatchers.IO + job)
     
-    private val SyncDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault())
+    private val syncDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault())
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
@@ -76,6 +76,17 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
         }
     }
 
+    private fun getTrendColor(trend: Int?): Int {
+        return when (trend) {
+            1 -> Color.parseColor("#FF5252") // ↓ Rapidly falling (Red)
+            2 -> Color.parseColor("#FF9800") // ↘ Falling (Orange)
+            3 -> Color.parseColor("#FFFFFF") // → Stable (White)
+            4 -> Color.parseColor("#FFD54F") // ↗ Rising (Yellow)
+            5 -> Color.parseColor("#FF5252") // ↑ Rapidly rising (Red)
+            else -> Color.parseColor("#FFFFFF")
+        }
+    }
+
     private suspend fun updateAppWidgetSuspend(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
         val views = RemoteViews(context.packageName, R.layout.widget_glucose)
 
@@ -99,8 +110,28 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
 
             val isSmallLayout = compactModePref || minHeightDp < 90 || minWidthDp < 180
 
-            // Fetch latest data
-            val measurement = repository.currentGlucose.first()
+            // Fetch raw measurement and user calibration settings
+            val rawMeasurement = repository.currentGlucose.first()
+            val manualOffset = preferenceManager.glucoseOffset.first()
+            val userRanges = preferenceManager.glucoseOffsetRanges.first()
+            val autoAdjustEnabled = preferenceManager.autoAdjustEnabled.first()
+            val autoRangeOffsetMode = preferenceManager.autoRangeOffsetMode.first()
+            val capillaryReadings = preferenceManager.capillaryReadings.first()
+            val activeSensorSn = preferenceManager.activeSensorSerialNumber.first()
+
+            // Process calibration
+            val measurement = if (rawMeasurement != null) {
+                GlucoseProcessor.process(
+                    measurement = rawMeasurement,
+                    manualOffset = manualOffset,
+                    userRanges = userRanges,
+                    autoAdjustEnabled = autoAdjustEnabled,
+                    autoRangeOffsetMode = autoRangeOffsetMode,
+                    capillaryReadings = capillaryReadings,
+                    activeSensorSn = activeSensorSn
+                )
+            } else null
+
             val insulinDoses = preferenceManager.insulinDoses.first()
 
             val evalVal = measurement?.calibratedValue ?: measurement?.value ?: 0
@@ -135,9 +166,10 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
             if (measurement != null) {
                 views.setTextViewText(R.id.tv_glucose_value, dualValueStr)
                 views.setTextViewText(R.id.tv_glucose_trend, GlucoseProcessor.getTrendArrowSymbol(trend ?: 0))
+                views.setTextColor(R.id.tv_glucose_trend, getTrendColor(trend))
                 
                 val instant = TimestampParser.parseMeasurementInstant(measurement)
-                views.setTextViewText(R.id.tv_last_update, SyncDateFormatter.format(instant))
+                views.setTextViewText(R.id.tv_last_update, syncDateFormatter.format(instant))
             } else {
                 views.setTextViewText(R.id.tv_glucose_value, "---")
                 views.setTextViewText(R.id.tv_glucose_trend, "")
@@ -152,10 +184,15 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
             views.setViewVisibility(R.id.ll_insulin_container, if (showInsulin) View.VISIBLE else View.GONE)
             views.setViewVisibility(R.id.divider_line, if (showInsulin) View.VISIBLE else View.GONE)
 
-            // Responsive Text Sizes
+            // Responsive Text Sizes for small tiles
             if (isSmallLayout) {
-                views.setTextViewTextSize(R.id.tv_glucose_value, TypedValue.COMPLEX_UNIT_SP, 32f)
-                views.setTextViewTextSize(R.id.tv_glucose_trend, TypedValue.COMPLEX_UNIT_SP, 26f)
+                if (dualValueStr.length > 5) {
+                    views.setTextViewTextSize(R.id.tv_glucose_value, TypedValue.COMPLEX_UNIT_SP, 22f)
+                    views.setTextViewTextSize(R.id.tv_glucose_trend, TypedValue.COMPLEX_UNIT_SP, 20f)
+                } else {
+                    views.setTextViewTextSize(R.id.tv_glucose_value, TypedValue.COMPLEX_UNIT_SP, 28f)
+                    views.setTextViewTextSize(R.id.tv_glucose_trend, TypedValue.COMPLEX_UNIT_SP, 24f)
+                }
             } else {
                 views.setTextViewTextSize(R.id.tv_glucose_value, TypedValue.COMPLEX_UNIT_SP, 40f)
                 views.setTextViewTextSize(R.id.tv_glucose_trend, TypedValue.COMPLEX_UNIT_SP, 32f)
