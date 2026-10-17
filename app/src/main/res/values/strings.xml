@@ -644,6 +644,12 @@
     <string name="widget_use_target_color_desc">Color background based on current glucose range (Red/Orange/Green) or neutral dark glass.</string>
     <string name="widget_show_insulin_title">Show Active Insulin (IOB)</string>
     <string name="widget_show_insulin_desc">Displays Rapid and Slow active insulin units if space permits.</string>
+    <string name="widget_show_rapid_title">Show Rapid Insulin (IOB)</string>
+    <string name="widget_show_rapid_desc">Displays active rapid insulin units on the widget.</string>
+    <string name="widget_show_slow_title">Show Slow Insulin (IOB)</string>
+    <string name="widget_show_slow_desc">Displays active slow insulin units on the widget.</string>
+    <string name="widget_show_fs_title">Show Insulin Sensitivity Factor (FS)</string>
+    <string name="widget_show_fs_desc">Displays the active Insulin Sensitivity Factor (FS / ISF) value.</string>
     <string name="widget_show_last_update_title">Show Last Update Time</string>
     <string name="widget_show_last_update_desc">Displays the timestamp of the last reading on the widget.</string>
     <string name="widget_tap_action_title">Widget Tap Action</string>

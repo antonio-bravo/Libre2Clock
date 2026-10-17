@@ -639,6 +639,12 @@
     <string name="widget_use_target_color_desc">Cambia el color de fondo según el nivel de glucosa (Rojo/Naranja/Verde) o usa un tono oscuro neutro.</string>
     <string name="widget_show_insulin_title">Mostrar Insulina Activa (IOB)</string>
     <string name="widget_show_insulin_desc">Muestra unidades de insulina rápida y lenta activas si hay espacio suficiente.</string>
+    <string name="widget_show_rapid_title">Mostrar Insulina Rápida (IOB)</string>
+    <string name="widget_show_rapid_desc">Muestra las unidades de insulina rápida activa en el widget.</string>
+    <string name="widget_show_slow_title">Mostrar Insulina Lenta (IOB)</string>
+    <string name="widget_show_slow_desc">Muestra las unidades de insulina lenta activa en el widget.</string>
+    <string name="widget_show_fs_title">Mostrar Factor de Sensibilidad (FS / ISF)</string>
+    <string name="widget_show_fs_desc">Muestra el Factor de Sensibilidad a la insulina activo en el widget.</string>
     <string name="widget_show_last_update_title">Mostrar Hora de Última Lectura</string>
     <string name="widget_show_last_update_desc">Muestra la hora de la última medición sincronizada en el widget.</string>
     <string name="widget_tap_action_title">Acción al Tocar el Widget</string>

@@ -28,7 +28,9 @@ fun SettingsWidgetScreen(
     onBack: () -> Unit
 ) {
     val widgetCompactMode by viewModel.widgetCompactMode.collectAsStateWithLifecycle()
-    val widgetShowInsulin by viewModel.widgetShowInsulin.collectAsStateWithLifecycle()
+    val widgetShowRapidInsulin by viewModel.widgetShowRapidInsulin.collectAsStateWithLifecycle()
+    val widgetShowSlowInsulin by viewModel.widgetShowSlowInsulin.collectAsStateWithLifecycle()
+    val widgetShowFS by viewModel.widgetShowFS.collectAsStateWithLifecycle()
     val widgetShowLastUpdate by viewModel.widgetShowLastUpdate.collectAsStateWithLifecycle()
     val widgetBackgroundOpacity by viewModel.widgetBackgroundOpacity.collectAsStateWithLifecycle()
     val widgetUseTargetColorBg by viewModel.widgetUseTargetColorBg.collectAsStateWithLifecycle()
@@ -57,7 +59,9 @@ fun SettingsWidgetScreen(
                 SettingsSection(title = stringResource(R.string.widget_preview_title)) {
                     WidgetLivePreviewCard(
                         compactMode = widgetCompactMode,
-                        showInsulin = widgetShowInsulin,
+                        showRapid = widgetShowRapidInsulin,
+                        showSlow = widgetShowSlowInsulin,
+                        showFS = widgetShowFS,
                         showLastUpdate = widgetShowLastUpdate,
                         opacityPercent = widgetBackgroundOpacity,
                         useTargetColor = widgetUseTargetColorBg
@@ -129,28 +133,52 @@ fun SettingsWidgetScreen(
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Mostrar Insulina Activa
-                    WidgetToggleOption(
-                        title = stringResource(R.string.widget_show_insulin_title),
-                        description = stringResource(R.string.widget_show_insulin_desc),
-                        checked = widgetShowInsulin,
-                        onCheckedChange = viewModel::setWidgetShowInsulin,
-                        icon = Icons.Default.Star,
-                        enabled = !widgetCompactMode
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                    Spacer(modifier = Modifier.height(16.dp))
-
                     // Mostrar Hora
                     WidgetToggleOption(
                         title = stringResource(R.string.widget_show_last_update_title),
                         description = stringResource(R.string.widget_show_last_update_desc),
                         checked = widgetShowLastUpdate,
                         onCheckedChange = viewModel::setWidgetShowLastUpdate,
-                        icon = Icons.Default.Notifications,
-                        enabled = !widgetCompactMode
+                        icon = Icons.Default.Notifications
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Mostrar Insulina Rápida
+                    WidgetToggleOption(
+                        title = stringResource(R.string.widget_show_rapid_title),
+                        description = stringResource(R.string.widget_show_rapid_desc),
+                        checked = widgetShowRapidInsulin,
+                        onCheckedChange = viewModel::setWidgetShowRapidInsulin,
+                        icon = Icons.Default.Star
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Mostrar Insulina Lenta
+                    WidgetToggleOption(
+                        title = stringResource(R.string.widget_show_slow_title),
+                        description = stringResource(R.string.widget_show_slow_desc),
+                        checked = widgetShowSlowInsulin,
+                        onCheckedChange = viewModel::setWidgetShowSlowInsulin,
+                        icon = Icons.Default.Star
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Mostrar Factor de Sensibilidad (FS / ISF)
+                    WidgetToggleOption(
+                        title = stringResource(R.string.widget_show_fs_title),
+                        description = stringResource(R.string.widget_show_fs_desc),
+                        checked = widgetShowFS,
+                        onCheckedChange = viewModel::setWidgetShowFS,
+                        icon = Icons.Default.Info
                     )
                 }
             }
@@ -238,7 +266,9 @@ private fun WidgetToggleOption(
 @Composable
 private fun WidgetLivePreviewCard(
     compactMode: Boolean,
-    showInsulin: Boolean,
+    showRapid: Boolean,
+    showSlow: Boolean,
+    showFS: Boolean,
     showLastUpdate: Boolean,
     opacityPercent: Int,
     useTargetColor: Boolean
@@ -299,7 +329,7 @@ private fun WidgetLivePreviewCard(
                     )
                 }
 
-                if (!compactMode && showLastUpdate) {
+                if (showLastUpdate) {
                     Text(
                         text = "12:34",
                         fontSize = 11.sp,
@@ -307,32 +337,52 @@ private fun WidgetLivePreviewCard(
                     )
                 }
 
-                if (!compactMode && showInsulin) {
-                    HorizontalDivider(
-                        modifier = Modifier
-                            .fillMaxWidth(0.8f)
-                            .padding(vertical = 4.dp),
-                        thickness = 1.dp,
-                        color = Color.White.copy(alpha = 0.2f)
-                    )
+                val showAnyInsulin = showRapid || showSlow || showFS
+                if (showAnyInsulin) {
+                    if (!compactMode) {
+                        HorizontalDivider(
+                            modifier = Modifier
+                                .fillMaxWidth(0.8f)
+                                .padding(vertical = 4.dp),
+                            thickness = 1.dp,
+                            color = Color.White.copy(alpha = 0.2f)
+                        )
+                    }
 
                     Row(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "Rápida: 1.5 U",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF82B1FF)
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            text = "Lenta: 12.0 U",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFFF8A80)
-                        )
+                        if (showRapid) {
+                            Text(
+                                text = if (compactMode) "R: 1.5U" else "Rápida: 1.5 U",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF82B1FF)
+                            )
+                        }
+                        if (showRapid && (showSlow || showFS)) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
+                        if (showSlow) {
+                            Text(
+                                text = if (compactMode) "L: 12.0U" else "Lenta: 12.0 U",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFFF8A80)
+                            )
+                        }
+                        if (showSlow && showFS) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
+                        if (showFS) {
+                            Text(
+                                text = "FS: 45",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFC5E1A5)
+                            )
+                        }
                     }
                 }
             }

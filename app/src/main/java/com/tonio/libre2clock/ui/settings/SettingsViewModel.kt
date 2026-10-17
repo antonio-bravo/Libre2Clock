@@ -168,6 +168,9 @@ class SettingsViewModel(
 
     val widgetCompactMode = preferenceManager.widgetCompactMode.stateInDefault(false)
     val widgetShowInsulin = preferenceManager.widgetShowInsulin.stateInDefault(true)
+    val widgetShowRapidInsulin = preferenceManager.widgetShowRapidInsulin.stateInDefault(true)
+    val widgetShowSlowInsulin = preferenceManager.widgetShowSlowInsulin.stateInDefault(true)
+    val widgetShowFS = preferenceManager.widgetShowFS.stateInDefault(false)
     val widgetShowLastUpdate = preferenceManager.widgetShowLastUpdate.stateInDefault(true)
     val widgetBackgroundOpacity = preferenceManager.widgetBackgroundOpacity.stateInDefault(80)
     val widgetUseTargetColorBg = preferenceManager.widgetUseTargetColorBg.stateInDefault(true)
@@ -1051,6 +1054,27 @@ class SettingsViewModel(
     fun setWidgetShowInsulin(enabled: Boolean) {
         viewModelScope.launch {
             preferenceManager.saveWidgetShowInsulin(enabled)
+            sendWidgetUpdateBroadcast()
+        }
+    }
+
+    fun setWidgetShowRapidInsulin(enabled: Boolean) {
+        viewModelScope.launch {
+            preferenceManager.saveWidgetShowRapidInsulin(enabled)
+            sendWidgetUpdateBroadcast()
+        }
+    }
+
+    fun setWidgetShowSlowInsulin(enabled: Boolean) {
+        viewModelScope.launch {
+            preferenceManager.saveWidgetShowSlowInsulin(enabled)
+            sendWidgetUpdateBroadcast()
+        }
+    }
+
+    fun setWidgetShowFS(enabled: Boolean) {
+        viewModelScope.launch {
+            preferenceManager.saveWidgetShowFS(enabled)
             sendWidgetUpdateBroadcast()
         }
     }

@@ -139,6 +139,9 @@ class PreferenceManager(private val context: Context) {
     private val DEXCOM_ACCOUNT_NAME_KEY = stringPreferencesKey("dexcom_account_name")
     private val WIDGET_COMPACT_MODE_KEY = booleanPreferencesKey("widget_compact_mode")
     private val WIDGET_SHOW_INSULIN_KEY = booleanPreferencesKey("widget_show_insulin")
+    private val WIDGET_SHOW_RAPID_INSULIN_KEY = booleanPreferencesKey("widget_show_rapid_insulin")
+    private val WIDGET_SHOW_SLOW_INSULIN_KEY = booleanPreferencesKey("widget_show_slow_insulin")
+    private val WIDGET_SHOW_FS_KEY = booleanPreferencesKey("widget_show_fs")
     private val WIDGET_SHOW_LAST_UPDATE_KEY = booleanPreferencesKey("widget_show_last_update")
     private val WIDGET_BACKGROUND_OPACITY_KEY = intPreferencesKey("widget_background_opacity")
     private val WIDGET_USE_TARGET_COLOR_BG_KEY = booleanPreferencesKey("widget_use_target_color_bg")
@@ -236,6 +239,9 @@ class PreferenceManager(private val context: Context) {
 
     val widgetCompactMode: Flow<Boolean> = context.dataStore.data.map { it[WIDGET_COMPACT_MODE_KEY] ?: false }.distinctUntilChanged()
     val widgetShowInsulin: Flow<Boolean> = context.dataStore.data.map { it[WIDGET_SHOW_INSULIN_KEY] ?: true }.distinctUntilChanged()
+    val widgetShowRapidInsulin: Flow<Boolean> = context.dataStore.data.map { it[WIDGET_SHOW_RAPID_INSULIN_KEY] ?: true }.distinctUntilChanged()
+    val widgetShowSlowInsulin: Flow<Boolean> = context.dataStore.data.map { it[WIDGET_SHOW_SLOW_INSULIN_KEY] ?: true }.distinctUntilChanged()
+    val widgetShowFS: Flow<Boolean> = context.dataStore.data.map { it[WIDGET_SHOW_FS_KEY] ?: false }.distinctUntilChanged()
     val widgetShowLastUpdate: Flow<Boolean> = context.dataStore.data.map { it[WIDGET_SHOW_LAST_UPDATE_KEY] ?: true }.distinctUntilChanged()
     val widgetBackgroundOpacity: Flow<Int> = context.dataStore.data.map { (it[WIDGET_BACKGROUND_OPACITY_KEY] ?: 80).coerceIn(0, 100) }.distinctUntilChanged()
     val widgetUseTargetColorBg: Flow<Boolean> = context.dataStore.data.map { it[WIDGET_USE_TARGET_COLOR_BG_KEY] ?: true }.distinctUntilChanged()
@@ -730,6 +736,21 @@ class PreferenceManager(private val context: Context) {
 
     suspend fun saveWidgetShowInsulin(enabled: Boolean) {
         context.dataStore.edit { it[WIDGET_SHOW_INSULIN_KEY] = enabled }
+        updateBackupPayload()
+    }
+
+    suspend fun saveWidgetShowRapidInsulin(enabled: Boolean) {
+        context.dataStore.edit { it[WIDGET_SHOW_RAPID_INSULIN_KEY] = enabled }
+        updateBackupPayload()
+    }
+
+    suspend fun saveWidgetShowSlowInsulin(enabled: Boolean) {
+        context.dataStore.edit { it[WIDGET_SHOW_SLOW_INSULIN_KEY] = enabled }
+        updateBackupPayload()
+    }
+
+    suspend fun saveWidgetShowFS(enabled: Boolean) {
+        context.dataStore.edit { it[WIDGET_SHOW_FS_KEY] = enabled }
         updateBackupPayload()
     }
 

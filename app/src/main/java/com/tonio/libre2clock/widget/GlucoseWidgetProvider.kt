@@ -96,7 +96,9 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
 
             // Preferences
             val compactModePref = preferenceManager.widgetCompactMode.first()
-            val showInsulinPref = preferenceManager.widgetShowInsulin.first()
+            val showRapidPref = preferenceManager.widgetShowRapidInsulin.first()
+            val showSlowPref = preferenceManager.widgetShowSlowInsulin.first()
+            val showFsPref = preferenceManager.widgetShowFS.first()
             val showLastUpdatePref = preferenceManager.widgetShowLastUpdate.first()
             val opacityPercent = preferenceManager.widgetBackgroundOpacity.first()
             val useTargetColor = preferenceManager.widgetUseTargetColorBg.first()
@@ -133,6 +135,9 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
             } else null
 
             val insulinDoses = preferenceManager.insulinDoses.first()
+            val manualIsf = preferenceManager.manualIsf.first()
+            val isfRuleC = preferenceManager.isfRuleConstant.first()
+            val manualTdi = preferenceManager.manualTdi.first()
 
             val evalVal = measurement?.calibratedValue ?: measurement?.value ?: 0
             val rawVal = measurement?.value ?: 0
@@ -176,13 +181,35 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
                 views.setTextViewText(R.id.tv_last_update, "----")
             }
 
-            // Visibility based on size and user settings
-            val showLastUpdate = showLastUpdatePref && !isSmallLayout
-            val showInsulin = showInsulinPref && !isSmallLayout
+            // Calculate Insulin & FS
+            val rapidDoses = insulinDoses.filter { it.type == InsulinType.RAPID }
+            val slowDoses = insulinDoses.filter { it.type == InsulinType.SLOW }
+            
+            val rapidIOB = InsulinProcessor.calculateTotalIOB(rapidDoses)
+            val slowIOB = InsulinProcessor.calculateTotalIOB(slowDoses)
 
-            views.setViewVisibility(R.id.tv_last_update, if (showLastUpdate) View.VISIBLE else View.GONE)
-            views.setViewVisibility(R.id.ll_insulin_container, if (showInsulin) View.VISIBLE else View.GONE)
-            views.setViewVisibility(R.id.divider_line, if (showInsulin) View.VISIBLE else View.GONE)
+            val calculatedTdi = manualTdi ?: InsulinProcessor.calculateAverageDaily(insulinDoses, 30)
+            val fsValue = InsulinProcessor.calculateISF(calculatedTdi, isfRuleC, manualIsf)
+            val formattedFS = if (fsValue > 0) {
+                if (fsValue % 1.0 == 0.0) String.format(Locale.US, "%.0f", fsValue) else String.format(Locale.US, "%.1f", fsValue)
+            } else "-"
+
+            // Configure Insulin & FS text fields
+            if (isSmallLayout) {
+                views.setTextViewText(R.id.tv_insulin_rapid, if (showRapidPref) String.format(Locale.getDefault(), "R: %.1fU", rapidIOB) else "")
+                views.setTextViewText(R.id.tv_insulin_slow, if (showSlowPref) String.format(Locale.getDefault(), "L: %.1fU", slowIOB) else "")
+                views.setTextViewText(R.id.tv_insulin_fs, if (showFsPref) "FS: $formattedFS" else "")
+            } else {
+                views.setTextViewText(R.id.tv_insulin_rapid, if (showRapidPref) String.format(Locale.getDefault(), "Rápida: %.1f U", rapidIOB) else "")
+                views.setTextViewText(R.id.tv_insulin_slow, if (showSlowPref) String.format(Locale.getDefault(), "Lenta: %.1f U", slowIOB) else "")
+                views.setTextViewText(R.id.tv_insulin_fs, if (showFsPref) "FS: $formattedFS" else "")
+            }
+
+            // Visibility based on user settings
+            val showAnyInsulin = showRapidPref || showSlowPref || showFsPref
+            views.setViewVisibility(R.id.tv_last_update, if (showLastUpdatePref) View.VISIBLE else View.GONE)
+            views.setViewVisibility(R.id.ll_insulin_container, if (showAnyInsulin) View.VISIBLE else View.GONE)
+            views.setViewVisibility(R.id.divider_line, if (showAnyInsulin && !isSmallLayout) View.VISIBLE else View.GONE)
 
             // Responsive Text Sizes for small tiles
             if (isSmallLayout) {
@@ -199,16 +226,6 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
             }
 
             views.setInt(R.id.widget_root, "setBackgroundColor", finalBgColor)
-            
-            // Calculate Insulin
-            val rapidDoses = insulinDoses.filter { it.type == InsulinType.RAPID }
-            val slowDoses = insulinDoses.filter { it.type == InsulinType.SLOW }
-            
-            val rapidIOB = InsulinProcessor.calculateTotalIOB(rapidDoses)
-            val slowIOB = InsulinProcessor.calculateTotalIOB(slowDoses)
-
-            views.setTextViewText(R.id.tv_insulin_rapid, String.format(Locale.getDefault(), "Rápida: %.1f U", rapidIOB))
-            views.setTextViewText(R.id.tv_insulin_slow, String.format(Locale.getDefault(), "Lenta: %.1f U", slowIOB))
 
             // Pending Intent to launch App on click
             val mainIntent = Intent(context, MainActivity::class.java).apply {
