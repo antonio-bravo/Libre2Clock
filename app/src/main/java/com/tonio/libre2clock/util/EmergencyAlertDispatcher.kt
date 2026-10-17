@@ -164,7 +164,7 @@ class EmergencyAlertDispatcher(private val context: Context) {
                 .build()
 
             val response = httpClient.newCall(request).execute()
-            val bodyStr = response.body?.string() ?: ""
+            val bodyStr = response.body.string()
             val isSuccess = response.isSuccessful && !bodyStr.contains("ERROR:", ignoreCase = true)
             response.close()
 
@@ -254,7 +254,7 @@ class EmergencyAlertDispatcher(private val context: Context) {
                 .build()
 
             val response = httpClient.newCall(request).execute()
-            val responseBodyStr = response.body?.string()
+            val responseBodyStr = response.body.string()
             val isSuccess = response.isSuccessful
             response.close()
 
