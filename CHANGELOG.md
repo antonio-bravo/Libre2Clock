@@ -1,5 +1,31 @@
 # Changelog
 
+## d2279a4 (Oct 17, 2026 16:42:03)
+fix workflows & version — antonio-bravo
+[detail](#d2279a4-details)
+
+<details id='d2279a4-details'>
+<summary>Changed files</summary>
+
+- .github/workflows/bot.yml [Modified]
+- .github/workflows/build-release.yml [Modified]
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 3da9607 (Oct 17, 2026 13:56:59)
+Update changelog — github-actions[bot]
+[detail](#3da9607-details)
+
+<details id='3da9607-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 54e16af (Oct 17, 2026 15:56:46)
 concurrency build-release — antonio-bravo
 [detail](#54e16af-details)
@@ -604,33 +630,6 @@ Update dependency com.google.android.libraries.identity.googleid:googleid to v1.
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## b0a88ff (Oct 17, 2026 13:22:15)
-Update changelog — github-actions[bot]
-[detail](#b0a88ff-details)
-
-<details id='b0a88ff-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 17ae0a7 (Oct 17, 2026 15:22:03)
-Merge pull request #11 from antonio-bravo/renovate/gradle-9.x
-
-Update Gradle to v9.8.1 — antonio-bravo
-[detail](#17ae0a7-details)
-
-<details id='17ae0a7-details'>
-<summary>Changed files</summary>
-
-- gradle/wrapper/gradle-wrapper.jar [Modified]
-- gradle/wrapper/gradle-wrapper.properties [Modified]
 </details>
 
 
