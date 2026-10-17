@@ -1,5 +1,29 @@
 # Changelog
 
+## 54e16af (Oct 17, 2026 15:56:46)
+concurrency build-release — antonio-bravo
+[detail](#54e16af-details)
+
+<details id='54e16af-details'>
+<summary>Changed files</summary>
+
+- .github/workflows/build-release.yml [Modified]
+</details>
+
+
+---
+## 038ae1f (Oct 17, 2026 13:32:10)
+Update changelog — github-actions[bot]
+[detail](#038ae1f-details)
+
+<details id='038ae1f-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 3363cf4 (Oct 17, 2026 15:32:01)
 Merge pull request #22 from antonio-bravo/renovate/lifecycleviewmodelcompose
 
@@ -607,32 +631,6 @@ Update Gradle to v9.8.1 — antonio-bravo
 
 - gradle/wrapper/gradle-wrapper.jar [Modified]
 - gradle/wrapper/gradle-wrapper.properties [Modified]
-</details>
-
-
----
-## 06d424d (Oct 17, 2026 13:21:52)
-Update changelog — github-actions[bot]
-[detail](#06d424d-details)
-
-<details id='06d424d-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## a7616ca (Oct 17, 2026 15:21:41)
-Merge pull request #12 from antonio-bravo/renovate/activitycompose
-
-Update dependency androidx.activity:activity-compose to v1.13.0 — antonio-bravo
-[detail](#a7616ca-details)
-
-<details id='a7616ca-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
 </details>
 
 
