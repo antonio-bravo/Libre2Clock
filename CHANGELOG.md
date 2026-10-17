@@ -1,5 +1,34 @@
 # Changelog
 
+## 924cf25 (Oct 17, 2026 15:19:33)
+add widget — antonio-bravo
+[detail](#924cf25-details)
+
+<details id='924cf25-details'>
+<summary>Changed files</summary>
+
+- app/src/main/AndroidManifest.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/widget/GlucoseWidgetProvider.kt [Deleted]
+- app/src/main/res/drawable/widget_background.xml [Deleted]
+- app/src/main/res/layout/widget_glucose.xml [Deleted]
+- app/src/main/res/xml/glucose_widget_info.xml [Deleted]
+</details>
+
+
+---
+## d9ede1c (Oct 11, 2026 12:53:29)
+Update changelog — github-actions[bot]
+[detail](#d9ede1c-details)
+
+<details id='d9ede1c-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 92b6a6f (Oct 11, 2026 14:53:15)
 Fix update insulin dosis — antonio-bravo
 [detail](#92b6a6f-details)
@@ -646,30 +675,6 @@ SOS Event Log — antonio-bravo
 <summary>Changed files</summary>
 
 - app/src/main/java/com/tonio/libre2clock/util/EmergencyAlertDispatcher.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/EmergencyLocationManager.kt [Modified]
-</details>
-
-
----
-## 218a2af (Oct 03, 2026 18:19:10)
-Update changelog — github-actions[bot]
-[detail](#218a2af-details)
-
-<details id='218a2af-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 72ad2bb (Oct 03, 2026 20:18:55)
-SOS mobile network — antonio-bravo
-[detail](#72ad2bb-details)
-
-<details id='72ad2bb-details'>
-<summary>Changed files</summary>
-
 - app/src/main/java/com/tonio/libre2clock/util/EmergencyLocationManager.kt [Modified]
 </details>
 
