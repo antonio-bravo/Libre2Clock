@@ -1,5 +1,31 @@
 # Changelog
 
+## f4bdf31 (Oct 17, 2026 16:58:10)
+Merge pull request #33 from antonio-bravo/renovate/firebasebom
+
+Update dependency com.google.firebase:firebase-bom to v34.19.0 — antonio-bravo
+[detail](#f4bdf31-details)
+
+<details id='f4bdf31-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 56df877 (Oct 17, 2026 14:58:02)
+Update changelog — github-actions[bot]
+[detail](#56df877-details)
+
+<details id='56df877-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 2d9cc9f (Oct 17, 2026 16:57:51)
 Merge pull request #35 from antonio-bravo/renovate/okhttp
 
@@ -19,6 +45,18 @@ Update dependency com.squareup.okhttp3:okhttp to v4.12.0 — renovate[bot]
 [detail](#c883680-details)
 
 <details id='c883680-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## fa685fa (Oct 17, 2026 14:43:32)
+Update dependency com.google.firebase:firebase-bom to v34.19.0 — renovate[bot]
+[detail](#fa685fa-details)
+
+<details id='fa685fa-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
@@ -592,44 +630,6 @@ Update dependency androidx.camera:camera-view to v1.6.2 — renovate[bot]
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 769436a (Oct 17, 2026 13:23:02)
-Update changelog — github-actions[bot]
-[detail](#769436a-details)
-
-<details id='769436a-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## b19de7c (Oct 17, 2026 15:22:49)
-Merge pull request #9 from antonio-bravo/renovate/googleid
-
-Update dependency com.google.android.libraries.identity.googleid:googleid to v1.2.1 — antonio-bravo
-[detail](#b19de7c-details)
-
-<details id='b19de7c-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## b9856f5 (Oct 17, 2026 13:22:44)
-Update changelog — github-actions[bot]
-[detail](#b9856f5-details)
-
-<details id='b9856f5-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
 </details>
 
 
