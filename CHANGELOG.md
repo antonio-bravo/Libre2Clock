@@ -1,5 +1,31 @@
 # Changelog
 
+## a7616ca (Oct 17, 2026 15:21:41)
+Merge pull request #12 from antonio-bravo/renovate/activitycompose
+
+Update dependency androidx.activity:activity-compose to v1.13.0 — antonio-bravo
+[detail](#a7616ca-details)
+
+<details id='a7616ca-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## c0ef27b (Oct 17, 2026 13:21:31)
+Update changelog — github-actions[bot]
+[detail](#c0ef27b-details)
+
+<details id='c0ef27b-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 48edc17 (Oct 17, 2026 15:21:21)
 Merge pull request #14 from antonio-bravo/renovate/cameracore
 
@@ -86,6 +112,18 @@ Update dependency androidx.camera:camera-core to v1.6.2 — renovate[bot]
 [detail](#0b2dcb6-details)
 
 <details id='0b2dcb6-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## b3b07c1 (Oct 11, 2026 12:56:46)
+Update dependency androidx.activity:activity-compose to v1.13.0 — renovate[bot]
+[detail](#b3b07c1-details)
+
+<details id='b3b07c1-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
@@ -625,52 +663,6 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
-</details>
-
-
----
-## ab88056 (Oct 04, 2026 14:24:22)
-whatsapp bot in Render — antonio-bravo
-[detail](#ab88056-details)
-
-<details id='ab88056-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/model/EmergencyModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEmergencyScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/util/EmergencyAlertDispatcher.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-- whatsapp-bot/.gitignore [Deleted]
-- whatsapp-bot/README.md [Deleted]
-- whatsapp-bot/index.js [Deleted]
-- whatsapp-bot/package.json [Deleted]
-</details>
-
-
----
-## ec7e47c (Oct 04, 2026 11:18:28)
-Update changelog — github-actions[bot]
-[detail](#ec7e47c-details)
-
-<details id='ec7e47c-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 2e36238 (Oct 04, 2026 13:18:15)
-CallMeBot — antonio-bravo
-[detail](#2e36238-details)
-
-<details id='2e36238-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/util/EmergencyAlertDispatcher.kt [Modified]
 </details>
 
 
