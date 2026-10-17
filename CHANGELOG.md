@@ -1,5 +1,31 @@
 # Changelog
 
+## bc27a96 (Oct 17, 2026 17:12:21)
+Merge pull request #43 from antonio-bravo/renovate/major-firebasebom
+
+Update dependency com.google.firebase:firebase-bom to v35 — antonio-bravo
+[detail](#bc27a96-details)
+
+<details id='bc27a96-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 99e0760 (Oct 17, 2026 15:12:05)
+Update changelog — github-actions[bot]
+[detail](#99e0760-details)
+
+<details id='99e0760-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## df90200 (Oct 17, 2026 17:11:54)
 Merge pull request #37 from antonio-bravo/renovate/kotlinxserializationjson
 
@@ -100,6 +126,18 @@ Update actions/setup-java action to v6 — antonio-bravo
 <summary>Changed files</summary>
 
 - .github/workflows/build-release.yml [Modified]
+</details>
+
+
+---
+## e7598eb (Oct 17, 2026 15:05:46)
+Update dependency com.google.firebase:firebase-bom to v35 — renovate[bot]
+[detail](#e7598eb-details)
+
+<details id='e7598eb-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
 </details>
 
 
@@ -589,44 +627,6 @@ Update dependency androidx.navigation3:navigation3-runtime to v1.2.0 — renovat
 [detail](#d016f91-details)
 
 <details id='d016f91-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## eb58588 (Oct 17, 2026 13:29:32)
-Update dependency androidx.camera:camera-camera2 to v1.6.2 — renovate[bot]
-[detail](#eb58588-details)
-
-<details id='eb58588-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## a36bd6d (Oct 17, 2026 13:28:57)
-Update changelog — github-actions[bot]
-[detail](#a36bd6d-details)
-
-<details id='a36bd6d-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 50e5863 (Oct 17, 2026 15:28:45)
-Merge pull request #24 from antonio-bravo/renovate/navigation3ui
-
-Update dependency androidx.navigation3:navigation3-ui to v1.2.0 — antonio-bravo
-[detail](#50e5863-details)
-
-<details id='50e5863-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
