@@ -1,5 +1,57 @@
 # Changelog
 
+## 50e5863 (Oct 17, 2026 15:28:45)
+Merge pull request #24 from antonio-bravo/renovate/navigation3ui
+
+Update dependency androidx.navigation3:navigation3-ui to v1.2.0 — antonio-bravo
+[detail](#50e5863-details)
+
+<details id='50e5863-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## b4cceea (Oct 17, 2026 15:28:33)
+Merge pull request #25 from antonio-bravo/renovate/roomcompiler
+
+Update dependency androidx.room:room-compiler to v2.8.5 — antonio-bravo
+[detail](#b4cceea-details)
+
+<details id='b4cceea-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 03c1d5f (Oct 17, 2026 13:28:32)
+Update dependency androidx.navigation3:navigation3-ui to v1.2.0 — renovate[bot]
+[detail](#03c1d5f-details)
+
+<details id='03c1d5f-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## fed5d09 (Oct 17, 2026 13:28:28)
+Update changelog — github-actions[bot]
+[detail](#fed5d09-details)
+
+<details id='fed5d09-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## b841a95 (Oct 17, 2026 15:28:16)
 fix bot.yml — antonio-bravo
 [detail](#b841a95-details)
@@ -20,6 +72,18 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
+</details>
+
+
+---
+## 482dcf1 (Oct 17, 2026 13:27:14)
+Update dependency androidx.room:room-compiler to v2.8.5 — renovate[bot]
+[detail](#482dcf1-details)
+
+<details id='482dcf1-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
 </details>
 
 
@@ -572,85 +636,6 @@ Update dependency androidx.activity:activity-compose to v1.13.0 — renovate[bot
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 92c9498 (Oct 11, 2026 12:56:40)
-Update Gradle to v9.8.1 — renovate[bot]
-[detail](#92c9498-details)
-
-<details id='92c9498-details'>
-<summary>Changed files</summary>
-
-- gradle/wrapper/gradle-wrapper.jar [Modified]
-- gradle/wrapper/gradle-wrapper.properties [Modified]
-</details>
-
-
----
-## d9ede1c (Oct 11, 2026 12:53:29)
-Update changelog — github-actions[bot]
-[detail](#d9ede1c-details)
-
-<details id='d9ede1c-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 92b6a6f (Oct 11, 2026 14:53:15)
-Fix update insulin dosis — antonio-bravo
-[detail](#92b6a6f-details)
-
-<details id='92b6a6f-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/test/java/com/tonio/libre2clock/ExampleUnitTest.kt [Modified]
-</details>
-
-
----
-## 199d412 (Oct 11, 2026 14:53:15)
-Dexcom stuff — antonio-bravo
-[detail](#199d412-details)
-
-<details id='199d412-details'>
-<summary>Changed files</summary>
-
-- app/build.gradle.kts [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/api/DexcomService.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/data/api/DexcomShareApi.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/data/api/LibreService.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/model/DexcomModels.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/data/model/LibreModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepository.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/SecureCredentialStore.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/di/AppContainer.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/login/LoginScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/login/LoginViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/test/java/com/tonio/libre2clock/DexcomServiceTest.kt [Deleted]
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## a2c01fa (Oct 10, 2026 19:42:34)
-Update changelog — github-actions[bot]
-[detail](#a2c01fa-details)
-
-<details id='a2c01fa-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
 </details>
 
 
