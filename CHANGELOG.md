@@ -1,5 +1,31 @@
 # Changelog
 
+## 27d4f82 (Oct 17, 2026 15:14:31)
+Update kotlinx-coroutines monorepo to v1.11.0 (#39)
+
+Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
+[detail](#27d4f82-details)
+
+<details id='27d4f82-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 291082f (Oct 17, 2026 15:13:38)
+Update changelog — github-actions[bot]
+[detail](#291082f-details)
+
+<details id='291082f-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## de54b23 (Oct 17, 2026 17:13:26)
 Merge pull request #30 from antonio-bravo/renovate/runner
 
@@ -604,32 +630,6 @@ concurrency build-release — antonio-bravo
 <summary>Changed files</summary>
 
 - .github/workflows/build-release.yml [Modified]
-</details>
-
-
----
-## 038ae1f (Oct 17, 2026 13:32:10)
-Update changelog — github-actions[bot]
-[detail](#038ae1f-details)
-
-<details id='038ae1f-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 3363cf4 (Oct 17, 2026 15:32:01)
-Merge pull request #22 from antonio-bravo/renovate/lifecycleviewmodelcompose
-
-Update dependency androidx.lifecycle:lifecycle-viewmodel-compose to v2.11.0 — antonio-bravo
-[detail](#3363cf4-details)
-
-<details id='3363cf4-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
 </details>
 
 
