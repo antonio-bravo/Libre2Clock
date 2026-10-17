@@ -1,5 +1,34 @@
 # Changelog
 
+## bc4d7a6 (Oct 17, 2026 17:26:28)
+fix degradation — antonio-bravo
+[detail](#bc4d7a6-details)
+
+<details id='bc4d7a6-details'>
+<summary>Changed files</summary>
+
+- app/build.gradle.kts [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/SecureCredentialStore.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/capillary/CapillaryScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportSectionCacheRepository.kt [Modified]
+- verify_optimizations.sh [Modified]
+</details>
+
+
+---
+## 48b56b6 (Oct 17, 2026 15:23:17)
+Update changelog — github-actions[bot]
+[detail](#48b56b6-details)
+
+<details id='48b56b6-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## e0712a6 (Oct 17, 2026 17:23:06)
 Merge pull request #26 from antonio-bravo/renovate/googleid
 
@@ -606,30 +635,6 @@ Update dependency com.google.android.material:material to v1.14.0 — antonio-br
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 5760a0f (Oct 17, 2026 14:59:07)
-Update dependency com.google.android.material:material to v1.14.0 — renovate[bot]
-[detail](#5760a0f-details)
-
-<details id='5760a0f-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 0359062 (Oct 17, 2026 14:58:47)
-Update changelog — github-actions[bot]
-[detail](#0359062-details)
-
-<details id='0359062-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
 </details>
 
 
