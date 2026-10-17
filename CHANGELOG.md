@@ -1,5 +1,31 @@
 # Changelog
 
+## b19de7c (Oct 17, 2026 15:22:49)
+Merge pull request #9 from antonio-bravo/renovate/googleid
+
+Update dependency com.google.android.libraries.identity.googleid:googleid to v1.2.1 — antonio-bravo
+[detail](#b19de7c-details)
+
+<details id='b19de7c-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## b9856f5 (Oct 17, 2026 13:22:44)
+Update changelog — github-actions[bot]
+[detail](#b9856f5-details)
+
+<details id='b9856f5-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 8544667 (Oct 17, 2026 15:22:33)
 Merge pull request #10 from antonio-bravo/renovate/ksp-monorepo
 
@@ -19,6 +45,18 @@ Update dependency com.google.devtools.ksp to v2.3.12 — renovate[bot]
 [detail](#4e510a3-details)
 
 <details id='4e510a3-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 84a67dd (Oct 17, 2026 13:22:21)
+Update dependency com.google.android.libraries.identity.googleid:googleid to v1.2.1 — renovate[bot]
+[detail](#84a67dd-details)
+
+<details id='84a67dd-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
@@ -630,43 +668,6 @@ whatsapp bot — antonio-bravo
 <summary>Changed files</summary>
 
 - whatsapp-bot/package.json [Modified]
-</details>
-
-
----
-## c8c9bbc (Oct 04, 2026 12:48:48)
-Update changelog — github-actions[bot]
-[detail](#c8c9bbc-details)
-
-<details id='c8c9bbc-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 6068e4e (Oct 04, 2026 14:48:35)
-whatsapp bot — antonio-bravo
-[detail](#6068e4e-details)
-
-<details id='6068e4e-details'>
-<summary>Changed files</summary>
-
-- whatsapp-bot/index.js [Modified]
-- whatsapp-bot/package.json [Modified]
-</details>
-
-
----
-## a76305f (Oct 04, 2026 12:46:00)
-Update changelog — github-actions[bot]
-[detail](#a76305f-details)
-
-<details id='a76305f-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
 </details>
 
 
