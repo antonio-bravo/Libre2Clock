@@ -11,6 +11,10 @@ on:
         required: false
         default: ""
 
+concurrency:
+  group: ${{ github.workflow }} #-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   JAVA_TOOL_OPTIONS: "-Djava.awt.headless=true"
   NODE_OPTIONS: "--no-deprecation"
