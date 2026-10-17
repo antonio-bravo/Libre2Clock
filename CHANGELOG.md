@@ -1,5 +1,57 @@
 # Changelog
 
+## e79989b (Oct 17, 2026 15:25:33)
+Merge pull request #21 from antonio-bravo/renovate/lifecycleruntimektx
+
+Update dependency androidx.lifecycle:lifecycle-runtime-ktx to v2.11.0 — antonio-bravo
+[detail](#e79989b-details)
+
+<details id='e79989b-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## d1c78b1 (Oct 17, 2026 15:25:21)
+Merge pull request #19 from antonio-bravo/renovate/datastorepreferences
+
+Update dependency androidx.datastore:datastore-preferences to v1.2.1 — antonio-bravo
+[detail](#d1c78b1-details)
+
+<details id='d1c78b1-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 5eca1a2 (Oct 17, 2026 13:25:18)
+Update changelog — github-actions[bot]
+[detail](#5eca1a2-details)
+
+<details id='5eca1a2-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
+## 5474d69 (Oct 17, 2026 13:25:16)
+Update dependency androidx.lifecycle:lifecycle-runtime-ktx to v2.11.0 — renovate[bot]
+[detail](#5474d69-details)
+
+<details id='5474d69-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
 ## 679e9cc (Oct 17, 2026 15:25:09)
 Merge pull request #17 from antonio-bravo/renovate/composebom
 
@@ -7,6 +59,18 @@ Update dependency androidx.compose:compose-bom to v2024.12.01 — antonio-bravo
 [detail](#679e9cc-details)
 
 <details id='679e9cc-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 97c1ea1 (Oct 17, 2026 13:25:04)
+Update dependency androidx.datastore:datastore-preferences to v1.2.1 — renovate[bot]
+[detail](#97c1ea1-details)
+
+<details id='97c1ea1-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
@@ -607,68 +671,6 @@ Trend graph dual — antonio-bravo
 <summary>Changed files</summary>
 
 - app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
-</details>
-
-
----
-## 44134bf (Oct 04, 2026 20:45:43)
-Update changelog — github-actions[bot]
-[detail](#44134bf-details)
-
-<details id='44134bf-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 018bb7d (Oct 04, 2026 22:45:28)
-Fix TrendGraph future — antonio-bravo
-[detail](#018bb7d-details)
-
-<details id='018bb7d-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 6e9ace0 (Oct 04, 2026 13:07:14)
-Update changelog — github-actions[bot]
-[detail](#6e9ace0-details)
-
-<details id='6e9ace0-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## eb5a542 (Oct 04, 2026 15:07:02)
-group — antonio-bravo
-[detail](#eb5a542-details)
-
-<details id='eb5a542-details'>
-<summary>Changed files</summary>
-
-- whatsapp-bot/index.js [Modified]
-</details>
-
-
----
-## 8fe2706 (Oct 04, 2026 12:58:48)
-Update changelog — github-actions[bot]
-[detail](#8fe2706-details)
-
-<details id='8fe2706-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
 </details>
 
 
