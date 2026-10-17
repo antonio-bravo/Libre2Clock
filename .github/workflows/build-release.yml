@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       version:
@@ -12,7 +15,7 @@ on:
         default: ""
 
 concurrency:
-  group: ${{ github.workflow }} #-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 env:
@@ -51,11 +54,19 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Decode Google Services JSON
-        run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > app/google-services.json
+        run: |
+          if [ -n "${{ secrets.GOOGLE_SERVICES_JSON }}" ]; then
+            echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > app/google-services.json
+          else
+            echo '{"project_info":{"project_number":"0","project_id":"dummy","storage_bucket":"dummy"},"client":[{"client_info":{"mobilesdk_app_id":"1:0:android:0","android_client_info":{"package_name":"com.tonio.libre2clock"}},"oauth_client":[],"api_key":[{"current_key":"dummy"}],"services":{"analytics_service":{"status":1,"other_platform_oauth_client":[]}}}],"configuration_version":"1"}' > app/google-services.json
+          fi
 
       - name: Decode Keystore
         if: matrix.build_type == 'release'
-        run: printf "%s" "${{ secrets.SIGNING_KEY }}" | base64 --decode > app/release.keystore
+        run: |
+          if [ -n "${{ secrets.SIGNING_KEY }}" ]; then
+            printf "%s" "${{ secrets.SIGNING_KEY }}" | base64 --decode > app/release.keystore
+          fi
 
       - name: Set up JDK 21
         uses: actions/setup-java@v5
@@ -107,6 +118,7 @@ jobs:
 
   release:
     needs: [prepare, build]
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       contents: write
