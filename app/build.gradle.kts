@@ -146,7 +146,7 @@ dependencies {
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.converter.moshi)
-    implementation("com.squareup.retrofit2:converter-scalars:2.12.0")
+    implementation("com.squareup.retrofit2:converter-scalars:3.0.0")
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.core)
