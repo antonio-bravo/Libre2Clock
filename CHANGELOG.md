@@ -1,5 +1,43 @@
 # Changelog
 
+## fc87ba9 (Oct 17, 2026 17:00:20)
+Merge pull request #27 from antonio-bravo/renovate/roomktx
+
+Update dependency androidx.room:room-ktx to v2.8.5 — antonio-bravo
+[detail](#fc87ba9-details)
+
+<details id='fc87ba9-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## c72c0da (Oct 17, 2026 15:00:02)
+Update dependency androidx.room:room-ktx to v2.8.5 — renovate[bot]
+[detail](#c72c0da-details)
+
+<details id='c72c0da-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## c274ab8 (Oct 17, 2026 14:59:36)
+Update changelog — github-actions[bot]
+[detail](#c274ab8-details)
+
+<details id='c274ab8-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 7ab2567 (Oct 17, 2026 16:59:24)
 Merge pull request #32 from antonio-bravo/renovate/material
 
@@ -591,44 +629,6 @@ Update dependency androidx.lifecycle:lifecycle-runtime-ktx to v2.11.0 — antoni
 [detail](#e79989b-details)
 
 <details id='e79989b-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## d1c78b1 (Oct 17, 2026 15:25:21)
-Merge pull request #19 from antonio-bravo/renovate/datastorepreferences
-
-Update dependency androidx.datastore:datastore-preferences to v1.2.1 — antonio-bravo
-[detail](#d1c78b1-details)
-
-<details id='d1c78b1-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 5eca1a2 (Oct 17, 2026 13:25:18)
-Update changelog — github-actions[bot]
-[detail](#5eca1a2-details)
-
-<details id='5eca1a2-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 5474d69 (Oct 17, 2026 13:25:16)
-Update dependency androidx.lifecycle:lifecycle-runtime-ktx to v2.11.0 — renovate[bot]
-[detail](#5474d69-details)
-
-<details id='5474d69-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
