@@ -1,5 +1,32 @@
 # Changelog
 
+## 17ae0a7 (Oct 17, 2026 15:22:03)
+Merge pull request #11 from antonio-bravo/renovate/gradle-9.x
+
+Update Gradle to v9.8.1 — antonio-bravo
+[detail](#17ae0a7-details)
+
+<details id='17ae0a7-details'>
+<summary>Changed files</summary>
+
+- gradle/wrapper/gradle-wrapper.jar [Modified]
+- gradle/wrapper/gradle-wrapper.properties [Modified]
+</details>
+
+
+---
+## 06d424d (Oct 17, 2026 13:21:52)
+Update changelog — github-actions[bot]
+[detail](#06d424d-details)
+
+<details id='06d424d-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## a7616ca (Oct 17, 2026 15:21:41)
 Merge pull request #12 from antonio-bravo/renovate/activitycompose
 
@@ -127,6 +154,19 @@ Update dependency androidx.activity:activity-compose to v1.13.0 — renovate[bot
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 92c9498 (Oct 11, 2026 12:56:40)
+Update Gradle to v9.8.1 — renovate[bot]
+[detail](#92c9498-details)
+
+<details id='92c9498-details'>
+<summary>Changed files</summary>
+
+- gradle/wrapper/gradle-wrapper.jar [Modified]
+- gradle/wrapper/gradle-wrapper.properties [Modified]
 </details>
 
 
@@ -627,42 +667,6 @@ whatsapp bot — antonio-bravo
 
 - whatsapp-bot/index.js [Modified]
 - whatsapp-bot/package.json [Modified]
-</details>
-
-
----
-## 6342f27 (Oct 04, 2026 12:30:35)
-Update changelog — github-actions[bot]
-[detail](#6342f27-details)
-
-<details id='6342f27-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 486e01c (Oct 04, 2026 14:30:19)
-Heath bot — antonio-bravo
-[detail](#486e01c-details)
-
-<details id='486e01c-details'>
-<summary>Changed files</summary>
-
-- whatsapp-bot/index.js [Modified]
-</details>
-
-
----
-## 9aa7bb6 (Oct 04, 2026 12:24:37)
-Update changelog — github-actions[bot]
-[detail](#9aa7bb6-details)
-
-<details id='9aa7bb6-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
 </details>
 
 
