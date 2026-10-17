@@ -1,5 +1,31 @@
 # Changelog
 
+## 684d1fe (Oct 17, 2026 18:49:42)
+fix widget — antonio-bravo
+[detail](#684d1fe-details)
+
+<details id='684d1fe-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseProcessor.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsWidgetScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/widget/GlucoseWidgetProvider.kt [Modified]
+</details>
+
+
+---
+## 4c0a9ee (Oct 17, 2026 16:18:27)
+Update changelog — github-actions[bot]
+[detail](#4c0a9ee-details)
+
+<details id='4c0a9ee-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 51271b0 (Oct 17, 2026 18:18:04)
 widget — antonio-bravo
 [detail](#51271b0-details)
@@ -619,30 +645,6 @@ Update dependency androidx.test:core to v1.7.0 — renovate[bot]
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 810db4b (Oct 17, 2026 15:01:11)
-Update dependency androidx.room:room-runtime to v2.8.5 — renovate[bot]
-[detail](#810db4b-details)
-
-<details id='810db4b-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## e5d0108 (Oct 17, 2026 15:00:29)
-Update changelog — github-actions[bot]
-[detail](#e5d0108-details)
-
-<details id='e5d0108-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
 </details>
 
 
