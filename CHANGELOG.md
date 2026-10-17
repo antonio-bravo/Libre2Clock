@@ -1,5 +1,31 @@
 # Changelog
 
+## 7929263 (Oct 17, 2026 17:37:02)
+fix warning — antonio-bravo
+[detail](#7929263-details)
+
+<details id='7929263-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/util/EmergencyAlertDispatcher.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 042bfa6 (Oct 17, 2026 15:26:41)
+Update changelog — github-actions[bot]
+[detail](#042bfa6-details)
+
+<details id='042bfa6-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## bc4d7a6 (Oct 17, 2026 17:26:28)
 fix degradation — antonio-bravo
 [detail](#bc4d7a6-details)
@@ -606,32 +632,6 @@ Update dependency androidx.room:room-ktx to v2.8.5 — renovate[bot]
 [detail](#c72c0da-details)
 
 <details id='c72c0da-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## c274ab8 (Oct 17, 2026 14:59:36)
-Update changelog — github-actions[bot]
-[detail](#c274ab8-details)
-
-<details id='c274ab8-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 7ab2567 (Oct 17, 2026 16:59:24)
-Merge pull request #32 from antonio-bravo/renovate/material
-
-Update dependency com.google.android.material:material to v1.14.0 — antonio-bravo
-[detail](#7ab2567-details)
-
-<details id='7ab2567-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
