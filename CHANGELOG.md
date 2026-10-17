@@ -1,5 +1,43 @@
 # Changelog
 
+## 328890c (Oct 17, 2026 17:13:07)
+Merge pull request #36 from antonio-bravo/renovate/kotlinxserializationcore
+
+Update dependency org.jetbrains.kotlinx:kotlinx-serialization-core to v1.11.0 — antonio-bravo
+[detail](#328890c-details)
+
+<details id='328890c-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 3106004 (Oct 17, 2026 15:12:31)
+Update changelog — github-actions[bot]
+[detail](#3106004-details)
+
+<details id='3106004-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
+## 9fe4372 (Oct 17, 2026 15:12:28)
+Update dependency org.jetbrains.kotlinx:kotlinx-serialization-core to v1.11.0 — renovate[bot]
+[detail](#9fe4372-details)
+
+<details id='9fe4372-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
 ## bc27a96 (Oct 17, 2026 17:12:21)
 Merge pull request #43 from antonio-bravo/renovate/major-firebasebom
 
@@ -589,44 +627,6 @@ Update dependency androidx.camera:camera-camera2 to v1.6.2 — antonio-bravo
 [detail](#e39a746-details)
 
 <details id='e39a746-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 77d4714 (Oct 17, 2026 13:30:08)
-Update changelog — github-actions[bot]
-[detail](#77d4714-details)
-
-<details id='77d4714-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 5a2f242 (Oct 17, 2026 15:29:55)
-Merge pull request #23 from antonio-bravo/renovate/navigation3runtime
-
-Update dependency androidx.navigation3:navigation3-runtime to v1.2.0 — antonio-bravo
-[detail](#5a2f242-details)
-
-<details id='5a2f242-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## d016f91 (Oct 17, 2026 13:29:42)
-Update dependency androidx.navigation3:navigation3-runtime to v1.2.0 — renovate[bot]
-[detail](#d016f91-details)
-
-<details id='d016f91-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
