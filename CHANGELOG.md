@@ -1,5 +1,31 @@
 # Changelog
 
+## e0712a6 (Oct 17, 2026 17:23:06)
+Merge pull request #26 from antonio-bravo/renovate/googleid
+
+Update dependency com.google.android.libraries.identity.googleid:googleid to v1.2.1 — antonio-bravo
+[detail](#e0712a6-details)
+
+<details id='e0712a6-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 7e99f84 (Oct 17, 2026 15:23:04)
+Update changelog — github-actions[bot]
+[detail](#7e99f84-details)
+
+<details id='7e99f84-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## dcbb127 (Oct 17, 2026 17:22:54)
 Merge pull request #45 from antonio-bravo/renovate/major-okhttp
 
@@ -161,6 +187,18 @@ Update dependency org.jetbrains.kotlinx:kotlinx-serialization-core to v1.11.0 �
 [detail](#328890c-details)
 
 <details id='328890c-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 9d0ef9b (Oct 17, 2026 15:13:06)
+Update dependency com.google.android.libraries.identity.googleid:googleid to v1.2.1 — renovate[bot]
+[detail](#9d0ef9b-details)
+
+<details id='9d0ef9b-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
@@ -592,46 +630,6 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
-</details>
-
-
----
-## 9f10b6f (Oct 17, 2026 16:58:38)
-Merge pull request #31 from antonio-bravo/renovate/playserviceslocation
-
-Update dependency com.google.android.gms:play-services-location to v21.4.0 — antonio-bravo
-[detail](#9f10b6f-details)
-
-<details id='9f10b6f-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 5116c23 (Oct 17, 2026 14:58:22)
-Update changelog — github-actions[bot]
-[detail](#5116c23-details)
-
-<details id='5116c23-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## f4bdf31 (Oct 17, 2026 16:58:10)
-Merge pull request #33 from antonio-bravo/renovate/firebasebom
-
-Update dependency com.google.firebase:firebase-bom to v34.19.0 — antonio-bravo
-[detail](#f4bdf31-details)
-
-<details id='f4bdf31-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
 </details>
 
 
