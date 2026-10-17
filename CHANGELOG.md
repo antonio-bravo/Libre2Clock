@@ -1,5 +1,43 @@
 # Changelog
 
+## 5a2f242 (Oct 17, 2026 15:29:55)
+Merge pull request #23 from antonio-bravo/renovate/navigation3runtime
+
+Update dependency androidx.navigation3:navigation3-runtime to v1.2.0 — antonio-bravo
+[detail](#5a2f242-details)
+
+<details id='5a2f242-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## d016f91 (Oct 17, 2026 13:29:42)
+Update dependency androidx.navigation3:navigation3-runtime to v1.2.0 — renovate[bot]
+[detail](#d016f91-details)
+
+<details id='d016f91-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## a36bd6d (Oct 17, 2026 13:28:57)
+Update changelog — github-actions[bot]
+[detail](#a36bd6d-details)
+
+<details id='a36bd6d-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 50e5863 (Oct 17, 2026 15:28:45)
 Merge pull request #24 from antonio-bravo/renovate/navigation3ui
 
@@ -600,42 +638,6 @@ add widget — antonio-bravo
 - app/src/main/res/drawable/widget_background.xml [Deleted]
 - app/src/main/res/layout/widget_glucose.xml [Deleted]
 - app/src/main/res/xml/glucose_widget_info.xml [Deleted]
-</details>
-
-
----
-## 345c324 (Oct 11, 2026 12:56:59)
-Update dependency androidx.camera:camera-lifecycle to v1.6.2 — renovate[bot]
-[detail](#345c324-details)
-
-<details id='345c324-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 0b2dcb6 (Oct 11, 2026 12:56:54)
-Update dependency androidx.camera:camera-core to v1.6.2 — renovate[bot]
-[detail](#0b2dcb6-details)
-
-<details id='0b2dcb6-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## b3b07c1 (Oct 11, 2026 12:56:46)
-Update dependency androidx.activity:activity-compose to v1.13.0 — renovate[bot]
-[detail](#b3b07c1-details)
-
-<details id='b3b07c1-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
 </details>
 
 
