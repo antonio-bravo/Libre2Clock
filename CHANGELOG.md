@@ -1,5 +1,31 @@
 # Changelog
 
+## ec1e5f7 (Oct 17, 2026 17:01:54)
+Merge pull request #29 from antonio-bravo/renovate/core
+
+Update dependency androidx.test:core to v1.7.0 — antonio-bravo
+[detail](#ec1e5f7-details)
+
+<details id='ec1e5f7-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 988a129 (Oct 17, 2026 15:01:46)
+Update changelog — github-actions[bot]
+[detail](#988a129-details)
+
+<details id='988a129-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 1f20327 (Oct 17, 2026 17:01:34)
 Merge pull request #28 from antonio-bravo/renovate/roomruntime
 
@@ -7,6 +33,18 @@ Update dependency androidx.room:room-runtime to v2.8.5 — antonio-bravo
 [detail](#1f20327-details)
 
 <details id='1f20327-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 9ee84cf (Oct 17, 2026 15:01:16)
+Update dependency androidx.test:core to v1.7.0 — renovate[bot]
+[detail](#9ee84cf-details)
+
+<details id='9ee84cf-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
@@ -592,44 +630,6 @@ Update dependency androidx.camera:camera-view to v1.6.2 — antonio-bravo
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 3087d0e (Oct 17, 2026 13:26:13)
-Update changelog — github-actions[bot]
-[detail](#3087d0e-details)
-
-<details id='3087d0e-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 0bb107a (Oct 17, 2026 15:26:04)
-Merge pull request #18 from antonio-bravo/renovate/corektx
-
-Update dependency androidx.core:core-ktx to v1.19.1 — antonio-bravo
-[detail](#0bb107a-details)
-
-<details id='0bb107a-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 7073445 (Oct 17, 2026 13:26:02)
-Update changelog — github-actions[bot]
-[detail](#7073445-details)
-
-<details id='7073445-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
 </details>
 
 
