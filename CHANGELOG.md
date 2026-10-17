@@ -1,5 +1,31 @@
 # Changelog
 
+## f741340 (Oct 17, 2026 15:26:15)
+Merge pull request #16 from antonio-bravo/renovate/cameraview
+
+Update dependency androidx.camera:camera-view to v1.6.2 — antonio-bravo
+[detail](#f741340-details)
+
+<details id='f741340-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 3087d0e (Oct 17, 2026 13:26:13)
+Update changelog — github-actions[bot]
+[detail](#3087d0e-details)
+
+<details id='3087d0e-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 0bb107a (Oct 17, 2026 15:26:04)
 Merge pull request #18 from antonio-bravo/renovate/corektx
 
@@ -159,6 +185,18 @@ Update dependency androidx.compose:compose-bom to v2024.12.01 — renovate[bot]
 [detail](#a9148ea-details)
 
 <details id='a9148ea-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## da6fbd6 (Oct 17, 2026 13:24:51)
+Update dependency androidx.camera:camera-view to v1.6.2 — renovate[bot]
+[detail](#da6fbd6-details)
+
+<details id='da6fbd6-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
@@ -637,42 +675,6 @@ Whatsapp group SOS — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEmergencyScreen.kt [Modified]
 - app/src/main/res/values-es/strings.xml [Modified]
 - app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 9e3dd5d (Oct 07, 2026 15:21:36)
-Update changelog — github-actions[bot]
-[detail](#9e3dd5d-details)
-
-<details id='9e3dd5d-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## b545715 (Oct 07, 2026 17:12:09)
-Whatsapp group SOS — antonio-bravo
-[detail](#b545715-details)
-
-<details id='b545715-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/util/EmergencyAlertDispatcher.kt [Modified]
-</details>
-
-
----
-## 917d0a4 (Oct 06, 2026 08:43:41)
-Update changelog — github-actions[bot]
-[detail](#917d0a4-details)
-
-<details id='917d0a4-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
 </details>
 
 
