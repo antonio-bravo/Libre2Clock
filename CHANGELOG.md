@@ -1,5 +1,43 @@
 # Changelog
 
+## df90200 (Oct 17, 2026 17:11:54)
+Merge pull request #37 from antonio-bravo/renovate/kotlinxserializationjson
+
+Update dependency org.jetbrains.kotlinx:kotlinx-serialization-json to v1.11.0 — antonio-bravo
+[detail](#df90200-details)
+
+<details id='df90200-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## f3e8175 (Oct 17, 2026 15:11:29)
+Update changelog — github-actions[bot]
+[detail](#f3e8175-details)
+
+<details id='f3e8175-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
+## 72b80d7 (Oct 17, 2026 15:11:26)
+Update dependency org.jetbrains.kotlinx:kotlinx-serialization-json to v1.11.0 — renovate[bot]
+[detail](#72b80d7-details)
+
+<details id='72b80d7-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
 ## 8028644 (Oct 17, 2026 17:11:19)
 Merge pull request #42 from antonio-bravo/renovate/major-composebom
 
@@ -592,44 +630,6 @@ Update dependency androidx.navigation3:navigation3-ui to v1.2.0 — antonio-brav
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## b4cceea (Oct 17, 2026 15:28:33)
-Merge pull request #25 from antonio-bravo/renovate/roomcompiler
-
-Update dependency androidx.room:room-compiler to v2.8.5 — antonio-bravo
-[detail](#b4cceea-details)
-
-<details id='b4cceea-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 03c1d5f (Oct 17, 2026 13:28:32)
-Update dependency androidx.navigation3:navigation3-ui to v1.2.0 — renovate[bot]
-[detail](#03c1d5f-details)
-
-<details id='03c1d5f-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## fed5d09 (Oct 17, 2026 13:28:28)
-Update changelog — github-actions[bot]
-[detail](#fed5d09-details)
-
-<details id='fed5d09-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
 </details>
 
 
