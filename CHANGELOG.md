@@ -1,5 +1,31 @@
 # Changelog
 
+## f87c9ea (Oct 17, 2026 17:16:50)
+Merge pull request #44 from antonio-bravo/renovate/major-logginginterceptor
+
+Update dependency com.squareup.okhttp3:logging-interceptor to v5 — antonio-bravo
+[detail](#f87c9ea-details)
+
+<details id='f87c9ea-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## d06ef7f (Oct 17, 2026 15:14:40)
+Update changelog — github-actions[bot]
+[detail](#d06ef7f-details)
+
+<details id='d06ef7f-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 27d4f82 (Oct 17, 2026 15:14:31)
 Update kotlinx-coroutines monorepo to v1.11.0 (#39)
 
@@ -135,6 +161,18 @@ Update dependency org.jetbrains.kotlinx:kotlinx-serialization-json to v1.11.0 �
 [detail](#df90200-details)
 
 <details id='df90200-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 190e9c2 (Oct 17, 2026 15:11:38)
+Update dependency com.squareup.okhttp3:logging-interceptor to v5 — renovate[bot]
+[detail](#190e9c2-details)
+
+<details id='190e9c2-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
@@ -592,44 +630,6 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
-</details>
-
-
----
-## d2279a4 (Oct 17, 2026 16:42:03)
-fix workflows & version — antonio-bravo
-[detail](#d2279a4-details)
-
-<details id='d2279a4-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/bot.yml [Modified]
-- .github/workflows/build-release.yml [Modified]
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 3da9607 (Oct 17, 2026 13:56:59)
-Update changelog — github-actions[bot]
-[detail](#3da9607-details)
-
-<details id='3da9607-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 54e16af (Oct 17, 2026 15:56:46)
-concurrency build-release — antonio-bravo
-[detail](#54e16af-details)
-
-<details id='54e16af-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/build-release.yml [Modified]
 </details>
 
 
