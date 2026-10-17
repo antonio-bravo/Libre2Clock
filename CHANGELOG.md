@@ -1,5 +1,43 @@
 # Changelog
 
+## 8544667 (Oct 17, 2026 15:22:33)
+Merge pull request #10 from antonio-bravo/renovate/ksp-monorepo
+
+Update dependency com.google.devtools.ksp to v2.3.12 — antonio-bravo
+[detail](#8544667-details)
+
+<details id='8544667-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 4e510a3 (Oct 17, 2026 13:22:26)
+Update dependency com.google.devtools.ksp to v2.3.12 — renovate[bot]
+[detail](#4e510a3-details)
+
+<details id='4e510a3-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## b0a88ff (Oct 17, 2026 13:22:15)
+Update changelog — github-actions[bot]
+[detail](#b0a88ff-details)
+
+<details id='b0a88ff-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 17ae0a7 (Oct 17, 2026 15:22:03)
 Merge pull request #11 from antonio-bravo/renovate/gradle-9.x
 
@@ -629,44 +667,6 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
-</details>
-
-
----
-## 7df19fb (Oct 04, 2026 14:45:48)
-whatsapp bot — antonio-bravo
-[detail](#7df19fb-details)
-
-<details id='7df19fb-details'>
-<summary>Changed files</summary>
-
-- whatsapp-bot/index.js [Modified]
-- whatsapp-bot/package.json [Modified]
-</details>
-
-
----
-## ed8657b (Oct 04, 2026 12:40:47)
-Update changelog — github-actions[bot]
-[detail](#ed8657b-details)
-
-<details id='ed8657b-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## b1f314f (Oct 04, 2026 14:40:28)
-whatsapp bot — antonio-bravo
-[detail](#b1f314f-details)
-
-<details id='b1f314f-details'>
-<summary>Changed files</summary>
-
-- whatsapp-bot/index.js [Modified]
-- whatsapp-bot/package.json [Modified]
 </details>
 
 
