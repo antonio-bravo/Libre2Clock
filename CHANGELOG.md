@@ -1,5 +1,43 @@
 # Changelog
 
+## 7ab2567 (Oct 17, 2026 16:59:24)
+Merge pull request #32 from antonio-bravo/renovate/material
+
+Update dependency com.google.android.material:material to v1.14.0 — antonio-bravo
+[detail](#7ab2567-details)
+
+<details id='7ab2567-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 5760a0f (Oct 17, 2026 14:59:07)
+Update dependency com.google.android.material:material to v1.14.0 — renovate[bot]
+[detail](#5760a0f-details)
+
+<details id='5760a0f-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 0359062 (Oct 17, 2026 14:58:47)
+Update changelog — github-actions[bot]
+[detail](#0359062-details)
+
+<details id='0359062-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 9f10b6f (Oct 17, 2026 16:58:38)
 Merge pull request #31 from antonio-bravo/renovate/playserviceslocation
 
@@ -591,44 +629,6 @@ Update dependency androidx.lifecycle:lifecycle-runtime-ktx to v2.11.0 — renova
 [detail](#5474d69-details)
 
 <details id='5474d69-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## bc55cf6 (Oct 17, 2026 13:25:11)
-Update dependency androidx.lifecycle:lifecycle-runtime-compose to v2.11.0 — renovate[bot]
-[detail](#bc55cf6-details)
-
-<details id='bc55cf6-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 679e9cc (Oct 17, 2026 15:25:09)
-Merge pull request #17 from antonio-bravo/renovate/composebom
-
-Update dependency androidx.compose:compose-bom to v2024.12.01 — antonio-bravo
-[detail](#679e9cc-details)
-
-<details id='679e9cc-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 97c1ea1 (Oct 17, 2026 13:25:04)
-Update dependency androidx.datastore:datastore-preferences to v1.2.1 — renovate[bot]
-[detail](#97c1ea1-details)
-
-<details id='97c1ea1-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
