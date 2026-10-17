@@ -1,5 +1,43 @@
 # Changelog
 
+## 2d9cc9f (Oct 17, 2026 16:57:51)
+Merge pull request #35 from antonio-bravo/renovate/okhttp
+
+Update dependency com.squareup.okhttp3:okhttp to v4.12.0 — antonio-bravo
+[detail](#2d9cc9f-details)
+
+<details id='2d9cc9f-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## c883680 (Oct 17, 2026 14:43:45)
+Update dependency com.squareup.okhttp3:okhttp to v4.12.0 — renovate[bot]
+[detail](#c883680-details)
+
+<details id='c883680-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 7a06baf (Oct 17, 2026 14:42:15)
+Update changelog — github-actions[bot]
+[detail](#7a06baf-details)
+
+<details id='7a06baf-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## d2279a4 (Oct 17, 2026 16:42:03)
 fix workflows & version — antonio-bravo
 [detail](#d2279a4-details)
@@ -592,44 +630,6 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
-</details>
-
-
----
-## 8544667 (Oct 17, 2026 15:22:33)
-Merge pull request #10 from antonio-bravo/renovate/ksp-monorepo
-
-Update dependency com.google.devtools.ksp to v2.3.12 — antonio-bravo
-[detail](#8544667-details)
-
-<details id='8544667-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 4e510a3 (Oct 17, 2026 13:22:26)
-Update dependency com.google.devtools.ksp to v2.3.12 — renovate[bot]
-[detail](#4e510a3-details)
-
-<details id='4e510a3-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 84a67dd (Oct 17, 2026 13:22:21)
-Update dependency com.google.android.libraries.identity.googleid:googleid to v1.2.1 — renovate[bot]
-[detail](#84a67dd-details)
-
-<details id='84a67dd-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
 </details>
 
 
