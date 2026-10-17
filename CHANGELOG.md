@@ -1,5 +1,29 @@
 # Changelog
 
+## 857db32 (Oct 17, 2026 20:18:51)
+Update timestamp format in README.md — antonio-bravo
+[detail](#857db32-details)
+
+<details id='857db32-details'>
+<summary>Changed files</summary>
+
+- README.md [Modified]
+</details>
+
+
+---
+## f95dc3a (Oct 17, 2026 18:10:03)
+Update changelog — github-actions[bot]
+[detail](#f95dc3a-details)
+
+<details id='f95dc3a-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 0b43673 (Oct 17, 2026 20:09:48)
 update documentation — antonio-bravo
 [detail](#0b43673-details)
@@ -623,30 +647,6 @@ Update kotlin monorepo to v2.4.21 — renovate[bot]
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 8eb290c (Oct 17, 2026 15:02:14)
-Update changelog — github-actions[bot]
-[detail](#8eb290c-details)
-
-<details id='8eb290c-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 2297545 (Oct 17, 2026 15:02:01)
-Update actions/setup-java action to v6 — renovate[bot]
-[detail](#2297545-details)
-
-<details id='2297545-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/build-release.yml [Modified]
 </details>
 
 
