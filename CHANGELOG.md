@@ -1,5 +1,31 @@
 # Changelog
 
+## bdb2c95 (Oct 18, 2026 13:17:48)
+Merge pull request #46 from antonio-bravo/renovate/express-5.x
+
+Update dependency express to v5 — antonio-bravo
+[detail](#bdb2c95-details)
+
+<details id='bdb2c95-details'>
+<summary>Changed files</summary>
+
+- whatsapp-bot/package.json [Modified]
+</details>
+
+
+---
+## 6d633ed (Oct 18, 2026 11:16:41)
+Update changelog — github-actions[bot]
+[detail](#6d633ed-details)
+
+<details id='6d633ed-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 595f3a3 (Oct 18, 2026 13:16:29)
 Merge pull request #49 from antonio-bravo/renovate/major-retrofit-monorepo
 
@@ -53,6 +79,18 @@ Update retrofit monorepo to v3 — renovate[bot]
 
 - app/build.gradle.kts [Modified]
 - gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 180991c (Oct 17, 2026 22:01:13)
+Update dependency express to v5 — renovate[bot]
+[detail](#180991c-details)
+
+<details id='180991c-details'>
+<summary>Changed files</summary>
+
+- whatsapp-bot/package.json [Modified]
 </details>
 
 
@@ -616,44 +654,6 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
-</details>
-
-
----
-## 76f9946 (Oct 17, 2026 17:10:43)
-Merge pull request #40 from antonio-bravo/renovate/actions-setup-java-6.x
-
-Update actions/setup-java action to v6 — antonio-bravo
-[detail](#76f9946-details)
-
-<details id='76f9946-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/build-release.yml [Modified]
-</details>
-
-
----
-## e7598eb (Oct 17, 2026 15:05:46)
-Update dependency com.google.firebase:firebase-bom to v35 — renovate[bot]
-[detail](#e7598eb-details)
-
-<details id='e7598eb-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## f6547fb (Oct 17, 2026 15:05:43)
-Update dependency androidx.compose:compose-bom to v2026 — renovate[bot]
-[detail](#f6547fb-details)
-
-<details id='f6547fb-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
 </details>
 
 
