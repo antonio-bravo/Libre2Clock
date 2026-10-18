@@ -1,5 +1,32 @@
 # Changelog
 
+## 595f3a3 (Oct 18, 2026 13:16:29)
+Merge pull request #49 from antonio-bravo/renovate/major-retrofit-monorepo
+
+Update retrofit monorepo to v3 — antonio-bravo
+[detail](#595f3a3-details)
+
+<details id='595f3a3-details'>
+<summary>Changed files</summary>
+
+- app/build.gradle.kts [Modified]
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 54613e2 (Oct 18, 2026 10:04:33)
+Update changelog — github-actions[bot]
+[detail](#54613e2-details)
+
+<details id='54613e2-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## ca7d685 (Oct 18, 2026 12:04:19)
 widget insulin decimals — antonio-bravo
 [detail](#ca7d685-details)
@@ -13,6 +40,19 @@ widget insulin decimals — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/widget/GlucoseWidgetProvider.kt [Modified]
 - app/src/main/res/values-es/strings.xml [Modified]
 - app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 5ecad4a (Oct 17, 2026 22:01:30)
+Update retrofit monorepo to v3 — renovate[bot]
+[detail](#5ecad4a-details)
+
+<details id='5ecad4a-details'>
+<summary>Changed files</summary>
+
+- app/build.gradle.kts [Modified]
+- gradle/libs.versions.toml [Modified]
 </details>
 
 
@@ -614,42 +654,6 @@ Update dependency androidx.compose:compose-bom to v2026 — renovate[bot]
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## de4d443 (Oct 17, 2026 15:05:22)
-Update dependency com.squareup.okhttp3:logging-interceptor to v4.12.0 — renovate[bot]
-[detail](#de4d443-details)
-
-<details id='de4d443-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 9cd01a5 (Oct 17, 2026 15:04:34)
-Update actions/setup-python action to v7 — renovate[bot]
-[detail](#9cd01a5-details)
-
-<details id='9cd01a5-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/changelog.yml [Modified]
-</details>
-
-
----
-## 7fd17b1 (Oct 17, 2026 15:04:12)
-Update changelog — github-actions[bot]
-[detail](#7fd17b1-details)
-
-<details id='7fd17b1-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
 </details>
 
 
