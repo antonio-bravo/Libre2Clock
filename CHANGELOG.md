@@ -1,5 +1,30 @@
 # Changelog
 
+## 71da312 (Oct 18, 2026 14:52:44)
+optmize memory — antonio-bravo
+[detail](#71da312-details)
+
+<details id='71da312-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/MainActivity.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
+</details>
+
+
+---
+## d5516dc (Oct 18, 2026 12:43:49)
+Update changelog — github-actions[bot]
+[detail](#d5516dc-details)
+
+<details id='d5516dc-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## eadcdc7 (Oct 18, 2026 14:43:40)
 Merge pull request #48 from antonio-bravo/renovate/major-puppeteer
 
@@ -628,32 +653,6 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
-</details>
-
-
----
-## df90200 (Oct 17, 2026 17:11:54)
-Merge pull request #37 from antonio-bravo/renovate/kotlinxserializationjson
-
-Update dependency org.jetbrains.kotlinx:kotlinx-serialization-json to v1.11.0 — antonio-bravo
-[detail](#df90200-details)
-
-<details id='df90200-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 190e9c2 (Oct 17, 2026 15:11:38)
-Update dependency com.squareup.okhttp3:logging-interceptor to v5 — renovate[bot]
-[detail](#190e9c2-details)
-
-<details id='190e9c2-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
 </details>
 
 
