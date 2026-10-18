@@ -174,6 +174,7 @@ class SettingsViewModel(
     val widgetShowLastUpdate = preferenceManager.widgetShowLastUpdate.stateInDefault(true)
     val widgetBackgroundOpacity = preferenceManager.widgetBackgroundOpacity.stateInDefault(80)
     val widgetUseTargetColorBg = preferenceManager.widgetUseTargetColorBg.stateInDefault(true)
+    val widgetInsulinDecimals = preferenceManager.widgetInsulinDecimals.stateInDefault(2)
 
     // MEJORA: Usamos 'this.capillaryReadings' (que ya está filtrado) en lugar del raw de preferenceManager
     val currentGlucose: StateFlow<GlucoseMeasurement?> = combine(
@@ -1096,6 +1097,13 @@ class SettingsViewModel(
     fun setWidgetUseTargetColorBg(enabled: Boolean) {
         viewModelScope.launch {
             preferenceManager.saveWidgetUseTargetColorBg(enabled)
+            sendWidgetUpdateBroadcast()
+        }
+    }
+
+    fun setWidgetInsulinDecimals(decimals: Int) {
+        viewModelScope.launch {
+            preferenceManager.saveWidgetInsulinDecimals(decimals)
             sendWidgetUpdateBroadcast()
         }
     }

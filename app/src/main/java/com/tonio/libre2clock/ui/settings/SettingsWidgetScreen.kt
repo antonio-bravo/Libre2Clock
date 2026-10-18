@@ -34,6 +34,7 @@ fun SettingsWidgetScreen(
     val widgetShowLastUpdate by viewModel.widgetShowLastUpdate.collectAsStateWithLifecycle()
     val widgetBackgroundOpacity by viewModel.widgetBackgroundOpacity.collectAsStateWithLifecycle()
     val widgetUseTargetColorBg by viewModel.widgetUseTargetColorBg.collectAsStateWithLifecycle()
+    val widgetInsulinDecimals by viewModel.widgetInsulinDecimals.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -64,7 +65,8 @@ fun SettingsWidgetScreen(
                         showFS = widgetShowFS,
                         showLastUpdate = widgetShowLastUpdate,
                         opacityPercent = widgetBackgroundOpacity,
-                        useTargetColor = widgetUseTargetColorBg
+                        useTargetColor = widgetUseTargetColorBg,
+                        decimalsMode = widgetInsulinDecimals
                     )
                 }
             }
@@ -128,6 +130,53 @@ fun SettingsWidgetScreen(
                         onCheckedChange = viewModel::setWidgetUseTargetColorBg,
                         icon = Icons.Default.Edit
                     )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Precisión de Decimales de Insulina
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = stringResource(R.string.widget_decimals_title),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = stringResource(R.string.widget_decimals_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            FilterChip(
+                                selected = widgetInsulinDecimals == 1,
+                                onClick = { viewModel.setWidgetInsulinDecimals(1) },
+                                label = { Text(stringResource(R.string.widget_decimals_1)) },
+                                modifier = Modifier.weight(1f)
+                            )
+                            FilterChip(
+                                selected = widgetInsulinDecimals == 2,
+                                onClick = { viewModel.setWidgetInsulinDecimals(2) },
+                                label = { Text(stringResource(R.string.widget_decimals_2)) },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(16.dp))
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
@@ -271,7 +320,8 @@ private fun WidgetLivePreviewCard(
     showFS: Boolean,
     showLastUpdate: Boolean,
     opacityPercent: Int,
-    useTargetColor: Boolean
+    useTargetColor: Boolean,
+    decimalsMode: Int
 ) {
     // Background simulation container (simulates home screen wallpaper)
     Box(
@@ -295,6 +345,18 @@ private fun WidgetLivePreviewCard(
         val alphaFloat = opacityPercent / 100f
         val baseColor = if (useTargetColor) Color(0xFF9DCA44) else Color(0xFF1E1E1E)
         val cardBgColor = baseColor.copy(alpha = alphaFloat)
+
+        val formattedRapidVal = if (decimalsMode == 1) "1.5" else "1.52"
+        val formattedSlowVal = if (decimalsMode == 1) "12.0" else "12.00"
+
+        val rapidLabel = if (compactMode) stringResource(R.string.widget_rapid_compact_label) else stringResource(R.string.widget_rapid_label)
+        val slowLabel = if (compactMode) stringResource(R.string.widget_slow_compact_label) else stringResource(R.string.widget_slow_label)
+
+        val rapidText = if (compactMode) stringResource(R.string.widget_rapid_compact_text, rapidLabel, formattedRapidVal)
+        else stringResource(R.string.widget_rapid_text, rapidLabel, formattedRapidVal)
+
+        val slowText = if (compactMode) stringResource(R.string.widget_slow_compact_text, slowLabel, formattedSlowVal)
+        else stringResource(R.string.widget_slow_text, slowLabel, formattedSlowVal)
 
         // Widget Card representation
         Box(
@@ -355,7 +417,7 @@ private fun WidgetLivePreviewCard(
                     ) {
                         if (showRapid) {
                             Text(
-                                text = if (compactMode) "R: 1.5U" else "Rápida: 1.5 U",
+                                text = rapidText,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF82B1FF)
@@ -366,7 +428,7 @@ private fun WidgetLivePreviewCard(
                         }
                         if (showSlow) {
                             Text(
-                                text = if (compactMode) "L: 12.0U" else "Lenta: 12.0 U",
+                                text = slowText,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFFFF8A80)

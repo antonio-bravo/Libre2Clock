@@ -145,6 +145,7 @@ class PreferenceManager(private val context: Context) {
     private val WIDGET_SHOW_LAST_UPDATE_KEY = booleanPreferencesKey("widget_show_last_update")
     private val WIDGET_BACKGROUND_OPACITY_KEY = intPreferencesKey("widget_background_opacity")
     private val WIDGET_USE_TARGET_COLOR_BG_KEY = booleanPreferencesKey("widget_use_target_color_bg")
+    private val WIDGET_INSULIN_DECIMALS_KEY = intPreferencesKey("widget_insulin_decimals")
 
     // --- Flows ---
     val glucoseSourceProvider: Flow<GlucoseSourceProvider> = context.dataStore.data.map { prefs ->
@@ -245,6 +246,7 @@ class PreferenceManager(private val context: Context) {
     val widgetShowLastUpdate: Flow<Boolean> = context.dataStore.data.map { it[WIDGET_SHOW_LAST_UPDATE_KEY] ?: true }.distinctUntilChanged()
     val widgetBackgroundOpacity: Flow<Int> = context.dataStore.data.map { (it[WIDGET_BACKGROUND_OPACITY_KEY] ?: 80).coerceIn(0, 100) }.distinctUntilChanged()
     val widgetUseTargetColorBg: Flow<Boolean> = context.dataStore.data.map { it[WIDGET_USE_TARGET_COLOR_BG_KEY] ?: true }.distinctUntilChanged()
+    val widgetInsulinDecimals: Flow<Int> = context.dataStore.data.map { (it[WIDGET_INSULIN_DECIMALS_KEY] ?: 2).coerceIn(0, 2) }.distinctUntilChanged()
     val deductIobForBolus: Flow<Boolean> = context.dataStore.data.map { it[DEDUCT_IOB_FOR_BOLUS_KEY] ?: false }.distinctUntilChanged()
     val useCalibratedForAlarms: Flow<Boolean> = context.dataStore.data.map { it[USE_CALIBRATED_FOR_ALARMS_KEY] ?: true }.distinctUntilChanged()
 
@@ -766,6 +768,11 @@ class PreferenceManager(private val context: Context) {
 
     suspend fun saveWidgetUseTargetColorBg(enabled: Boolean) {
         context.dataStore.edit { it[WIDGET_USE_TARGET_COLOR_BG_KEY] = enabled }
+        updateBackupPayload()
+    }
+
+    suspend fun saveWidgetInsulinDecimals(decimals: Int) {
+        context.dataStore.edit { it[WIDGET_INSULIN_DECIMALS_KEY] = decimals.coerceIn(0, 2) }
         updateBackupPayload()
     }
 

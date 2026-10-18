@@ -87,6 +87,21 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
         }
     }
 
+    private fun formatInsulinValue(iob: Double, decimalsMode: Int): String {
+        return when (decimalsMode) {
+            1 -> String.format(Locale.US, "%.1f", iob)
+            2 -> String.format(Locale.US, "%.2f", iob)
+            else -> { // 0 = Auto
+                val secondDecimal = Math.round(iob * 100) % 10
+                if (secondDecimal != 0L) {
+                    String.format(Locale.US, "%.2f", iob)
+                } else {
+                    String.format(Locale.US, "%.1f", iob)
+                }
+            }
+        }
+    }
+
     private suspend fun updateAppWidgetSuspend(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
         val views = RemoteViews(context.packageName, R.layout.widget_glucose)
 
@@ -102,6 +117,7 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
             val showLastUpdatePref = preferenceManager.widgetShowLastUpdate.first()
             val opacityPercent = preferenceManager.widgetBackgroundOpacity.first()
             val useTargetColor = preferenceManager.widgetUseTargetColorBg.first()
+            val decimalsMode = preferenceManager.widgetInsulinDecimals.first()
             val targetLow = preferenceManager.lowGlucoseThreshold.first()
             val targetHigh = preferenceManager.highGlucoseThreshold.first()
 
@@ -188,22 +204,32 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
             val rapidIOB = InsulinProcessor.calculateTotalIOB(rapidDoses)
             val slowIOB = InsulinProcessor.calculateTotalIOB(slowDoses)
 
+            val formattedRapidVal = formatInsulinValue(rapidIOB, decimalsMode)
+            val formattedSlowVal = formatInsulinValue(slowIOB, decimalsMode)
+
             val calculatedTdi = manualTdi ?: InsulinProcessor.calculateAverageDaily(insulinDoses, 30)
             val fsValue = InsulinProcessor.calculateISF(calculatedTdi, isfRuleC, manualIsf)
             val formattedFS = if (fsValue > 0) {
                 if (fsValue % 1.0 == 0.0) String.format(Locale.US, "%.0f", fsValue) else String.format(Locale.US, "%.1f", fsValue)
             } else "-"
 
-            // Configure Insulin & FS text fields
-            if (isSmallLayout) {
-                views.setTextViewText(R.id.tv_insulin_rapid, if (showRapidPref) String.format(Locale.getDefault(), "R: %.1fU", rapidIOB) else "")
-                views.setTextViewText(R.id.tv_insulin_slow, if (showSlowPref) String.format(Locale.getDefault(), "L: %.1fU", slowIOB) else "")
-                views.setTextViewText(R.id.tv_insulin_fs, if (showFsPref) "FS: $formattedFS" else "")
-            } else {
-                views.setTextViewText(R.id.tv_insulin_rapid, if (showRapidPref) String.format(Locale.getDefault(), "Rápida: %.1f U", rapidIOB) else "")
-                views.setTextViewText(R.id.tv_insulin_slow, if (showSlowPref) String.format(Locale.getDefault(), "Lenta: %.1f U", slowIOB) else "")
-                views.setTextViewText(R.id.tv_insulin_fs, if (showFsPref) "FS: $formattedFS" else "")
-            }
+            // Localized labels for Rapid / Slow
+            val rapidLabel = if (isSmallLayout) context.getString(R.string.widget_rapid_compact_label) else context.getString(R.string.widget_rapid_label)
+            val slowLabel = if (isSmallLayout) context.getString(R.string.widget_slow_compact_label) else context.getString(R.string.widget_slow_label)
+
+            val rapidText = if (showRapidPref) {
+                if (isSmallLayout) context.getString(R.string.widget_rapid_compact_text, rapidLabel, formattedRapidVal)
+                else context.getString(R.string.widget_rapid_text, rapidLabel, formattedRapidVal)
+            } else ""
+
+            val slowText = if (showSlowPref) {
+                if (isSmallLayout) context.getString(R.string.widget_slow_compact_text, slowLabel, formattedSlowVal)
+                else context.getString(R.string.widget_slow_text, slowLabel, formattedSlowVal)
+            } else ""
+
+            views.setTextViewText(R.id.tv_insulin_rapid, rapidText)
+            views.setTextViewText(R.id.tv_insulin_slow, slowText)
+            views.setTextViewText(R.id.tv_insulin_fs, if (showFsPref) "FS: $formattedFS" else "")
 
             // Visibility based on user settings
             val showAnyInsulin = showRapidPref || showSlowPref || showFsPref
