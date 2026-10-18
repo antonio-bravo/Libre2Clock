@@ -1,5 +1,34 @@
 # Changelog
 
+## ca7d685 (Oct 18, 2026 12:04:19)
+widget insulin decimals — antonio-bravo
+[detail](#ca7d685-details)
+
+<details id='ca7d685-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsWidgetScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/widget/GlucoseWidgetProvider.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## e0856ef (Oct 17, 2026 18:19:01)
+Update changelog — github-actions[bot]
+[detail](#e0856ef-details)
+
+<details id='e0856ef-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 857db32 (Oct 17, 2026 20:18:51)
 Update timestamp format in README.md — antonio-bravo
 [detail](#857db32-details)
@@ -621,32 +650,6 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
-</details>
-
-
----
-## 90c037b (Oct 17, 2026 17:03:44)
-Merge pull request #38 from antonio-bravo/renovate/kotlin-monorepo
-
-Update kotlin monorepo to v2.4.21 — antonio-bravo
-[detail](#90c037b-details)
-
-<details id='90c037b-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## c78e392 (Oct 17, 2026 15:03:04)
-Update kotlin monorepo to v2.4.21 — renovate[bot]
-[detail](#c78e392-details)
-
-<details id='c78e392-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
 </details>
 
 
