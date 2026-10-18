@@ -1,5 +1,43 @@
 # Changelog
 
+## eadcdc7 (Oct 18, 2026 14:43:40)
+Merge pull request #48 from antonio-bravo/renovate/major-puppeteer
+
+Update dependency puppeteer to v25 — antonio-bravo
+[detail](#eadcdc7-details)
+
+<details id='eadcdc7-details'>
+<summary>Changed files</summary>
+
+- whatsapp-bot/package.json [Modified]
+</details>
+
+
+---
+## cf67c47 (Oct 18, 2026 11:18:35)
+Update dependency puppeteer to v25 — renovate[bot]
+[detail](#cf67c47-details)
+
+<details id='cf67c47-details'>
+<summary>Changed files</summary>
+
+- whatsapp-bot/package.json [Modified]
+</details>
+
+
+---
+## 567a6e9 (Oct 18, 2026 11:18:18)
+Update changelog — github-actions[bot]
+[detail](#567a6e9-details)
+
+<details id='567a6e9-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## ef0b6d5 (Oct 18, 2026 13:18:08)
 Merge pull request #47 from antonio-bravo/renovate/java-jdk-25.x
 
@@ -613,44 +651,6 @@ Update dependency com.squareup.okhttp3:logging-interceptor to v5 — renovate[bo
 [detail](#190e9c2-details)
 
 <details id='190e9c2-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## f3e8175 (Oct 17, 2026 15:11:29)
-Update changelog — github-actions[bot]
-[detail](#f3e8175-details)
-
-<details id='f3e8175-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 72b80d7 (Oct 17, 2026 15:11:26)
-Update dependency org.jetbrains.kotlinx:kotlinx-serialization-json to v1.11.0 — renovate[bot]
-[detail](#72b80d7-details)
-
-<details id='72b80d7-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 8028644 (Oct 17, 2026 17:11:19)
-Merge pull request #42 from antonio-bravo/renovate/major-composebom
-
-Update dependency androidx.compose:compose-bom to v2026 — antonio-bravo
-[detail](#8028644-details)
-
-<details id='8028644-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
