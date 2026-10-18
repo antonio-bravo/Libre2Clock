@@ -1,5 +1,31 @@
 # Changelog
 
+## ef0b6d5 (Oct 18, 2026 13:18:08)
+Merge pull request #47 from antonio-bravo/renovate/java-jdk-25.x
+
+Update dependency java-jdk to v25 — antonio-bravo
+[detail](#ef0b6d5-details)
+
+<details id='ef0b6d5-details'>
+<summary>Changed files</summary>
+
+- .github/workflows/build-release.yml [Modified]
+</details>
+
+
+---
+## 17b825d (Oct 18, 2026 11:18:03)
+Update changelog — github-actions[bot]
+[detail](#17b825d-details)
+
+<details id='17b825d-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## bdb2c95 (Oct 18, 2026 13:17:48)
 Merge pull request #46 from antonio-bravo/renovate/express-5.x
 
@@ -79,6 +105,18 @@ Update retrofit monorepo to v3 — renovate[bot]
 
 - app/build.gradle.kts [Modified]
 - gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 1c74470 (Oct 17, 2026 22:01:18)
+Update dependency java-jdk to v25 — renovate[bot]
+[detail](#1c74470-details)
+
+<details id='1c74470-details'>
+<summary>Changed files</summary>
+
+- .github/workflows/build-release.yml [Modified]
 </details>
 
 
@@ -616,44 +654,6 @@ Update dependency androidx.compose:compose-bom to v2026 — antonio-bravo
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## e8a31d4 (Oct 17, 2026 15:11:11)
-Update changelog — github-actions[bot]
-[detail](#e8a31d4-details)
-
-<details id='e8a31d4-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## a0bd340 (Oct 17, 2026 17:11:00)
-Merge pull request #34 from antonio-bravo/renovate/logginginterceptor
-
-Update dependency com.squareup.okhttp3:logging-interceptor to v4.12.0 — antonio-bravo
-[detail](#a0bd340-details)
-
-<details id='a0bd340-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 39ffb34 (Oct 17, 2026 15:10:51)
-Update changelog — github-actions[bot]
-[detail](#39ffb34-details)
-
-<details id='39ffb34-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
 </details>
 
 
