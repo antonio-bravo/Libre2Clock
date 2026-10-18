@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
 import com.tonio.libre2clock.ui.navigation.NavGraph
 import com.tonio.libre2clock.ui.theme.Libre2ClockTheme
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -109,6 +110,50 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // Envía broadcast al widget al minimizar o cerrar la aplicación para mantener sincronización 100% inmediata
+        try {
+            val updateIntent = Intent("com.tonio.libre2clock.ACTION_UPDATE_WIDGET").apply {
+                setPackage(packageName)
+            }
+            sendBroadcast(updateIntent)
+        } catch (e: Exception) {
+            // Ignorar en apagado
+        }
+    }
+
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        if (level >= TRIM_MEMORY_BACKGROUND) {
+            // Limpia cachés en memoria para liberar RAM de forma inmediata cuando el sistema lo requiere
+            try {
+                if (::repositoryImpl.isInitialized) {
+                    lifecycleScope.launch(Dispatchers.IO) {
+                        repositoryImpl.clearCache()
+                    }
+                }
+                System.gc()
+            } catch (e: Exception) {
+                // Ignorar
+            }
+        }
+    }
+
+    override fun onLowMemory() {
+        super.onLowMemory()
+        try {
+            if (::repositoryImpl.isInitialized) {
+                lifecycleScope.launch(Dispatchers.IO) {
+                    repositoryImpl.clearCache()
+                }
+            }
+            System.gc()
+        } catch (e: Exception) {
+            // Ignorar
         }
     }
 

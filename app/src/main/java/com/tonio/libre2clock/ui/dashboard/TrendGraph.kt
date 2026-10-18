@@ -227,6 +227,14 @@ fun InteractiveTrendGraph(
         }
     }
 
+    val targetLowPaint = remember(density, tickPaint) {
+        Paint(tickPaint).apply { color = android.graphics.Color.RED }
+    }
+
+    val targetHighPaint = remember(density, tickPaint) {
+        Paint(tickPaint).apply { color = android.graphics.Color.GREEN }
+    }
+
     val labelPaint = remember(density) {
         Paint().apply {
             color = android.graphics.Color.GRAY
@@ -767,8 +775,8 @@ fun InteractiveTrendGraph(
                         val y = topPadding + (relY * plotHeight)
 
                         val paintToUse = when (value) {
-                            targetLow -> Paint(tickPaint).apply { color = android.graphics.Color.RED }
-                            targetHigh -> Paint(tickPaint).apply { color = android.graphics.Color.GREEN }
+                            targetLow -> targetLowPaint
+                            targetHigh -> targetHighPaint
                             else -> tickPaint
                         }
 
