@@ -1,5 +1,31 @@
 # Changelog
 
+## 0918c27 (Oct 20, 2026 21:44:06)
+Update Gradle to v9.8.2 (#50)
+
+Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
+[detail](#0918c27-details)
+
+<details id='0918c27-details'>
+<summary>Changed files</summary>
+
+- gradle/wrapper/gradle-wrapper.properties [Modified]
+</details>
+
+
+---
+## e4bebab (Oct 18, 2026 12:52:56)
+Update changelog — github-actions[bot]
+[detail](#e4bebab-details)
+
+<details id='e4bebab-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 71da312 (Oct 18, 2026 14:52:44)
 optmize memory — antonio-bravo
 [detail](#71da312-details)
@@ -627,32 +653,6 @@ Update dependency org.jetbrains.kotlinx:kotlinx-serialization-core to v1.11.0 �
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## bc27a96 (Oct 17, 2026 17:12:21)
-Merge pull request #43 from antonio-bravo/renovate/major-firebasebom
-
-Update dependency com.google.firebase:firebase-bom to v35 — antonio-bravo
-[detail](#bc27a96-details)
-
-<details id='bc27a96-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 99e0760 (Oct 17, 2026 15:12:05)
-Update changelog — github-actions[bot]
-[detail](#99e0760-details)
-
-<details id='99e0760-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
 </details>
 
 
