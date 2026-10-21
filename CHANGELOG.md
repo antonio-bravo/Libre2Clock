@@ -1,5 +1,31 @@
 # Changelog
 
+## 2716449 (Oct 21, 2026 16:26:11)
+Update dependency org.jetbrains.kotlinx:kotlinx-serialization-json to v1.12.0 (#52)
+
+Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
+[detail](#2716449-details)
+
+<details id='2716449-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 4db98e0 (Oct 21, 2026 04:28:57)
+Update changelog — github-actions[bot]
+[detail](#4db98e0-details)
+
+<details id='4db98e0-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 820af8b (Oct 21, 2026 04:28:47)
 Update dependency org.jetbrains.kotlinx:kotlinx-serialization-core to v1.12.0 (#51)
 
@@ -626,32 +652,6 @@ Update dependency androidx.test:runner to v1.7.0 — renovate[bot]
 [detail](#7da393d-details)
 
 <details id='7da393d-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 328890c (Oct 17, 2026 17:13:07)
-Merge pull request #36 from antonio-bravo/renovate/kotlinxserializationcore
-
-Update dependency org.jetbrains.kotlinx:kotlinx-serialization-core to v1.11.0 — antonio-bravo
-[detail](#328890c-details)
-
-<details id='328890c-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 9d0ef9b (Oct 17, 2026 15:13:06)
-Update dependency com.google.android.libraries.identity.googleid:googleid to v1.2.1 — renovate[bot]
-[detail](#9d0ef9b-details)
-
-<details id='9d0ef9b-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
