@@ -1,5 +1,31 @@
 # Changelog
 
+## 820af8b (Oct 21, 2026 04:28:47)
+Update dependency org.jetbrains.kotlinx:kotlinx-serialization-core to v1.12.0 (#51)
+
+Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
+[detail](#820af8b-details)
+
+<details id='820af8b-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## d4395d3 (Oct 20, 2026 21:44:16)
+Update changelog — github-actions[bot]
+[detail](#d4395d3-details)
+
+<details id='d4395d3-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 0918c27 (Oct 20, 2026 21:44:06)
 Update Gradle to v9.8.2 (#50)
 
@@ -626,30 +652,6 @@ Update dependency com.google.android.libraries.identity.googleid:googleid to v1.
 [detail](#9d0ef9b-details)
 
 <details id='9d0ef9b-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 3106004 (Oct 17, 2026 15:12:31)
-Update changelog — github-actions[bot]
-[detail](#3106004-details)
-
-<details id='3106004-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 9fe4372 (Oct 17, 2026 15:12:28)
-Update dependency org.jetbrains.kotlinx:kotlinx-serialization-core to v1.11.0 — renovate[bot]
-[detail](#9fe4372-details)
-
-<details id='9fe4372-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
