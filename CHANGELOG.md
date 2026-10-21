@@ -1,5 +1,31 @@
 # Changelog
 
+## 5c59b78 (Oct 21, 2026 22:03:23)
+Update dependency androidx.datastore:datastore-preferences to v1.3.0 (#53)
+
+Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
+[detail](#5c59b78-details)
+
+<details id='5c59b78-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 5416d09 (Oct 21, 2026 16:26:21)
+Update changelog — github-actions[bot]
+[detail](#5416d09-details)
+
+<details id='5416d09-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 2716449 (Oct 21, 2026 16:26:11)
 Update dependency org.jetbrains.kotlinx:kotlinx-serialization-json to v1.12.0 (#52)
 
@@ -628,30 +654,6 @@ Update dependency androidx.test:runner to v1.7.0 — antonio-bravo
 [detail](#de54b23-details)
 
 <details id='de54b23-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## fcd5f7b (Oct 17, 2026 15:13:18)
-Update changelog — github-actions[bot]
-[detail](#fcd5f7b-details)
-
-<details id='fcd5f7b-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 7da393d (Oct 17, 2026 15:13:10)
-Update dependency androidx.test:runner to v1.7.0 — renovate[bot]
-[detail](#7da393d-details)
-
-<details id='7da393d-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
