@@ -1,5 +1,31 @@
 # Changelog
 
+## b5e9a69 (Oct 22, 2026 05:34:15)
+Update dependency com.google.firebase:firebase-bom to v35.1.0 (#54)
+
+Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
+[detail](#b5e9a69-details)
+
+<details id='b5e9a69-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 589c07c (Oct 21, 2026 22:03:40)
+Update changelog — github-actions[bot]
+[detail](#589c07c-details)
+
+<details id='589c07c-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 5c59b78 (Oct 21, 2026 22:03:23)
 Update dependency androidx.datastore:datastore-preferences to v1.3.0 (#53)
 
@@ -628,32 +654,6 @@ Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> 
 [detail](#27d4f82-details)
 
 <details id='27d4f82-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 291082f (Oct 17, 2026 15:13:38)
-Update changelog — github-actions[bot]
-[detail](#291082f-details)
-
-<details id='291082f-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## de54b23 (Oct 17, 2026 17:13:26)
-Merge pull request #30 from antonio-bravo/renovate/runner
-
-Update dependency androidx.test:runner to v1.7.0 — antonio-bravo
-[detail](#de54b23-details)
-
-<details id='de54b23-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
