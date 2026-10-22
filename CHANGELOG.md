@@ -1,5 +1,31 @@
 # Changelog
 
+## 293bc3e (Oct 22, 2026 20:32:15)
+Update dependency com.squareup.okhttp3:logging-interceptor to v5.5.1 (#55)
+
+Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
+[detail](#293bc3e-details)
+
+<details id='293bc3e-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## d9a060b (Oct 22, 2026 05:34:28)
+Update changelog — github-actions[bot]
+[detail](#d9a060b-details)
+
+<details id='d9a060b-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## b5e9a69 (Oct 22, 2026 05:34:15)
 Update dependency com.google.firebase:firebase-bom to v35.1.0 (#54)
 
@@ -628,32 +654,6 @@ Update dependency com.squareup.okhttp3:logging-interceptor to v5 — antonio-bra
 [detail](#f87c9ea-details)
 
 <details id='f87c9ea-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## d06ef7f (Oct 17, 2026 15:14:40)
-Update changelog — github-actions[bot]
-[detail](#d06ef7f-details)
-
-<details id='d06ef7f-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 27d4f82 (Oct 17, 2026 15:14:31)
-Update kotlinx-coroutines monorepo to v1.11.0 (#39)
-
-Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
-[detail](#27d4f82-details)
-
-<details id='27d4f82-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
