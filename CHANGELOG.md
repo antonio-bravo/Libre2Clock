@@ -1,5 +1,33 @@
 # Changelog
 
+## 28b4c64 (Oct 23, 2026 21:29:52)
+add values with voice and integration with 3rd party — antonio-bravo
+[detail](#28b4c64-details)
+
+<details id='28b4c64-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsNightscoutScreen.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsVoiceScreen.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/util/GlucoseVoiceManager.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/util/NightscoutManager.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/util/XDripBroadcastManager.kt [Deleted]
+</details>
+
+
+---
+## cebc5f7 (Oct 23, 2026 07:53:07)
+Update changelog — github-actions[bot]
+[detail](#cebc5f7-details)
+
+<details id='cebc5f7-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 7c0ea09 (Oct 23, 2026 07:52:47)
 Update dependency com.squareup.okhttp3:okhttp to v5.5.1 (#56)
 
@@ -631,32 +659,6 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
-</details>
-
-
----
-## 21e7fba (Oct 17, 2026 17:22:37)
-Merge pull request #41 from antonio-bravo/renovate/actions-setup-python-7.x
-
-Update actions/setup-python action to v7 — antonio-bravo
-[detail](#21e7fba-details)
-
-<details id='21e7fba-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/changelog.yml [Modified]
-</details>
-
-
----
-## 52f1a5a (Oct 17, 2026 15:17:19)
-Update dependency com.squareup.okhttp3:okhttp to v5 — renovate[bot]
-[detail](#52f1a5a-details)
-
-<details id='52f1a5a-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
 </details>
 
 
