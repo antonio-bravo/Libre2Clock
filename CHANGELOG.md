@@ -1,5 +1,31 @@
 # Changelog
 
+## 7c0ea09 (Oct 23, 2026 07:52:47)
+Update dependency com.squareup.okhttp3:okhttp to v5.5.1 (#56)
+
+Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
+[detail](#7c0ea09-details)
+
+<details id='7c0ea09-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 45175de (Oct 22, 2026 20:32:25)
+Update changelog — github-actions[bot]
+[detail](#45175de-details)
+
+<details id='45175de-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 293bc3e (Oct 22, 2026 20:32:15)
 Update dependency com.squareup.okhttp3:logging-interceptor to v5.5.1 (#55)
 
@@ -628,32 +654,6 @@ Update dependency com.squareup.okhttp3:okhttp to v5 — renovate[bot]
 [detail](#52f1a5a-details)
 
 <details id='52f1a5a-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 801e521 (Oct 17, 2026 15:17:01)
-Update changelog — github-actions[bot]
-[detail](#801e521-details)
-
-<details id='801e521-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## f87c9ea (Oct 17, 2026 17:16:50)
-Merge pull request #44 from antonio-bravo/renovate/major-logginginterceptor
-
-Update dependency com.squareup.okhttp3:logging-interceptor to v5 — antonio-bravo
-[detail](#f87c9ea-details)
-
-<details id='f87c9ea-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
