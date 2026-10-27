@@ -660,6 +660,8 @@
     <string name="widget_decimals_2">2 decimales (1.52 U)</string>
     <string name="widget_stale_indicator_title">Indicador de Desincronización (&gt; 15 min)</string>
     <string name="widget_stale_indicator_desc">Atenúa el texto y cambia el fondo a gris oscuro si los datos tienen más de 15 minutos sin necesidad de mostrar texto.</string>
+    <string name="widget_double_tap_speech_title">Doble Toque para Lectura por Voz (TTS)</string>
+    <string name="widget_double_tap_speech_desc">Al hacer doble toque con el dedo sobre el widget en la pantalla de inicio, se leen los valores en voz alta.</string>
     <string name="auth_refresh_session_btn">Renovar Sesión / Token</string>
     <string name="auth_refreshing_session">Renovando sesión…</string>
     <string name="auth_refresh_success">¡Sesión renovada con éxito!</string>

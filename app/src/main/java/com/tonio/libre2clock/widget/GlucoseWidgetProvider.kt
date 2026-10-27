@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.os.SystemClock
 import android.util.TypedValue
 import android.view.View
 import android.widget.RemoteViews
@@ -17,19 +18,18 @@ import com.tonio.libre2clock.data.model.InsulinType
 import com.tonio.libre2clock.data.repository.GlucoseProcessor
 import com.tonio.libre2clock.data.repository.InsulinProcessor
 import com.tonio.libre2clock.di.AppContainer
+import com.tonio.libre2clock.util.GlucoseVoiceManager
 import com.tonio.libre2clock.util.TimestampParser
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-
-import com.tonio.libre2clock.data.local.GlucoseHistoryDatabaseHelper
-import kotlinx.coroutines.withContext
 
 class GlucoseWidgetProvider : AppWidgetProvider() {
 
@@ -40,6 +40,10 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
 
     companion object {
         const val ACTION_UPDATE_WIDGET = "com.tonio.libre2clock.ACTION_UPDATE_WIDGET"
+        const val ACTION_WIDGET_CLICK = "com.tonio.libre2clock.ACTION_WIDGET_CLICK"
+
+        @Volatile
+        private var lastWidgetClickTime: Long = 0L
 
         fun triggerUpdate(context: Context) {
             try {
@@ -54,6 +58,69 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
     }
 
     override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action == ACTION_WIDGET_CLICK) {
+            val now = SystemClock.elapsedRealtime()
+            val timeDiff = now - lastWidgetClickTime
+            lastWidgetClickTime = now
+
+            val pendingResult = goAsync()
+            scope.launch {
+                try {
+                    val preferenceManager = AppContainer.providePreferenceManager(context)
+                    val doubleTapSpeechEnabled = preferenceManager.widgetDoubleTapSpeech.first()
+
+                    if (timeDiff in 80L..650L && doubleTapSpeechEnabled) {
+                        // Double tap detected -> Speak glucose aloud!
+                        val repository = AppContainer.provideGlucoseRepository(context)
+                        val rawMeasurement = repository.currentGlucose.first()
+                            ?: withContext(Dispatchers.IO) {
+                                com.tonio.libre2clock.data.local.GlucoseHistoryDatabaseHelper(context).readRecentHistory(1).firstOrNull()
+                            }
+                        if (rawMeasurement != null) {
+                            val manualOffset = preferenceManager.glucoseOffset.first()
+                            val userRanges = preferenceManager.glucoseOffsetRanges.first()
+                            val autoAdjustEnabled = preferenceManager.autoAdjustEnabled.first()
+                            val autoRangeOffsetMode = preferenceManager.autoRangeOffsetMode.first()
+                            val capillaryReadings = preferenceManager.capillaryReadings.first()
+                            val activeSensorSn = preferenceManager.activeSensorSerialNumber.first()
+
+                            val measurement = GlucoseProcessor.process(
+                                measurement = rawMeasurement,
+                                manualOffset = manualOffset,
+                                userRanges = userRanges,
+                                autoAdjustEnabled = autoAdjustEnabled,
+                                autoRangeOffsetMode = autoRangeOffsetMode,
+                                capillaryReadings = capillaryReadings,
+                                activeSensorSn = activeSensorSn
+                            )
+
+                            val insulinDoses = preferenceManager.insulinDoses.first()
+                            val activeDoses = insulinDoses.filter { !it.isDeleted }
+                            val rapidDoses = activeDoses.filter { it.type == InsulinType.RAPID }
+                            val slowDoses = activeDoses.filter { it.type == InsulinType.SLOW }
+                            val rapidIob = InsulinProcessor.calculateTotalIOB(rapidDoses)
+                            val slowIob = InsulinProcessor.calculateTotalIOB(slowDoses)
+                            val ttsDetailed = preferenceManager.ttsFormatDetailed.first()
+
+                            val voiceManager = GlucoseVoiceManager.getInstance(context)
+                            voiceManager.speakGlucose(measurement, rapidIob, slowIob, isDetailed = ttsDetailed)
+                        }
+                    } else {
+                        // Single tap -> Launch MainActivity
+                        val mainIntent = Intent(context, MainActivity::class.java).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                        }
+                        context.startActivity(mainIntent)
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                } finally {
+                    pendingResult.finish()
+                }
+            }
+            return
+        }
+
         if (intent.action == ACTION_UPDATE_WIDGET) {
             val pendingResult = goAsync()
             val appWidgetManager = AppWidgetManager.getInstance(context)
@@ -75,16 +142,7 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
     }
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
-        val pendingResult = goAsync()
-        scope.launch {
-            try {
-                for (appWidgetId in appWidgetIds) {
-                    updateAppWidgetSuspend(context, appWidgetManager, appWidgetId)
-                }
-            } finally {
-                pendingResult.finish()
-            }
-        }
+        // Handled by onReceive
     }
 
     override fun onAppWidgetOptionsChanged(
@@ -160,7 +218,7 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
             // Fetch raw measurement and user calibration settings
             val rawMeasurement = repository.currentGlucose.first()
                 ?: withContext(Dispatchers.IO) {
-                    GlucoseHistoryDatabaseHelper(context).readRecentHistory(1).firstOrNull()
+                    com.tonio.libre2clock.data.local.GlucoseHistoryDatabaseHelper(context).readRecentHistory(1).firstOrNull()
                 }
             val manualOffset = preferenceManager.glucoseOffset.first()
             val userRanges = preferenceManager.glucoseOffsetRanges.first()
@@ -305,14 +363,15 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
 
             views.setInt(R.id.widget_root, "setBackgroundColor", finalBgColor)
 
-            // Pending Intent to launch App on click
-            val mainIntent = Intent(context, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            // Pending Intent to capture Click / Double Tap
+            val clickIntent = Intent(context, GlucoseWidgetProvider::class.java).apply {
+                action = ACTION_WIDGET_CLICK
+                putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
             }
-            val pendingIntent = PendingIntent.getActivity(
+            val pendingIntent = PendingIntent.getBroadcast(
                 context,
-                0,
-                mainIntent,
+                appWidgetId,
+                clickIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
             views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)

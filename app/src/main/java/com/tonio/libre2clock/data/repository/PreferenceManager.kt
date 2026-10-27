@@ -147,6 +147,7 @@ class PreferenceManager(private val context: Context) {
     private val WIDGET_USE_TARGET_COLOR_BG_KEY = booleanPreferencesKey("widget_use_target_color_bg")
     private val WIDGET_INSULIN_DECIMALS_KEY = intPreferencesKey("widget_insulin_decimals")
     private val WIDGET_STALE_INDICATOR_KEY = booleanPreferencesKey("widget_stale_indicator")
+    private val WIDGET_DOUBLE_TAP_SPEECH_KEY = booleanPreferencesKey("widget_double_tap_speech")
     private val TTS_ANNOUNCE_ON_TAP_KEY = booleanPreferencesKey("tts_announce_on_tap")
     private val TTS_ANNOUNCE_PERIODIC_KEY = booleanPreferencesKey("tts_announce_periodic")
     private val TTS_ANNOUNCE_ON_ALERT_KEY = booleanPreferencesKey("tts_announce_on_alert")
@@ -259,6 +260,7 @@ class PreferenceManager(private val context: Context) {
     val widgetUseTargetColorBg: Flow<Boolean> = context.dataStore.data.map { it[WIDGET_USE_TARGET_COLOR_BG_KEY] ?: true }.distinctUntilChanged()
     val widgetInsulinDecimals: Flow<Int> = context.dataStore.data.map { (it[WIDGET_INSULIN_DECIMALS_KEY] ?: 2).coerceIn(0, 2) }.distinctUntilChanged()
     val widgetStaleIndicator: Flow<Boolean> = context.dataStore.data.map { it[WIDGET_STALE_INDICATOR_KEY] ?: true }.distinctUntilChanged()
+    val widgetDoubleTapSpeech: Flow<Boolean> = context.dataStore.data.map { it[WIDGET_DOUBLE_TAP_SPEECH_KEY] ?: true }.distinctUntilChanged()
     val ttsAnnounceOnTap: Flow<Boolean> = context.dataStore.data.map { it[TTS_ANNOUNCE_ON_TAP_KEY] ?: true }.distinctUntilChanged()
     val ttsAnnouncePeriodic: Flow<Boolean> = context.dataStore.data.map { it[TTS_ANNOUNCE_PERIODIC_KEY] ?: false }.distinctUntilChanged()
     val ttsAnnounceOnAlert: Flow<Boolean> = context.dataStore.data.map { it[TTS_ANNOUNCE_ON_ALERT_KEY] ?: true }.distinctUntilChanged()
@@ -802,6 +804,11 @@ class PreferenceManager(private val context: Context) {
 
     suspend fun saveWidgetStaleIndicator(enabled: Boolean) {
         context.dataStore.edit { it[WIDGET_STALE_INDICATOR_KEY] = enabled }
+        updateBackupPayload()
+    }
+
+    suspend fun saveWidgetDoubleTapSpeech(enabled: Boolean) {
+        context.dataStore.edit { it[WIDGET_DOUBLE_TAP_SPEECH_KEY] = enabled }
         updateBackupPayload()
     }
 

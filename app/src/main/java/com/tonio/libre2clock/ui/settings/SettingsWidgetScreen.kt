@@ -43,6 +43,7 @@ fun SettingsWidgetScreen(
     val widgetUseTargetColorBg by viewModel.widgetUseTargetColorBg.collectAsStateWithLifecycle()
     val widgetInsulinDecimals by viewModel.widgetInsulinDecimals.collectAsStateWithLifecycle()
     val widgetStaleIndicator by viewModel.widgetStaleIndicator.collectAsStateWithLifecycle()
+    val widgetDoubleTapSpeech by viewModel.widgetDoubleTapSpeech.collectAsStateWithLifecycle()
     val currentGlucose by viewModel.currentGlucose.collectAsStateWithLifecycle()
 
     Scaffold(
@@ -152,6 +153,19 @@ fun SettingsWidgetScreen(
                         checked = widgetStaleIndicator,
                         onCheckedChange = viewModel::setWidgetStaleIndicator,
                         icon = Icons.Default.Warning
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Doble toque para lectura por voz (TTS)
+                    WidgetToggleOption(
+                        title = stringResource(R.string.widget_double_tap_speech_title),
+                        description = stringResource(R.string.widget_double_tap_speech_desc),
+                        checked = widgetDoubleTapSpeech,
+                        onCheckedChange = viewModel::setWidgetDoubleTapSpeech,
+                        icon = Icons.Default.Notifications
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))

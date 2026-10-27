@@ -665,6 +665,8 @@
     <string name="widget_decimals_2">2 decimal places (1.52 U)</string>
     <string name="widget_stale_indicator_title">Stale Data Indicator (&gt; 15 min)</string>
     <string name="widget_stale_indicator_desc">Dims text and changes background to dark grey when readings are older than 15 minutes without needing text.</string>
+    <string name="widget_double_tap_speech_title">Double-Tap for Voice Reading (TTS)</string>
+    <string name="widget_double_tap_speech_desc">Double-tapping the widget on your home screen reads the glucose values and trend aloud.</string>
     <string name="auth_refresh_session_btn">Renew Session / Token</string>
     <string name="auth_refreshing_session">Renewing session…</string>
     <string name="auth_refresh_success">Session renewed successfully!</string>

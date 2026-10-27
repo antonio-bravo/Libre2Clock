@@ -179,6 +179,7 @@ class SettingsViewModel(
     val widgetUseTargetColorBg = preferenceManager.widgetUseTargetColorBg.stateInDefault(true)
     val widgetInsulinDecimals = preferenceManager.widgetInsulinDecimals.stateInDefault(2)
     val widgetStaleIndicator = preferenceManager.widgetStaleIndicator.stateInDefault(true)
+    val widgetDoubleTapSpeech = preferenceManager.widgetDoubleTapSpeech.stateInDefault(true)
 
     val ttsAnnounceOnTap = preferenceManager.ttsAnnounceOnTap.stateInDefault(true)
     val ttsAnnouncePeriodic = preferenceManager.ttsAnnouncePeriodic.stateInDefault(false)
@@ -1133,6 +1134,13 @@ class SettingsViewModel(
     fun setWidgetStaleIndicator(enabled: Boolean) {
         viewModelScope.launch {
             preferenceManager.saveWidgetStaleIndicator(enabled)
+            sendWidgetUpdateBroadcast()
+        }
+    }
+
+    fun setWidgetDoubleTapSpeech(enabled: Boolean) {
+        viewModelScope.launch {
+            preferenceManager.saveWidgetDoubleTapSpeech(enabled)
             sendWidgetUpdateBroadcast()
         }
     }
