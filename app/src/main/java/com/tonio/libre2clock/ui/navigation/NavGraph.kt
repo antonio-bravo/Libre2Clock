@@ -34,8 +34,10 @@ import com.tonio.libre2clock.ui.settings.SettingsDataScreen
 import com.tonio.libre2clock.ui.settings.SettingsDeviceScreen
 import com.tonio.libre2clock.ui.settings.SettingsEmergencyScreen
 import com.tonio.libre2clock.ui.settings.SettingsEventLogScreen
+import com.tonio.libre2clock.ui.settings.SettingsNightscoutScreen
 import com.tonio.libre2clock.ui.settings.SettingsScreen
 import com.tonio.libre2clock.ui.settings.SettingsViewModel
+import com.tonio.libre2clock.ui.settings.SettingsVoiceScreen
 import com.tonio.libre2clock.ui.settings.SettingsWidgetScreen
 import com.tonio.libre2clock.ui.strategy.StrategyScreen
 
@@ -165,6 +167,8 @@ fun NavGraph(
                     onNavigateToBattery = { backStack.add(Destination.SettingsBattery) },
                     onNavigateToDevice = { backStack.add(Destination.SettingsDevice) },
                     onNavigateToWidget = { backStack.add(Destination.SettingsWidget) },
+                    onNavigateToVoice = { backStack.add(Destination.SettingsVoice) },
+                    onNavigateToNightscout = { backStack.add(Destination.SettingsNightscout) },
                     onNavigateToData = { backStack.add(Destination.SettingsData) },
                     onNavigateToCloud = { backStack.add(Destination.SettingsCloud) },
                     onNavigateToAdvanced = { backStack.add(Destination.SettingsAdvanced) }
@@ -172,6 +176,18 @@ fun NavGraph(
             }
             entry<Destination.SettingsWidget> {
                 SettingsWidgetScreen(
+                    viewModel = settingsViewModel,
+                    onBack = { popBackStack() }
+                )
+            }
+            entry<Destination.SettingsVoice> {
+                SettingsVoiceScreen(
+                    viewModel = settingsViewModel,
+                    onBack = { popBackStack() }
+                )
+            }
+            entry<Destination.SettingsNightscout> {
+                SettingsNightscoutScreen(
                     viewModel = settingsViewModel,
                     onBack = { popBackStack() }
                 )

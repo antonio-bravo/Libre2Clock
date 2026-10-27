@@ -1,5 +1,6 @@
 package com.tonio.libre2clock.ui.settings
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -10,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -26,12 +28,16 @@ fun SettingsScreen(
     onNavigateToBattery: () -> Unit,
     onNavigateToDevice: () -> Unit,
     onNavigateToWidget: () -> Unit,
+    onNavigateToVoice: () -> Unit,
+    onNavigateToNightscout: () -> Unit,
     onNavigateToData: () -> Unit,
     onNavigateToCloud: () -> Unit,
     onNavigateToAdvanced: () -> Unit
 ) {
+    val context = LocalContext.current
     val sectionPerfStats by viewModel.sectionPerfStats.collectAsStateWithLifecycle()
     val libreLinkUpEmail by viewModel.libreLinkUpEmail.collectAsStateWithLifecycle()
+    val isRefreshingToken by viewModel.isRefreshingToken.collectAsStateWithLifecycle()
 
     var showLogoutConfirmDialog by remember { mutableStateOf(false) }
 
@@ -69,7 +75,15 @@ fun SettingsScreen(
             // OPTIMIZACIÓN: Cada sección es un 'item' independiente con 'key' para aislar recomposiciones
             item(key = "account_header") {
                 Spacer(modifier = Modifier.height(8.dp))
-                AccountHeaderSection(email = libreLinkUpEmail)
+                AccountHeaderSection(
+                    email = libreLinkUpEmail,
+                    isRefreshingToken = isRefreshingToken,
+                    onRefreshToken = {
+                        viewModel.refreshToken { _, message ->
+                            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                )
             }
 
             item(key = "alerts") {
@@ -124,6 +138,24 @@ fun SettingsScreen(
                     description = stringResource(R.string.settings_widget_desc),
                     icon = Icons.Default.Build,
                     onClick = onNavigateToWidget
+                )
+            }
+
+            item(key = "voice") {
+                SettingsCategoryItem(
+                    title = stringResource(R.string.settings_voice_title),
+                    description = stringResource(R.string.settings_voice_desc),
+                    icon = Icons.Default.Notifications,
+                    onClick = onNavigateToVoice
+                )
+            }
+
+            item(key = "nightscout") {
+                SettingsCategoryItem(
+                    title = stringResource(R.string.settings_nightscout_title),
+                    description = stringResource(R.string.settings_nightscout_desc),
+                    icon = Icons.Default.Share,
+                    onClick = onNavigateToNightscout
                 )
             }
 
@@ -220,26 +252,50 @@ fun SettingsScreen(
 // --- Componente Extraído para Aislar Recomposiciones ---
 
 @Composable
-private fun AccountHeaderSection(email: String?) {
+private fun AccountHeaderSection(
+    email: String?,
+    isRefreshingToken: Boolean,
+    onRefreshToken: () -> Unit
+) {
     SettingsSection(title = stringResource(R.string.settings_llu_account_header)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                Icons.Default.Person,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Column {
-                Text(
-                    text = email ?: stringResource(R.string.settings_confirm),
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Medium
+        Column {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Default.Person,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
                 )
-                Text(
-                    text = stringResource(R.string.settings_llu_account_desc),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = email ?: stringResource(R.string.settings_confirm),
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Medium
+                    )
+                    Text(
+                        text = stringResource(R.string.settings_llu_account_desc),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedButton(
+                onClick = onRefreshToken,
+                enabled = !isRefreshingToken,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                if (isRefreshingToken) {
+                    CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.auth_refreshing_session))
+                } else {
+                    Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.auth_refresh_session_btn))
+                }
             }
         }
     }

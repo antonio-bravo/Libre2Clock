@@ -113,14 +113,29 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        try {
+            com.tonio.libre2clock.widget.GlucoseWidgetProvider.triggerUpdate(this)
+        } catch (e: Exception) {
+            // Ignorar
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        try {
+            com.tonio.libre2clock.widget.GlucoseWidgetProvider.triggerUpdate(this)
+        } catch (e: Exception) {
+            // Ignorar
+        }
+    }
+
     override fun onStop() {
         super.onStop()
         // Envía broadcast al widget al minimizar o cerrar la aplicación para mantener sincronización 100% inmediata
         try {
-            val updateIntent = Intent("com.tonio.libre2clock.ACTION_UPDATE_WIDGET").apply {
-                setPackage(packageName)
-            }
-            sendBroadcast(updateIntent)
+            com.tonio.libre2clock.widget.GlucoseWidgetProvider.triggerUpdate(this)
         } catch (e: Exception) {
             // Ignorar en apagado
         }

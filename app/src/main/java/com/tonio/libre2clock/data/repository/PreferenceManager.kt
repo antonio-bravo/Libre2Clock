@@ -146,6 +146,17 @@ class PreferenceManager(private val context: Context) {
     private val WIDGET_BACKGROUND_OPACITY_KEY = intPreferencesKey("widget_background_opacity")
     private val WIDGET_USE_TARGET_COLOR_BG_KEY = booleanPreferencesKey("widget_use_target_color_bg")
     private val WIDGET_INSULIN_DECIMALS_KEY = intPreferencesKey("widget_insulin_decimals")
+    private val WIDGET_STALE_INDICATOR_KEY = booleanPreferencesKey("widget_stale_indicator")
+    private val TTS_ANNOUNCE_ON_TAP_KEY = booleanPreferencesKey("tts_announce_on_tap")
+    private val TTS_ANNOUNCE_PERIODIC_KEY = booleanPreferencesKey("tts_announce_periodic")
+    private val TTS_ANNOUNCE_ON_ALERT_KEY = booleanPreferencesKey("tts_announce_on_alert")
+    private val TTS_FORMAT_DETAILED_KEY = booleanPreferencesKey("tts_format_detailed")
+    private val TTS_PERIODIC_INTERVAL_MINS_KEY = intPreferencesKey("tts_periodic_interval_mins")
+    private val NIGHTSCOUT_ENABLED_KEY = booleanPreferencesKey("nightscout_enabled")
+    private val NIGHTSCOUT_URL_KEY = stringPreferencesKey("nightscout_url")
+    private val NIGHTSCOUT_API_SECRET_KEY = stringPreferencesKey("nightscout_api_secret")
+    private val NIGHTSCOUT_USE_CALIBRATED_KEY = booleanPreferencesKey("nightscout_use_calibrated")
+    private val XDRIP_BROADCAST_ENABLED_KEY = booleanPreferencesKey("xdrip_broadcast_enabled")
 
     // --- Flows ---
     val glucoseSourceProvider: Flow<GlucoseSourceProvider> = context.dataStore.data.map { prefs ->
@@ -247,6 +258,17 @@ class PreferenceManager(private val context: Context) {
     val widgetBackgroundOpacity: Flow<Int> = context.dataStore.data.map { (it[WIDGET_BACKGROUND_OPACITY_KEY] ?: 80).coerceIn(0, 100) }.distinctUntilChanged()
     val widgetUseTargetColorBg: Flow<Boolean> = context.dataStore.data.map { it[WIDGET_USE_TARGET_COLOR_BG_KEY] ?: true }.distinctUntilChanged()
     val widgetInsulinDecimals: Flow<Int> = context.dataStore.data.map { (it[WIDGET_INSULIN_DECIMALS_KEY] ?: 2).coerceIn(0, 2) }.distinctUntilChanged()
+    val widgetStaleIndicator: Flow<Boolean> = context.dataStore.data.map { it[WIDGET_STALE_INDICATOR_KEY] ?: true }.distinctUntilChanged()
+    val ttsAnnounceOnTap: Flow<Boolean> = context.dataStore.data.map { it[TTS_ANNOUNCE_ON_TAP_KEY] ?: true }.distinctUntilChanged()
+    val ttsAnnouncePeriodic: Flow<Boolean> = context.dataStore.data.map { it[TTS_ANNOUNCE_PERIODIC_KEY] ?: false }.distinctUntilChanged()
+    val ttsAnnounceOnAlert: Flow<Boolean> = context.dataStore.data.map { it[TTS_ANNOUNCE_ON_ALERT_KEY] ?: true }.distinctUntilChanged()
+    val ttsFormatDetailed: Flow<Boolean> = context.dataStore.data.map { it[TTS_FORMAT_DETAILED_KEY] ?: false }.distinctUntilChanged()
+    val ttsPeriodicIntervalMins: Flow<Int> = context.dataStore.data.map { (it[TTS_PERIODIC_INTERVAL_MINS_KEY] ?: 15).coerceIn(5, 120) }.distinctUntilChanged()
+    val nightscoutEnabled: Flow<Boolean> = context.dataStore.data.map { it[NIGHTSCOUT_ENABLED_KEY] ?: false }.distinctUntilChanged()
+    val nightscoutUrl: Flow<String> = context.dataStore.data.map { it[NIGHTSCOUT_URL_KEY] ?: "" }.distinctUntilChanged()
+    val nightscoutApiSecret: Flow<String> = context.dataStore.data.map { it[NIGHTSCOUT_API_SECRET_KEY] ?: "" }.distinctUntilChanged()
+    val nightscoutUseCalibrated: Flow<Boolean> = context.dataStore.data.map { it[NIGHTSCOUT_USE_CALIBRATED_KEY] ?: true }.distinctUntilChanged()
+    val xdripBroadcastEnabled: Flow<Boolean> = context.dataStore.data.map { it[XDRIP_BROADCAST_ENABLED_KEY] ?: false }.distinctUntilChanged()
     val deductIobForBolus: Flow<Boolean> = context.dataStore.data.map { it[DEDUCT_IOB_FOR_BOLUS_KEY] ?: false }.distinctUntilChanged()
     val useCalibratedForAlarms: Flow<Boolean> = context.dataStore.data.map { it[USE_CALIBRATED_FOR_ALARMS_KEY] ?: true }.distinctUntilChanged()
 
@@ -504,6 +526,7 @@ class PreferenceManager(private val context: Context) {
     suspend fun saveCapillaryReadings(readings: List<CapillaryMeasurement>) {
         context.dataStore.edit { it[CAPILLARY_READINGS_KEY] = json.encodeToString(readings) }
         updateBackupPayload()
+        com.tonio.libre2clock.widget.GlucoseWidgetProvider.triggerUpdate(context)
     }
 
     suspend fun saveWatchAlertsEnabled(enabled: Boolean) {
@@ -694,6 +717,7 @@ class PreferenceManager(private val context: Context) {
     suspend fun saveInsulinDoses(doses: List<InsulinDose>) {
         context.dataStore.edit { it[INSULIN_DOSES_KEY] = json.encodeToString(doses) }
         updateBackupPayload()
+        com.tonio.libre2clock.widget.GlucoseWidgetProvider.triggerUpdate(context)
     }
 
     suspend fun saveSensorLogs(logs: List<SensorLog>) {
@@ -773,6 +797,61 @@ class PreferenceManager(private val context: Context) {
 
     suspend fun saveWidgetInsulinDecimals(decimals: Int) {
         context.dataStore.edit { it[WIDGET_INSULIN_DECIMALS_KEY] = decimals.coerceIn(0, 2) }
+        updateBackupPayload()
+    }
+
+    suspend fun saveWidgetStaleIndicator(enabled: Boolean) {
+        context.dataStore.edit { it[WIDGET_STALE_INDICATOR_KEY] = enabled }
+        updateBackupPayload()
+    }
+
+    suspend fun saveTtsAnnounceOnTap(enabled: Boolean) {
+        context.dataStore.edit { it[TTS_ANNOUNCE_ON_TAP_KEY] = enabled }
+        updateBackupPayload()
+    }
+
+    suspend fun saveTtsAnnouncePeriodic(enabled: Boolean) {
+        context.dataStore.edit { it[TTS_ANNOUNCE_PERIODIC_KEY] = enabled }
+        updateBackupPayload()
+    }
+
+    suspend fun saveTtsAnnounceOnAlert(enabled: Boolean) {
+        context.dataStore.edit { it[TTS_ANNOUNCE_ON_ALERT_KEY] = enabled }
+        updateBackupPayload()
+    }
+
+    suspend fun saveTtsFormatDetailed(enabled: Boolean) {
+        context.dataStore.edit { it[TTS_FORMAT_DETAILED_KEY] = enabled }
+        updateBackupPayload()
+    }
+
+    suspend fun saveTtsPeriodicIntervalMins(minutes: Int) {
+        context.dataStore.edit { it[TTS_PERIODIC_INTERVAL_MINS_KEY] = minutes.coerceIn(5, 120) }
+        updateBackupPayload()
+    }
+
+    suspend fun saveNightscoutEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[NIGHTSCOUT_ENABLED_KEY] = enabled }
+        updateBackupPayload()
+    }
+
+    suspend fun saveNightscoutUrl(url: String) {
+        context.dataStore.edit { it[NIGHTSCOUT_URL_KEY] = url.trim() }
+        updateBackupPayload()
+    }
+
+    suspend fun saveNightscoutApiSecret(secret: String) {
+        context.dataStore.edit { it[NIGHTSCOUT_API_SECRET_KEY] = secret.trim() }
+        updateBackupPayload()
+    }
+
+    suspend fun saveNightscoutUseCalibrated(useCalibrated: Boolean) {
+        context.dataStore.edit { it[NIGHTSCOUT_USE_CALIBRATED_KEY] = useCalibrated }
+        updateBackupPayload()
+    }
+
+    suspend fun saveXdripBroadcastEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[XDRIP_BROADCAST_ENABLED_KEY] = enabled }
         updateBackupPayload()
     }
 

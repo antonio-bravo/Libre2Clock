@@ -412,6 +412,7 @@ class DashboardViewModel(
                 repository.fetchLatestGlucose()
             } finally {
                 _isRefreshing.value = false
+                com.tonio.libre2clock.widget.GlucoseWidgetProvider.triggerUpdate(androidContext)
             }
         }
     }
@@ -432,6 +433,7 @@ class DashboardViewModel(
                 repository.refreshHistoricalGlucoseWindow()
             } finally {
                 _isHistoryRefreshing.value = false
+                com.tonio.libre2clock.widget.GlucoseWidgetProvider.triggerUpdate(androidContext)
             }
         }
     }
@@ -566,6 +568,22 @@ class DashboardViewModel(
             expiryDate = androidContext.getString(R.string.sensor_expires_label, expiryDateStr),
             serialNumber = info.serialNumber
         )
+    }
+
+    fun speakCurrentGlucoseIfTapEnabled() {
+        viewModelScope.launch {
+            val announceOnTap = preferenceManager.ttsAnnounceOnTap.first()
+            if (announceOnTap) {
+                val current = currentGlucose.value ?: return@launch
+                val isDetailed = preferenceManager.ttsFormatDetailed.first()
+                val rapidDoses = insulinDoses.value.filter { it.type == com.tonio.libre2clock.data.model.InsulinType.RAPID }
+                val slowDoses = insulinDoses.value.filter { it.type == com.tonio.libre2clock.data.model.InsulinType.SLOW }
+                val rapidIob = InsulinProcessor.calculateTotalIOB(rapidDoses)
+                val slowIob = InsulinProcessor.calculateTotalIOB(slowDoses)
+                val voiceManager = com.tonio.libre2clock.util.GlucoseVoiceManager.getInstance(androidContext)
+                voiceManager.speakGlucose(current, rapidIob, slowIob, isDetailed = isDetailed)
+            }
+        }
     }
 
     private data class DashboardInputs(

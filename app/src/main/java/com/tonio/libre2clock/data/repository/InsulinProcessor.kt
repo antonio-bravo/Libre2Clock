@@ -18,6 +18,7 @@ object InsulinProcessor {
      * Calculates IOB for a single dose.
      */
     fun calculateIOB(dose: InsulinDose, atInstant: Instant = Instant.now()): Double {
+        if (dose.isDeleted) return 0.0
         val doseInstant = TimestampParser.parseFlexibleInstant(dose.timestamp) ?: return 0.0
         return calculateIOBFromInstant(dose, doseInstant, atInstant)
     }
@@ -27,6 +28,7 @@ object InsulinProcessor {
      * Crucial for avoiding redundant parsing in loops (e.g., predictGlucosePath).
      */
     private fun calculateIOBFromInstant(dose: InsulinDose, doseInstant: Instant, atInstant: Instant): Double {
+        if (dose.isDeleted) return 0.0
         val minutesPassed = Duration.between(doseInstant, atInstant).toMinutes().toInt()
         
         if (minutesPassed <= 0) return dose.units
@@ -48,11 +50,10 @@ object InsulinProcessor {
                     0.21053 * (1.0 - progresoFinal)
                 }
             }
-            // Preservamos el comportamiento original de redondeo
-            (dose.units * factorRestante).roundToInt().toDouble()
+            max(0.0, dose.units * factorRestante)
         } else {
             val timeFraction = minutesPassed.toDouble() / dose.durationMinutes.toDouble()
-            dose.units * (1.0 - timeFraction)
+            max(0.0, dose.units * (1.0 - timeFraction))
         }
     }
 
@@ -60,6 +61,7 @@ object InsulinProcessor {
         if (doses.isEmpty()) return 0.0
         var total = 0.0
         for (dose in doses) {
+            if (dose.isDeleted) continue
             total += calculateIOB(dose, atInstant)
         }
         return total
@@ -77,6 +79,7 @@ object InsulinProcessor {
 
         var sum = 0.0
         for (dose in doses) {
+            if (dose.isDeleted) continue
             if (type != null && dose.type != type) continue
             
             val instant = TimestampParser.parseFlexibleInstant(dose.timestamp) ?: continue
@@ -98,6 +101,7 @@ object InsulinProcessor {
         var earliestDoseDate: LocalDate? = null
 
         for (dose in doses) {
+            if (dose.isDeleted) continue
             val instant = TimestampParser.parseFlexibleInstant(dose.timestamp) ?: continue
             if (!instant.isBefore(cutoffInstant) && instant.isBefore(endInstant)) {
                 total += dose.units
@@ -131,6 +135,7 @@ object InsulinProcessor {
         var slowSum = 0.0
 
         for (dose in doses) {
+            if (dose.isDeleted) continue
             val instant = TimestampParser.parseFlexibleInstant(dose.timestamp) ?: continue
             if (!instant.isBefore(startOfDay) && instant.isBefore(endOfDay)) {
                 if (dose.type == InsulinType.RAPID) {

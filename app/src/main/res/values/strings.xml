@@ -663,9 +663,47 @@
     <string name="widget_decimals_auto">Auto (1 or 2 decimals)</string>
     <string name="widget_decimals_1">1 decimal place (1.5 U)</string>
     <string name="widget_decimals_2">2 decimal places (1.52 U)</string>
+    <string name="widget_stale_indicator_title">Stale Data Indicator (&gt; 15 min)</string>
+    <string name="widget_stale_indicator_desc">Dims text and changes background to dark grey when readings are older than 15 minutes without needing text.</string>
+    <string name="auth_refresh_session_btn">Renew Session / Token</string>
+    <string name="auth_refreshing_session">Renewing session…</string>
+    <string name="auth_refresh_success">Session renewed successfully!</string>
+    <string name="auth_refresh_no_creds">No stored credentials found. Please sign in again.</string>
+    <string name="auth_refresh_error">Failed to renew session: %1$s</string>
     <string name="widget_show_last_update_title">Show Last Update Time</string>
     <string name="widget_show_last_update_desc">Displays the timestamp of the last reading on the widget.</string>
     <string name="widget_tap_action_title">Widget Tap Action</string>
     <string name="widget_tap_action_desc">Tapping the widget on your home screen opens Libre2Clock directly.</string>
     <string name="widget_description">Shows real-time glucose, trend arrow, and active insulin on home screen.</string>
+
+    <!-- Voice TTS Settings -->
+    <string name="settings_voice_title">Voice Reading (TTS)</string>
+    <string name="settings_voice_desc">Text-to-speech voice announcements for glucose readings and trend alerts.</string>
+    <string name="tts_announce_on_tap_title">Announce on Glucose Tap</string>
+    <string name="tts_announce_on_tap_desc">Reads current glucose aloud when you tap the glucose display on the Dashboard.</string>
+    <string name="tts_announce_periodic_title">Periodic Background Speech</string>
+    <string name="tts_announce_periodic_desc">Announces glucose reading aloud every N minutes in background (e.g. driving/sports).</string>
+    <string name="tts_announce_alert_title">Announce Trend Alerts &amp; Shifts</string>
+    <string name="tts_announce_alert_desc">Reads glucose aloud when entering High/Low or on rapid rise/fall arrows.</string>
+    <string name="tts_format_detailed_title">Detailed Speech Format</string>
+    <string name="tts_format_detailed_desc">Include active insulin (IOB) units in the spoken announcement.</string>
+    <string name="tts_interval_label">Speech Interval: %1$d minutes</string>
+    <string name="tts_test_button">Test Voice Announcement</string>
+    <string name="tts_test_phrase">Glucose 110 mg/dL, stable. Active insulin 1.5 units.</string>
+
+    <!-- Nightscout & xDrip+ Settings -->
+    <string name="settings_nightscout_title">Nightscout &amp; xDrip+ / AAPS</string>
+    <string name="settings_nightscout_desc">Sync glucose readings with Nightscout REST API and broadcast locally to xDrip+ / AndroidAPS.</string>
+    <string name="nightscout_enable_title">Nightscout Sync</string>
+    <string name="nightscout_enable_desc">Automatically upload new glucose readings to your Nightscout server.</string>
+    <string name="nightscout_url_label">Nightscout Server URL</string>
+    <string name="nightscout_url_hint">E.g., https://my-nightscout.fly.dev</string>
+    <string name="nightscout_secret_label">API Secret</string>
+    <string name="nightscout_secret_hint">API Secret for Nightscout authentication</string>
+    <string name="nightscout_use_calibrated_title">Upload Calibrated Value</string>
+    <string name="nightscout_use_calibrated_desc">Uploads calibrated value (with offset) or raw value to Nightscout.</string>
+    <string name="nightscout_test_button">Test Nightscout Connection</string>
+    <string name="nightscout_testing_button">Testing connection…</string>
+    <string name="xdrip_broadcast_title">xDrip+ / AndroidAPS Local Broadcast</string>
+    <string name="xdrip_broadcast_desc">Sends local inter-app broadcasts on this phone for xDrip+, AndroidAPS, and Wear OS apps.</string>
 </resources>

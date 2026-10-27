@@ -294,7 +294,15 @@ fun DashboardScreen(
                         }
                     }
                 }
-                item { GlucoseCard(currentGlucose, dashboardMetrics, targetGlucoseLow, targetGlucoseHigh) }
+                item {
+                GlucoseCard(
+                    measurement = currentGlucose,
+                    metrics = dashboardMetrics,
+                    targetLow = targetGlucoseLow,
+                    targetHigh = targetGlucoseHigh,
+                    onTapGlucoseCard = { viewModel.speakCurrentGlucoseIfTapEnabled() }
+                )
+            }
                 item {
                     SensorHealthCard(
                         status = sensorStatus,
@@ -839,7 +847,8 @@ private fun GlucoseCard(
     measurement: GlucoseMeasurement?,
     metrics: DashboardMetrics,
     targetLow: Int = 70,
-    targetHigh: Int = 180
+    targetHigh: Int = 180,
+    onTapGlucoseCard: () -> Unit = {}
 ) {
     val measurementInstant = remember(measurement) {
         measurement?.let { m -> TimestampParser.parseMeasurementInstant(m) }
@@ -888,7 +897,8 @@ private fun GlucoseCard(
     Card(
         modifier = Modifier.fillMaxWidth().height(230.dp),
         colors = CardDefaults.cardColors(containerColor = cardBgColor),
-        shape = RoundedCornerShape(20.dp)
+        shape = RoundedCornerShape(20.dp),
+        onClick = onTapGlucoseCard
     ) {
         Box(modifier = Modifier.fillMaxSize().padding(12.dp)) {
             Row(

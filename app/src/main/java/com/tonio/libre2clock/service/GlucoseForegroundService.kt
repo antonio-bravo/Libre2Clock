@@ -366,6 +366,9 @@ class GlucoseForegroundService : Service() {
                 maybeSendGlucoseAlarms(processed, config)
                 maybeSendPredictiveHypoAlert(processed, config)
                 maybeSendEmergencySosAlert(processed)
+                maybeVoiceAnnounce(processed, config)
+                maybeSyncNightscout(processed)
+                maybeBroadcastXdrip(processed)
             } else {
                 fetchResult.exceptionOrNull()?.let { error ->
                     eventLogger.log(LogLevel.WARNING, "ServiceSync", "Fetch failed: ${error.message}")
@@ -580,6 +583,76 @@ class GlucoseForegroundService : Service() {
             }
 
             notificationManager.notify(TEST_NOTIFICATION_ID, notification)
+        }
+    }
+
+    private fun maybeVoiceAnnounce(measurement: GlucoseMeasurement, config: ServiceConfig) {
+        serviceScope.launch {
+            try {
+                val ttsPeriodic = preferenceManager.ttsAnnouncePeriodic.first()
+                val ttsAlerts = preferenceManager.ttsAnnounceOnAlert.first()
+                val ttsDetailed = preferenceManager.ttsFormatDetailed.first()
+
+                val isAlert = measurement.trendArrow == 1 || measurement.trendArrow == 5 ||
+                    measurement.calibratedValue < config.lowGlucoseThreshold ||
+                    measurement.calibratedValue > config.highGlucoseThreshold
+
+                if (ttsPeriodic || (ttsAlerts && isAlert)) {
+                    val insulinDoses = preferenceManager.insulinDoses.first()
+                    val activeDoses = insulinDoses.filter { !it.isDeleted }
+                    val rapidDoses = activeDoses.filter { it.type == com.tonio.libre2clock.data.model.InsulinType.RAPID }
+                    val slowDoses = activeDoses.filter { it.type == com.tonio.libre2clock.data.model.InsulinType.SLOW }
+                    val rapidIob = com.tonio.libre2clock.data.repository.InsulinProcessor.calculateTotalIOB(rapidDoses)
+                    val slowIob = com.tonio.libre2clock.data.repository.InsulinProcessor.calculateTotalIOB(slowDoses)
+
+                    val voiceManager = com.tonio.libre2clock.util.GlucoseVoiceManager.getInstance(applicationContext)
+                    voiceManager.speakGlucose(measurement, rapidIob, slowIob, isDetailed = ttsDetailed)
+                }
+            } catch (e: Exception) {
+                // Ignore TTS failures in background
+            }
+        }
+    }
+
+    private fun maybeSyncNightscout(measurement: GlucoseMeasurement) {
+        serviceScope.launch {
+            try {
+                val enabled = preferenceManager.nightscoutEnabled.first()
+                if (!enabled) return@launch
+
+                val url = preferenceManager.nightscoutUrl.first()
+                val secret = preferenceManager.nightscoutApiSecret.first()
+                val useCal = preferenceManager.nightscoutUseCalibrated.first()
+
+                if (url.isNotBlank()) {
+                    com.tonio.libre2clock.util.NightscoutManager.uploadGlucose(
+                        nightscoutUrl = url,
+                        apiSecret = secret,
+                        measurement = measurement,
+                        useCalibrated = useCal
+                    )
+                }
+            } catch (e: Exception) {
+                eventLogger.log(LogLevel.WARNING, "NightscoutSync", "Upload failed: ${e.message}")
+            }
+        }
+    }
+
+    private fun maybeBroadcastXdrip(measurement: GlucoseMeasurement) {
+        serviceScope.launch {
+            try {
+                val enabled = preferenceManager.xdripBroadcastEnabled.first()
+                if (!enabled) return@launch
+
+                val useCal = preferenceManager.nightscoutUseCalibrated.first()
+                com.tonio.libre2clock.util.XDripBroadcastManager.sendBroadcast(
+                    context = applicationContext,
+                    measurement = measurement,
+                    useCalibrated = useCal
+                )
+            } catch (e: Exception) {
+                eventLogger.log(LogLevel.WARNING, "XDripBroadcast", "Broadcast failed: ${e.message}")
+            }
         }
     }
 

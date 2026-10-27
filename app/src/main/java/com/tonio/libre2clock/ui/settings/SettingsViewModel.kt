@@ -87,6 +87,9 @@ class SettingsViewModel(
     private val _isCloudSyncDebugLoading = MutableStateFlow(false)
     val isCloudSyncDebugLoading: StateFlow<Boolean> = _isCloudSyncDebugLoading.asStateFlow()
 
+    private val _isRefreshingToken = MutableStateFlow(false)
+    val isRefreshingToken: StateFlow<Boolean> = _isRefreshingToken.asStateFlow()
+
     val eventLogs: StateFlow<List<LogEvent>> = eventLogManager.events
     private val _sectionPerfStats = MutableStateFlow<List<SectionPerfTelemetry.Snapshot>>(emptyList())
     val sectionPerfStats: StateFlow<List<SectionPerfTelemetry.Snapshot>> = _sectionPerfStats.asStateFlow()
@@ -175,6 +178,22 @@ class SettingsViewModel(
     val widgetBackgroundOpacity = preferenceManager.widgetBackgroundOpacity.stateInDefault(80)
     val widgetUseTargetColorBg = preferenceManager.widgetUseTargetColorBg.stateInDefault(true)
     val widgetInsulinDecimals = preferenceManager.widgetInsulinDecimals.stateInDefault(2)
+    val widgetStaleIndicator = preferenceManager.widgetStaleIndicator.stateInDefault(true)
+
+    val ttsAnnounceOnTap = preferenceManager.ttsAnnounceOnTap.stateInDefault(true)
+    val ttsAnnouncePeriodic = preferenceManager.ttsAnnouncePeriodic.stateInDefault(false)
+    val ttsAnnounceOnAlert = preferenceManager.ttsAnnounceOnAlert.stateInDefault(true)
+    val ttsFormatDetailed = preferenceManager.ttsFormatDetailed.stateInDefault(false)
+    val ttsPeriodicIntervalMins = preferenceManager.ttsPeriodicIntervalMins.stateInDefault(15)
+
+    val nightscoutEnabled = preferenceManager.nightscoutEnabled.stateInDefault(false)
+    val nightscoutUrl = preferenceManager.nightscoutUrl.stateInDefault("")
+    val nightscoutApiSecret = preferenceManager.nightscoutApiSecret.stateInDefault("")
+    val nightscoutUseCalibrated = preferenceManager.nightscoutUseCalibrated.stateInDefault(true)
+    val xdripBroadcastEnabled = preferenceManager.xdripBroadcastEnabled.stateInDefault(false)
+
+    private val _isTestingNightscout = MutableStateFlow(false)
+    val isTestingNightscout: StateFlow<Boolean> = _isTestingNightscout.asStateFlow()
 
     // MEJORA: Usamos 'this.capillaryReadings' (que ya está filtrado) en lugar del raw de preferenceManager
     val currentGlucose: StateFlow<GlucoseMeasurement?> = combine(
@@ -933,6 +952,7 @@ class SettingsViewModel(
             }
             allDoses.sortByDescending { it.timestamp }
             preferenceManager.saveInsulinDoses(allDoses)
+            sendWidgetUpdateBroadcast()
         }
     }
 
@@ -943,6 +963,7 @@ class SettingsViewModel(
             if (index != -1) {
                 allDoses[index] = dose.copy(isDeleted = true, updatedAtMs = System.currentTimeMillis())
                 preferenceManager.saveInsulinDoses(allDoses)
+                sendWidgetUpdateBroadcast()
             }
         }
     }
@@ -964,6 +985,7 @@ class SettingsViewModel(
             }
             allDoses.sortByDescending { it.timestamp }
             preferenceManager.saveInsulinDoses(allDoses)
+            sendWidgetUpdateBroadcast()
         }
     }
 
@@ -1105,6 +1127,165 @@ class SettingsViewModel(
         viewModelScope.launch {
             preferenceManager.saveWidgetInsulinDecimals(decimals)
             sendWidgetUpdateBroadcast()
+        }
+    }
+
+    fun setWidgetStaleIndicator(enabled: Boolean) {
+        viewModelScope.launch {
+            preferenceManager.saveWidgetStaleIndicator(enabled)
+            sendWidgetUpdateBroadcast()
+        }
+    }
+
+    fun setTtsAnnounceOnTap(enabled: Boolean) {
+        viewModelScope.launch { preferenceManager.saveTtsAnnounceOnTap(enabled) }
+    }
+
+    fun setTtsAnnouncePeriodic(enabled: Boolean) {
+        viewModelScope.launch { preferenceManager.saveTtsAnnouncePeriodic(enabled) }
+    }
+
+    fun setTtsAnnounceOnAlert(enabled: Boolean) {
+        viewModelScope.launch { preferenceManager.saveTtsAnnounceOnAlert(enabled) }
+    }
+
+    fun setTtsFormatDetailed(enabled: Boolean) {
+        viewModelScope.launch { preferenceManager.saveTtsFormatDetailed(enabled) }
+    }
+
+    fun setTtsPeriodicIntervalMins(minutes: Int) {
+        viewModelScope.launch { preferenceManager.saveTtsPeriodicIntervalMins(minutes) }
+    }
+
+    fun testVoiceAnnouncement() {
+        val testMeasurement = GlucoseMeasurement(
+            value = 110,
+            calibratedValue = 110,
+            trendArrow = 3,
+            timestamp = System.currentTimeMillis().toString(),
+            factoryTimestamp = System.currentTimeMillis().toString()
+        )
+        val voiceManager = com.tonio.libre2clock.util.GlucoseVoiceManager.getInstance(appContext)
+        voiceManager.speakGlucose(testMeasurement, rapidIob = 1.5, slowIob = 12.0, isDetailed = ttsFormatDetailed.value)
+    }
+
+    fun speakCurrentGlucoseIfTapEnabled() {
+        viewModelScope.launch {
+            if (ttsAnnounceOnTap.value) {
+                val current = currentGlucose.value ?: return@launch
+                val rapidDoses = insulinDoses.value.filter { it.type == com.tonio.libre2clock.data.model.InsulinType.RAPID }
+                val slowDoses = insulinDoses.value.filter { it.type == com.tonio.libre2clock.data.model.InsulinType.SLOW }
+                val rapidIob = com.tonio.libre2clock.data.repository.InsulinProcessor.calculateTotalIOB(rapidDoses)
+                val slowIob = com.tonio.libre2clock.data.repository.InsulinProcessor.calculateTotalIOB(slowDoses)
+                val voiceManager = com.tonio.libre2clock.util.GlucoseVoiceManager.getInstance(appContext)
+                voiceManager.speakGlucose(current, rapidIob, slowIob, isDetailed = ttsFormatDetailed.value)
+            }
+        }
+    }
+
+    fun refreshToken(onResult: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            _isRefreshingToken.value = true
+            try {
+                val provider = preferenceManager.glucoseSourceProvider.first()
+                if (provider == com.tonio.libre2clock.data.model.GlucoseSourceProvider.DEXCOM_SHARE) {
+                    val dexcomCreds = credentialStore.getDexcomCredentials()
+                    if (dexcomCreds == null) {
+                        val msg = appContext.getString(R.string.auth_refresh_no_creds)
+                        onResult(false, msg)
+                        return@launch
+                    }
+                    val (accountName, password) = dexcomCreds
+                    val region = preferenceManager.dexcomServerRegion.first()
+                    val result = com.tonio.libre2clock.data.api.DexcomService.login(accountName, password, region)
+                    if (result.isSuccess) {
+                        repository.fetchLatestGlucose()
+                        sendWidgetUpdateBroadcast()
+                        val msg = appContext.getString(R.string.auth_refresh_success)
+                        onResult(true, msg)
+                    } else {
+                        val errorMsg = result.exceptionOrNull()?.localizedMessage ?: "Dexcom auth error"
+                        val msg = appContext.getString(R.string.auth_refresh_error, errorMsg)
+                        onResult(false, msg)
+                    }
+                } else {
+                    // LibreLinkUp
+                    val creds = credentialStore.getCredentials()
+                    if (creds == null) {
+                        val msg = appContext.getString(R.string.auth_refresh_no_creds)
+                        onResult(false, msg)
+                        return@launch
+                    }
+                    val (email, password) = creds
+                    val reauthResult = com.tonio.libre2clock.data.api.LibreService.performSilentReauth(email, password)
+                    if (reauthResult.isSuccess) {
+                        val loginData = reauthResult.getOrNull()
+                        val newToken = loginData?.authTicket?.token
+                        val newUserId = loginData?.user?.id
+                        if (!newToken.isNullOrBlank() && !newUserId.isNullOrBlank()) {
+                            preferenceManager.saveAuth(newToken, newUserId)
+                            repository.fetchLatestGlucose()
+                            sendWidgetUpdateBroadcast()
+                            val msg = appContext.getString(R.string.auth_refresh_success)
+                            onResult(true, msg)
+                        } else {
+                            val msg = appContext.getString(R.string.auth_refresh_error, "Token de respuesta vacío")
+                            onResult(false, msg)
+                        }
+                    } else {
+                        val errorMsg = reauthResult.exceptionOrNull()?.localizedMessage ?: "Error de re-autenticación"
+                        val msg = appContext.getString(R.string.auth_refresh_error, errorMsg)
+                        onResult(false, msg)
+                    }
+                }
+            } catch (e: Exception) {
+                val msg = appContext.getString(R.string.auth_refresh_error, e.localizedMessage ?: "Error desconocido")
+                onResult(false, msg)
+            } finally {
+                _isRefreshingToken.value = false
+            }
+        }
+    }
+
+    fun setNightscoutEnabled(enabled: Boolean) = viewModelScope.launch { preferenceManager.saveNightscoutEnabled(enabled) }
+    fun setNightscoutUrl(url: String) = viewModelScope.launch { preferenceManager.saveNightscoutUrl(url) }
+    fun setNightscoutApiSecret(secret: String) = viewModelScope.launch { preferenceManager.saveNightscoutApiSecret(secret) }
+    fun setNightscoutUseCalibrated(useCalibrated: Boolean) = viewModelScope.launch { preferenceManager.saveNightscoutUseCalibrated(useCalibrated) }
+    fun setXdripBroadcastEnabled(enabled: Boolean) = viewModelScope.launch { preferenceManager.saveXdripBroadcastEnabled(enabled) }
+
+    fun testNightscoutConnection(onResult: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            _isTestingNightscout.value = true
+            try {
+                val url = nightscoutUrl.value
+                val secret = nightscoutApiSecret.value
+                val useCal = nightscoutUseCalibrated.value
+                val current = currentGlucose.value ?: GlucoseMeasurement(
+                    value = 110,
+                    calibratedValue = 110,
+                    trendArrow = 3,
+                    timestamp = System.currentTimeMillis().toString(),
+                    factoryTimestamp = System.currentTimeMillis().toString()
+                )
+
+                val result = com.tonio.libre2clock.util.NightscoutManager.uploadGlucose(
+                    nightscoutUrl = url,
+                    apiSecret = secret,
+                    measurement = current,
+                    useCalibrated = useCal
+                )
+
+                if (result.isSuccess) {
+                    onResult(true, result.getOrDefault("Conexión con Nightscout exitosa"))
+                } else {
+                    val err = result.exceptionOrNull()?.localizedMessage ?: "Error de conexión"
+                    onResult(false, err)
+                }
+            } catch (e: Exception) {
+                onResult(false, "Error: ${e.localizedMessage}")
+            } finally {
+                _isTestingNightscout.value = false
+            }
         }
     }
 }

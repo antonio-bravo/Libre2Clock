@@ -658,9 +658,47 @@
     <string name="widget_decimals_auto">Automático (1 o 2 decimales)</string>
     <string name="widget_decimals_1">1 decimal (1.5 U)</string>
     <string name="widget_decimals_2">2 decimales (1.52 U)</string>
+    <string name="widget_stale_indicator_title">Indicador de Desincronización (&gt; 15 min)</string>
+    <string name="widget_stale_indicator_desc">Atenúa el texto y cambia el fondo a gris oscuro si los datos tienen más de 15 minutos sin necesidad de mostrar texto.</string>
+    <string name="auth_refresh_session_btn">Renovar Sesión / Token</string>
+    <string name="auth_refreshing_session">Renovando sesión…</string>
+    <string name="auth_refresh_success">¡Sesión renovada con éxito!</string>
+    <string name="auth_refresh_no_creds">No hay credenciales guardadas. Por favor inicie sesión de nuevo.</string>
+    <string name="auth_refresh_error">Error al renovar sesión: %1$s</string>
     <string name="widget_show_last_update_title">Mostrar Hora de Última Lectura</string>
     <string name="widget_show_last_update_desc">Muestra la hora de la última medición sincronizada en el widget.</string>
     <string name="widget_tap_action_title">Acción al Tocar el Widget</string>
     <string name="widget_tap_action_desc">Al pulsar el widget en la pantalla de inicio se abre directamente Libre2Clock.</string>
     <string name="widget_description">Muestra la glucosa en tiempo real, flecha de tendencia e insulina activa en tu pantalla de inicio.</string>
+
+    <!-- Voice TTS Settings -->
+    <string name="settings_voice_title">Lectura por Voz (TTS)</string>
+    <string name="settings_voice_desc">Anuncios de voz por síntesis de texto (TTS) para lecturas de glucosa y alertas de tendencia.</string>
+    <string name="tts_announce_on_tap_title">Anunciar al Tocar la Glucosa</string>
+    <string name="tts_announce_on_tap_desc">Lee en voz alta la glucosa actual al pulsar sobre la glucosa en la pantalla principal.</string>
+    <string name="tts_announce_periodic_title">Lectura Periódica en Segundo Plano</string>
+    <string name="tts_announce_periodic_desc">Anuncia la glucosa en voz alta cada N minutos de fondo (ideal para conducción o deportes).</string>
+    <string name="tts_announce_alert_title">Anunciar Cambios Brúscos y Alertas</string>
+    <string name="tts_announce_alert_desc">Lee la glucosa al entrar en rango alto/bajo o ante subidas/bajadas rápidas.</string>
+    <string name="tts_format_detailed_title">Formato de Anuncio Detallado</string>
+    <string name="tts_format_detailed_desc">Incluye las unidades de insulina activa (IOB) en el anuncio por voz.</string>
+    <string name="tts_interval_label">Intervalo de anuncio: %1$d minutos</string>
+    <string name="tts_test_button">Probar Lectura por Voz</string>
+    <string name="tts_test_phrase">Glucosa 110 mg/dL, estable. Insulina activa 1.5 unidades.</string>
+
+    <!-- Nightscout & xDrip+ Settings -->
+    <string name="settings_nightscout_title">Nightscout &amp; xDrip+ / AAPS</string>
+    <string name="settings_nightscout_desc">Sincroniza glucosa con la API de Nightscout y transmite localmente a xDrip+ / AndroidAPS.</string>
+    <string name="nightscout_enable_title">Sincronización con Nightscout</string>
+    <string name="nightscout_enable_desc">Sube automáticamente las nuevas lecturas de glucosa a tu servidor Nightscout.</string>
+    <string name="nightscout_url_label">URL del Servidor Nightscout</string>
+    <string name="nightscout_url_hint">Ej: https://mi-nightscout.fly.dev</string>
+    <string name="nightscout_secret_label">API Secret</string>
+    <string name="nightscout_secret_hint">Contraseña / API Secret de Nightscout</string>
+    <string name="nightscout_use_calibrated_title">Subir Valor Calibrado</string>
+    <string name="nightscout_use_calibrated_desc">Sube el valor corregido con offset o el valor original a Nightscout.</string>
+    <string name="nightscout_test_button">Probar Conexión con Nightscout</string>
+    <string name="nightscout_testing_button">Probando conexión…</string>
+    <string name="xdrip_broadcast_title">Transmisión Local xDrip+ / AndroidAPS</string>
+    <string name="xdrip_broadcast_desc">Envía emisiones locales en este teléfono para xDrip+, AndroidAPS y aplicaciones de reloj.</string>
 </resources>

@@ -28,6 +28,9 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+import com.tonio.libre2clock.data.local.GlucoseHistoryDatabaseHelper
+import kotlinx.coroutines.withContext
+
 class GlucoseWidgetProvider : AppWidgetProvider() {
 
     private val job = SupervisorJob()
@@ -35,9 +38,23 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
     
     private val syncDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault())
 
+    companion object {
+        const val ACTION_UPDATE_WIDGET = "com.tonio.libre2clock.ACTION_UPDATE_WIDGET"
+
+        fun triggerUpdate(context: Context) {
+            try {
+                val intent = Intent(context, GlucoseWidgetProvider::class.java).apply {
+                    action = ACTION_UPDATE_WIDGET
+                }
+                context.sendBroadcast(intent)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     override fun onReceive(context: Context, intent: Intent) {
-        super.onReceive(context, intent)
-        if (intent.action == "com.tonio.libre2clock.ACTION_UPDATE_WIDGET" || intent.action == AppWidgetManager.ACTION_APPWIDGET_UPDATE) {
+        if (intent.action == ACTION_UPDATE_WIDGET) {
             val pendingResult = goAsync()
             val appWidgetManager = AppWidgetManager.getInstance(context)
             val componentName = ComponentName(context, GlucoseWidgetProvider::class.java)
@@ -52,11 +69,22 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
                     pendingResult.finish()
                 }
             }
+            return
         }
+        super.onReceive(context, intent)
     }
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
-        // Handled by onReceive to ensure goAsync() works correctly with coroutines
+        val pendingResult = goAsync()
+        scope.launch {
+            try {
+                for (appWidgetId in appWidgetIds) {
+                    updateAppWidgetSuspend(context, appWidgetManager, appWidgetId)
+                }
+            } finally {
+                pendingResult.finish()
+            }
+        }
     }
 
     override fun onAppWidgetOptionsChanged(
@@ -118,6 +146,7 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
             val opacityPercent = preferenceManager.widgetBackgroundOpacity.first()
             val useTargetColor = preferenceManager.widgetUseTargetColorBg.first()
             val decimalsMode = preferenceManager.widgetInsulinDecimals.first()
+            val staleIndicatorPref = preferenceManager.widgetStaleIndicator.first()
             val targetLow = preferenceManager.lowGlucoseThreshold.first()
             val targetHigh = preferenceManager.highGlucoseThreshold.first()
 
@@ -130,6 +159,9 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
 
             // Fetch raw measurement and user calibration settings
             val rawMeasurement = repository.currentGlucose.first()
+                ?: withContext(Dispatchers.IO) {
+                    GlucoseHistoryDatabaseHelper(context).readRecentHistory(1).firstOrNull()
+                }
             val manualOffset = preferenceManager.glucoseOffset.first()
             val userRanges = preferenceManager.glucoseOffsetRanges.first()
             val autoAdjustEnabled = preferenceManager.autoAdjustEnabled.first()
@@ -151,6 +183,7 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
             } else null
 
             val insulinDoses = preferenceManager.insulinDoses.first()
+            val activeDoses = insulinDoses.filter { !it.isDeleted }
             val manualIsf = preferenceManager.manualIsf.first()
             val isfRuleC = preferenceManager.isfRuleConstant.first()
             val manualTdi = preferenceManager.manualTdi.first()
@@ -170,10 +203,12 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
                 java.time.Duration.between(instant, Instant.now()).toMinutes() > 15
             } else true
 
+            val applyStaleMode = isStale && staleIndicatorPref
+
             // Base RGB Color
             val baseRgb = when {
+                applyStaleMode -> Color.parseColor("#2C2C2C")
                 !useTargetColor -> Color.parseColor("#1E1E1E")
-                isStale -> Color.parseColor("#444444")
                 evalVal < targetLow -> Color.parseColor("#C83B34")
                 evalVal > targetHigh -> Color.parseColor("#E89940")
                 else -> Color.parseColor("#9DCA44")
@@ -187,19 +222,27 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
             if (measurement != null) {
                 views.setTextViewText(R.id.tv_glucose_value, dualValueStr)
                 views.setTextViewText(R.id.tv_glucose_trend, GlucoseProcessor.getTrendArrowSymbol(trend ?: 0))
-                views.setTextColor(R.id.tv_glucose_trend, getTrendColor(trend))
                 
+                val glucoseColor = if (applyStaleMode) Color.parseColor("#888888") else Color.parseColor("#FFFFFF")
+                val trendColor = if (applyStaleMode) Color.parseColor("#666666") else getTrendColor(trend)
+                val timeColor = if (applyStaleMode) Color.parseColor("#666666") else Color.parseColor("#DDDDDD")
+
+                views.setTextColor(R.id.tv_glucose_value, glucoseColor)
+                views.setTextColor(R.id.tv_glucose_trend, trendColor)
+                views.setTextColor(R.id.tv_last_update, timeColor)
+
                 val instant = TimestampParser.parseMeasurementInstant(measurement)
                 views.setTextViewText(R.id.tv_last_update, syncDateFormatter.format(instant))
             } else {
                 views.setTextViewText(R.id.tv_glucose_value, "---")
                 views.setTextViewText(R.id.tv_glucose_trend, "")
                 views.setTextViewText(R.id.tv_last_update, "----")
+                views.setTextColor(R.id.tv_glucose_value, Color.parseColor("#888888"))
             }
 
             // Calculate Insulin & FS
-            val rapidDoses = insulinDoses.filter { it.type == InsulinType.RAPID }
-            val slowDoses = insulinDoses.filter { it.type == InsulinType.SLOW }
+            val rapidDoses = activeDoses.filter { it.type == InsulinType.RAPID }
+            val slowDoses = activeDoses.filter { it.type == InsulinType.SLOW }
             
             val rapidIOB = InsulinProcessor.calculateTotalIOB(rapidDoses)
             val slowIOB = InsulinProcessor.calculateTotalIOB(slowDoses)
@@ -207,7 +250,7 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
             val formattedRapidVal = formatInsulinValue(rapidIOB, decimalsMode)
             val formattedSlowVal = formatInsulinValue(slowIOB, decimalsMode)
 
-            val calculatedTdi = manualTdi ?: InsulinProcessor.calculateAverageDaily(insulinDoses, 30)
+            val calculatedTdi = manualTdi ?: InsulinProcessor.calculateAverageDaily(activeDoses, 30)
             val fsValue = InsulinProcessor.calculateISF(calculatedTdi, isfRuleC, manualIsf)
             val formattedFS = if (fsValue > 0) {
                 if (fsValue % 1.0 == 0.0) String.format(Locale.US, "%.0f", fsValue) else String.format(Locale.US, "%.1f", fsValue)
@@ -227,9 +270,18 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
                 else context.getString(R.string.widget_slow_text, slowLabel, formattedSlowVal)
             } else ""
 
+            val subTextColor = if (applyStaleMode) Color.parseColor("#666666") else Color.parseColor("#82B1FF")
+            val slowTextColor = if (applyStaleMode) Color.parseColor("#666666") else Color.parseColor("#FF8A80")
+            val fsTextColor = if (applyStaleMode) Color.parseColor("#666666") else Color.parseColor("#C5E1A5")
+
             views.setTextViewText(R.id.tv_insulin_rapid, rapidText)
+            views.setTextColor(R.id.tv_insulin_rapid, subTextColor)
+
             views.setTextViewText(R.id.tv_insulin_slow, slowText)
+            views.setTextColor(R.id.tv_insulin_slow, slowTextColor)
+
             views.setTextViewText(R.id.tv_insulin_fs, if (showFsPref) "FS: $formattedFS" else "")
+            views.setTextColor(R.id.tv_insulin_fs, fsTextColor)
 
             // Visibility based on user settings
             val showAnyInsulin = showRapidPref || showSlowPref || showFsPref

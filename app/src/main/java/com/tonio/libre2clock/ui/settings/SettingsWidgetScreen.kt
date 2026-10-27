@@ -21,6 +21,13 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tonio.libre2clock.R
 
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import com.tonio.libre2clock.data.model.GlucoseMeasurement
+import com.tonio.libre2clock.data.repository.GlucoseProcessor
+import com.tonio.libre2clock.util.TimestampParser
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsWidgetScreen(
@@ -35,6 +42,8 @@ fun SettingsWidgetScreen(
     val widgetBackgroundOpacity by viewModel.widgetBackgroundOpacity.collectAsStateWithLifecycle()
     val widgetUseTargetColorBg by viewModel.widgetUseTargetColorBg.collectAsStateWithLifecycle()
     val widgetInsulinDecimals by viewModel.widgetInsulinDecimals.collectAsStateWithLifecycle()
+    val widgetStaleIndicator by viewModel.widgetStaleIndicator.collectAsStateWithLifecycle()
+    val currentGlucose by viewModel.currentGlucose.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -66,7 +75,8 @@ fun SettingsWidgetScreen(
                         showLastUpdate = widgetShowLastUpdate,
                         opacityPercent = widgetBackgroundOpacity,
                         useTargetColor = widgetUseTargetColorBg,
-                        decimalsMode = widgetInsulinDecimals
+                        decimalsMode = widgetInsulinDecimals,
+                        measurement = currentGlucose
                     )
                 }
             }
@@ -129,6 +139,19 @@ fun SettingsWidgetScreen(
                         checked = widgetUseTargetColorBg,
                         onCheckedChange = viewModel::setWidgetUseTargetColorBg,
                         icon = Icons.Default.Edit
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Indicador inteligente de desincronización
+                    WidgetToggleOption(
+                        title = stringResource(R.string.widget_stale_indicator_title),
+                        description = stringResource(R.string.widget_stale_indicator_desc),
+                        checked = widgetStaleIndicator,
+                        onCheckedChange = viewModel::setWidgetStaleIndicator,
+                        icon = Icons.Default.Warning
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -321,8 +344,32 @@ private fun WidgetLivePreviewCard(
     showLastUpdate: Boolean,
     opacityPercent: Int,
     useTargetColor: Boolean,
-    decimalsMode: Int
+    decimalsMode: Int,
+    measurement: GlucoseMeasurement? = null
 ) {
+    val syncDateFormatter = remember {
+        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault())
+    }
+    val instant = remember(measurement) {
+        measurement?.let { TimestampParser.parseMeasurementInstant(it) } ?: Instant.now()
+    }
+    val previewTimestampStr = remember(instant) {
+        syncDateFormatter.format(instant)
+    }
+
+    val evalVal = measurement?.calibratedValue ?: measurement?.value ?: 110
+    val rawVal = measurement?.value ?: 110
+    val glucoseDisplayStr = if (measurement != null) {
+        GlucoseProcessor.formatDualValue(rawVal, evalVal)
+    } else {
+        "110"
+    }
+    val trendSymbol = if (measurement != null) {
+        GlucoseProcessor.getTrendArrowSymbol(measurement.trendArrow ?: 3)
+    } else {
+        "→"
+    }
+
     // Background simulation container (simulates home screen wallpaper)
     Box(
         modifier = Modifier
@@ -343,7 +390,12 @@ private fun WidgetLivePreviewCard(
 
         // Calculated simulated widget background color
         val alphaFloat = opacityPercent / 100f
-        val baseColor = if (useTargetColor) Color(0xFF9DCA44) else Color(0xFF1E1E1E)
+        val baseColor = when {
+            !useTargetColor -> Color(0xFF1E1E1E)
+            evalVal < 70 -> Color(0xFFC83B34)
+            evalVal > 180 -> Color(0xFFE89940)
+            else -> Color(0xFF9DCA44)
+        }
         val cardBgColor = baseColor.copy(alpha = alphaFloat)
 
         val formattedRapidVal = if (decimalsMode == 1) "1.5" else "1.52"
@@ -377,14 +429,14 @@ private fun WidgetLivePreviewCard(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "110",
+                        text = glucoseDisplayStr,
                         fontSize = if (compactMode) 28.sp else 36.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "→",
+                        text = trendSymbol,
                         fontSize = if (compactMode) 24.sp else 28.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF81C784)
@@ -393,9 +445,10 @@ private fun WidgetLivePreviewCard(
 
                 if (showLastUpdate) {
                     Text(
-                        text = "12:34",
-                        fontSize = 11.sp,
-                        color = Color(0xFFDDDDDD)
+                        text = previewTimestampStr,
+                        fontSize = if (compactMode) 10.sp else 11.sp,
+                        color = Color(0xFFDDDDDD),
+                        maxLines = 1
                     )
                 }
 

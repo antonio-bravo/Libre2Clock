@@ -161,4 +161,35 @@ class ExampleUnitTest {
         assertEquals(6.0, edited.units, 0.01)
         assertEquals("2024-01-01 12:05", edited.timestamp)
     }
+
+    @Test
+    fun deletedInsulinDosesAreExcludedFromIOBAndTDI() {
+        val now = java.time.Instant.now()
+        val nowStr = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+            .withZone(java.time.ZoneId.systemDefault())
+            .format(now)
+
+        val activeDose = com.tonio.libre2clock.data.model.InsulinDose(
+            units = 3.5,
+            timestamp = nowStr,
+            type = com.tonio.libre2clock.data.model.InsulinType.RAPID,
+            isDeleted = false
+        )
+        val deletedDose = com.tonio.libre2clock.data.model.InsulinDose(
+            units = 10.0,
+            timestamp = nowStr,
+            type = com.tonio.libre2clock.data.model.InsulinType.RAPID,
+            isDeleted = true
+        )
+
+        val list = listOf(activeDose, deletedDose)
+        val totalIob = InsulinProcessor.calculateTotalIOB(list, now)
+        assertEquals(3.5, totalIob, 0.01)
+
+        val dailyTotal = InsulinProcessor.calculateDailyTotal(list, java.time.LocalDate.now())
+        assertEquals(3.5, dailyTotal, 0.01)
+
+        val avgDaily = InsulinProcessor.calculateAverageDaily(list, 30)
+        assertEquals(3.5, avgDaily, 0.01)
+    }
 }
