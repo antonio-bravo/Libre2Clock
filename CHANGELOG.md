@@ -1,5 +1,44 @@
 # Changelog
 
+## bfa648e (Oct 27, 2026 14:19:21)
+fix widget update and add new features — antonio-bravo
+[detail](#bfa648e-details)
+
+<details id='bfa648e-details'>
+<summary>Changed files</summary>
+
+- .idea/misc.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/MainActivity.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/InsulinProcessor.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/navigation/Destinations.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsWidgetScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/widget/GlucoseWidgetProvider.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+- app/src/test/java/com/tonio/libre2clock/ExampleUnitTest.kt [Modified]
+</details>
+
+
+---
+## b447f90 (Oct 23, 2026 19:30:10)
+Update changelog — github-actions[bot]
+[detail](#b447f90-details)
+
+<details id='b447f90-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 28b4c64 (Oct 23, 2026 21:29:52)
 add values with voice and integration with 3rd party — antonio-bravo
 [detail](#28b4c64-details)
@@ -630,32 +669,6 @@ Update changelog — github-actions[bot]
 [detail](#7e99f84-details)
 
 <details id='7e99f84-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## dcbb127 (Oct 17, 2026 17:22:54)
-Merge pull request #45 from antonio-bravo/renovate/major-okhttp
-
-Update dependency com.squareup.okhttp3:okhttp to v5 — antonio-bravo
-[detail](#dcbb127-details)
-
-<details id='dcbb127-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 592ecfb (Oct 17, 2026 15:22:47)
-Update changelog — github-actions[bot]
-[detail](#592ecfb-details)
-
-<details id='592ecfb-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
