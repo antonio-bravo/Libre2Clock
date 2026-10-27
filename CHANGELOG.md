@@ -1,5 +1,34 @@
 # Changelog
 
+## a4e8257 (Oct 27, 2026 20:48:10)
+TTS double click en widget — antonio-bravo
+[detail](#a4e8257-details)
+
+<details id='a4e8257-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsWidgetScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/widget/GlucoseWidgetProvider.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 873c3a2 (Oct 27, 2026 13:19:34)
+Update changelog — github-actions[bot]
+[detail](#873c3a2-details)
+
+<details id='873c3a2-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## bfa648e (Oct 27, 2026 14:19:21)
 fix widget update and add new features — antonio-bravo
 [detail](#bfa648e-details)
@@ -643,32 +672,6 @@ Update changelog — github-actions[bot]
 [detail](#48b56b6-details)
 
 <details id='48b56b6-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## e0712a6 (Oct 17, 2026 17:23:06)
-Merge pull request #26 from antonio-bravo/renovate/googleid
-
-Update dependency com.google.android.libraries.identity.googleid:googleid to v1.2.1 — antonio-bravo
-[detail](#e0712a6-details)
-
-<details id='e0712a6-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 7e99f84 (Oct 17, 2026 15:23:04)
-Update changelog — github-actions[bot]
-[detail](#7e99f84-details)
-
-<details id='7e99f84-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
