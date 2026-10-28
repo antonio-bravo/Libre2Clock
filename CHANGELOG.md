@@ -1,5 +1,31 @@
 # Changelog
 
+## 53086d0 (Oct 28, 2026 21:29:17)
+Merge pull request #57 from antonio-bravo/renovate/agp
+
+Update dependency com.android.application to v9.5.0 — antonio-bravo
+[detail](#53086d0-details)
+
+<details id='53086d0-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 7f5826c (Oct 28, 2026 20:27:40)
+Update changelog — github-actions[bot]
+[detail](#7f5826c-details)
+
+<details id='7f5826c-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## f629983 (Oct 28, 2026 21:27:24)
 bolo y double click widget — antonio-bravo
 [detail](#f629983-details)
@@ -16,6 +42,18 @@ bolo y double click widget — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/widget/GlucoseWidgetProvider.kt [Modified]
 - app/src/main/res/values-es/strings.xml [Modified]
 - app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 6613b2c (Oct 28, 2026 18:32:38)
+Update dependency com.android.application to v9.5.0 — renovate[bot]
+[detail](#6613b2c-details)
+
+<details id='6613b2c-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
 </details>
 
 
@@ -640,44 +678,6 @@ widget — antonio-bravo
 - app/src/main/res/values-es/strings.xml [Modified]
 - app/src/main/res/values/strings.xml [Modified]
 - app/src/main/res/xml/glucose_widget_info.xml [Modified]
-</details>
-
-
----
-## 606ed81 (Oct 17, 2026 15:37:19)
-Update changelog — github-actions[bot]
-[detail](#606ed81-details)
-
-<details id='606ed81-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 7929263 (Oct 17, 2026 17:37:02)
-fix warning — antonio-bravo
-[detail](#7929263-details)
-
-<details id='7929263-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/util/EmergencyAlertDispatcher.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 042bfa6 (Oct 17, 2026 15:26:41)
-Update changelog — github-actions[bot]
-[detail](#042bfa6-details)
-
-<details id='042bfa6-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
 </details>
 
 
