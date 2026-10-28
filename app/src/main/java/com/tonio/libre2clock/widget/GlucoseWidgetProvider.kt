@@ -22,7 +22,9 @@ import com.tonio.libre2clock.util.GlucoseVoiceManager
 import com.tonio.libre2clock.util.TimestampParser
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -44,6 +46,9 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
 
         @Volatile
         private var lastWidgetClickTime: Long = 0L
+
+        @Volatile
+        private var singleTapJob: Job? = null
 
         fun triggerUpdate(context: Context) {
             try {
@@ -71,12 +76,17 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
                     val doubleTapTimeoutMs = preferenceManager.widgetDoubleTapTimeoutMs.first().toLong()
 
                     if (timeDiff in 80L..doubleTapTimeoutMs && doubleTapSpeechEnabled) {
-                        // Double tap detected -> Speak glucose aloud!
+                        // Double tap detected! Cancel the delayed single-tap app launch
+                        singleTapJob?.cancel()
+                        singleTapJob = null
+
                         val repository = AppContainer.provideGlucoseRepository(context)
                         val rawMeasurement = repository.currentGlucose.first()
+                            ?: preferenceManager.historicalGlucoseArchive.first().firstOrNull()
                             ?: withContext(Dispatchers.IO) {
                                 com.tonio.libre2clock.data.local.GlucoseHistoryDatabaseHelper(context).readRecentHistory(1).firstOrNull()
                             }
+
                         if (rawMeasurement != null) {
                             val manualOffset = preferenceManager.glucoseOffset.first()
                             val userRanges = preferenceManager.glucoseOffsetRanges.first()
@@ -107,11 +117,17 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
                             voiceManager.speakGlucose(measurement, rapidIob, slowIob, isDetailed = ttsDetailed)
                         }
                     } else {
-                        // Single tap -> Launch MainActivity
-                        val mainIntent = Intent(context, MainActivity::class.java).apply {
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                        // First tap: delay launching app slightly to see if a second tap follows
+                        singleTapJob?.cancel()
+                        singleTapJob = scope.launch {
+                            if (doubleTapSpeechEnabled) {
+                                delay(doubleTapTimeoutMs)
+                            }
+                            val mainIntent = Intent(context, MainActivity::class.java).apply {
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                            }
+                            context.startActivity(mainIntent)
                         }
-                        context.startActivity(mainIntent)
                     }
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -216,11 +232,13 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
 
             val isSmallLayout = compactModePref || minHeightDp < 90 || minWidthDp < 180
 
-            // Fetch raw measurement and user calibration settings
+            // Fetch raw measurement from all storage locations (Memory, Preference Archive, and SQLite)
             val rawMeasurement = repository.currentGlucose.first()
+                ?: preferenceManager.historicalGlucoseArchive.first().firstOrNull()
                 ?: withContext(Dispatchers.IO) {
                     com.tonio.libre2clock.data.local.GlucoseHistoryDatabaseHelper(context).readRecentHistory(1).firstOrNull()
                 }
+
             val manualOffset = preferenceManager.glucoseOffset.first()
             val userRanges = preferenceManager.glucoseOffsetRanges.first()
             val autoAdjustEnabled = preferenceManager.autoAdjustEnabled.first()
@@ -249,7 +267,7 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
 
             val evalVal = measurement?.calibratedValue ?: measurement?.value ?: 0
             val rawVal = measurement?.value ?: 0
-            val dualValueStr = if (measurement != null) {
+            val dualValueStr = if (measurement != null && rawVal > 0) {
                 GlucoseProcessor.formatDualValue(rawVal, evalVal)
             } else {
                 "---"
@@ -278,7 +296,7 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
             val finalBgColor = (alpha shl 24) or (baseRgb and 0x00FFFFFF)
 
             // Update Glucose and Trend text
-            if (measurement != null) {
+            if (measurement != null && rawVal > 0) {
                 views.setTextViewText(R.id.tv_glucose_value, dualValueStr)
                 views.setTextViewText(R.id.tv_glucose_trend, GlucoseProcessor.getTrendArrowSymbol(trend ?: 0))
                 

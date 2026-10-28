@@ -677,6 +677,12 @@
     <string name="calc_breakdown_corr_detail">🎯 Corrección (%1$d -&gt; %2$d mg/dL | FS %3$.1f): %4$.2f U</string>
     <string name="calc_breakdown_basal_detail">⚠️ Recargo por Vencimiento Basal (+20%%): +%1$.2f U</string>
     <string name="calc_breakdown_iob_detail">💧 Descuento Insulina Activa (IOB): -%1$.2f U</string>
+    <string name="dash_fs_history_title">Historial Factor de Sensibilidad (FS/ISF)</string>
+    <string name="dash_fs_yesterday">Ayer</string>
+    <string name="dash_fs_7d">7 Días</string>
+    <string name="dash_fs_14d">14 Días</string>
+    <string name="dash_fs_30d">30 Días</string>
+    <string name="dash_fs_90d">90 Días</string>
     <string name="auth_refresh_session_btn">Renovar Sesión / Token</string>
     <string name="auth_refreshing_session">Renovando sesión…</string>
     <string name="auth_refresh_success">¡Sesión renovada con éxito!</string>

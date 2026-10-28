@@ -478,7 +478,7 @@ fun InsulinHealthCard(
     deductIobForBolus: Boolean = false,
     onDeductIobChange: ((Boolean) -> Unit)? = null
 ) {
-    val pagerState = rememberPagerState(pageCount = { 2 })
+    val pagerState = rememberPagerState(pageCount = { 3 })
     val today = LocalDate.now()
     val yesterday = today.minusDays(1)
 
@@ -530,7 +530,31 @@ fun InsulinHealthCard(
     }
     
     val weekAvg = remember(doses) { InsulinProcessor.calculateAverageDailySplit(doses, 7) }
+    val twoWeeksAvg = remember(doses) { InsulinProcessor.calculateAverageDailySplit(doses, 14) }
     val monthAvg = remember(doses) { InsulinProcessor.calculateAverageDailySplit(doses, 30) }
+    val threeMonthsAvg = remember(doses) { InsulinProcessor.calculateAverageDailySplit(doses, 90) }
+
+    val yesterdayIsf = remember(yesterdaySplit, isfRuleConstant, manualIsf) {
+        InsulinProcessor.calculateISF(yesterdaySplit.total, isfRuleConstant, manualIsf)
+    }
+    val weekIsf = remember(weekAvg, isfRuleConstant, manualIsf) {
+        InsulinProcessor.calculateISF(weekAvg.total, isfRuleConstant, manualIsf)
+    }
+    val twoWeeksIsf = remember(twoWeeksAvg, isfRuleConstant, manualIsf) {
+        InsulinProcessor.calculateISF(twoWeeksAvg.total, isfRuleConstant, manualIsf)
+    }
+    val monthIsf = remember(monthAvg, isfRuleConstant, manualIsf) {
+        InsulinProcessor.calculateISF(monthAvg.total, isfRuleConstant, manualIsf)
+    }
+    val threeMonthsIsf = remember(threeMonthsAvg, isfRuleConstant, manualIsf) {
+        InsulinProcessor.calculateISF(threeMonthsAvg.total, isfRuleConstant, manualIsf)
+    }
+
+    val formatFsVal = { fs: Double ->
+        if (fs > 0.0) {
+            if (fs % 1.0 == 0.0) String.format(Locale.US, "%.0f", fs) else String.format(Locale.US, "%.2f", fs)
+        } else "--"
+    }
 
     var isBasalExpiringSoon by remember { mutableStateOf(false) }
     LaunchedEffect(doses) {
@@ -650,11 +674,42 @@ fun InsulinHealthCard(
                             Text(text = stringResource(R.string.insulin_30d_avg), style = MaterialTheme.typography.labelSmall)
                         }
                     }
+                    2 -> Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = stringResource(R.string.dash_fs_history_title),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(bottom = 6.dp)
+                        )
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(text = formatFsVal(yesterdayIsf), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                Text(text = stringResource(R.string.dash_fs_yesterday), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(text = formatFsVal(weekIsf), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                Text(text = stringResource(R.string.dash_fs_7d), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(text = formatFsVal(twoWeeksIsf), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                Text(text = stringResource(R.string.dash_fs_14d), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(text = formatFsVal(monthIsf), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                Text(text = stringResource(R.string.dash_fs_30d), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(text = formatFsVal(threeMonthsIsf), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                Text(text = stringResource(R.string.dash_fs_90d), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                    }
                 }
             }
             
             Row(Modifier.fillMaxWidth().height(12.dp), horizontalArrangement = Arrangement.Center) {
-                repeat(2) { iteration ->
+                repeat(3) { iteration ->
                     val color = if (pagerState.currentPage == iteration) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
                     Box(
                         modifier = Modifier

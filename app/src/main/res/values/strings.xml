@@ -682,6 +682,12 @@
     <string name="calc_breakdown_corr_detail">🎯 Correction (%1$d -&gt; %2$d mg/dL | ISF %3$.1f): %4$.2f U</string>
     <string name="calc_breakdown_basal_detail">⚠️ Basal Expiration Surcharge (+20%%): +%1$.2f U</string>
     <string name="calc_breakdown_iob_detail">💧 Active Insulin (IOB) Deduction: -%1$.2f U</string>
+    <string name="dash_fs_history_title">Sensitivity Factor (FS/ISF) History</string>
+    <string name="dash_fs_yesterday">Yesterday</string>
+    <string name="dash_fs_7d">7 Days</string>
+    <string name="dash_fs_14d">14 Days</string>
+    <string name="dash_fs_30d">30 Days</string>
+    <string name="dash_fs_90d">90 Days</string>
     <string name="auth_refresh_session_btn">Renew Session / Token</string>
     <string name="auth_refreshing_session">Renewing session…</string>
     <string name="auth_refresh_success">Session renewed successfully!</string>
