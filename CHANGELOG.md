@@ -1,5 +1,37 @@
 # Changelog
 
+## f629983 (Oct 28, 2026 21:27:24)
+bolo y double click widget — antonio-bravo
+[detail](#f629983-details)
+
+<details id='f629983-details'>
+<summary>Changed files</summary>
+
+- .idea/misc.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsWidgetScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/widget/GlucoseWidgetProvider.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## dd4b738 (Oct 27, 2026 19:48:27)
+Update changelog — github-actions[bot]
+[detail](#dd4b738-details)
+
+<details id='dd4b738-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## a4e8257 (Oct 27, 2026 20:48:10)
 TTS double click en widget — antonio-bravo
 [detail](#a4e8257-details)
@@ -643,35 +675,6 @@ Update changelog — github-actions[bot]
 [detail](#042bfa6-details)
 
 <details id='042bfa6-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## bc4d7a6 (Oct 17, 2026 17:26:28)
-fix degradation — antonio-bravo
-[detail](#bc4d7a6-details)
-
-<details id='bc4d7a6-details'>
-<summary>Changed files</summary>
-
-- app/build.gradle.kts [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/SecureCredentialStore.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/capillary/CapillaryScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/report/ReportSectionCacheRepository.kt [Modified]
-- verify_optimizations.sh [Modified]
-</details>
-
-
----
-## 48b56b6 (Oct 17, 2026 15:23:17)
-Update changelog — github-actions[bot]
-[detail](#48b56b6-details)
-
-<details id='48b56b6-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
