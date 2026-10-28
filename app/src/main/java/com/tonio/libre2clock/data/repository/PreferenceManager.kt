@@ -148,6 +148,7 @@ class PreferenceManager(private val context: Context) {
     private val WIDGET_INSULIN_DECIMALS_KEY = intPreferencesKey("widget_insulin_decimals")
     private val WIDGET_STALE_INDICATOR_KEY = booleanPreferencesKey("widget_stale_indicator")
     private val WIDGET_DOUBLE_TAP_SPEECH_KEY = booleanPreferencesKey("widget_double_tap_speech")
+    private val WIDGET_DOUBLE_TAP_TIMEOUT_MS_KEY = intPreferencesKey("widget_double_tap_timeout_ms")
     private val TTS_ANNOUNCE_ON_TAP_KEY = booleanPreferencesKey("tts_announce_on_tap")
     private val TTS_ANNOUNCE_PERIODIC_KEY = booleanPreferencesKey("tts_announce_periodic")
     private val TTS_ANNOUNCE_ON_ALERT_KEY = booleanPreferencesKey("tts_announce_on_alert")
@@ -261,6 +262,7 @@ class PreferenceManager(private val context: Context) {
     val widgetInsulinDecimals: Flow<Int> = context.dataStore.data.map { (it[WIDGET_INSULIN_DECIMALS_KEY] ?: 2).coerceIn(0, 2) }.distinctUntilChanged()
     val widgetStaleIndicator: Flow<Boolean> = context.dataStore.data.map { it[WIDGET_STALE_INDICATOR_KEY] ?: true }.distinctUntilChanged()
     val widgetDoubleTapSpeech: Flow<Boolean> = context.dataStore.data.map { it[WIDGET_DOUBLE_TAP_SPEECH_KEY] ?: true }.distinctUntilChanged()
+    val widgetDoubleTapTimeoutMs: Flow<Int> = context.dataStore.data.map { (it[WIDGET_DOUBLE_TAP_TIMEOUT_MS_KEY] ?: 600).coerceIn(200, 1200) }.distinctUntilChanged()
     val ttsAnnounceOnTap: Flow<Boolean> = context.dataStore.data.map { it[TTS_ANNOUNCE_ON_TAP_KEY] ?: true }.distinctUntilChanged()
     val ttsAnnouncePeriodic: Flow<Boolean> = context.dataStore.data.map { it[TTS_ANNOUNCE_PERIODIC_KEY] ?: false }.distinctUntilChanged()
     val ttsAnnounceOnAlert: Flow<Boolean> = context.dataStore.data.map { it[TTS_ANNOUNCE_ON_ALERT_KEY] ?: true }.distinctUntilChanged()
@@ -333,11 +335,11 @@ class PreferenceManager(private val context: Context) {
     val settingsUpdatedAt: Flow<Long?> = context.dataStore.data.map { it[SETTINGS_UPDATED_AT_KEY] }.distinctUntilChanged()
 
     private fun getDefaultRanges() = listOf(
-        GlucoseOffsetRange(0, 70, 20),
-        GlucoseOffsetRange(70, 100, 40),
-        GlucoseOffsetRange(100, 140, 60),
-        GlucoseOffsetRange(140, 200, 80),
-        GlucoseOffsetRange(200, null, 80)
+        GlucoseOffsetRange(min = 0, max = 70, offset = 0, percentage = 23),
+        GlucoseOffsetRange(min = 70, max = 100, offset = 0, percentage = 21),
+        GlucoseOffsetRange(min = 100, max = 140, offset = 0, percentage = 18),
+        GlucoseOffsetRange(min = 140, max = 200, offset = 0, percentage = 15),
+        GlucoseOffsetRange(min = 200, max = null, offset = 0, percentage = 8)
     )
 
     private inline fun <reified T> decodeList(prefs: Preferences, key: Preferences.Key<String>): List<T> {
@@ -809,6 +811,11 @@ class PreferenceManager(private val context: Context) {
 
     suspend fun saveWidgetDoubleTapSpeech(enabled: Boolean) {
         context.dataStore.edit { it[WIDGET_DOUBLE_TAP_SPEECH_KEY] = enabled }
+        updateBackupPayload()
+    }
+
+    suspend fun saveWidgetDoubleTapTimeoutMs(timeoutMs: Int) {
+        context.dataStore.edit { it[WIDGET_DOUBLE_TAP_TIMEOUT_MS_KEY] = timeoutMs.coerceIn(200, 1200) }
         updateBackupPayload()
     }
 

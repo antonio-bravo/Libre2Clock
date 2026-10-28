@@ -662,6 +662,21 @@
     <string name="widget_stale_indicator_desc">Atenúa el texto y cambia el fondo a gris oscuro si los datos tienen más de 15 minutos sin necesidad de mostrar texto.</string>
     <string name="widget_double_tap_speech_title">Doble Toque para Lectura por Voz (TTS)</string>
     <string name="widget_double_tap_speech_desc">Al hacer doble toque con el dedo sobre el widget en la pantalla de inicio, se leen los valores en voz alta.</string>
+    <string name="widget_double_tap_timeout_label">Límite de Tiempo de Doble Toque: %1$d ms</string>
+    <string name="widget_double_tap_test_title">Zona de Prueba de Doble Toque</string>
+    <string name="widget_double_tap_test_desc">Pulsa la tarjeta dos veces con tu dedo para medir tu velocidad exacta en milisegundos.</string>
+    <string name="widget_double_tap_test_prompt">TOCA AQUÍ DOS VECES</string>
+    <string name="widget_double_tap_first_click">Primer toque registrado. ¡Toca de nuevo rápido!</string>
+    <string name="widget_double_tap_test_success">✓ ¡Doble toque válido! Intervalo: %1$d ms (&lt;= %2$d ms)</string>
+    <string name="widget_double_tap_test_too_slow">⚠️ ¡Demasiado lento! Intervalo: %1$d ms (&gt; %2$d ms). ¡Aumenta el límite!</string>
+    <string name="widget_double_tap_lock_btn">Fijar %1$d ms como mi límite de doble toque</string>
+    <string name="calc_latest_capillary_chip">🩸 Usar Capilar Reciente: %1$d mg/dL</string>
+    <string name="calc_breakdown_expand">Ver Desglose del Cálculo</string>
+    <string name="calc_breakdown_collapse">Ocultar Desglose del Cálculo</string>
+    <string name="calc_breakdown_carbs_detail">🍞 Carbohidratos (Ratio 1:%1$.1f): %2$.2f U</string>
+    <string name="calc_breakdown_corr_detail">🎯 Corrección (%1$d -&gt; %2$d mg/dL | FS %3$.1f): %4$.2f U</string>
+    <string name="calc_breakdown_basal_detail">⚠️ Recargo por Vencimiento Basal (+20%%): +%1$.2f U</string>
+    <string name="calc_breakdown_iob_detail">💧 Descuento Insulina Activa (IOB): -%1$.2f U</string>
     <string name="auth_refresh_session_btn">Renovar Sesión / Token</string>
     <string name="auth_refreshing_session">Renovando sesión…</string>
     <string name="auth_refresh_success">¡Sesión renovada con éxito!</string>

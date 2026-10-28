@@ -1,6 +1,7 @@
 package com.tonio.libre2clock.ui.insulin
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardActions
@@ -357,6 +358,10 @@ fun BolusCalculatorCard(
         Triple(realG, calG, breakdownReal to breakdownCal)
     }
 
+    val capillaryReadings by viewModel.capillaryReadings.collectAsStateWithLifecycle()
+    val latestCapillary = remember(capillaryReadings) { capillaryReadings.firstOrNull() }
+    var showBreakdownDetails by remember { mutableStateOf(false) }
+
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(text = stringResource(R.string.calc_bolus_helper), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -376,6 +381,15 @@ fun BolusCalculatorCard(
                     label = { Text(stringResource(R.string.calc_glucose_label)) },
                     modifier = Modifier.weight(1f),
                     placeholder = { Text(stringResource(R.string.insulin_placeholder_real_offset)) }
+                )
+            }
+
+            latestCapillary?.let { cap ->
+                Spacer(modifier = Modifier.height(4.dp))
+                AssistChip(
+                    onClick = { glucoseText = cap.value.toString() },
+                    label = { Text(stringResource(R.string.calc_latest_capillary_chip, cap.value)) },
+                    leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp)) }
                 )
             }
 
@@ -514,6 +528,57 @@ fun BolusCalculatorCard(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
+                }
+
+                TextButton(
+                    onClick = { showBreakdownDetails = !showBreakdownDetails },
+                    modifier = Modifier.padding(top = 4.dp)
+                ) {
+                    Icon(
+                        imageVector = if (showBreakdownDetails) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = if (showBreakdownDetails) stringResource(R.string.calc_breakdown_collapse) else stringResource(R.string.calc_breakdown_expand),
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
+
+                if (showBreakdownDetails) {
+                    val activeBreakdown = if (useCalibratedForAlarms && isDual) bCal else bReal
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp)
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), MaterialTheme.shapes.small)
+                            .padding(12.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.calc_breakdown_carbs_detail, icRatio, activeBreakdown.carbDose),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        Text(
+                            text = stringResource(R.string.calc_breakdown_corr_detail, if (useCalibratedForAlarms && isDual) calG else realG, targetGlucose, isf, activeBreakdown.correctionDose),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        if (isBasalExpiringSoon) {
+                            val basalSurcharge = (activeBreakdown.carbDose + activeBreakdown.correctionDose) * 0.20
+                            Text(
+                                text = stringResource(R.string.calc_breakdown_basal_detail, basalSurcharge),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                        if (deductIobForBolus && activeBreakdown.appliedIob > 0) {
+                            Text(
+                                text = stringResource(R.string.calc_breakdown_iob_detail, activeBreakdown.appliedIob),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
                 }
             }
             
@@ -693,7 +758,11 @@ fun InsulinDoseDialog(
     suggestedUnits: Double? = null,
     suggestedUnitsCal: Double? = null,
     isf: Double? = null,
+    tdi: Double = 0.0,
+    icConstant: Int = 450,
+    targetGlucose: Int = 100,
     currentGlucose: GlucoseMeasurement? = null,
+    capillaryReadings: List<com.tonio.libre2clock.data.model.CapillaryMeasurement> = emptyList(),
     isBasalExpiringSoon: Boolean = false,
     rapidIOB: Double = 0.0,
     deductIobForBolus: Boolean = false,
@@ -704,6 +773,32 @@ fun InsulinDoseDialog(
     var unitsText by remember { mutableStateOf(initialDose?.units?.toString() ?: "") }
     var carbsText by remember { mutableStateOf(initialDose?.carbs?.toString() ?: "") }
     var type by remember { mutableStateOf(initialDose?.type ?: InsulinType.RAPID) }
+
+    val latestCapillary = remember(capillaryReadings) { capillaryReadings.firstOrNull() }
+    val initialGlucoseStr = remember(currentGlucose) {
+        val real = currentGlucose?.value ?: 0
+        val cal = currentGlucose?.calibratedValue ?: 0
+        if (real > 0 && real != cal) "$real($cal)" else if (real > 0) "$real" else ""
+    }
+    var customGlucoseText by remember { mutableStateOf(initialGlucoseStr) }
+
+    val computedSuggestedUnits = remember(customGlucoseText, carbsText, tdi, icConstant, isf, targetGlucose, isBasalExpiringSoon, rapidIOB, deductIobForBolus, suggestedUnits) {
+        val carbs = carbsText.toDoubleOrNull() ?: 0.0
+        val cleanText = customGlucoseText.replace(" ", "")
+        val glucoseParts = cleanText.replace(")", "").split("(")
+        val realG = glucoseParts.getOrNull(0)?.toIntOrNull() ?: 0
+        val calG = glucoseParts.getOrNull(1)?.toIntOrNull() ?: realG
+
+        if (realG > 0 && tdi > 0 && isf != null && isf > 0) {
+            val bReal = InsulinProcessor.getSuggestedBolusDetailed(carbs, realG, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon, rapidIOB, deductIobForBolus)
+            val bCal = if (calG == realG) bReal else InsulinProcessor.getSuggestedBolusDetailed(carbs, calG, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon, rapidIOB, deductIobForBolus)
+            Pair(bReal.total, bCal.total)
+        } else if (suggestedUnits != null) {
+            Pair(suggestedUnits, suggestedUnitsCal ?: suggestedUnits)
+        } else {
+            null
+        }
+    }
 
     val unitsEntered = unitsText.toDoubleOrNull() ?: 0.0
     val totalRapidUnits = rapidIOB + (if (type == InsulinType.RAPID) unitsEntered else 0.0)
@@ -754,11 +849,35 @@ fun InsulinDoseDialog(
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
-                if (suggestedUnits != null) {
+                if (type == InsulinType.RAPID) {
+                    OutlinedTextField(
+                        value = customGlucoseText,
+                        onValueChange = { customGlucoseText = it.filter { char -> char.isDigit() || char == '(' || char == ')' } },
+                        label = { Text(stringResource(R.string.calc_glucose_label)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text(stringResource(R.string.insulin_placeholder_real_offset)) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+
+                    latestCapillary?.let { cap ->
+                        Spacer(modifier = Modifier.height(4.dp))
+                        AssistChip(
+                            onClick = { customGlucoseText = cap.value.toString() },
+                            label = { Text(stringResource(R.string.calc_latest_capillary_chip, cap.value)) },
+                            leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                computedSuggestedUnits?.let { (rawUnits, calUnits) ->
                     val formatValue = { v: Double -> (Math.floor(v * 100) / 100.0) }
-                    val rawVal = maxOf(0.0, suggestedUnits)
-                    val calVal = suggestedUnitsCal?.let { maxOf(0.0, it) }
-                    val unitsStr = if (calVal != null) {
+                    val rawVal = maxOf(0.0, rawUnits)
+                    val calVal = maxOf(0.0, calUnits)
+                    val isDual = rawVal != calVal && rawVal > 0
+
+                    val unitsStr = if (isDual) {
                         String.format(Locale.US, "%.2f(%.2f)", formatValue(rawVal), formatValue(calVal))
                     } else {
                         String.format(Locale.US, "%.2f", formatValue(rawVal))
@@ -789,7 +908,7 @@ fun InsulinDoseDialog(
                             )
                         }
                         TextButton(onClick = {
-                            val unitsToUse = calVal ?: rawVal
+                            val unitsToUse = calVal
                             unitsText = String.format(Locale.US, "%.2f", formatValue(unitsToUse))
                         }) {
                             Text(stringResource(R.string.insulin_use_suggested))

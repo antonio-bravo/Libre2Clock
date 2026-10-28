@@ -68,8 +68,9 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
                 try {
                     val preferenceManager = AppContainer.providePreferenceManager(context)
                     val doubleTapSpeechEnabled = preferenceManager.widgetDoubleTapSpeech.first()
+                    val doubleTapTimeoutMs = preferenceManager.widgetDoubleTapTimeoutMs.first().toLong()
 
-                    if (timeDiff in 80L..650L && doubleTapSpeechEnabled) {
+                    if (timeDiff in 80L..doubleTapTimeoutMs && doubleTapSpeechEnabled) {
                         // Double tap detected -> Speak glucose aloud!
                         val repository = AppContainer.provideGlucoseRepository(context)
                         val rawMeasurement = repository.currentGlucose.first()

@@ -667,6 +667,21 @@
     <string name="widget_stale_indicator_desc">Dims text and changes background to dark grey when readings are older than 15 minutes without needing text.</string>
     <string name="widget_double_tap_speech_title">Double-Tap for Voice Reading (TTS)</string>
     <string name="widget_double_tap_speech_desc">Double-tapping the widget on your home screen reads the glucose values and trend aloud.</string>
+    <string name="widget_double_tap_timeout_label">Double-Tap Speed Limit: %1$d ms</string>
+    <string name="widget_double_tap_test_title">Double-Tap Speed Test Card</string>
+    <string name="widget_double_tap_test_desc">Tap the test card twice to measure your tapping speed in milliseconds.</string>
+    <string name="widget_double_tap_test_prompt">TAP HERE TWICE</string>
+    <string name="widget_double_tap_first_click">First tap recorded. Tap again quickly!</string>
+    <string name="widget_double_tap_test_success">✓ Valid Double-Tap! Interval: %1$d ms (&lt;= %2$d ms)</string>
+    <string name="widget_double_tap_test_too_slow">⚠️ Too Slow! Interval: %1$d ms (&gt; %2$d ms). Increase limit!</string>
+    <string name="widget_double_tap_lock_btn">Set %1$d ms as my double-tap limit</string>
+    <string name="calc_latest_capillary_chip">🩸 Use Recent Fingerstick: %1$d mg/dL</string>
+    <string name="calc_breakdown_expand">Show Calculation Breakdown</string>
+    <string name="calc_breakdown_collapse">Hide Calculation Breakdown</string>
+    <string name="calc_breakdown_carbs_detail">🍞 Carbs (Ratio 1:%1$.1f): %2$.2f U</string>
+    <string name="calc_breakdown_corr_detail">🎯 Correction (%1$d -&gt; %2$d mg/dL | ISF %3$.1f): %4$.2f U</string>
+    <string name="calc_breakdown_basal_detail">⚠️ Basal Expiration Surcharge (+20%%): +%1$.2f U</string>
+    <string name="calc_breakdown_iob_detail">💧 Active Insulin (IOB) Deduction: -%1$.2f U</string>
     <string name="auth_refresh_session_btn">Renew Session / Token</string>
     <string name="auth_refreshing_session">Renewing session…</string>
     <string name="auth_refresh_success">Session renewed successfully!</string>

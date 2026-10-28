@@ -1,7 +1,9 @@
 package com.tonio.libre2clock.ui.settings
 
+import android.os.SystemClock
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,19 +16,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tonio.libre2clock.R
-
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import com.tonio.libre2clock.data.model.GlucoseMeasurement
-import com.tonio.libre2clock.data.repository.GlucoseProcessor
-import com.tonio.libre2clock.util.TimestampParser
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,7 +40,7 @@ fun SettingsWidgetScreen(
     val widgetInsulinDecimals by viewModel.widgetInsulinDecimals.collectAsStateWithLifecycle()
     val widgetStaleIndicator by viewModel.widgetStaleIndicator.collectAsStateWithLifecycle()
     val widgetDoubleTapSpeech by viewModel.widgetDoubleTapSpeech.collectAsStateWithLifecycle()
-    val currentGlucose by viewModel.currentGlucose.collectAsStateWithLifecycle()
+    val widgetDoubleTapTimeoutMs by viewModel.widgetDoubleTapTimeoutMs.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -76,8 +72,7 @@ fun SettingsWidgetScreen(
                         showLastUpdate = widgetShowLastUpdate,
                         opacityPercent = widgetBackgroundOpacity,
                         useTargetColor = widgetUseTargetColorBg,
-                        decimalsMode = widgetInsulinDecimals,
-                        measurement = currentGlucose
+                        decimalsMode = widgetInsulinDecimals
                     )
                 }
             }
@@ -167,6 +162,32 @@ fun SettingsWidgetScreen(
                         onCheckedChange = viewModel::setWidgetDoubleTapSpeech,
                         icon = Icons.Default.Notifications
                     )
+
+                    if (widgetDoubleTapSpeech) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Column(modifier = Modifier.padding(start = 8.dp)) {
+                            Text(
+                                text = stringResource(R.string.widget_double_tap_timeout_label, widgetDoubleTapTimeoutMs),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Slider(
+                                value = widgetDoubleTapTimeoutMs.toFloat(),
+                                onValueChange = { viewModel.setWidgetDoubleTapTimeoutMs(it.toInt()) },
+                                valueRange = 200f..1200f,
+                                steps = 19,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // Zona de prueba de doble toque ubicada junto a la barra de velocidad
+                            DoubleTapTestCard(
+                                currentThresholdMs = widgetDoubleTapTimeoutMs,
+                                onLockThreshold = viewModel::setWidgetDoubleTapTimeoutMs
+                            )
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(16.dp))
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
@@ -303,6 +324,110 @@ fun SettingsWidgetScreen(
 }
 
 @Composable
+private fun DoubleTapTestCard(
+    currentThresholdMs: Int,
+    onLockThreshold: (Int) -> Unit
+) {
+    val context = LocalContext.current
+    var lastTapTime by remember { mutableStateOf(0L) }
+    var measuredIntervalMs by remember { mutableStateOf<Int?>(null) }
+    var statusText by remember { mutableStateOf("") }
+    var isSuccessState by remember { mutableStateOf<Boolean?>(null) }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                val now = SystemClock.elapsedRealtime()
+                if (lastTapTime > 0L) {
+                    val diff = (now - lastTapTime).toInt()
+                    if (diff in 50..2000) {
+                        measuredIntervalMs = diff
+                        if (diff <= currentThresholdMs) {
+                            isSuccessState = true
+                            statusText = context.resources.getString(R.string.widget_double_tap_test_success, diff, currentThresholdMs)
+                            val voiceManager = com.tonio.libre2clock.util.GlucoseVoiceManager.getInstance(context)
+                            voiceManager.speakCustom("Doble toque de $diff milisegundos detectado")
+                        } else {
+                            isSuccessState = false
+                            statusText = context.resources.getString(R.string.widget_double_tap_test_too_slow, diff, currentThresholdMs)
+                        }
+                        lastTapTime = 0L
+                    } else {
+                        lastTapTime = now
+                        statusText = context.resources.getString(R.string.widget_double_tap_first_click)
+                    }
+                } else {
+                    lastTapTime = now
+                    statusText = context.resources.getString(R.string.widget_double_tap_first_click)
+                }
+            },
+        colors = CardDefaults.cardColors(
+            containerColor = when (isSuccessState) {
+                true -> MaterialTheme.colorScheme.primaryContainer
+                false -> MaterialTheme.colorScheme.errorContainer
+                null -> MaterialTheme.colorScheme.surfaceVariant
+            }
+        ),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = stringResource(R.string.widget_double_tap_test_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = stringResource(R.string.widget_double_tap_test_desc),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(60.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surface)
+                    .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = if (statusText.isBlank()) stringResource(R.string.widget_double_tap_test_prompt) else statusText,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = when (isSuccessState) {
+                        true -> MaterialTheme.colorScheme.primary
+                        false -> MaterialTheme.colorScheme.error
+                        null -> MaterialTheme.colorScheme.onSurface
+                    }
+                )
+            }
+
+            measuredIntervalMs?.let { interval ->
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedButton(
+                    onClick = { onLockThreshold(interval) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.widget_double_tap_lock_btn, interval))
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun WidgetToggleOption(
     title: String,
     description: String,
@@ -358,32 +483,8 @@ private fun WidgetLivePreviewCard(
     showLastUpdate: Boolean,
     opacityPercent: Int,
     useTargetColor: Boolean,
-    decimalsMode: Int,
-    measurement: GlucoseMeasurement? = null
+    decimalsMode: Int
 ) {
-    val syncDateFormatter = remember {
-        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault())
-    }
-    val instant = remember(measurement) {
-        measurement?.let { TimestampParser.parseMeasurementInstant(it) } ?: Instant.now()
-    }
-    val previewTimestampStr = remember(instant) {
-        syncDateFormatter.format(instant)
-    }
-
-    val evalVal = measurement?.calibratedValue ?: measurement?.value ?: 110
-    val rawVal = measurement?.value ?: 110
-    val glucoseDisplayStr = if (measurement != null) {
-        GlucoseProcessor.formatDualValue(rawVal, evalVal)
-    } else {
-        "110"
-    }
-    val trendSymbol = if (measurement != null) {
-        GlucoseProcessor.getTrendArrowSymbol(measurement.trendArrow ?: 3)
-    } else {
-        "→"
-    }
-
     // Background simulation container (simulates home screen wallpaper)
     Box(
         modifier = Modifier
@@ -404,12 +505,7 @@ private fun WidgetLivePreviewCard(
 
         // Calculated simulated widget background color
         val alphaFloat = opacityPercent / 100f
-        val baseColor = when {
-            !useTargetColor -> Color(0xFF1E1E1E)
-            evalVal < 70 -> Color(0xFFC83B34)
-            evalVal > 180 -> Color(0xFFE89940)
-            else -> Color(0xFF9DCA44)
-        }
+        val baseColor = if (useTargetColor) Color(0xFF9DCA44) else Color(0xFF1E1E1E)
         val cardBgColor = baseColor.copy(alpha = alphaFloat)
 
         val formattedRapidVal = if (decimalsMode == 1) "1.5" else "1.52"
@@ -443,14 +539,14 @@ private fun WidgetLivePreviewCard(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = glucoseDisplayStr,
+                        text = "110",
                         fontSize = if (compactMode) 28.sp else 36.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = trendSymbol,
+                        text = "→",
                         fontSize = if (compactMode) 24.sp else 28.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF81C784)
@@ -459,10 +555,9 @@ private fun WidgetLivePreviewCard(
 
                 if (showLastUpdate) {
                     Text(
-                        text = previewTimestampStr,
-                        fontSize = if (compactMode) 10.sp else 11.sp,
-                        color = Color(0xFFDDDDDD),
-                        maxLines = 1
+                        text = "12:34",
+                        fontSize = 11.sp,
+                        color = Color(0xFFDDDDDD)
                     )
                 }
 
