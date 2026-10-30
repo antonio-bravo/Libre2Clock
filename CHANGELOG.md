@@ -1,5 +1,32 @@
 # Changelog
 
+## b741428 (Oct 30, 2026 22:08:33)
+add insulin screen — antonio-bravo
+[detail](#b741428-details)
+
+<details id='b741428-details'>
+<summary>Changed files</summary>
+
+- .idea/misc.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 263ed70 (Oct 28, 2026 21:42:43)
+Update changelog — github-actions[bot]
+[detail](#263ed70-details)
+
+<details id='263ed70-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 6ffd075 (Oct 28, 2026 22:42:29)
 FS slide — antonio-bravo
 [detail](#6ffd075-details)
@@ -646,32 +673,6 @@ widget options — antonio-bravo
 - app/src/main/res/layout/widget_glucose.xml [Modified]
 - app/src/main/res/values-es/strings.xml [Modified]
 - app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 16ca45f (Oct 17, 2026 16:49:54)
-Update changelog — github-actions[bot]
-[detail](#16ca45f-details)
-
-<details id='16ca45f-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 684d1fe (Oct 17, 2026 18:49:42)
-fix widget — antonio-bravo
-[detail](#684d1fe-details)
-
-<details id='684d1fe-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseProcessor.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsWidgetScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/widget/GlucoseWidgetProvider.kt [Modified]
 </details>
 
 
