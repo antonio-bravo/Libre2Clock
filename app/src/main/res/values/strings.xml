@@ -71,6 +71,7 @@
     <string name="add_insulin_dose">Add insulin dose</string>
     <string name="edit_insulin_dose">Edit insulin dose</string>
     <string name="update">Update</string>
+    <string name="edit">Edit</string>
     <string name="insulin_units_label">Units (U)</string>
     <string name="insulin_use_suggested">Use</string>
     <string name="settings_account_title">Account</string>
