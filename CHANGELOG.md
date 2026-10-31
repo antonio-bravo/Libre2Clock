@@ -1,5 +1,31 @@
 # Changelog
 
+## c4e3be7 (Oct 31, 2026 01:24:42)
+Update dependency com.google.devtools.ksp to v2.3.13 (#58)
+
+Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
+[detail](#c4e3be7-details)
+
+<details id='c4e3be7-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## eb351cb (Oct 30, 2026 21:09:30)
+Update changelog — github-actions[bot]
+[detail](#eb351cb-details)
+
+<details id='eb351cb-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## b741428 (Oct 30, 2026 22:08:33)
 add insulin screen — antonio-bravo
 [detail](#b741428-details)
@@ -643,36 +669,6 @@ update documentation — antonio-bravo
 <summary>Changed files</summary>
 
 - README.md [Modified]
-</details>
-
-
----
-## 70b40d5 (Oct 17, 2026 17:50:33)
-Update changelog — github-actions[bot]
-[detail](#70b40d5-details)
-
-<details id='70b40d5-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 4dc8752 (Oct 17, 2026 19:50:21)
-widget options — antonio-bravo
-[detail](#4dc8752-details)
-
-<details id='4dc8752-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsWidgetScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/widget/GlucoseWidgetProvider.kt [Modified]
-- app/src/main/res/layout/widget_glucose.xml [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
 </details>
 
 
