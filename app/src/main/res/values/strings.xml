@@ -91,6 +91,7 @@
     <string name="calc_bolus_helper">Bolus Helper</string>
     <string name="calc_carbs_label">Carbs (g)</string>
     <string name="calc_glucose_label">Current Glucose (mg/dL)</string>
+    <string name="calc_glucose_compact">Glucose: %1$s</string>
     <string name="calc_suggested_bolus">Suggested Units: %1$s</string>
     <string name="calc_suggested_bolus_dual">Suggested Units: %1$s</string>
     <string name="calc_suggested_bolus_with_isf">Suggested Units: %1$s\nFS: %2$s</string>

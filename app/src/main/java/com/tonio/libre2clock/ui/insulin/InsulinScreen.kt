@@ -23,6 +23,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tonio.libre2clock.R
@@ -909,103 +910,110 @@ fun InsulinDoseDialog(
                             "--"
                         }
 
-                        // FILA 1: Unidades Sugeridas (Dual) + Botón Usar
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                        // CABECERA COMPACTA DE BOLO
+                        Surface(
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f),
+                            shape = MaterialTheme.shapes.small,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = stringResource(R.string.calc_suggested_bolus_dual, unitsStr),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Text(
-                                    text = stringResource(R.string.dash_fs_label, formattedIsf),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            TextButton(onClick = {
-                                val unitsToUse = calVal
-                                unitsText = String.format(Locale.US, "%.2f", formatValue(unitsToUse))
-                            }) {
-                                Text(stringResource(R.string.insulin_use_suggested), fontWeight = FontWeight.Bold)
-                            }
-                        }
-
-                        // FILA 2: Glucosa actual (Dual) con botón para editar/expandir si se desea
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 2.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text(
-                                    text = "${stringResource(R.string.calc_glucose_label)}: ",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Text(
-                                    text = if (customGlucoseText.isNotBlank()) customGlucoseText else sensorGlucoseDisplay,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                if (projectedGlucoseText != null) {
+                            Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)) {
+                                // Fila 1: Unidades sugeridas + Botón Usar
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
                                     Text(
-                                        text = " → ${stringResource(R.string.predicted_glucose_label)} $projectedGlucoseText",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = FontWeight.SemiBold,
+                                        text = stringResource(R.string.calc_suggested_bolus_dual, unitsStr),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.primary
                                     )
+                                    TextButton(
+                                        onClick = {
+                                            val unitsToUse = calVal
+                                            unitsText = String.format(Locale.US, "%.2f", formatValue(unitsToUse))
+                                        },
+                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                                        modifier = Modifier.height(28.dp)
+                                    ) {
+                                        Text(stringResource(R.string.insulin_use_suggested), fontWeight = FontWeight.Bold)
+                                    }
                                 }
-                            }
 
-                            TextButton(
-                                onClick = { isEditingGlucose = !isEditingGlucose },
-                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
-                                modifier = Modifier.height(28.dp)
-                            ) {
-                                Icon(
-                                    imageVector = if (isEditingGlucose) Icons.Default.Close else Icons.Default.Edit,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(14.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = if (isEditingGlucose) stringResource(android.R.string.cancel) else stringResource(R.string.edit),
-                                    style = MaterialTheme.typography.labelSmall
-                                )
-                            }
-                        }
-
-                        // DESPLEGABLE: Solo visible si el usuario pulsa "Editar"
-                        AnimatedVisibility(visible = isEditingGlucose) {
-                            Column(modifier = Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 6.dp)) {
-                                OutlinedTextField(
-                                    value = customGlucoseText,
-                                    onValueChange = { customGlucoseText = it.filter { char -> char.isDigit() || char == '(' || char == ')' } },
-                                    label = { Text(stringResource(R.string.calc_glucose_label)) },
+                                // Fila 2: Glucosa usada para el cálculo y FS + Botón Editar
+                                Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    placeholder = { Text(stringResource(R.string.insulin_placeholder_real_offset)) },
-                                    singleLine = true,
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
-                                )
-                                latestCapillary?.let { cap ->
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    AssistChip(
-                                        onClick = { customGlucoseText = cap.value.toString() },
-                                        label = { Text(stringResource(R.string.calc_latest_capillary_chip, cap.value)) },
-                                        leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    val currentDisplay = if (customGlucoseText.isNotBlank()) customGlucoseText else sensorGlucoseDisplay
+                                    Text(
+                                        text = stringResource(R.string.calc_glucose_compact, currentDisplay) + " · " + stringResource(R.string.dash_fs_label, formattedIsf),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f, fill = false)
                                     )
+
+                                    TextButton(
+                                        onClick = { isEditingGlucose = !isEditingGlucose },
+                                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp),
+                                        modifier = Modifier.height(26.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = if (isEditingGlucose) Icons.Default.Close else Icons.Default.Edit,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(12.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(3.dp))
+                                        Text(
+                                            text = if (isEditingGlucose) stringResource(android.R.string.cancel) else stringResource(R.string.edit),
+                                            style = MaterialTheme.typography.labelSmall
+                                        )
+                                    }
+                                }
+
+                                // Fila 3 (Opcional): Glucosa estimada si tiene valor positivo
+                                if (projectedGlucoseText != null && projectedGlucoseText != "--") {
+                                    Text(
+                                        text = "${stringResource(R.string.predicted_glucose_label)} $projectedGlucoseText",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.SemiBold,
+                                        modifier = Modifier.padding(top = 2.dp)
+                                    )
+                                }
+
+                                // DESPLEGABLE: Editor de glucosa
+                                AnimatedVisibility(visible = isEditingGlucose) {
+                                    Column(modifier = Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 4.dp)) {
+                                        OutlinedTextField(
+                                            value = customGlucoseText,
+                                            onValueChange = { customGlucoseText = it.filter { char -> char.isDigit() || char == '(' || char == ')' } },
+                                            label = { Text(stringResource(R.string.calc_glucose_label)) },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            placeholder = { Text(stringResource(R.string.insulin_placeholder_real_offset)) },
+                                            singleLine = true,
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                                            keyboardActions = KeyboardActions(onDone = { 
+                                                focusManager.clearFocus()
+                                                isEditingGlucose = false
+                                            })
+                                        )
+                                        latestCapillary?.let { cap ->
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            AssistChip(
+                                                onClick = { 
+                                                    customGlucoseText = cap.value.toString()
+                                                    isEditingGlucose = false
+                                                },
+                                                label = { Text(stringResource(R.string.calc_latest_capillary_chip, cap.value)) },
+                                                leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(14.dp)) }
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
