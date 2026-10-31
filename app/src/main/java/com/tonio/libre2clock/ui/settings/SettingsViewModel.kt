@@ -146,6 +146,7 @@ class SettingsViewModel(
     val isfRuleConstant = preferenceManager.isfRuleConstant.stateInDefault(1800)
     val manualTdi = preferenceManager.manualTdi.stateInDefault(null)
     val manualIsf = preferenceManager.manualIsf.stateInDefault(null)
+    val tdiCalculationDays = preferenceManager.tdiCalculationDays.stateInDefault(30)
     val targetGlucose = preferenceManager.targetGlucose.stateInDefault(100)
     val targetGlucoseLow = preferenceManager.targetGlucoseLow.stateInDefault(70)
     val targetGlucoseHigh = preferenceManager.targetGlucoseHigh.stateInDefault(180)
@@ -354,6 +355,7 @@ class SettingsViewModel(
     fun updateIsfRuleConstant(constant: Int) = launchSave { preferenceManager.saveIsfRuleConstant(constant) }
     fun updateManualTdi(tdi: Double?) = launchSave { preferenceManager.saveManualTdi(tdi) }
     fun updateManualIsf(isf: Double?) = launchSave { preferenceManager.saveManualIsf(isf) }
+    fun updateTdiCalculationDays(days: Int) = launchSave { preferenceManager.saveTdiCalculationDays(days) }
     fun updateTargetGlucose(target: Int) = launchSave { preferenceManager.saveTargetGlucose(target) }
     fun updateTargetGlucoseLow(value: Int) = launchSave { preferenceManager.saveTargetGlucoseLow(value) }
     fun updateTargetGlucoseHigh(value: Int) = launchSave { preferenceManager.saveTargetGlucoseHigh(value) }

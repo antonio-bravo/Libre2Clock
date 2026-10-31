@@ -192,4 +192,34 @@ class ExampleUnitTest {
         val avgDaily = InsulinProcessor.calculateAverageDaily(list, 30)
         assertEquals(3.5, avgDaily, 0.01)
     }
+
+    @Test
+    fun formatPredictedDualValueDoesNotReturnDashesForLowOrZeroValues() {
+        // Normal value
+        assertEquals("80(75)", GlucoseProcessor.formatPredictedDualValue(80, 75))
+        // Equal values
+        assertEquals("80", GlucoseProcessor.formatPredictedDualValue(80, 80))
+        // Zero or negative values (high IOB drop) - should coerce to 0 instead of returning "---"
+        assertEquals("0", GlucoseProcessor.formatPredictedDualValue(0, 0))
+        assertEquals("0", GlucoseProcessor.formatPredictedDualValue(-20, -15))
+    }
+
+    @Test
+    fun calculateAverageDailySupportsCustomDays() {
+        val now = java.time.Instant.now()
+        val nowStr = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+            .withZone(java.time.ZoneId.systemDefault())
+            .format(now)
+
+        val dose = com.tonio.libre2clock.data.model.InsulinDose(
+            units = 20.0,
+            timestamp = nowStr,
+            type = com.tonio.libre2clock.data.model.InsulinType.RAPID
+        )
+
+        val list = listOf(dose)
+        assertEquals(20.0, InsulinProcessor.calculateAverageDaily(list, 1), 0.01)
+        assertEquals(20.0, InsulinProcessor.calculateAverageDaily(list, 7), 0.01)
+        assertEquals(20.0, InsulinProcessor.calculateAverageDaily(list, 14), 0.01)
+    }
 }

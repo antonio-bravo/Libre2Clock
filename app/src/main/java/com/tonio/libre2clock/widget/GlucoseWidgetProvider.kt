@@ -327,7 +327,8 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
             val formattedRapidVal = formatInsulinValue(rapidIOB, decimalsMode)
             val formattedSlowVal = formatInsulinValue(slowIOB, decimalsMode)
 
-            val calculatedTdi = manualTdi ?: InsulinProcessor.calculateAverageDaily(activeDoses, 30)
+            val tdiDays = preferenceManager.tdiCalculationDays.first()
+            val calculatedTdi = manualTdi ?: InsulinProcessor.calculateAverageDaily(activeDoses, tdiDays)
             val fsValue = InsulinProcessor.calculateISF(calculatedTdi, isfRuleC, manualIsf)
             val formattedFS = if (fsValue > 0) {
                 if (fsValue % 1.0 == 0.0) String.format(Locale.US, "%.0f", fsValue) else String.format(Locale.US, "%.1f", fsValue)

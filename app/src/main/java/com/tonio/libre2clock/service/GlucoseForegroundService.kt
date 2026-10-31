@@ -898,7 +898,8 @@ class GlucoseForegroundService : Service() {
         val manualIsf = preferenceManager.manualIsf.first()
         val isfRuleC = preferenceManager.isfRuleConstant.first()
         val manualTdi = preferenceManager.manualTdi.first()
-        val calculatedTdi = InsulinProcessor.calculateAverageDaily(doses, 30)
+        val tdiDays = preferenceManager.tdiCalculationDays.first()
+        val calculatedTdi = InsulinProcessor.calculateAverageDaily(doses, tdiDays)
         val tdi = manualTdi ?: calculatedTdi
         val isf = InsulinProcessor.calculateISF(tdi, isfRuleC, manualIsf)
 

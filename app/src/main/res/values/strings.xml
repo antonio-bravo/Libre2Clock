@@ -138,6 +138,9 @@
     <string name="insulin_time_format_label">Time (HH:mm)</string>
     <string name="insulin_manual_tdi_value_label">TDI Value (U)</string>
     <string name="insulin_manual_isf_value_label">ISF Value (mg/dL/U)</string>
+    <string name="settings_tdi_days">TDI / ISF Average Days</string>
+    <string name="settings_tdi_days_desc">History days used to average Total Daily Insulin (TDI) in the ISF rule (ADA recommended: 14d, default: 30d).</string>
+    <string name="settings_tdi_days_label">TDI Calculation Days (1-365)</string>
 
     <string name="strategy_title">Trend Strategies</string>
     <string name="strategy_insulin_adj">Insulin Adjustment: %1$s</string>

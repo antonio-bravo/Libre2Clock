@@ -339,6 +339,9 @@ class DashboardViewModel(
     val isfRuleConstant: StateFlow<Int> = preferenceManager.isfRuleConstant
         .stateIn(viewModelScope, subscribedSharing, 1800)
 
+    val tdiCalculationDays: StateFlow<Int> = preferenceManager.tdiCalculationDays
+        .stateIn(viewModelScope, subscribedSharing, 30)
+
     val icRuleConstant: StateFlow<Int> = preferenceManager.icRuleConstant
         .stateIn(viewModelScope, subscribedSharing, 450)
 
@@ -381,10 +384,19 @@ class DashboardViewModel(
         insulinDoses,
         manualTdi,
         manualIsf,
-        isfRuleConstant
-    ) { current, doses, tdi, mIsf, isfRule ->
+        isfRuleConstant,
+        tdiCalculationDays
+    ) { flows ->
+        val current = flows[0] as? GlucoseMeasurement
+        @Suppress("UNCHECKED_CAST")
+        val doses = (flows[1] as? List<InsulinDose>) ?: emptyList()
+        val tdi = flows[2] as? Double
+        val mIsf = flows[3] as? Double
+        val isfRule = (flows[4] as? Int) ?: 1800
+        val tdiDays = (flows[5] as? Int) ?: 30
+
         val g = current?.calibratedValue ?: return@combine emptyList()
-        val calculatedTdi = tdi ?: InsulinProcessor.calculateAverageDaily(doses, 30)
+        val calculatedTdi = tdi ?: InsulinProcessor.calculateAverageDaily(doses, tdiDays)
         val isf = InsulinProcessor.calculateISF(calculatedTdi, isfRule, mIsf)
         
         InsulinProcessor.predictGlucosePath(g, doses, isf)

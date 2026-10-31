@@ -107,6 +107,7 @@ class PreferenceManager(private val context: Context) {
     private val ISF_RULE_CONSTANT_KEY = intPreferencesKey("isf_rule_constant")
     private val MANUAL_TDI_KEY = doublePreferencesKey("manual_tdi")
     private val MANUAL_ISF_KEY = doublePreferencesKey("manual_isf")
+    private val TDI_CALCULATION_DAYS_KEY = intPreferencesKey("tdi_calculation_days")
     private val TARGET_GLUCOSE_KEY = intPreferencesKey("target_glucose")
     private val TARGET_GLUCOSE_LOW_KEY = intPreferencesKey("target_glucose_low")
     private val TARGET_GLUCOSE_HIGH_KEY = intPreferencesKey("target_glucose_high")
@@ -294,6 +295,7 @@ class PreferenceManager(private val context: Context) {
     val isfRuleConstant: Flow<Int> = context.dataStore.data.map { it[ISF_RULE_CONSTANT_KEY] ?: 1800 }.distinctUntilChanged()
     val manualTdi: Flow<Double?> = context.dataStore.data.map { it[MANUAL_TDI_KEY] }.distinctUntilChanged()
     val manualIsf: Flow<Double?> = context.dataStore.data.map { it[MANUAL_ISF_KEY] }.distinctUntilChanged()
+    val tdiCalculationDays: Flow<Int> = context.dataStore.data.map { (it[TDI_CALCULATION_DAYS_KEY] ?: 30).coerceIn(1, 365) }.distinctUntilChanged()
     val targetGlucose: Flow<Int> = context.dataStore.data.map { it[TARGET_GLUCOSE_KEY] ?: 80 }.distinctUntilChanged()
     val targetGlucoseLow: Flow<Int> = context.dataStore.data.map { (it[TARGET_GLUCOSE_LOW_KEY] ?: 70).coerceIn(50, 120) }.distinctUntilChanged()
     val targetGlucoseHigh: Flow<Int> = context.dataStore.data.map { (it[TARGET_GLUCOSE_HIGH_KEY] ?: 180).coerceIn(120, 300) }.distinctUntilChanged()
@@ -700,6 +702,11 @@ class PreferenceManager(private val context: Context) {
         context.dataStore.edit { preferences ->
             if (isf == null) preferences.remove(MANUAL_ISF_KEY) else preferences[MANUAL_ISF_KEY] = isf
         }
+        updateBackupPayload()
+    }
+
+    suspend fun saveTdiCalculationDays(days: Int) {
+        context.dataStore.edit { it[TDI_CALCULATION_DAYS_KEY] = days.coerceIn(1, 365) }
         updateBackupPayload()
     }
 
@@ -1111,6 +1118,7 @@ class PreferenceManager(private val context: Context) {
             isfRuleConstant = prefs[ISF_RULE_CONSTANT_KEY] ?: 1800,
             manualTdi = prefs[MANUAL_TDI_KEY],
             manualIsf = prefs[MANUAL_ISF_KEY],
+            tdiCalculationDays = (prefs[TDI_CALCULATION_DAYS_KEY] ?: 30).coerceIn(1, 365),
             targetGlucose = prefs[TARGET_GLUCOSE_KEY] ?: 80,
             watchAlertsEnabled = prefs[WATCH_ALERTS_ENABLED_KEY] ?: false,
             watchNotificationMode = watchNotificationMode,
@@ -1261,6 +1269,7 @@ class PreferenceManager(private val context: Context) {
         payload.isfRuleConstant?.let { preferences[ISF_RULE_CONSTANT_KEY] = it }
         payload.manualTdi?.let { preferences[MANUAL_TDI_KEY] = it }
         payload.manualIsf?.let { preferences[MANUAL_ISF_KEY] = it }
+        payload.tdiCalculationDays?.let { preferences[TDI_CALCULATION_DAYS_KEY] = it.coerceIn(1, 365) }
         payload.targetGlucose?.let { preferences[TARGET_GLUCOSE_KEY] = it }
         payload.watchAlertsEnabled?.let { preferences[WATCH_ALERTS_ENABLED_KEY] = it }
         payload.watchNotificationMode?.let { preferences[WATCH_NOTIFICATION_MODE_KEY] = it.name }

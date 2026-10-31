@@ -110,6 +110,7 @@ data class HistoryBackupPayload(
     val isfRuleConstant: Int? = null,
     val manualTdi: Double? = null,
     val manualIsf: Double? = null,
+    val tdiCalculationDays: Int? = null,
     val targetGlucose: Int? = null,
     // Alert Config
     val watchAlertsEnabled: Boolean? = null,

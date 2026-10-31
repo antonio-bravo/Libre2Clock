@@ -75,7 +75,8 @@ fun InsulinHubScreen(
         }
     }
 
-    val calculatedTdi = remember(doses) { InsulinProcessor.calculateAverageDaily(doses, 30) }
+    val tdiCalculationDays by viewModel.tdiCalculationDays.collectAsStateWithLifecycle()
+    val calculatedTdi = remember(doses, tdiCalculationDays) { InsulinProcessor.calculateAverageDaily(doses, tdiCalculationDays) }
     val tdi = manualTdi ?: calculatedTdi
     val calculatedIsf = if (tdi > 0) isfRuleConstant.toDouble() / tdi else 0.0
     val isf = manualIsf ?: calculatedIsf
@@ -172,7 +173,8 @@ fun InsulinHubScreen(
                     calculatedTdi = calculatedTdi,
                     calculatedIsf = calculatedIsf,
                     todayTotal = todayTotal,
-                    isManualTdi = manualTdi != null
+                    isManualTdi = manualTdi != null,
+                    tdiCalculationDays = tdiCalculationDays
                 )
             }
             item {
@@ -304,7 +306,8 @@ fun InsulinSummaryCard(
 @Composable
 fun ActiveInsulinCard(
     total: Double, rapid: Double, slow: Double, fs: Double, activeThreads: Int,
-    isManualFs: Boolean, calculatedTdi: Double, calculatedIsf: Double, todayTotal: Double, isManualTdi: Boolean
+    isManualFs: Boolean, calculatedTdi: Double, calculatedIsf: Double, todayTotal: Double, isManualTdi: Boolean,
+    tdiCalculationDays: Int = 30
 ) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
@@ -329,7 +332,7 @@ fun ActiveInsulinCard(
                     Text(text = if (isManualFs) stringResource(R.string.insulin_manual) else stringResource(R.string.insulin_calculated), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f))
                 }
             }
-            Text(text = stringResource(R.string.insulin_tdi_30d_val, calculatedTdi, if (isManualTdi) stringResource(R.string.insulin_manual) else stringResource(R.string.insulin_auto_30d)), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f))
+            Text(text = "TDI (${tdiCalculationDays}d): ${String.format(Locale.US, "%.1f", calculatedTdi)} U ${if (isManualTdi) "(${stringResource(R.string.insulin_manual)})" else ""}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f))
             Text(text = stringResource(R.string.insulin_isf_auto_from_tdi, calculatedIsf), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f))
         }
     }
@@ -737,6 +740,72 @@ fun AdvancedSettingsCard(
                     )
                 }
             }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), thickness = 0.5.dp)
+
+            val tdiDays by viewModel.tdiCalculationDays.collectAsStateWithLifecycle()
+            var tdiDaysText by remember(tdiDays) { mutableStateOf(tdiDays.toString()) }
+
+            LaunchedEffect(tdiDaysText) {
+                val parsed = tdiDaysText.toIntOrNull()
+                if (parsed != null && parsed in 1..365 && parsed != tdiDays) {
+                    delay(600)
+                    viewModel.updateTdiCalculationDays(parsed)
+                }
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    text = stringResource(R.string.settings_tdi_days),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = stringResource(R.string.settings_tdi_days_desc),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    listOf(1, 7, 14, 30, 90).forEach { presetDays ->
+                        FilterChip(
+                            selected = tdiDays == presetDays,
+                            onClick = {
+                                tdiDaysText = presetDays.toString()
+                                viewModel.updateTdiCalculationDays(presetDays)
+                            },
+                            label = {
+                                Text(
+                                    text = if (presetDays == 14) "14d (ADA)" else "${presetDays}d",
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            }
+                        )
+                    }
+                }
+
+                OutlinedTextField(
+                    value = tdiDaysText,
+                    onValueChange = { input ->
+                        val digits = input.filter { it.isDigit() }
+                        tdiDaysText = digits
+                        digits.toIntOrNull()?.let {
+                            if (it in 1..365) viewModel.updateTdiCalculationDays(it)
+                        }
+                    },
+                    label = { Text(stringResource(R.string.settings_tdi_days_label)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = {
+                        val parsed = tdiDaysText.toIntOrNull()?.coerceIn(1, 365) ?: 30
+                        tdiDaysText = parsed.toString()
+                        viewModel.updateTdiCalculationDays(parsed)
+                    })
+                )
+            }
         }
     }
 }
@@ -841,14 +910,23 @@ fun InsulinDoseDialog(
         val customRealG = glucoseParts.getOrNull(0)?.toIntOrNull() ?: 0
         val customCalG = glucoseParts.getOrNull(1)?.toIntOrNull() ?: customRealG
 
-        val gRaw = if (customRealG > 0) customRealG else (currentGlucose?.let { if (it.value > 0) it.value else it.valueInMgPerDl } ?: 0)
-        val gCal = if (customRealG > 0) customCalG else (currentGlucose?.let { if (it.calibratedValue > 0) it.calibratedValue else gRaw } ?: 0)
+        val gRaw = if (customRealG > 0) customRealG else (currentGlucose?.let {
+            if (it.value > 0) it.value
+            else if (it.valueInMgPerDl > 0) it.valueInMgPerDl
+            else it.calibratedValue
+        } ?: 0)
 
-        if (gRaw > 0 && isf != null && isf > 0.0) {
-            val totalDrop = totalRapidUnits * isf
+        val gCal = if (customRealG > 0) customCalG else (currentGlucose?.let {
+            if (it.calibratedValue > 0) it.calibratedValue else gRaw
+        } ?: gRaw)
+
+        val effectiveIsf = if (isf != null && isf > 0.0) isf else 40.0
+
+        if (gRaw > 0) {
+            val totalDrop = totalRapidUnits * effectiveIsf
             val predRaw = (gRaw - totalDrop).roundToInt()
             val predCal = (gCal - totalDrop).roundToInt()
-            GlucoseProcessor.formatDualValue(predRaw, predCal)
+            GlucoseProcessor.formatPredictedDualValue(predRaw, predCal)
         } else {
             null
         }

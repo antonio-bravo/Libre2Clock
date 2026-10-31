@@ -91,6 +91,7 @@ fun DashboardScreen(
     val manualTdi by viewModel.manualTdi.collectAsStateWithLifecycle()
     val manualIsf by viewModel.manualIsf.collectAsStateWithLifecycle()
     val isfRuleConstant by viewModel.isfRuleConstant.collectAsStateWithLifecycle()
+    val tdiCalculationDays by viewModel.tdiCalculationDays.collectAsStateWithLifecycle()
     val rapidDuration by viewModel.rapidDurationMinutes.collectAsStateWithLifecycle()
     val slowDuration by viewModel.slowDurationMinutes.collectAsStateWithLifecycle()
     val isDemoMode by viewModel.isDemoMode.collectAsStateWithLifecycle()
@@ -326,7 +327,9 @@ fun DashboardScreen(
                         rapidDuration = rapidDuration,
                         slowDuration = slowDuration,
                         deductIobForBolus = deductIobForBolus,
-                        onDeductIobChange = viewModel::updateDeductIobForBolus
+                        onDeductIobChange = viewModel::updateDeductIobForBolus,
+                        fallbackGlucose = graphData.lastOrNull(),
+                        tdiCalculationDays = tdiCalculationDays
                     )
                 }
                 item {
@@ -476,7 +479,9 @@ fun InsulinHealthCard(
     rapidDuration: Int = 240,
     slowDuration: Int = 1440,
     deductIobForBolus: Boolean = false,
-    onDeductIobChange: ((Boolean) -> Unit)? = null
+    onDeductIobChange: ((Boolean) -> Unit)? = null,
+    fallbackGlucose: GlucoseMeasurement? = null,
+    tdiCalculationDays: Int = 30
 ) {
     val pagerState = rememberPagerState(pageCount = { 3 })
     val today = LocalDate.now()
@@ -494,7 +499,7 @@ fun InsulinHealthCard(
     val todayRapid = remember(doses) { InsulinProcessor.calculateDailyTotal(doses, today, InsulinType.RAPID) }
     val todaySlow = remember(doses) { InsulinProcessor.calculateDailyTotal(doses, today, InsulinType.SLOW) }
 
-    val calculatedTdi = remember(doses) { InsulinProcessor.calculateAverageDaily(doses, 30) }
+    val calculatedTdi = remember(doses, tdiCalculationDays) { InsulinProcessor.calculateAverageDaily(doses, tdiCalculationDays) }
     val tdi = manualTdi ?: calculatedTdi
     val currentIsf = InsulinProcessor.calculateISF(tdi, isfRuleConstant, manualIsf)
 
@@ -515,15 +520,31 @@ fun InsulinHealthCard(
     val rapidIOB = remember(rapidDoses, nowTick) { InsulinProcessor.calculateTotalIOB(rapidDoses) }
     val slowIOB = remember(slowDoses, nowTick) { InsulinProcessor.calculateTotalIOB(slowDoses) }
 
-    val predictedGlucoseText = remember(currentGlucose, rapidIOB, currentIsf) {
-        val gRaw = currentGlucose?.let { if (it.value > 0) it.value else it.valueInMgPerDl } ?: 0
-        val gCal = currentGlucose?.let { if (it.calibratedValue > 0) it.calibratedValue else gRaw } ?: 0
+    val effectiveGlucose = remember(currentGlucose, fallbackGlucose) {
+        currentGlucose?.takeIf { (if (it.value > 0) it.value else (if (it.valueInMgPerDl > 0) it.valueInMgPerDl else it.calibratedValue)) > 0 }
+            ?: fallbackGlucose?.takeIf { (if (it.value > 0) it.value else (if (it.valueInMgPerDl > 0) it.valueInMgPerDl else it.calibratedValue)) > 0 }
+    }
 
-        if (gRaw > 0 && currentIsf > 0.0) {
-            val drop = rapidIOB * currentIsf
-            val predRaw = (gRaw - drop).roundToInt()
-            val predCal = (gCal - drop).roundToInt()
-            GlucoseProcessor.formatDualValue(predRaw, predCal)
+    val effectiveIsf = remember(currentIsf) {
+        if (currentIsf > 0.0) currentIsf else 40.0
+    }
+
+    val predictedGlucoseText = remember(effectiveGlucose, rapidIOB, effectiveIsf) {
+        val rawVal = effectiveGlucose?.let {
+            if (it.value > 0) it.value
+            else if (it.valueInMgPerDl > 0) it.valueInMgPerDl
+            else it.calibratedValue
+        } ?: 0
+
+        val calVal = effectiveGlucose?.let {
+            if (it.calibratedValue > 0) it.calibratedValue else rawVal
+        } ?: rawVal
+
+        if (rawVal > 0) {
+            val drop = rapidIOB * effectiveIsf
+            val predRaw = (rawVal - drop).roundToInt()
+            val predCal = (calVal - drop).roundToInt()
+            GlucoseProcessor.formatPredictedDualValue(predRaw, predCal)
         } else {
             "--"
         }

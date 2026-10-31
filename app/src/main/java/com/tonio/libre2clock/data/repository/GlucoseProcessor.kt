@@ -319,6 +319,21 @@ object GlucoseProcessor {
     }
 
     /**
+     * Formats predicted or calculated glucose values.
+     * Unlike formatDualValue for real sensor measurements, predicted values can be 0 or low
+     * and will not return "---" when a valid base glucose is available.
+     */
+    fun formatPredictedDualValue(predRaw: Int, predCal: Int): String {
+        val safeRaw = predRaw.coerceAtLeast(0)
+        val safeCal = predCal.coerceAtLeast(0)
+        return if (safeRaw == safeCal || safeCal <= 0) {
+            "$safeRaw"
+        } else {
+            "$safeRaw($safeCal)"
+        }
+    }
+
+    /**
      * Maps the trend arrow integer to a string description or icon reference.
      */
     fun getTrendArrowSymbol(trend: Int?): String {
