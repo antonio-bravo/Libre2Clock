@@ -1,5 +1,31 @@
 # Changelog
 
+## 4008da9 (Oct 31, 2026 10:29:01)
+adjust add insulin screen — antonio-bravo
+[detail](#4008da9-details)
+
+<details id='4008da9-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 979d6bc (Oct 31, 2026 01:24:55)
+Update changelog — github-actions[bot]
+[detail](#979d6bc-details)
+
+<details id='979d6bc-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## c4e3be7 (Oct 31, 2026 01:24:42)
 Update dependency com.google.devtools.ksp to v2.3.13 (#58)
 
@@ -642,30 +668,6 @@ Update timestamp format in README.md — antonio-bravo
 [detail](#857db32-details)
 
 <details id='857db32-details'>
-<summary>Changed files</summary>
-
-- README.md [Modified]
-</details>
-
-
----
-## f95dc3a (Oct 17, 2026 18:10:03)
-Update changelog — github-actions[bot]
-[detail](#f95dc3a-details)
-
-<details id='f95dc3a-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 0b43673 (Oct 17, 2026 20:09:48)
-update documentation — antonio-bravo
-[detail](#0b43673-details)
-
-<details id='0b43673-details'>
 <summary>Changed files</summary>
 
 - README.md [Modified]
