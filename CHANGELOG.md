@@ -1,5 +1,40 @@
 # Changelog
 
+## 0c8e9a7 (Oct 31, 2026 18:48:53)
+custom days for FS — antonio-bravo
+[detail](#0c8e9a7-details)
+
+<details id='0c8e9a7-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseProcessor.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/widget/GlucoseWidgetProvider.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+- app/src/test/java/com/tonio/libre2clock/ExampleUnitTest.kt [Modified]
+</details>
+
+
+---
+## fe6f9e9 (Oct 31, 2026 09:29:34)
+Update changelog — github-actions[bot]
+[detail](#fe6f9e9-details)
+
+<details id='fe6f9e9-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 4008da9 (Oct 31, 2026 10:29:01)
 adjust add insulin screen — antonio-bravo
 [detail](#4008da9-details)
@@ -647,30 +682,6 @@ Update dependency express to v5 — renovate[bot]
 <summary>Changed files</summary>
 
 - whatsapp-bot/package.json [Modified]
-</details>
-
-
----
-## e0856ef (Oct 17, 2026 18:19:01)
-Update changelog — github-actions[bot]
-[detail](#e0856ef-details)
-
-<details id='e0856ef-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 857db32 (Oct 17, 2026 20:18:51)
-Update timestamp format in README.md — antonio-bravo
-[detail](#857db32-details)
-
-<details id='857db32-details'>
-<summary>Changed files</summary>
-
-- README.md [Modified]
 </details>
 
 
