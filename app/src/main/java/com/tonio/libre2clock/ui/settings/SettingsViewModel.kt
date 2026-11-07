@@ -9,15 +9,19 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.tonio.libre2clock.data.api.LibreService
 import com.tonio.libre2clock.data.model.AlarmSchedule
+import com.tonio.libre2clock.data.model.AppRole
 import com.tonio.libre2clock.data.model.AutoRangeOffsetMode
 import com.tonio.libre2clock.data.model.CapillaryMeasurement
 import com.tonio.libre2clock.data.model.EmergencyConfig
 import com.tonio.libre2clock.data.model.EmergencyContact
+import com.tonio.libre2clock.data.model.FollowedPatient
+import com.tonio.libre2clock.data.model.FollowerInfo
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.GlucoseOffsetRange
 import com.tonio.libre2clock.data.model.InsulinDose
 import com.tonio.libre2clock.data.model.RangeOffsetInsight
 import com.tonio.libre2clock.data.model.SensorLog
+import com.tonio.libre2clock.data.model.ShareInvite
 import com.tonio.libre2clock.data.model.WatchNotificationMode
 import com.tonio.libre2clock.data.repository.GlucoseProcessor
 import com.tonio.libre2clock.data.repository.GlucoseRepository
@@ -194,6 +198,13 @@ class SettingsViewModel(
     val nightscoutApiSecret = preferenceManager.nightscoutApiSecret.stateInDefault("")
     val nightscoutUseCalibrated = preferenceManager.nightscoutUseCalibrated.stateInDefault(true)
     val xdripBroadcastEnabled = preferenceManager.xdripBroadcastEnabled.stateInDefault(false)
+
+    val appRole = preferenceManager.appRole.stateInDefault(AppRole.PATIENT)
+    val isFollowerMode = preferenceManager.isFollowerMode.stateInDefault(false)
+    val followedPatients = preferenceManager.followedPatients.stateInDefault(emptyList())
+    val activeFollowedPatientUid = preferenceManager.activeFollowedPatientUid.stateInDefault(null)
+    val activeFollowedPatient = preferenceManager.activeFollowedPatient.stateInDefault(null)
+    val followersList = cloudSyncManager.getFollowers().stateInDefault(emptyList())
 
     private val _isTestingNightscout = MutableStateFlow(false)
     val isTestingNightscout: StateFlow<Boolean> = _isTestingNightscout.asStateFlow()
@@ -675,6 +686,47 @@ class SettingsViewModel(
 
     fun clearCloudSyncDebugOutput() {
         cloudSyncManager.clearDebugOutput()
+    }
+
+    // --- Métodos de Compartir Datos y Modo Seguidor ---
+
+    fun generateShareInvite(label: String, expiresAtMs: Long?, onResult: (Result<ShareInvite>) -> Unit) {
+        viewModelScope.launch {
+            val result = cloudSyncManager.generateShareInvite(label, expiresAtMs)
+            onResult(result)
+        }
+    }
+
+    fun redeemShareInvite(code: String, customLabel: String?, onResult: (Result<FollowedPatient>) -> Unit) {
+        viewModelScope.launch {
+            val result = cloudSyncManager.redeemShareInvite(code, customLabel)
+            onResult(result)
+        }
+    }
+
+    fun revokeFollower(followerUid: String, onResult: (Result<Unit>) -> Unit) {
+        viewModelScope.launch {
+            val result = cloudSyncManager.revokeFollower(followerUid)
+            onResult(result)
+        }
+    }
+
+    fun selectActiveFollowedPatient(patientUid: String) {
+        viewModelScope.launch {
+            preferenceManager.saveActiveFollowedPatientUid(patientUid)
+        }
+    }
+
+    fun removeFollowedPatient(patientUid: String) {
+        viewModelScope.launch {
+            preferenceManager.removeFollowedPatient(patientUid)
+        }
+    }
+
+    fun switchRoleToPatient() {
+        viewModelScope.launch {
+            preferenceManager.saveAppRole(AppRole.PATIENT)
+        }
     }
 
     fun formatLogTimestamp(timestamp: Long): String = eventLogManager.formatTimestamp(timestamp)

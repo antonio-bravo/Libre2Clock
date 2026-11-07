@@ -64,6 +64,7 @@ fun InsulinHubScreen(
     val currentGlucoseData by viewModel.currentGlucose.collectAsStateWithLifecycle()
     val useCalibratedForAlarms by viewModel.useCalibratedForAlarms.collectAsStateWithLifecycle()
     val deductIobForBolus by viewModel.deductIobForBolus.collectAsStateWithLifecycle()
+    val isFollowerMode by viewModel.isFollowerMode.collectAsStateWithLifecycle()
 
     var showAddDialog by remember { mutableStateOf(false) }
 
@@ -150,8 +151,10 @@ fun InsulinHubScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_insulin_dose))
+            if (!isFollowerMode) {
+                FloatingActionButton(onClick = { showAddDialog = true }) {
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_insulin_dose))
+                }
             }
         }
     ) { innerPadding ->

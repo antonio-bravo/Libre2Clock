@@ -729,4 +729,39 @@
     <string name="nightscout_testing_button">Probando conexión…</string>
     <string name="xdrip_broadcast_title">Transmisión Local xDrip+ / AndroidAPS</string>
     <string name="xdrip_broadcast_desc">Envía emisiones locales en este teléfono para xDrip+, AndroidAPS y aplicaciones de reloj.</string>
+
+    <!-- Compartir Datos y Cuidadores -->
+    <string name="share_title">Compartir Datos y Seguidores</string>
+    <string name="share_drawer_menu">Compartir datos / Código</string>
+    <string name="share_tab_generate">Generar Código</string>
+    <string name="share_tab_join">Unirse Seguidor</string>
+    <string name="share_generate_desc">Genera un código de un solo uso para compartir tus datos en tiempo real con familiares de forma 100% de solo lectura.</string>
+    <string name="share_follower_label">Nombre del seguidor (ej. Mamá)</string>
+    <string name="share_expiry_label">Validez del código:</string>
+    <string name="share_no_limit">Sin límite</string>
+    <string name="share_days_7">7 días</string>
+    <string name="share_days_30">30 días</string>
+    <string name="share_custom_date">Elegir fecha...</string>
+    <string name="share_until_date">Hasta %1$s</string>
+    <string name="share_select_date">Seleccionar fecha de caducidad</string>
+    <string name="share_generate_button">Generar Código de Invitación</string>
+    <string name="share_code_for">Código de un solo uso para \'%1$s\':</string>
+    <string name="share_copy_button">Copiar código</string>
+    <string name="share_copy_success">Código copiado al portapapeles</string>
+    <string name="share_authorized_followers">Seguidores Autorizados</string>
+    <string name="share_revoke_button">Revocar</string>
+    <string name="share_expires_on">Caduca: %1$s</string>
+    <string name="share_unlimited_access">Acceso sin límite</string>
+    <string name="share_join_desc">Introduce el código proporcionado por un paciente para empezar a ver sus datos en tiempo real de solo lectura.</string>
+    <string name="share_code_hint">Código de invitación (ej. 7K9-X2M)</string>
+    <string name="share_patient_label_hint">Nombre para identificarlo (ej. Hijo Juan)</string>
+    <string name="share_connect_button">Conectar y Ver Datos</string>
+    <string name="share_followed_patients">Pacientes Seguidos</string>
+    <string name="share_viewing_active">🟢 Viendo actualmente</string>
+    <string name="share_viewing_label">Viendo a:</string>
+    <string name="share_read_only_badge">Solo Lectura</string>
+    <string name="share_change_patient">Cambiar paciente</string>
+    <string name="share_followed_patients_header">PACIENTES SEGUIDOS</string>
+    <string name="share_add_patient">➕ Conectar a otro paciente</string>
+    <string name="share_exit_follower_mode">🔄 Salir de Modo Seguidor</string>
 </resources>

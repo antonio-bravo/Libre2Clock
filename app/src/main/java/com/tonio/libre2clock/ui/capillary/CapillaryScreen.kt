@@ -42,6 +42,7 @@ fun CapillaryScreen(
 
     val capillaryReadings by viewModel.capillaryReadings.collectAsStateWithLifecycle()
     val currentGlucose by viewModel.currentGlucose.collectAsStateWithLifecycle()
+    val isFollowerMode by viewModel.isFollowerMode.collectAsStateWithLifecycle()
 
     LaunchedEffect(capillaryReadings, currentGlucose) {
         if (!enterTimingRecorded) {
@@ -94,14 +95,16 @@ fun CapillaryScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = {
-                val now = LocalTime.now()
-                capillaryDate = LocalDate.now()
-                capillaryHour = now.hour.toString().padStart(2, '0')
-                capillaryMinute = now.minute.toString().padStart(2, '0')
-                showCapillaryDialog = true
-            }) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_capillary_reading))
+            if (!isFollowerMode) {
+                FloatingActionButton(onClick = {
+                    val now = LocalTime.now()
+                    capillaryDate = LocalDate.now()
+                    capillaryHour = now.hour.toString().padStart(2, '0')
+                    capillaryMinute = now.minute.toString().padStart(2, '0')
+                    showCapillaryDialog = true
+                }) {
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_capillary_reading))
+                }
             }
         }
     ) { innerPadding ->

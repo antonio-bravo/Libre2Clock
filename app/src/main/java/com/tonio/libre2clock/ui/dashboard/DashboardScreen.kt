@@ -15,7 +15,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.*
+import com.tonio.libre2clock.ui.components.PatientSelectorDropdown
+import com.tonio.libre2clock.ui.components.ShareDialog
 import com.tonio.libre2clock.ui.icons.TrendingUp
 import com.tonio.libre2clock.ui.icons.ContentCopy
 import com.tonio.libre2clock.ui.icons.History
@@ -107,6 +110,12 @@ fun DashboardScreen(
     val deductIobForBolus by viewModel.deductIobForBolus.collectAsStateWithLifecycle()
     val predictedPoints by viewModel.predictedGlucose.collectAsStateWithLifecycle()
     val isBatteryOptimized by viewModel.isBatteryOptimized.collectAsStateWithLifecycle()
+
+    val isFollowerMode by viewModel.isFollowerMode.collectAsStateWithLifecycle()
+    val followedPatients by viewModel.followedPatients.collectAsStateWithLifecycle()
+    val activeFollowedPatientUid by viewModel.activeFollowedPatientUid.collectAsStateWithLifecycle()
+    val followersList by viewModel.followersList.collectAsStateWithLifecycle()
+    var showShareDialog by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -202,6 +211,67 @@ fun DashboardScreen(
                     icon = { Icon(Icons.Filled.History, contentDescription = null) },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
+
+                // --- SECCIÓN DE COMPARTIR Y CUIDADORES ---
+                NavigationDrawerItem(
+                    label = { Text(stringResource(R.string.share_drawer_menu)) },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        showShareDialog = true
+                    },
+                    icon = { Icon(Icons.Default.Share, contentDescription = null) },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+
+                if (isFollowerMode && followedPatients.isNotEmpty()) {
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                    Text(
+                        text = stringResource(R.string.share_followed_patients_header),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                    )
+                    followedPatients.forEach { patient ->
+                        val isSelected = patient.patientUid == activeFollowedPatientUid
+                        NavigationDrawerItem(
+                            label = {
+                                Text(
+                                    text = if (isSelected) "🟢 ${patient.label}" else patient.label,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                )
+                            },
+                            selected = isSelected,
+                            onClick = {
+                                scope.launch { drawerState.close() }
+                                viewModel.selectActiveFollowedPatient(patient.patientUid)
+                            },
+                            icon = { Icon(Icons.Default.Person, contentDescription = null) },
+                            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                        )
+                    }
+                    NavigationDrawerItem(
+                        label = { Text(stringResource(R.string.share_add_patient)) },
+                        selected = false,
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            showShareDialog = true
+                        },
+                        icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                    )
+                    NavigationDrawerItem(
+                        label = { Text(stringResource(R.string.share_exit_follower_mode)) },
+                        selected = false,
+                        onClick = {
+                            scope.launch { drawerState.close() }
+                            viewModel.switchRoleToPatient()
+                        },
+                        icon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null) },
+                        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                    )
+                }
                 
                 Spacer(modifier = Modifier.weight(1f))
                 HorizontalDivider()
@@ -227,19 +297,21 @@ fun DashboardScreen(
                         }
                     },
                     actions = {
-                        IconButton(onClick = {
-                            capillaryValueText = ""
-                            val now = LocalTime.now()
-                            capillaryDate = LocalDate.now()
-                            capillaryHour = now.hour.toString().padStart(2, '0')
-                            capillaryMinute = now.minute.toString().padStart(2, '0')
-                            showCapillaryDialog = true
-                        }) {
-                            Icon(
-                                imageVector = Icons.Filled.WaterDrop,
-                                contentDescription = stringResource(R.string.add_capillary_reading),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
+                        if (!isFollowerMode) {
+                            IconButton(onClick = {
+                                capillaryValueText = ""
+                                val now = LocalTime.now()
+                                capillaryDate = LocalDate.now()
+                                capillaryHour = now.hour.toString().padStart(2, '0')
+                                capillaryMinute = now.minute.toString().padStart(2, '0')
+                                showCapillaryDialog = true
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Filled.WaterDrop,
+                                    contentDescription = stringResource(R.string.add_capillary_reading),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
                         IconButton(onClick = viewModel::refresh) {
                             Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.refresh))
@@ -256,6 +328,39 @@ fun DashboardScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                if (isFollowerMode) {
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                PatientSelectorDropdown(
+                                    followedPatients = followedPatients,
+                                    activePatientUid = activeFollowedPatientUid,
+                                    onSelectPatient = viewModel::selectActiveFollowedPatient
+                                )
+                                Surface(
+                                    shape = MaterialTheme.shapes.extraSmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                ) {
+                                    Text(
+                                        "Solo Lectura",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
                 if (isBatteryOptimized) {
                     item {
                         Card(
@@ -461,6 +566,19 @@ fun DashboardScreen(
                     Text(stringResource(android.R.string.cancel))
                 }
             }
+        )
+    }
+
+    if (showShareDialog) {
+        ShareDialog(
+            onDismissRequest = { showShareDialog = false },
+            followersList = followersList,
+            followedPatients = followedPatients,
+            activePatientUid = activeFollowedPatientUid,
+            onGenerateInvite = viewModel::generateShareInvite,
+            onRedeemInvite = viewModel::redeemShareInvite,
+            onRevokeFollower = viewModel::revokeFollower,
+            onSelectPatient = viewModel::selectActiveFollowedPatient
         )
     }
 }

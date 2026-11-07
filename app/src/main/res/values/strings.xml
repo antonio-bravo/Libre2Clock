@@ -734,4 +734,39 @@
     <string name="nightscout_testing_button">Testing connection…</string>
     <string name="xdrip_broadcast_title">xDrip+ / AndroidAPS Local Broadcast</string>
     <string name="xdrip_broadcast_desc">Sends local inter-app broadcasts on this phone for xDrip+, AndroidAPS, and Wear OS apps.</string>
+
+    <!-- Caregiver & Data Sharing Strings -->
+    <string name="share_title">Data Sharing &amp; Caregivers</string>
+    <string name="share_drawer_menu">Data Sharing / Invite Code</string>
+    <string name="share_tab_generate">Generate Code</string>
+    <string name="share_tab_join">Join as Follower</string>
+    <string name="share_generate_desc">Generate a one-time code to share your real-time glucose, insulin, and report data read-only with caregivers.</string>
+    <string name="share_follower_label">Follower Name / Label (e.g., Mom)</string>
+    <string name="share_expiry_label">Code Validity:</string>
+    <string name="share_no_limit">Unlimited</string>
+    <string name="share_days_7">7 days</string>
+    <string name="share_days_30">30 days</string>
+    <string name="share_custom_date">Custom Date...</string>
+    <string name="share_until_date">Until %1$s</string>
+    <string name="share_select_date">Select Expiration Date</string>
+    <string name="share_generate_button">Generate Invite Code</string>
+    <string name="share_code_for">One-time code for \'%1$s\':</string>
+    <string name="share_copy_button">Copy Code</string>
+    <string name="share_copy_success">Code copied to clipboard</string>
+    <string name="share_authorized_followers">Authorized Followers</string>
+    <string name="share_revoke_button">Revoke</string>
+    <string name="share_expires_on">Expires: %1$s</string>
+    <string name="share_unlimited_access">Unlimited access</string>
+    <string name="share_join_desc">Enter an invite code provided by a patient to view their glucose and insulin data in real-time read-only mode.</string>
+    <string name="share_code_hint">Invite Code (e.g., 7K9-X2M)</string>
+    <string name="share_patient_label_hint">Name to identify patient (e.g., Son John)</string>
+    <string name="share_connect_button">Connect &amp; View Data</string>
+    <string name="share_followed_patients">Followed Patients</string>
+    <string name="share_viewing_active">🟢 Viewing currently</string>
+    <string name="share_viewing_label">Viewing:</string>
+    <string name="share_read_only_badge">Read-Only</string>
+    <string name="share_change_patient">Change patient</string>
+    <string name="share_followed_patients_header">FOLLOWED PATIENTS</string>
+    <string name="share_add_patient">➕ Connect to another patient</string>
+    <string name="share_exit_follower_mode">🔄 Exit Follower Mode</string>
 </resources>

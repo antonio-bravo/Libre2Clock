@@ -76,5 +76,21 @@ class AuthManager(private val context: Context) {
         credentialManager.clearCredentialState(ClearCredentialStateRequest())
     }
 
+    suspend fun signInAnonymously(): Result<String> {
+        return try {
+            val currentUser = auth.currentUser
+            if (currentUser != null) {
+                Result.success(currentUser.uid)
+            } else {
+                val authResult = auth.signInAnonymously().await()
+                val uid = authResult.user?.uid ?: throw Exception("Error al obtener UID anónimo de Firebase")
+                Result.success(uid)
+            }
+        } catch (e: Exception) {
+            Log.e("AuthManager", "Error in anonymous sign-in", e)
+            Result.failure(e)
+        }
+    }
+
     fun getCurrentUserUid(): String? = auth.currentUser?.uid
 }

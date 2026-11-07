@@ -7,8 +7,13 @@ import androidx.lifecycle.viewModelScope
 import com.tonio.libre2clock.R
 import com.tonio.libre2clock.data.model.ActiveSensorInfo
 import com.tonio.libre2clock.data.model.AutoRangeOffsetMode
+import com.tonio.libre2clock.data.model.AppRole
 import com.tonio.libre2clock.data.model.CapillaryMeasurement
+import com.tonio.libre2clock.data.model.FollowedPatient
+import com.tonio.libre2clock.data.model.FollowerInfo
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
+import com.tonio.libre2clock.data.model.ShareInvite
+import com.tonio.libre2clock.di.AppContainer
 import com.tonio.libre2clock.data.model.GlucoseOffsetRange
 import com.tonio.libre2clock.data.model.InsulinDose
 import com.tonio.libre2clock.data.model.SensorLog
@@ -365,6 +370,53 @@ class DashboardViewModel(
 
     fun updateDeductIobForBolus(enabled: Boolean) {
         viewModelScope.launch { preferenceManager.saveDeductIobForBolus(enabled) }
+    }
+
+    val isFollowerMode: StateFlow<Boolean> = preferenceManager.isFollowerMode
+        .stateIn(viewModelScope, subscribedSharing, false)
+
+    val followedPatients: StateFlow<List<FollowedPatient>> = preferenceManager.followedPatients
+        .stateIn(viewModelScope, subscribedSharing, emptyList())
+
+    val activeFollowedPatientUid: StateFlow<String?> = preferenceManager.activeFollowedPatientUid
+        .stateIn(viewModelScope, subscribedSharing, null)
+
+    fun selectActiveFollowedPatient(patientUid: String) {
+        viewModelScope.launch {
+            preferenceManager.saveActiveFollowedPatientUid(patientUid)
+        }
+    }
+
+    private val cloudSyncManager = AppContainer.provideCloudSyncManager(androidContext)
+
+    val followersList: StateFlow<List<FollowerInfo>> = cloudSyncManager.getFollowers()
+        .stateIn(viewModelScope, subscribedSharing, emptyList())
+
+    fun generateShareInvite(label: String, expiresAtMs: Long?, onResult: (Result<ShareInvite>) -> Unit) {
+        viewModelScope.launch {
+            val result = cloudSyncManager.generateShareInvite(label, expiresAtMs)
+            onResult(result)
+        }
+    }
+
+    fun redeemShareInvite(code: String, customLabel: String?, onResult: (Result<FollowedPatient>) -> Unit) {
+        viewModelScope.launch {
+            val result = cloudSyncManager.redeemShareInvite(code, customLabel)
+            onResult(result)
+        }
+    }
+
+    fun revokeFollower(followerUid: String, onResult: (Result<Unit>) -> Unit) {
+        viewModelScope.launch {
+            val result = cloudSyncManager.revokeFollower(followerUid)
+            onResult(result)
+        }
+    }
+
+    fun switchRoleToPatient() {
+        viewModelScope.launch {
+            preferenceManager.saveAppRole(AppRole.PATIENT)
+        }
     }
 
     // --- 6. Sensor Error ---

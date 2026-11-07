@@ -17,8 +17,10 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.tonio.libre2clock.data.model.AlarmSchedule
 import com.tonio.libre2clock.data.model.AutoRangeOffsetMode
+import com.tonio.libre2clock.data.model.AppRole
 import com.tonio.libre2clock.data.model.CapillaryMeasurement
 import com.tonio.libre2clock.data.model.DexcomServerRegion
+import com.tonio.libre2clock.data.model.FollowedPatient
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.GlucoseOffsetRange
 import com.tonio.libre2clock.data.model.GlucoseSourceProvider
@@ -160,6 +162,9 @@ class PreferenceManager(private val context: Context) {
     private val NIGHTSCOUT_API_SECRET_KEY = stringPreferencesKey("nightscout_api_secret")
     private val NIGHTSCOUT_USE_CALIBRATED_KEY = booleanPreferencesKey("nightscout_use_calibrated")
     private val XDRIP_BROADCAST_ENABLED_KEY = booleanPreferencesKey("xdrip_broadcast_enabled")
+    private val APP_ROLE_KEY = stringPreferencesKey("app_role")
+    private val FOLLOWED_PATIENTS_KEY = stringPreferencesKey("followed_patients")
+    private val ACTIVE_FOLLOWED_PATIENT_UID_KEY = stringPreferencesKey("active_followed_patient_uid")
 
     // --- Flows ---
     val glucoseSourceProvider: Flow<GlucoseSourceProvider> = context.dataStore.data.map { prefs ->
@@ -335,6 +340,40 @@ class PreferenceManager(private val context: Context) {
     val isCloudSyncEnabled: Flow<Boolean> = context.dataStore.data.map { it[IS_CLOUD_SYNC_ENABLED_KEY] ?: false }.distinctUntilChanged()
     val cloudSyncLastSuccessAt: Flow<Long?> = context.dataStore.data.map { it[CLOUD_SYNC_LAST_SUCCESS_AT_KEY] }.distinctUntilChanged()
     val settingsUpdatedAt: Flow<Long?> = context.dataStore.data.map { it[SETTINGS_UPDATED_AT_KEY] }.distinctUntilChanged()
+
+    val appRole: Flow<AppRole> = context.dataStore.data.map { prefs ->
+        val raw = prefs[APP_ROLE_KEY]
+        if (!raw.isNullOrBlank()) {
+            try { AppRole.valueOf(raw) } catch (e: Exception) { AppRole.PATIENT }
+        } else {
+            AppRole.PATIENT
+        }
+    }.distinctUntilChanged()
+
+    val isFollowerMode: Flow<Boolean> = appRole.map { it == AppRole.FOLLOWER }.distinctUntilChanged()
+
+    val followedPatients: Flow<List<FollowedPatient>> = context.dataStore.data
+        .map { it[FOLLOWED_PATIENTS_KEY] }
+        .distinctUntilChanged()
+        .map { jsonStr ->
+            if (!jsonStr.isNullOrBlank()) {
+                try {
+                    json.decodeFromString<List<FollowedPatient>>(jsonStr)
+                } catch (e: Exception) {
+                    emptyList()
+                }
+            } else {
+                emptyList()
+            }
+        }
+
+    val activeFollowedPatientUid: Flow<String?> = context.dataStore.data
+        .map { it[ACTIVE_FOLLOWED_PATIENT_UID_KEY] }
+        .distinctUntilChanged()
+
+    val activeFollowedPatient: Flow<FollowedPatient?> = combine(followedPatients, activeFollowedPatientUid) { patients, activeUid ->
+        patients.firstOrNull { it.patientUid == activeUid } ?: patients.firstOrNull()
+    }.distinctUntilChanged()
 
     private fun getDefaultRanges() = listOf(
         GlucoseOffsetRange(min = 0, max = 70, offset = 0, percentage = 23),
@@ -882,6 +921,72 @@ class PreferenceManager(private val context: Context) {
 
     suspend fun saveCloudSyncLastSuccessAt(timestamp: Long) {
         context.dataStore.edit { it[CLOUD_SYNC_LAST_SUCCESS_AT_KEY] = timestamp }
+    }
+
+    suspend fun saveAppRole(role: AppRole) {
+        context.dataStore.edit { it[APP_ROLE_KEY] = role.name }
+    }
+
+    suspend fun saveFollowedPatients(patients: List<FollowedPatient>) {
+        context.dataStore.edit { it[FOLLOWED_PATIENTS_KEY] = json.encodeToString(patients) }
+    }
+
+    suspend fun addFollowedPatient(patient: FollowedPatient) {
+        context.dataStore.edit { preferences ->
+            val currentList = try {
+                preferences[FOLLOWED_PATIENTS_KEY]?.let { json.decodeFromString<List<FollowedPatient>>(it) } ?: emptyList()
+            } catch (e: Exception) {
+                emptyList()
+            }
+            val updated = currentList.filterNot { it.patientUid == patient.patientUid } + patient
+            preferences[FOLLOWED_PATIENTS_KEY] = json.encodeToString(updated)
+            if (preferences[ACTIVE_FOLLOWED_PATIENT_UID_KEY].isNullOrBlank()) {
+                preferences[ACTIVE_FOLLOWED_PATIENT_UID_KEY] = patient.patientUid
+            }
+            preferences[APP_ROLE_KEY] = AppRole.FOLLOWER.name
+        }
+    }
+
+    suspend fun removeFollowedPatient(patientUid: String) {
+        context.dataStore.edit { preferences ->
+            val currentList = try {
+                preferences[FOLLOWED_PATIENTS_KEY]?.let { json.decodeFromString<List<FollowedPatient>>(it) } ?: emptyList()
+            } catch (e: Exception) {
+                emptyList()
+            }
+            val updated = currentList.filterNot { it.patientUid == patientUid }
+            preferences[FOLLOWED_PATIENTS_KEY] = json.encodeToString(updated)
+            if (preferences[ACTIVE_FOLLOWED_PATIENT_UID_KEY] == patientUid) {
+                preferences[ACTIVE_FOLLOWED_PATIENT_UID_KEY] = updated.firstOrNull()?.patientUid ?: ""
+            }
+            if (updated.isEmpty()) {
+                preferences[APP_ROLE_KEY] = AppRole.PATIENT.name
+                preferences[INSULIN_DOSES_KEY] = "[]"
+                preferences[CAPILLARY_READINGS_KEY] = "[]"
+                preferences[SENSOR_LOGS_KEY] = "[]"
+            }
+        }
+    }
+
+    suspend fun clearFollowerData() {
+        context.dataStore.edit { preferences ->
+            preferences[INSULIN_DOSES_KEY] = "[]"
+            preferences[CAPILLARY_READINGS_KEY] = "[]"
+            preferences[SENSOR_LOGS_KEY] = "[]"
+            preferences[FOLLOWED_PATIENTS_KEY] = "[]"
+            preferences.remove(ACTIVE_FOLLOWED_PATIENT_UID_KEY)
+            preferences[APP_ROLE_KEY] = AppRole.PATIENT.name
+        }
+    }
+
+    suspend fun saveActiveFollowedPatientUid(patientUid: String?) {
+        context.dataStore.edit { preferences ->
+            if (patientUid != null) {
+                preferences[ACTIVE_FOLLOWED_PATIENT_UID_KEY] = patientUid
+            } else {
+                preferences.remove(ACTIVE_FOLLOWED_PATIENT_UID_KEY)
+            }
+        }
     }
 
     // --- Backup y Restauración ---

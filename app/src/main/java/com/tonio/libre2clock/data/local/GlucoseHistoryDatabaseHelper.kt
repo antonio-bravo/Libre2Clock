@@ -194,6 +194,10 @@ class GlucoseHistoryDatabaseHelper(context: Context) :
         }
     }
 
+    fun clearAll() {
+        writableDatabase.delete("glucose_history", null, null)
+    }
+
     fun replaceAll(measurements: List<GlucoseMeasurement>) {
         val db = writableDatabase
         db.beginTransaction()

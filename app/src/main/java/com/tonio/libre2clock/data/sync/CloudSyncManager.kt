@@ -16,18 +16,25 @@ import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
 import com.tonio.libre2clock.R
 import com.tonio.libre2clock.data.local.GlucoseHistoryDatabaseHelper
+import com.tonio.libre2clock.data.model.AppRole
 import com.tonio.libre2clock.data.model.CapillaryMeasurement
+import com.tonio.libre2clock.data.model.FollowedPatient
+import com.tonio.libre2clock.data.model.FollowerInfo
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.HistoryBackupPayload
 import com.tonio.libre2clock.data.model.InsulinDose
 import com.tonio.libre2clock.data.model.SensorLog
+import com.tonio.libre2clock.data.model.ShareInvite
 import com.tonio.libre2clock.data.repository.PreferenceManager
 import com.tonio.libre2clock.di.AppContainer
 import com.tonio.libre2clock.util.LogLevel
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
@@ -773,6 +780,254 @@ class CloudSyncManager(
             } finally {
                 syncMutex.unlock()
                 log("🔓 [Force Pull] Bloqueo de sincronización liberado.")
+            }
+        }
+    }
+
+    // --- Sharing & Follower Management ---
+
+    private fun generateRandomCode(): String {
+        val chars = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
+        val part1 = (1..3).map { chars.random() }.joinToString("")
+        val part2 = (1..3).map { chars.random() }.joinToString("")
+        return "$part1-$part2"
+    }
+
+    suspend fun generateShareInvite(label: String, expiresAtMs: Long? = null): Result<ShareInvite> {
+        return try {
+            val user = authManager.user.value ?: throw Exception("Debes haber iniciado sesión con Google para compartir datos.")
+            val patientId = preferenceManager.patientId.first() ?: throw Exception("ID de paciente no encontrado. Inicia sesión en LibreLinkUp primero.")
+
+            val code = generateRandomCode()
+
+            val invite = ShareInvite(
+                code = code,
+                ownerUid = user.uid,
+                patientId = patientId,
+                label = label.ifBlank { "Invitado" },
+                createdAtMs = System.currentTimeMillis(),
+                expiresAtMs = expiresAtMs,
+                isUsed = false,
+                active = true
+            )
+
+            firestore.collection("share_invites").document(code).set(invite).await()
+            log("🔑 Invitación generada exitosamente: $code para '$label'")
+            Result.success(invite)
+        } catch (e: Exception) {
+            Log.e("CloudSync", "Error generating share invite", e)
+            Result.failure(e)
+        }
+    }
+
+    suspend fun redeemShareInvite(code: String, customLabel: String? = null): Result<FollowedPatient> {
+        return try {
+            val normalizedCode = code.trim().uppercase()
+            if (normalizedCode.isBlank()) throw Exception("El código no puede estar vacío.")
+
+            // Asegurar sesión de Firebase (anónima si no tiene cuenta)
+            val authResult = authManager.signInAnonymously()
+            if (authResult.isFailure) {
+                throw authResult.exceptionOrNull() ?: Exception("Error al conectar con Firebase")
+            }
+            val followerUid = authResult.getOrThrow()
+
+            val inviteDoc = firestore.collection("share_invites").document(normalizedCode).get().await()
+            if (!inviteDoc.exists()) {
+                throw Exception("El código introducido no existe o ha sido eliminado.")
+            }
+
+            val invite = inviteDoc.toObject(ShareInvite::class.java)
+                ?: throw Exception("Error al procesar los datos de la invitación.")
+
+            if (!invite.active) {
+                throw Exception("Esta invitación ya no está activa.")
+            }
+            if (invite.isUsed) {
+                throw Exception("Este código ya ha sido canjeado.")
+            }
+            if (invite.expiresAtMs != null && invite.expiresAtMs < System.currentTimeMillis()) {
+                throw Exception("Este código de invitación ha caducado.")
+            }
+
+            // Marcar código como usado
+            inviteDoc.reference.update("isUsed", true).await()
+
+            // Registrar al seguidor en la lista del paciente
+            val followerInfo = FollowerInfo(
+                followerUid = followerUid,
+                label = invite.label,
+                active = true,
+                createdAtMs = System.currentTimeMillis(),
+                expiresAtMs = invite.expiresAtMs
+            )
+            firestore.collection("users").document(invite.ownerUid)
+                .collection("followers").document(followerUid)
+                .set(followerInfo).await()
+
+            // Crear el paciente seguido en local
+            val followedPatient = FollowedPatient(
+                patientUid = invite.ownerUid,
+                patientId = invite.patientId,
+                label = customLabel?.ifBlank { null } ?: invite.label,
+                addedAtMs = System.currentTimeMillis()
+            )
+
+            preferenceManager.addFollowedPatient(followedPatient)
+            startFollowerSync()
+
+            log("✅ Código $normalizedCode canjeado con éxito. Siguiendo a '${followedPatient.label}'")
+            Result.success(followedPatient)
+        } catch (e: Exception) {
+            Log.e("CloudSync", "Error redeeming share invite", e)
+            Result.failure(e)
+        }
+    }
+
+    fun getFollowers(): Flow<List<FollowerInfo>> = callbackFlow {
+        val user = authManager.user.value
+        if (user == null) {
+            trySend(emptyList())
+            close()
+            return@callbackFlow
+        }
+
+        val registration = firestore.collection("users").document(user.uid)
+            .collection("followers")
+            .whereEqualTo("active", true)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(emptyList())
+                    return@addSnapshotListener
+                }
+                val followers = snapshot?.documents?.mapNotNull { doc ->
+                    doc.toObject(FollowerInfo::class.java)
+                } ?: emptyList()
+                trySend(followers)
+            }
+
+        awaitClose { registration.remove() }
+    }
+
+    suspend fun revokeFollower(followerUid: String): Result<Unit> {
+        return try {
+            val user = authManager.user.value ?: throw Exception("No autenticado")
+            firestore.collection("users").document(user.uid)
+                .collection("followers").document(followerUid)
+                .update("active", false).await()
+            log("🔒 Seguidor $followerUid revocado con éxito")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e("CloudSync", "Error revoking follower", e)
+            Result.failure(e)
+        }
+    }
+
+    private val followerListenerRegistrations = mutableListOf<ListenerRegistration>()
+
+    fun startFollowerSync() {
+        scope.launch {
+            val followedList = preferenceManager.followedPatients.first()
+            if (followedList.isEmpty()) return@launch
+
+            followerListenerRegistrations.forEach { it.remove() }
+            followerListenerRegistrations.clear()
+
+            log("📡 Iniciando sincronización en tiempo real para ${followedList.size} paciente(s) seguido(s)...")
+
+            for (patient in followedList) {
+                val patientDoc = firestore.collection("users").document(patient.patientUid)
+                    .collection("patients").document(patient.patientId)
+
+                val regHistory = patientDoc.collection("glucose_history")
+                    .orderBy("sort_epoch_ms", Query.Direction.DESCENDING)
+                    .limit(200)
+                    .addSnapshotListener { snapshot, error ->
+                        if (error != null || snapshot == null) return@addSnapshotListener
+                        val measurements = snapshot.documents.mapNotNull { it.toObject(GlucoseMeasurement::class.java) }
+                        if (measurements.isNotEmpty()) {
+                            dbHelper.upsertAll(measurements)
+                        }
+                    }
+                followerListenerRegistrations.add(regHistory)
+
+                val regInsulin = patientDoc.collection("insulin_doses")
+                    .addSnapshotListener { snapshot, error ->
+                        if (error != null || snapshot == null) return@addSnapshotListener
+                        scope.launch {
+                            val localDoses = preferenceManager.insulinDoses.first().associateBy { it.id }.toMutableMap()
+                            var changed = false
+                            for (change in snapshot.documentChanges) {
+                                when (change.type) {
+                                    DocumentChange.Type.ADDED, DocumentChange.Type.MODIFIED -> {
+                                        val dose = change.document.toObject(InsulinDose::class.java)
+                                        localDoses[dose.id] = dose
+                                        changed = true
+                                    }
+                                    DocumentChange.Type.REMOVED -> {
+                                        localDoses.remove(change.document.id)
+                                        changed = true
+                                    }
+                                }
+                            }
+                            if (changed) {
+                                preferenceManager.saveInsulinDoses(localDoses.values.sortedByDescending { it.timestamp })
+                            }
+                        }
+                    }
+                followerListenerRegistrations.add(regInsulin)
+
+                val regCapillary = patientDoc.collection("capillary_readings")
+                    .addSnapshotListener { snapshot, error ->
+                        if (error != null || snapshot == null) return@addSnapshotListener
+                        scope.launch {
+                            val localCapillary = preferenceManager.capillaryReadings.first().associateBy { it.id }.toMutableMap()
+                            var changed = false
+                            for (change in snapshot.documentChanges) {
+                                when (change.type) {
+                                    DocumentChange.Type.ADDED, DocumentChange.Type.MODIFIED -> {
+                                        val reading = change.document.toObject(CapillaryMeasurement::class.java)
+                                        localCapillary[reading.id] = reading
+                                        changed = true
+                                    }
+                                    DocumentChange.Type.REMOVED -> {
+                                        localCapillary.remove(change.document.id)
+                                        changed = true
+                                    }
+                                }
+                            }
+                            if (changed) {
+                                preferenceManager.saveCapillaryReadings(localCapillary.values.sortedByDescending { it.timestamp })
+                            }
+                        }
+                    }
+                followerListenerRegistrations.add(regCapillary)
+
+                val regSensorLogs = patientDoc.collection("sensor_logs")
+                    .addSnapshotListener { snapshot, error ->
+                        if (error != null || snapshot == null) return@addSnapshotListener
+                        scope.launch {
+                            val localLogs = preferenceManager.sensorLogs.first().associateBy { it.serialNumber }.toMutableMap()
+                            var changed = false
+                            for (change in snapshot.documentChanges) {
+                                when (change.type) {
+                                    DocumentChange.Type.ADDED, DocumentChange.Type.MODIFIED -> {
+                                        val item = change.document.toObject(SensorLog::class.java)
+                                        localLogs[item.serialNumber] = item
+                                        changed = true
+                                    }
+                                    DocumentChange.Type.REMOVED -> {
+                                        localLogs.remove(change.document.id)
+                                        changed = true
+                                    }
+                                }
+                            }
+                            if (changed) {
+                                preferenceManager.saveSensorLogs(localLogs.values.sortedByDescending { it.startDate })
+                            }
+                        }
+                    }
+                followerListenerRegistrations.add(regSensorLogs)
             }
         }
     }
