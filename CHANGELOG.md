@@ -1,5 +1,29 @@
 # Changelog
 
+## 196a092 (Nov 07, 2026 23:08:26)
+firebase rules — antonio-bravo
+[detail](#196a092-details)
+
+<details id='196a092-details'>
+<summary>Changed files</summary>
+
+- firebase.md [Deleted]
+</details>
+
+
+---
+## b6369e9 (Nov 07, 2026 20:56:22)
+Update changelog — github-actions[bot]
+[detail](#b6369e9-details)
+
+<details id='b6369e9-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 768b41e (Nov 07, 2026 21:56:04)
 Share data model — antonio-bravo
 [detail](#768b41e-details)
@@ -667,36 +691,6 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
-</details>
-
-
----
-## ca7d685 (Oct 18, 2026 12:04:19)
-widget insulin decimals — antonio-bravo
-[detail](#ca7d685-details)
-
-<details id='ca7d685-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsWidgetScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/widget/GlucoseWidgetProvider.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 5ecad4a (Oct 17, 2026 22:01:30)
-Update retrofit monorepo to v3 — renovate[bot]
-[detail](#5ecad4a-details)
-
-<details id='5ecad4a-details'>
-<summary>Changed files</summary>
-
-- app/build.gradle.kts [Modified]
-- gradle/libs.versions.toml [Modified]
 </details>
 
 
