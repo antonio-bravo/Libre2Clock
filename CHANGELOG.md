@@ -1,5 +1,44 @@
 # Changelog
 
+## 768b41e (Nov 07, 2026 21:56:04)
+Share data model — antonio-bravo
+[detail](#768b41e-details)
+
+<details id='768b41e-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/local/GlucoseHistoryDatabaseHelper.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/model/ShareModels.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/sync/AuthManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/capillary/CapillaryScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/components/PatientSelectorDropdown.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/components/ShareDialog.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 87a3679 (Oct 31, 2026 17:49:08)
+Update changelog — github-actions[bot]
+[detail](#87a3679-details)
+
+<details id='87a3679-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 0c8e9a7 (Oct 31, 2026 18:48:53)
 custom days for FS — antonio-bravo
 [detail](#0c8e9a7-details)
@@ -658,30 +697,6 @@ Update retrofit monorepo to v3 — renovate[bot]
 
 - app/build.gradle.kts [Modified]
 - gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 1c74470 (Oct 17, 2026 22:01:18)
-Update dependency java-jdk to v25 — renovate[bot]
-[detail](#1c74470-details)
-
-<details id='1c74470-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/build-release.yml [Modified]
-</details>
-
-
----
-## 180991c (Oct 17, 2026 22:01:13)
-Update dependency express to v5 — renovate[bot]
-[detail](#180991c-details)
-
-<details id='180991c-details'>
-<summary>Changed files</summary>
-
-- whatsapp-bot/package.json [Modified]
 </details>
 
 
