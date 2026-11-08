@@ -1,5 +1,31 @@
 # Changelog
 
+## 4f91849 (Nov 08, 2026 16:46:55)
+Update dependency androidx.navigation3:navigation3-ui to v1.2.1 (#60)
+
+Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
+[detail](#4f91849-details)
+
+<details id='4f91849-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## a7ef963 (Nov 08, 2026 05:58:05)
+Update changelog — github-actions[bot]
+[detail](#a7ef963-details)
+
+<details id='a7ef963-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 5944407 (Nov 08, 2026 05:57:55)
 Update dependency androidx.navigation3:navigation3-runtime to v1.2.1 (#59)
 
@@ -661,32 +687,6 @@ Update changelog — github-actions[bot]
 [detail](#17b825d-details)
 
 <details id='17b825d-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## bdb2c95 (Oct 18, 2026 13:17:48)
-Merge pull request #46 from antonio-bravo/renovate/express-5.x
-
-Update dependency express to v5 — antonio-bravo
-[detail](#bdb2c95-details)
-
-<details id='bdb2c95-details'>
-<summary>Changed files</summary>
-
-- whatsapp-bot/package.json [Modified]
-</details>
-
-
----
-## 6d633ed (Oct 18, 2026 11:16:41)
-Update changelog — github-actions[bot]
-[detail](#6d633ed-details)
-
-<details id='6d633ed-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
