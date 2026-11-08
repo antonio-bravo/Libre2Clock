@@ -1,5 +1,31 @@
 # Changelog
 
+## 5944407 (Nov 08, 2026 05:57:55)
+Update dependency androidx.navigation3:navigation3-runtime to v1.2.1 (#59)
+
+Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
+[detail](#5944407-details)
+
+<details id='5944407-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 558f728 (Nov 07, 2026 22:08:39)
+Update changelog — github-actions[bot]
+[detail](#558f728-details)
+
+<details id='558f728-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 196a092 (Nov 07, 2026 23:08:26)
 firebase rules — antonio-bravo
 [detail](#196a092-details)
@@ -661,33 +687,6 @@ Update changelog — github-actions[bot]
 [detail](#6d633ed-details)
 
 <details id='6d633ed-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 595f3a3 (Oct 18, 2026 13:16:29)
-Merge pull request #49 from antonio-bravo/renovate/major-retrofit-monorepo
-
-Update retrofit monorepo to v3 — antonio-bravo
-[detail](#595f3a3-details)
-
-<details id='595f3a3-details'>
-<summary>Changed files</summary>
-
-- app/build.gradle.kts [Modified]
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 54613e2 (Oct 18, 2026 10:04:33)
-Update changelog — github-actions[bot]
-[detail](#54613e2-details)
-
-<details id='54613e2-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
