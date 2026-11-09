@@ -1,5 +1,32 @@
 # Changelog
 
+## 6ab12f2 (Nov 09, 2026 03:01:02)
+Update Gradle to v9.9.0 (#61)
+
+Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
+[detail](#6ab12f2-details)
+
+<details id='6ab12f2-details'>
+<summary>Changed files</summary>
+
+- gradle/wrapper/gradle-wrapper.jar [Modified]
+- gradle/wrapper/gradle-wrapper.properties [Modified]
+</details>
+
+
+---
+## 06f1c0e (Nov 08, 2026 16:47:07)
+Update changelog — github-actions[bot]
+[detail](#06f1c0e-details)
+
+<details id='06f1c0e-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 4f91849 (Nov 08, 2026 16:46:55)
 Update dependency androidx.navigation3:navigation3-ui to v1.2.1 (#60)
 
@@ -661,32 +688,6 @@ Update changelog — github-actions[bot]
 [detail](#567a6e9-details)
 
 <details id='567a6e9-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## ef0b6d5 (Oct 18, 2026 13:18:08)
-Merge pull request #47 from antonio-bravo/renovate/java-jdk-25.x
-
-Update dependency java-jdk to v25 — antonio-bravo
-[detail](#ef0b6d5-details)
-
-<details id='ef0b6d5-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/build-release.yml [Modified]
-</details>
-
-
----
-## 17b825d (Oct 18, 2026 11:18:03)
-Update changelog — github-actions[bot]
-[detail](#17b825d-details)
-
-<details id='17b825d-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
