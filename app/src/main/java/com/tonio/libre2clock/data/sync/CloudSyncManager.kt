@@ -131,7 +131,7 @@ class CloudSyncManager(
         }
     }
 
-    private fun log(msg: String) {
+    fun log(msg: String) {
         val current = _cloudSyncDebugOutput.value ?: ""
         val lines = current.split("\n")
         val limitedLog = if (lines.size > 150) lines.takeLast(150).joinToString("\n") else current

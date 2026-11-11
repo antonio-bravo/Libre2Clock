@@ -53,11 +53,21 @@ fun SettingsCloudScreen(
     val activeFollowedPatientUid by viewModel.activeFollowedPatientUid.collectAsStateWithLifecycle()
     val followersList by viewModel.followersList.collectAsStateWithLifecycle()
 
+    val backupStatusMessage by viewModel.backupStatusMessage.collectAsStateWithLifecycle()
+    val isSigningInWithGoogle by viewModel.isSigningInWithGoogle.collectAsStateWithLifecycle()
+
     var showResetConfirm by remember { mutableStateOf(false) }
     var isResetting by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+
+    LaunchedEffect(backupStatusMessage) {
+        backupStatusMessage?.let { msg ->
+            snackbarHostState.showSnackbar(msg)
+            viewModel.clearBackupStatusMessage()
+        }
+    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -84,6 +94,7 @@ fun SettingsCloudScreen(
                     firebaseUser = firebaseUser,
                     isWhitelisted = isWhitelistedUser,
                     isWhitelistActive = isWhitelistActive,
+                    isSigningIn = isSigningInWithGoogle,
                     onSignIn = { viewModel.signInWithGoogle(context) },
                     onSignOut = viewModel::signOutFromGoogle
                 )
@@ -205,6 +216,7 @@ private fun AccountSection(
     firebaseUser: com.google.firebase.auth.FirebaseUser?,
     isWhitelisted: Boolean,
     isWhitelistActive: Boolean,
+    isSigningIn: Boolean,
     onSignIn: () -> Unit,
     onSignOut: () -> Unit
 ) {
@@ -284,11 +296,22 @@ private fun AccountSection(
             if (firebaseUser == null) {
                 Button(
                     onClick = onSignIn,
+                    enabled = !isSigningIn,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(Icons.Default.Person, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.cloud_connect_button))
+                    if (isSigningIn) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Conectando...")
+                    } else {
+                        Icon(Icons.Default.Person, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.cloud_connect_button))
+                    }
                 }
             } else {
                 OutlinedButton(

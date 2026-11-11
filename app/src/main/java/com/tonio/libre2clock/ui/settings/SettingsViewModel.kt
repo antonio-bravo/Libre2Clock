@@ -80,6 +80,9 @@ class SettingsViewModel(
     private val _backupStatusMessage = MutableStateFlow<String?>(null)
     val backupStatusMessage = _backupStatusMessage.asStateFlow()
 
+    private val _isSigningInWithGoogle = MutableStateFlow(false)
+    val isSigningInWithGoogle: StateFlow<Boolean> = _isSigningInWithGoogle.asStateFlow()
+
     private val _apiDebugOutput = MutableStateFlow<String?>(null)
     val apiDebugOutput: StateFlow<String?> = _apiDebugOutput.asStateFlow()
 
@@ -748,21 +751,39 @@ class SettingsViewModel(
     }
 
     fun signInWithGoogle(context: Context) {
+        if (_isSigningInWithGoogle.value) return
         viewModelScope.launch {
+            _isSigningInWithGoogle.value = true
             try {
                 val resId = appContext.resources.getIdentifier("default_web_client_id", "string", appContext.packageName)
                 if (resId == 0) {
-                    _backupStatusMessage.value = "Error: google-services.json not configured."
+                    val errMsg = "Error: google-services.json no está configurado o falta default_web_client_id."
+                    _backupStatusMessage.value = errMsg
+                    cloudSyncManager.log(errMsg)
                     return@launch
                 }
                 val webClientId = appContext.getString(resId)
+                cloudSyncManager.log("Iniciando sesión con Google... WebClientID: $webClientId")
                 val result = authManager.signInWithGoogle(context, webClientId)
-                _backupStatusMessage.value = result.fold(
-                    onSuccess = { "Signed in with Google." },
-                    onFailure = { it.message ?: "Sign in failed." }
+                val status = result.fold(
+                    onSuccess = {
+                        val successMsg = "Inicio de sesión con Google correcto."
+                        cloudSyncManager.log(successMsg)
+                        successMsg
+                    },
+                    onFailure = { err ->
+                        val errMsg = "Error al iniciar sesión con Google: ${err.localizedMessage ?: err.message ?: "Desconocido"}"
+                        cloudSyncManager.log(errMsg)
+                        errMsg
+                    }
                 )
+                _backupStatusMessage.value = status
             } catch (e: Exception) {
-                _backupStatusMessage.value = "Error: ${e.message}"
+                val errMsg = "Error al iniciar sesión con Google: ${e.localizedMessage ?: e.message}"
+                _backupStatusMessage.value = errMsg
+                cloudSyncManager.log(errMsg)
+            } finally {
+                _isSigningInWithGoogle.value = false
             }
         }
     }
