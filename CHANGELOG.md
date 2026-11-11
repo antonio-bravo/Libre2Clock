@@ -1,5 +1,31 @@
 # Changelog
 
+## d01cb6a (Nov 11, 2026 02:17:31)
+Update Gradle to v9.9.1 (#62)
+
+Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
+[detail](#d01cb6a-details)
+
+<details id='d01cb6a-details'>
+<summary>Changed files</summary>
+
+- gradle/wrapper/gradle-wrapper.properties [Modified]
+</details>
+
+
+---
+## c51e483 (Nov 09, 2026 03:01:17)
+Update changelog — github-actions[bot]
+[detail](#c51e483-details)
+
+<details id='c51e483-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 6ab12f2 (Nov 09, 2026 03:01:02)
 Update Gradle to v9.9.0 (#61)
 
@@ -667,30 +693,6 @@ Update dependency puppeteer to v25 — antonio-bravo
 <summary>Changed files</summary>
 
 - whatsapp-bot/package.json [Modified]
-</details>
-
-
----
-## cf67c47 (Oct 18, 2026 11:18:35)
-Update dependency puppeteer to v25 — renovate[bot]
-[detail](#cf67c47-details)
-
-<details id='cf67c47-details'>
-<summary>Changed files</summary>
-
-- whatsapp-bot/package.json [Modified]
-</details>
-
-
----
-## 567a6e9 (Oct 18, 2026 11:18:18)
-Update changelog — github-actions[bot]
-[detail](#567a6e9-details)
-
-<details id='567a6e9-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
 </details>
 
 
