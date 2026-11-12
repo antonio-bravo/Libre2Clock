@@ -442,17 +442,31 @@ class CloudSyncManager(
                 .collection("patients").document(patientId)
                 .collection("glucose_history")
 
-            val snapshot = retryWithBackoff("Pull History") {
-                historyColl.orderBy("sort_epoch_ms", Query.Direction.DESCENDING)
-                    .limit(300)
-                    .get()
-                    .await()
-            }
+            var lastDoc: DocumentSnapshot? = null
+            var totalPulled = 0
 
-            val remote = snapshot.documents.mapNotNull { it.toObject(GlucoseMeasurement::class.java) }
-            if (remote.isNotEmpty()) {
-                dbHelper.upsertAll(remote)
-                log("Successfully pulled ${remote.size} history records.")
+            do {
+                val query = retryWithBackoff("Pull History Batch") {
+                    var q = historyColl.orderBy("sort_epoch_ms", Query.Direction.DESCENDING).limit(500)
+                    if (lastDoc != null) {
+                        q = q.startAfter(lastDoc)
+                    }
+                    q.get().await()
+                }
+
+                if (query.documents.isEmpty()) break
+
+                val remote = query.documents.mapNotNull { it.toObject(GlucoseMeasurement::class.java) }
+                if (remote.isNotEmpty()) {
+                    dbHelper.upsertAll(remote)
+                    totalPulled += remote.size
+                }
+
+                lastDoc = if (query.documents.size == 500) query.documents.last() else null
+            } while (lastDoc != null)
+
+            if (totalPulled > 0) {
+                log("Successfully pulled $totalPulled history records from cloud.")
 
                 // NOTIFICACIÓN CRÍTICA A LA UI: Forzamos al repositorio central de glucosa a recargar
                 // los datos recién descargados de la nube desde SQLite hacia el estado reactivo en memoria.
@@ -660,14 +674,23 @@ class CloudSyncManager(
     }
 
     private suspend fun syncHistory(googleUid: String, patientId: String) {
-        val local = dbHelper.readRecentHistory(200)
+        val lastSyncAt = preferenceManager.cloudSyncLastSuccessAt.first() ?: 0L
+        val local = if (lastSyncAt > 0L) {
+            val cutoff = (lastSyncAt - 3600_000L).coerceAtLeast(0L)
+            dbHelper.readWindowNewestFirst(cutoff, System.currentTimeMillis())
+        } else {
+            dbHelper.readAllNewestFirst()
+        }
+
         if (local.isEmpty()) return
+
+        log("  -> Pushing ${local.size} glucose history records to cloud...")
 
         val historyColl = firestore.collection("users").document(googleUid)
             .collection("patients").document(patientId)
             .collection("glucose_history")
 
-        val chunks = local.chunked(20)
+        val chunks = local.chunked(400)
         chunks.forEachIndexed { index, chunk ->
             retryWithBackoff("History Batch ${index + 1}/${chunks.size}") {
                 val batch = firestore.batch()
