@@ -1,5 +1,29 @@
 # Changelog
 
+## ee08aa9 (Nov 12, 2026 22:01:39)
+Sync with cloud the whole sync — antonio-bravo
+[detail](#ee08aa9-details)
+
+<details id='ee08aa9-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
+</details>
+
+
+---
+## 1c5df82 (Nov 12, 2026 09:29:28)
+Update changelog — github-actions[bot]
+[detail](#1c5df82-details)
+
+<details id='1c5df82-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 68fd988 (Nov 12, 2026 10:29:13)
 fix google syc — antonio-bravo
 [detail](#68fd988-details)
@@ -665,32 +689,6 @@ Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> 
 [detail](#293bc3e-details)
 
 <details id='293bc3e-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## d9a060b (Oct 22, 2026 05:34:28)
-Update changelog — github-actions[bot]
-[detail](#d9a060b-details)
-
-<details id='d9a060b-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## b5e9a69 (Oct 22, 2026 05:34:15)
-Update dependency com.google.firebase:firebase-bom to v35.1.0 (#54)
-
-Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
-[detail](#b5e9a69-details)
-
-<details id='b5e9a69-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
