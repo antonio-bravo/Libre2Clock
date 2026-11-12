@@ -1,4 +1,5 @@
 <resources>
+    <string name="default_web_client_id" translatable="false">172410610607-nbpqb5f16vr1ets2v7oh43do23ogo50k.apps.googleusercontent.com</string>
     <string name="app_name">Libre2Clock</string>
     <string name="dashboard_title">Libre2Clock</string>
     <string name="menu_settings">Settings</string>

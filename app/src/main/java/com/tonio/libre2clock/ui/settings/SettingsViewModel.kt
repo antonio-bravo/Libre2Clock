@@ -750,30 +750,41 @@ class SettingsViewModel(
         }
     }
 
+    private fun getWebClientId(): String {
+        try {
+            val resId = appContext.resources.getIdentifier("default_web_client_id", "string", appContext.packageName)
+            if (resId != 0) {
+                val clientFromRes = appContext.getString(resId)
+                if (clientFromRes.isNotBlank()) return clientFromRes
+            }
+        } catch (_: Exception) {}
+
+        return try {
+            appContext.getString(R.string.default_web_client_id)
+        } catch (_: Exception) {
+            "172410610607-nbpqb5f16vr1ets2v7oh43do23ogo50k.apps.googleusercontent.com"
+        }
+    }
+
     fun signInWithGoogle(context: Context) {
         if (_isSigningInWithGoogle.value) return
         viewModelScope.launch {
             _isSigningInWithGoogle.value = true
             try {
-                val resId = appContext.resources.getIdentifier("default_web_client_id", "string", appContext.packageName)
-                if (resId == 0) {
-                    val errMsg = "Error: google-services.json no está configurado o falta default_web_client_id."
-                    _backupStatusMessage.value = errMsg
-                    cloudSyncManager.log(errMsg)
-                    return@launch
-                }
-                val webClientId = appContext.getString(resId)
+                val webClientId = getWebClientId()
                 cloudSyncManager.log("Iniciando sesión con Google... WebClientID: $webClientId")
                 val result = authManager.signInWithGoogle(context, webClientId)
                 val status = result.fold(
                     onSuccess = {
                         val successMsg = "Inicio de sesión con Google correcto."
                         cloudSyncManager.log(successMsg)
+                        eventLogManager.log(com.tonio.libre2clock.util.LogLevel.INFO, "GoogleAuth", successMsg)
                         successMsg
                     },
                     onFailure = { err ->
                         val errMsg = "Error al iniciar sesión con Google: ${err.localizedMessage ?: err.message ?: "Desconocido"}"
                         cloudSyncManager.log(errMsg)
+                        eventLogManager.log(com.tonio.libre2clock.util.LogLevel.ERROR, "GoogleAuth", errMsg, err.stackTraceToString())
                         errMsg
                     }
                 )
@@ -782,6 +793,7 @@ class SettingsViewModel(
                 val errMsg = "Error al iniciar sesión con Google: ${e.localizedMessage ?: e.message}"
                 _backupStatusMessage.value = errMsg
                 cloudSyncManager.log(errMsg)
+                eventLogManager.log(com.tonio.libre2clock.util.LogLevel.ERROR, "GoogleAuth", errMsg, e.stackTraceToString())
             } finally {
                 _isSigningInWithGoogle.value = false
             }
@@ -792,6 +804,7 @@ class SettingsViewModel(
         viewModelScope.launch {
             authManager.signOut()
             _backupStatusMessage.value = "Signed out."
+            eventLogManager.log(com.tonio.libre2clock.util.LogLevel.INFO, "GoogleAuth", "Cerró sesión de Google")
         }
     }
 
