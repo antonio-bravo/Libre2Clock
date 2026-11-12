@@ -1,5 +1,161 @@
 # Changelog
 
+## 68fd988 (Nov 12, 2026 10:29:13)
+fix google syc — antonio-bravo
+[detail](#68fd988-details)
+
+<details id='68fd988-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 1477ab9 (Nov 11, 2026 21:45:38)
+Merge pull request #65 from antonio-bravo/renovate/kotlinxserializationcore
+
+Update dependency org.jetbrains.kotlinx:kotlinx-serialization-core to v1.13.0 — antonio-bravo
+[detail](#1477ab9-details)
+
+<details id='1477ab9-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 9719405 (Nov 11, 2026 21:45:08)
+Merge branch 'main' into renovate/kotlinxserializationcore — antonio-bravo
+[detail](#9719405-details)
+
+<details id='9719405-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 2599611 (Nov 11, 2026 21:44:34)
+Merge pull request #66 from antonio-bravo/renovate/kotlinxserializationjson
+
+Update dependency org.jetbrains.kotlinx:kotlinx-serialization-json to v1.13.0 — antonio-bravo
+[detail](#2599611-details)
+
+<details id='2599611-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## b5bfb86 (Nov 11, 2026 20:39:19)
+Update dependency org.jetbrains.kotlinx:kotlinx-serialization-json to v1.13.0 — renovate[bot]
+[detail](#b5bfb86-details)
+
+<details id='b5bfb86-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 16956d1 (Nov 11, 2026 20:39:12)
+Update dependency org.jetbrains.kotlinx:kotlinx-serialization-core to v1.13.0 — renovate[bot]
+[detail](#16956d1-details)
+
+<details id='16956d1-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 7dd707a (Nov 11, 2026 21:38:51)
+Merge pull request #63 from antonio-bravo/renovate/firebasebom
+
+Update dependency com.google.firebase:firebase-bom to v35.2.0 — antonio-bravo
+[detail](#7dd707a-details)
+
+<details id='7dd707a-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 175a502 (Nov 11, 2026 21:38:39)
+Merge pull request #64 from antonio-bravo/renovate/googleservices
+
+Update dependency com.google.gms.google-services to v4.6.0 — antonio-bravo
+[detail](#175a502-details)
+
+<details id='175a502-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 699be2a (Nov 11, 2026 21:22:27)
+Log Cloud Authentication — antonio-bravo
+[detail](#699be2a-details)
+
+<details id='699be2a-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/sync/AuthManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+</details>
+
+
+---
+## 4c4d76c (Nov 11, 2026 19:32:19)
+Update dependency com.google.gms.google-services to v4.6.0 — renovate[bot]
+[detail](#4c4d76c-details)
+
+<details id='4c4d76c-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## bc76b3a (Nov 11, 2026 19:32:12)
+Update dependency com.google.firebase:firebase-bom to v35.2.0 — renovate[bot]
+[detail](#bc76b3a-details)
+
+<details id='bc76b3a-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 9344d46 (Nov 11, 2026 02:17:44)
+Update changelog — github-actions[bot]
+[detail](#9344d46-details)
+
+<details id='9344d46-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## d01cb6a (Nov 11, 2026 02:17:31)
 Update Gradle to v9.9.1 (#62)
 
@@ -538,161 +694,6 @@ Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> 
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 589c07c (Oct 21, 2026 22:03:40)
-Update changelog — github-actions[bot]
-[detail](#589c07c-details)
-
-<details id='589c07c-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 5c59b78 (Oct 21, 2026 22:03:23)
-Update dependency androidx.datastore:datastore-preferences to v1.3.0 (#53)
-
-Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
-[detail](#5c59b78-details)
-
-<details id='5c59b78-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 5416d09 (Oct 21, 2026 16:26:21)
-Update changelog — github-actions[bot]
-[detail](#5416d09-details)
-
-<details id='5416d09-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 2716449 (Oct 21, 2026 16:26:11)
-Update dependency org.jetbrains.kotlinx:kotlinx-serialization-json to v1.12.0 (#52)
-
-Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
-[detail](#2716449-details)
-
-<details id='2716449-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 4db98e0 (Oct 21, 2026 04:28:57)
-Update changelog — github-actions[bot]
-[detail](#4db98e0-details)
-
-<details id='4db98e0-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 820af8b (Oct 21, 2026 04:28:47)
-Update dependency org.jetbrains.kotlinx:kotlinx-serialization-core to v1.12.0 (#51)
-
-Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
-[detail](#820af8b-details)
-
-<details id='820af8b-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## d4395d3 (Oct 20, 2026 21:44:16)
-Update changelog — github-actions[bot]
-[detail](#d4395d3-details)
-
-<details id='d4395d3-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 0918c27 (Oct 20, 2026 21:44:06)
-Update Gradle to v9.8.2 (#50)
-
-Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
-[detail](#0918c27-details)
-
-<details id='0918c27-details'>
-<summary>Changed files</summary>
-
-- gradle/wrapper/gradle-wrapper.properties [Modified]
-</details>
-
-
----
-## e4bebab (Oct 18, 2026 12:52:56)
-Update changelog — github-actions[bot]
-[detail](#e4bebab-details)
-
-<details id='e4bebab-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 71da312 (Oct 18, 2026 14:52:44)
-optmize memory — antonio-bravo
-[detail](#71da312-details)
-
-<details id='71da312-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/MainActivity.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
-</details>
-
-
----
-## d5516dc (Oct 18, 2026 12:43:49)
-Update changelog — github-actions[bot]
-[detail](#d5516dc-details)
-
-<details id='d5516dc-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## eadcdc7 (Oct 18, 2026 14:43:40)
-Merge pull request #48 from antonio-bravo/renovate/major-puppeteer
-
-Update dependency puppeteer to v25 — antonio-bravo
-[detail](#eadcdc7-details)
-
-<details id='eadcdc7-details'>
-<summary>Changed files</summary>
-
-- whatsapp-bot/package.json [Modified]
 </details>
 
 
