@@ -1,5 +1,31 @@
 # Changelog
 
+## 561a18a (Nov 14, 2026 01:15:25)
+Update dependency com.google.devtools.ksp to v2.3.14 (#67)
+
+Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
+[detail](#561a18a-details)
+
+<details id='561a18a-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 11384d7 (Nov 12, 2026 21:01:53)
+Update changelog — github-actions[bot]
+[detail](#11384d7-details)
+
+<details id='11384d7-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## ee08aa9 (Nov 12, 2026 22:01:39)
 Sync with cloud the whole sync — antonio-bravo
 [detail](#ee08aa9-details)
@@ -663,32 +689,6 @@ Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> 
 [detail](#7c0ea09-details)
 
 <details id='7c0ea09-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 45175de (Oct 22, 2026 20:32:25)
-Update changelog — github-actions[bot]
-[detail](#45175de-details)
-
-<details id='45175de-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 293bc3e (Oct 22, 2026 20:32:15)
-Update dependency com.squareup.okhttp3:logging-interceptor to v5.5.1 (#55)
-
-Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
-[detail](#293bc3e-details)
-
-<details id='293bc3e-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
