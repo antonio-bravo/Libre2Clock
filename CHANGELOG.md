@@ -1,5 +1,31 @@
 # Changelog
 
+## e1a7b3a (Nov 19, 2026 05:48:36)
+Update dependency androidx.camera:camera-camera2 to v1.7.0 (#68)
+
+Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
+[detail](#e1a7b3a-details)
+
+<details id='e1a7b3a-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 2961ec7 (Nov 14, 2026 01:15:39)
+Update changelog — github-actions[bot]
+[detail](#2961ec7-details)
+
+<details id='2961ec7-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 561a18a (Nov 14, 2026 01:15:25)
 Update dependency com.google.devtools.ksp to v2.3.14 (#67)
 
@@ -666,32 +692,6 @@ add values with voice and integration with 3rd party — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/util/GlucoseVoiceManager.kt [Deleted]
 - app/src/main/java/com/tonio/libre2clock/util/NightscoutManager.kt [Deleted]
 - app/src/main/java/com/tonio/libre2clock/util/XDripBroadcastManager.kt [Deleted]
-</details>
-
-
----
-## cebc5f7 (Oct 23, 2026 07:53:07)
-Update changelog — github-actions[bot]
-[detail](#cebc5f7-details)
-
-<details id='cebc5f7-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 7c0ea09 (Oct 23, 2026 07:52:47)
-Update dependency com.squareup.okhttp3:okhttp to v5.5.1 (#56)
-
-Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
-[detail](#7c0ea09-details)
-
-<details id='7c0ea09-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
 </details>
 
 
