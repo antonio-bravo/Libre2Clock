@@ -1,5 +1,31 @@
 # Changelog
 
+## 0b1ce45 (Nov 20, 2026 06:30:46)
+Update dependency androidx.lifecycle:lifecycle-runtime-compose to v2.11.1 (#72)
+
+Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
+[detail](#0b1ce45-details)
+
+<details id='0b1ce45-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## fc91fd0 (Nov 19, 2026 05:48:51)
+Update changelog — github-actions[bot]
+[detail](#fc91fd0-details)
+
+<details id='fc91fd0-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## e1a7b3a (Nov 19, 2026 05:48:36)
 Update dependency androidx.camera:camera-camera2 to v1.7.0 (#68)
 
@@ -664,34 +690,6 @@ fix widget update and add new features — antonio-bravo
 - app/src/main/res/values-es/strings.xml [Modified]
 - app/src/main/res/values/strings.xml [Modified]
 - app/src/test/java/com/tonio/libre2clock/ExampleUnitTest.kt [Modified]
-</details>
-
-
----
-## b447f90 (Oct 23, 2026 19:30:10)
-Update changelog — github-actions[bot]
-[detail](#b447f90-details)
-
-<details id='b447f90-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 28b4c64 (Oct 23, 2026 21:29:52)
-add values with voice and integration with 3rd party — antonio-bravo
-[detail](#28b4c64-details)
-
-<details id='28b4c64-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsNightscoutScreen.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsVoiceScreen.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/util/GlucoseVoiceManager.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/util/NightscoutManager.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/util/XDripBroadcastManager.kt [Deleted]
 </details>
 
 
