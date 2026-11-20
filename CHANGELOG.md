@@ -1,5 +1,31 @@
 # Changelog
 
+## 0c1e8b1 (Nov 20, 2026 16:27:50)
+Update dependency androidx.lifecycle:lifecycle-runtime-ktx to v2.11.1 (#73)
+
+Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
+[detail](#0c1e8b1-details)
+
+<details id='0c1e8b1-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 32b9ca8 (Nov 20, 2026 06:30:59)
+Update changelog — github-actions[bot]
+[detail](#32b9ca8-details)
+
+<details id='32b9ca8-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 0b1ce45 (Nov 20, 2026 06:30:46)
 Update dependency androidx.lifecycle:lifecycle-runtime-compose to v2.11.1 (#72)
 
@@ -651,45 +677,6 @@ TTS double click en widget — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/widget/GlucoseWidgetProvider.kt [Modified]
 - app/src/main/res/values-es/strings.xml [Modified]
 - app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 873c3a2 (Oct 27, 2026 13:19:34)
-Update changelog — github-actions[bot]
-[detail](#873c3a2-details)
-
-<details id='873c3a2-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## bfa648e (Oct 27, 2026 14:19:21)
-fix widget update and add new features — antonio-bravo
-[detail](#bfa648e-details)
-
-<details id='bfa648e-details'>
-<summary>Changed files</summary>
-
-- .idea/misc.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/MainActivity.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/InsulinProcessor.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/navigation/Destinations.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/navigation/NavGraph.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsWidgetScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/widget/GlucoseWidgetProvider.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-- app/src/test/java/com/tonio/libre2clock/ExampleUnitTest.kt [Modified]
 </details>
 
 
