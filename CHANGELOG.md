@@ -1,5 +1,31 @@
 # Changelog
 
+## c48eb58 (Nov 21, 2026 04:50:03)
+Update dependency androidx.lifecycle:lifecycle-viewmodel-compose to v2.11.1 (#74)
+
+Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
+[detail](#c48eb58-details)
+
+<details id='c48eb58-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## f5b886b (Nov 20, 2026 16:28:05)
+Update changelog — github-actions[bot]
+[detail](#f5b886b-details)
+
+<details id='f5b886b-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 0c1e8b1 (Nov 20, 2026 16:27:50)
 Update dependency androidx.lifecycle:lifecycle-runtime-ktx to v2.11.1 (#73)
 
@@ -648,35 +674,6 @@ Update dependency com.android.application to v9.5.0 — renovate[bot]
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## dd4b738 (Oct 27, 2026 19:48:27)
-Update changelog — github-actions[bot]
-[detail](#dd4b738-details)
-
-<details id='dd4b738-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## a4e8257 (Oct 27, 2026 20:48:10)
-TTS double click en widget — antonio-bravo
-[detail](#a4e8257-details)
-
-<details id='a4e8257-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsWidgetScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/widget/GlucoseWidgetProvider.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
 </details>
 
 
