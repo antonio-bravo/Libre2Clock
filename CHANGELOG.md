@@ -1,5 +1,31 @@
 # Changelog
 
+## 07078bd (Nov 21, 2026 14:08:17)
+Update dependency androidx.lifecycle:lifecycle-viewmodel-navigation3 to v2.11.1 (#75)
+
+Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
+[detail](#07078bd-details)
+
+<details id='07078bd-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## eb994a1 (Nov 21, 2026 04:50:15)
+Update changelog — github-actions[bot]
+[detail](#eb994a1-details)
+
+<details id='eb994a1-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## c48eb58 (Nov 21, 2026 04:50:03)
 Update dependency androidx.lifecycle:lifecycle-viewmodel-compose to v2.11.1 (#74)
 
@@ -642,38 +668,6 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
-</details>
-
-
----
-## f629983 (Oct 28, 2026 21:27:24)
-bolo y double click widget — antonio-bravo
-[detail](#f629983-details)
-
-<details id='f629983-details'>
-<summary>Changed files</summary>
-
-- .idea/misc.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsWidgetScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/widget/GlucoseWidgetProvider.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 6613b2c (Oct 28, 2026 18:32:38)
-Update dependency com.android.application to v9.5.0 — renovate[bot]
-[detail](#6613b2c-details)
-
-<details id='6613b2c-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
 </details>
 
 
