@@ -1,5 +1,31 @@
 # Changelog
 
+## 98961b0 (Nov 22, 2026 08:28:32)
+Update dependency androidx.navigation3:navigation3-ui to v1.2.2 (#77)
+
+Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
+[detail](#98961b0-details)
+
+<details id='98961b0-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 8061f68 (Nov 22, 2026 01:28:35)
+Update changelog — github-actions[bot]
+[detail](#8061f68-details)
+
+<details id='8061f68-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## d27a44e (Nov 22, 2026 01:28:17)
 Update dependency androidx.navigation3:navigation3-runtime to v1.2.2 (#76)
 
@@ -637,34 +663,6 @@ Update changelog — github-actions[bot]
 [detail](#263ed70-details)
 
 <details id='263ed70-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 6ffd075 (Oct 28, 2026 22:42:29)
-FS slide — antonio-bravo
-[detail](#6ffd075-details)
-
-<details id='6ffd075-details'>
-<summary>Changed files</summary>
-
-- .idea/misc.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/widget/GlucoseWidgetProvider.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## ba71b2f (Oct 28, 2026 20:29:35)
-Update changelog — github-actions[bot]
-[detail](#ba71b2f-details)
-
-<details id='ba71b2f-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
