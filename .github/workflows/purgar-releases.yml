@@ -1,10 +1,11 @@
 name: Purge Old Releases
 
 on:
-  # Se ejecuta cada vez que publicas una nueva release
+  push:
+    branches:
+      - main
   release:
     types: [published]
-  # También permite ejecutarlo manualmente desde la pestaña Actions
   workflow_dispatch:
 
 permissions:
@@ -19,13 +20,26 @@ jobs:
       KEEP_LATEST: 10 # Conservar las 10 releases más recientes
 
     steps:
-      - name: Eliminar releases antiguas y sus tags
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Eliminar releases antiguas y sus tags (sin límite)
         run: |
-          # Obtiene la lista de tags de todas las releases (ordenadas de más nueva a más antigua)
-          # Omite las primeras N (KEEP_LATEST) y borra el resto junto con su tag
-          gh release list --limit 100 --json tagName --jq ".[$KEEP_LATEST:][].tagName" | while read -r tag; do
-            if [ -n "$tag" ]; then
-              echo "Eliminando release y tag: $tag"
-              gh release delete "$tag" --cleanup-tag --yes
-            fi
-          done
+          echo "Obteniendo la lista completa de todas las releases via GitHub REST API..."
+          RELEASES_TO_DELETE=$(gh api "repos/${{ github.repository }}/releases?per_page=100" --paginate | jq -r ".[$KEEP_LATEST:][] | \"\(.id) \(.tag_name)\"")
+
+          if [ -z "$RELEASES_TO_DELETE" ]; then
+            echo "No hay releases antiguas para eliminar (se conservan las $KEEP_LATEST más recientes)."
+          else
+            echo "Eliminando releases y tags antiguas..."
+            echo "$RELEASES_TO_DELETE" | while read -r rel_id tag; do
+              if [ -n "$rel_id" ] && [ "$rel_id" != "null" ]; then
+                echo "Eliminando release ID $rel_id (tag: $tag)..."
+                gh api -X DELETE "repos/${{ github.repository }}/releases/$rel_id" || true
+                if [ -n "$tag" ] && [ "$tag" != "null" ]; then
+                  gh api -X DELETE "repos/${{ github.repository }}/git/refs/tags/$tag" || true
+                fi
+              fi
+            done
+            echo "Purga completada exitosamente."
+          fi

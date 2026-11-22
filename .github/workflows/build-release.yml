@@ -142,3 +142,27 @@ jobs:
             --generate-notes \
             libre2clock-v$VERSION.apk \
             libre2clock-v${VERSION}_debug.apk
+
+      - name: Purge Old GitHub Releases (Keep Latest 10)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          KEEP_LATEST: 10
+        run: |
+          echo "Obteniendo la lista completa de todas las releases via GitHub REST API..."
+          RELEASES_TO_DELETE=$(gh api "repos/${{ github.repository }}/releases?per_page=100" --paginate | jq -r ".[$KEEP_LATEST:][] | \"\(.id) \(.tag_name)\"")
+
+          if [ -z "$RELEASES_TO_DELETE" ]; then
+            echo "No hay releases antiguas para eliminar (se conservan las $KEEP_LATEST más recientes)."
+          else
+            echo "Eliminando releases y tags antiguas..."
+            echo "$RELEASES_TO_DELETE" | while read -r rel_id tag; do
+              if [ -n "$rel_id" ] && [ "$rel_id" != "null" ]; then
+                echo "Eliminando release ID $rel_id (tag: $tag)..."
+                gh api -X DELETE "repos/${{ github.repository }}/releases/$rel_id" || true
+                if [ -n "$tag" ] && [ "$tag" != "null" ]; then
+                  gh api -X DELETE "repos/${{ github.repository }}/git/refs/tags/$tag" || true
+                fi
+              fi
+            done
+            echo "Purga completada exitosamente."
+          fi
