@@ -1,5 +1,29 @@
 # Changelog
 
+## c540a5f (Nov 22, 2026 23:02:38)
+add renovate — antonio-bravo
+[detail](#c540a5f-details)
+
+<details id='c540a5f-details'>
+<summary>Changed files</summary>
+
+- renovate.json [Deleted]
+</details>
+
+
+---
+## 8f99dc9 (Nov 22, 2026 21:39:20)
+Update changelog — github-actions[bot]
+[detail](#8f99dc9-details)
+
+<details id='8f99dc9-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## e682eb0 (Nov 22, 2026 22:39:07)
 workflow — antonio-bravo
 [detail](#e682eb0-details)
@@ -613,45 +637,6 @@ Update changelog — github-actions[bot]
 [detail](#b6369e9-details)
 
 <details id='b6369e9-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 768b41e (Nov 07, 2026 21:56:04)
-Share data model — antonio-bravo
-[detail](#768b41e-details)
-
-<details id='768b41e-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/local/GlucoseHistoryDatabaseHelper.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/model/ShareModels.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/sync/AuthManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/capillary/CapillaryScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/components/PatientSelectorDropdown.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/ui/components/ShareDialog.kt [Deleted]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 87a3679 (Oct 31, 2026 17:49:08)
-Update changelog — github-actions[bot]
-[detail](#87a3679-details)
-
-<details id='87a3679-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
