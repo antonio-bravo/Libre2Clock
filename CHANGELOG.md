@@ -1,5 +1,31 @@
 # Changelog
 
+## b39324f (Nov 22, 2026 12:53:04)
+Update Gradle to v9.9.2 (#79)
+
+Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
+[detail](#b39324f-details)
+
+<details id='b39324f-details'>
+<summary>Changed files</summary>
+
+- gradle/wrapper/gradle-wrapper.properties [Modified]
+</details>
+
+
+---
+## 0292976 (Nov 22, 2026 10:05:32)
+Update changelog — github-actions[bot]
+[detail](#0292976-details)
+
+<details id='0292976-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## f47931d (Nov 22, 2026 11:05:20)
 fix sync on widget — antonio-bravo
 [detail](#f47931d-details)
@@ -637,32 +663,6 @@ Update changelog — github-actions[bot]
 [detail](#979d6bc-details)
 
 <details id='979d6bc-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## c4e3be7 (Oct 31, 2026 01:24:42)
-Update dependency com.google.devtools.ksp to v2.3.13 (#58)
-
-Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
-[detail](#c4e3be7-details)
-
-<details id='c4e3be7-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## eb351cb (Oct 30, 2026 21:09:30)
-Update changelog — github-actions[bot]
-[detail](#eb351cb-details)
-
-<details id='eb351cb-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
