@@ -1,5 +1,32 @@
 # Changelog
 
+## f47931d (Nov 22, 2026 11:05:20)
+fix sync on widget — antonio-bravo
+[detail](#f47931d-details)
+
+<details id='f47931d-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/service/GlucoseAlarmReceiver.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/widget/GlucoseWidgetProvider.kt [Modified]
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## cc7a06a (Nov 22, 2026 08:28:44)
+Update changelog — github-actions[bot]
+[detail](#cc7a06a-details)
+
+<details id='cc7a06a-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 98961b0 (Nov 22, 2026 08:28:32)
 Update dependency androidx.navigation3:navigation3-ui to v1.2.2 (#77)
 
@@ -636,33 +663,6 @@ Update changelog — github-actions[bot]
 [detail](#eb351cb-details)
 
 <details id='eb351cb-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## b741428 (Oct 30, 2026 22:08:33)
-add insulin screen — antonio-bravo
-[detail](#b741428-details)
-
-<details id='b741428-details'>
-<summary>Changed files</summary>
-
-- .idea/misc.xml [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 263ed70 (Oct 28, 2026 21:42:43)
-Update changelog — github-actions[bot]
-[detail](#263ed70-details)
-
-<details id='263ed70-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
