@@ -1,5 +1,30 @@
 # Changelog
 
+## e682eb0 (Nov 22, 2026 22:39:07)
+workflow — antonio-bravo
+[detail](#e682eb0-details)
+
+<details id='e682eb0-details'>
+<summary>Changed files</summary>
+
+- .github/workflows/build-release.yml [Modified]
+- .github/workflows/purgar-releases.yml [Modified]
+</details>
+
+
+---
+## 4a33452 (Nov 22, 2026 21:29:17)
+Update changelog — github-actions[bot]
+[detail](#4a33452-details)
+
+<details id='4a33452-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 35fe55b (Nov 22, 2026 22:29:03)
 purge releases — antonio-bravo
 [detail](#35fe55b-details)
@@ -627,41 +652,6 @@ Update changelog — github-actions[bot]
 [detail](#87a3679-details)
 
 <details id='87a3679-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 0c8e9a7 (Oct 31, 2026 18:48:53)
-custom days for FS — antonio-bravo
-[detail](#0c8e9a7-details)
-
-<details id='0c8e9a7-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseProcessor.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/widget/GlucoseWidgetProvider.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-- app/src/test/java/com/tonio/libre2clock/ExampleUnitTest.kt [Modified]
-</details>
-
-
----
-## fe6f9e9 (Oct 31, 2026 09:29:34)
-Update changelog — github-actions[bot]
-[detail](#fe6f9e9-details)
-
-<details id='fe6f9e9-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
