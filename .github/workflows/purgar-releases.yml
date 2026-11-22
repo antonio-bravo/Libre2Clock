@@ -1,0 +1,31 @@
+name: Purge Old Releases
+
+on:
+  # Se ejecuta cada vez que publicas una nueva release
+  release:
+    types: [published]
+  # También permite ejecutarlo manualmente desde la pestaña Actions
+  workflow_dispatch:
+
+permissions:
+  # Permiso necesario para borrar releases y tags
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      KEEP_LATEST: 10 # Conservar las 10 releases más recientes
+
+    steps:
+      - name: Eliminar releases antiguas y sus tags
+        run: |
+          # Obtiene la lista de tags de todas las releases (ordenadas de más nueva a más antigua)
+          # Omite las primeras N (KEEP_LATEST) y borra el resto junto con su tag
+          gh release list --limit 100 --json tagName --jq ".[$KEEP_LATEST:][].tagName" | while read -r tag; do
+            if [ -n "$tag" ]; then
+              echo "Eliminando release y tag: $tag"
+              gh release delete "$tag" --cleanup-tag --yes
+            fi
+          done
