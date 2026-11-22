@@ -1,5 +1,30 @@
 # Changelog
 
+## 35fe55b (Nov 22, 2026 22:29:03)
+purge releases — antonio-bravo
+[detail](#35fe55b-details)
+
+<details id='35fe55b-details'>
+<summary>Changed files</summary>
+
+- .github/workflows/purgar-releases.yml [Deleted]
+- .idea/misc.xml [Modified]
+</details>
+
+
+---
+## 6ad5428 (Nov 22, 2026 12:53:17)
+Update changelog — github-actions[bot]
+[detail](#6ad5428-details)
+
+<details id='6ad5428-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## b39324f (Nov 22, 2026 12:53:04)
 Update Gradle to v9.9.2 (#79)
 
@@ -637,32 +662,6 @@ Update changelog — github-actions[bot]
 [detail](#fe6f9e9-details)
 
 <details id='fe6f9e9-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 4008da9 (Oct 31, 2026 10:29:01)
-adjust add insulin screen — antonio-bravo
-[detail](#4008da9-details)
-
-<details id='4008da9-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
-- app/src/main/res/values-es/strings.xml [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 979d6bc (Oct 31, 2026 01:24:55)
-Update changelog — github-actions[bot]
-[detail](#979d6bc-details)
-
-<details id='979d6bc-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
