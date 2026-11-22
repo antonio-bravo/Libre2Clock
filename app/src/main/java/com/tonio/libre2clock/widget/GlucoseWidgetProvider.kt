@@ -14,6 +14,7 @@ import android.view.View
 import android.widget.RemoteViews
 import com.tonio.libre2clock.MainActivity
 import com.tonio.libre2clock.R
+import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.InsulinType
 import com.tonio.libre2clock.data.repository.GlucoseProcessor
 import com.tonio.libre2clock.data.repository.InsulinProcessor
@@ -81,11 +82,7 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
                         singleTapJob = null
 
                         val repository = AppContainer.provideGlucoseRepository(context)
-                        val rawMeasurement = repository.currentGlucose.first()
-                            ?: preferenceManager.historicalGlucoseArchive.first().firstOrNull()
-                            ?: withContext(Dispatchers.IO) {
-                                com.tonio.libre2clock.data.local.GlucoseHistoryDatabaseHelper(context).readRecentHistory(1).firstOrNull()
-                            }
+                        val rawMeasurement = getLatestRawMeasurement(context, repository, preferenceManager)
 
                         if (rawMeasurement != null) {
                             val manualOffset = preferenceManager.glucoseOffset.first()
@@ -232,12 +229,8 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
 
             val isSmallLayout = compactModePref || minHeightDp < 90 || minWidthDp < 180
 
-            // Fetch raw measurement from all storage locations (Memory, Preference Archive, and SQLite)
-            val rawMeasurement = repository.currentGlucose.first()
-                ?: preferenceManager.historicalGlucoseArchive.first().firstOrNull()
-                ?: withContext(Dispatchers.IO) {
-                    com.tonio.libre2clock.data.local.GlucoseHistoryDatabaseHelper(context).readRecentHistory(1).firstOrNull()
-                }
+            // Fetch raw measurement from all storage locations (Memory, Preference Archive, and SQLite) selecting the newest by timestamp
+            val rawMeasurement = getLatestRawMeasurement(context, repository, preferenceManager)
 
             val manualOffset = preferenceManager.glucoseOffset.first()
             val userRanges = preferenceManager.glucoseOffsetRanges.first()
@@ -401,5 +394,20 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    private suspend fun getLatestRawMeasurement(
+        context: Context,
+        repository: com.tonio.libre2clock.data.repository.GlucoseRepositoryImpl,
+        preferenceManager: com.tonio.libre2clock.data.repository.PreferenceManager
+    ): GlucoseMeasurement? {
+        val dbMeasurement = withContext(Dispatchers.IO) {
+            com.tonio.libre2clock.data.local.GlucoseHistoryDatabaseHelper(context).readRecentHistory(1).firstOrNull()
+        }
+        val memoryMeasurement = try { repository.currentGlucose.first() } catch (_: Exception) { null }
+        val archiveMeasurement = try { preferenceManager.historicalGlucoseArchive.first().firstOrNull() } catch (_: Exception) { null }
+
+        val candidates = listOfNotNull(dbMeasurement, memoryMeasurement, archiveMeasurement)
+        return candidates.maxByOrNull { TimestampParser.parseMeasurementInstant(it) ?: Instant.EPOCH }
     }
 }

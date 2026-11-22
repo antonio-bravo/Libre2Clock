@@ -33,6 +33,7 @@ import com.tonio.libre2clock.data.repository.GlucoseRepository
 import com.tonio.libre2clock.data.repository.GlucoseRepositoryImpl
 import com.tonio.libre2clock.data.repository.InsulinProcessor
 import com.tonio.libre2clock.data.repository.PreferenceManager
+import com.tonio.libre2clock.widget.GlucoseWidgetProvider
 import com.tonio.libre2clock.di.AppContainer
 import com.tonio.libre2clock.util.EventLogManager
 import com.tonio.libre2clock.util.LogLevel
@@ -485,10 +486,8 @@ class GlucoseForegroundService : Service() {
         val dualValue = GlucoseProcessor.formatDualValue(measurement.value, measurement.calibratedValue)
         val content = "$dualValue mg/dL $trendStr"
         
-        // Notify widget to update regardless of content change
-        val widgetIntent = Intent("com.tonio.libre2clock.ACTION_UPDATE_WIDGET")
-        widgetIntent.setPackage(packageName)
-        sendBroadcast(widgetIntent)
+        // Notify widget to update explicitly regardless of content change
+        GlucoseWidgetProvider.triggerUpdate(this)
         
         if (content == lastForegroundNotificationContent) return
         
