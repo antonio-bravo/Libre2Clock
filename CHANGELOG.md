@@ -1,5 +1,31 @@
 # Changelog
 
+## d27a44e (Nov 22, 2026 01:28:17)
+Update dependency androidx.navigation3:navigation3-runtime to v1.2.2 (#76)
+
+Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
+[detail](#d27a44e-details)
+
+<details id='d27a44e-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## bc55a7c (Nov 21, 2026 14:08:28)
+Update changelog — github-actions[bot]
+[detail](#bc55a7c-details)
+
+<details id='bc55a7c-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 07078bd (Nov 21, 2026 14:08:17)
 Update dependency androidx.lifecycle:lifecycle-viewmodel-navigation3 to v2.11.1 (#75)
 
@@ -639,32 +665,6 @@ Update changelog — github-actions[bot]
 [detail](#ba71b2f-details)
 
 <details id='ba71b2f-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 53086d0 (Oct 28, 2026 21:29:17)
-Merge pull request #57 from antonio-bravo/renovate/agp
-
-Update dependency com.android.application to v9.5.0 — antonio-bravo
-[detail](#53086d0-details)
-
-<details id='53086d0-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 7f5826c (Oct 28, 2026 20:27:40)
-Update changelog — github-actions[bot]
-[detail](#7f5826c-details)
-
-<details id='7f5826c-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
