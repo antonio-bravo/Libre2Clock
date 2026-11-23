@@ -1,5 +1,31 @@
 # Changelog
 
+## 395df48 (Nov 23, 2026 00:41:58)
+Update dependency androidx.camera:camera-core to v1.7.0 (#69)
+
+Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
+[detail](#395df48-details)
+
+<details id='395df48-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## d3c717b (Nov 22, 2026 22:02:51)
+Update changelog — github-actions[bot]
+[detail](#d3c717b-details)
+
+<details id='d3c717b-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## c540a5f (Nov 22, 2026 23:02:38)
 add renovate — antonio-bravo
 [detail](#c540a5f-details)
@@ -613,30 +639,6 @@ Update changelog — github-actions[bot]
 [detail](#558f728-details)
 
 <details id='558f728-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 196a092 (Nov 07, 2026 23:08:26)
-firebase rules — antonio-bravo
-[detail](#196a092-details)
-
-<details id='196a092-details'>
-<summary>Changed files</summary>
-
-- firebase.md [Deleted]
-</details>
-
-
----
-## b6369e9 (Nov 07, 2026 20:56:22)
-Update changelog — github-actions[bot]
-[detail](#b6369e9-details)
-
-<details id='b6369e9-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
