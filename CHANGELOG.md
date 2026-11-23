@@ -1,5 +1,31 @@
 # Changelog
 
+## 9196331 (Nov 23, 2026 23:01:44)
+Update dependency androidx.camera:camera-view to v1.7.0 (#71)
+
+Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
+[detail](#9196331-details)
+
+<details id='9196331-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## bbbf10f (Nov 23, 2026 12:11:19)
+Update changelog — github-actions[bot]
+[detail](#bbbf10f-details)
+
+<details id='bbbf10f-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 0423803 (Nov 23, 2026 12:11:00)
 Update dependency androidx.camera:camera-lifecycle to v1.7.0 (#70)
 
@@ -613,32 +639,6 @@ Update changelog — github-actions[bot]
 [detail](#06f1c0e-details)
 
 <details id='06f1c0e-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 4f91849 (Nov 08, 2026 16:46:55)
-Update dependency androidx.navigation3:navigation3-ui to v1.2.1 (#60)
-
-Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
-[detail](#4f91849-details)
-
-<details id='4f91849-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## a7ef963 (Nov 08, 2026 05:58:05)
-Update changelog — github-actions[bot]
-[detail](#a7ef963-details)
-
-<details id='a7ef963-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
