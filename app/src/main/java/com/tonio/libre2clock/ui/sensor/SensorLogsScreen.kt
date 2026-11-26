@@ -3,6 +3,7 @@ package com.tonio.libre2clock.ui.sensor
 import android.content.ClipData
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -403,18 +404,38 @@ fun SensorLogItem(
             }
 
             if (errorSummary != null) {
+                var showMardHelp by remember { mutableStateOf(false) }
                 Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = stringResource(
-                        R.string.sensor_error_summary_row,
-                        errorSummary.samples,
-                        errorSummary.mardPct,
-                        errorSummary.avgSignedDeviationPct
-                    ),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Medium
-                )
+                Row(
+                    modifier = Modifier
+                        .clickable { showMardHelp = true }
+                        .padding(vertical = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = stringResource(
+                            R.string.sensor_error_summary_row,
+                            errorSummary.samples,
+                            errorSummary.mardPct,
+                            errorSummary.avgSignedDeviationPct
+                        ),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = stringResource(R.string.sensor_mard_bias_help_title),
+                        modifier = Modifier.size(14.dp),
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                    )
+                }
+                if (showMardHelp) {
+                    com.tonio.libre2clock.ui.components.SensorQualityHelpDialog(
+                        onDismiss = { showMardHelp = false }
+                    )
+                }
                 if (errorSummary.samples >= 2) {
                     val qualityRes = when (errorSummary.qualityTier) {
                         SensorQualityTier.EXCELLENT -> R.string.sensor_quality_excellent

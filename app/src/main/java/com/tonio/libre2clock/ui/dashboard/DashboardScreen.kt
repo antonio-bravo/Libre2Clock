@@ -1131,22 +1131,44 @@ fun SensorHealthCard(
                     )
 
                     if (errorSummary != null) {
+                        var showMardHelp by remember { mutableStateOf(false) }
                         Spacer(modifier = Modifier.height(8.dp))
                         HorizontalDivider(
                             modifier = Modifier.padding(vertical = 4.dp),
                             color = (if (isDemoMode) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSecondaryContainer).copy(alpha = 0.2f)
                         )
-                        Text(
-                            text = stringResource(
-                                R.string.sensor_error_summary_row,
-                                errorSummary.samples,
-                                errorSummary.mardPct,
-                                errorSummary.avgSignedDeviationPct
-                            ),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = if (isDemoMode) MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.9f) else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.9f),
-                            fontWeight = FontWeight.Medium
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { showMardHelp = true }
+                                .padding(vertical = 2.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                text = stringResource(
+                                    R.string.sensor_error_summary_row,
+                                    errorSummary.samples,
+                                    errorSummary.mardPct,
+                                    errorSummary.avgSignedDeviationPct
+                                ),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (isDemoMode) MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.9f) else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.9f),
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.weight(1f, fill = false)
+                            )
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = stringResource(R.string.sensor_mard_bias_help_title),
+                                modifier = Modifier.size(14.dp),
+                                tint = (if (isDemoMode) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSecondaryContainer).copy(alpha = 0.7f)
+                            )
+                        }
+                        if (showMardHelp) {
+                            com.tonio.libre2clock.ui.components.SensorQualityHelpDialog(
+                                onDismiss = { showMardHelp = false }
+                            )
+                        }
                         if (errorSummary.samples >= 2) {
                             val qualityRes = when (errorSummary.qualityTier) {
                                 SensorQualityTier.EXCELLENT -> R.string.sensor_quality_excellent

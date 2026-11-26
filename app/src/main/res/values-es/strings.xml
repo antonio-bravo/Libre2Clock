@@ -50,6 +50,8 @@
     <string name="sensor_quality_acceptable">Precisión: Aceptable</string>
     <string name="sensor_quality_degraded">Precisión: Degradada (Revisar sensor)</string>
     <string name="sensor_compression_low_alert">Posible falso bajo por presión (%1$d en 24h, mín %2$d mg/dL)</string>
+    <string name="sensor_mard_bias_help_title">Guía de MARD y Sesgo (Bias)</string>
+    <string name="sensor_mard_bias_help_body" formatted="false">• MARD: Margen de error promedio del sensor frente al capilar (siempre positivo).\n  - ≤ 10%: Precisión excelente\n  - 10–15%: Precisión aceptable\n  - &gt; 15%: Precisión degradada (confirmar con capilar)\n\n• Sesgo (Bias): Dirección del error.\n  - Positivo (+): El sensor lee por debajo de tu glucosa real\n  - Negativo (-): El sensor lee por encima de tu glucosa real\n  - Cercano a 0%: Equilibrado (sin desviación fija)</string>
 
     <string name="insulin_hub_title">Gestión de Insulina</string>
     <string name="insulin_active_total">Total Insulina Activa (IOB)</string>

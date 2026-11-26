@@ -51,6 +51,8 @@
     <string name="sensor_quality_acceptable">Accuracy: Acceptable</string>
     <string name="sensor_quality_degraded">Accuracy: Degraded (Check sensor)</string>
     <string name="sensor_compression_low_alert">Possible compression low (%1$d in 24h, nadir %2$d mg/dL)</string>
+    <string name="sensor_mard_bias_help_title">MARD &amp; Bias Guide</string>
+    <string name="sensor_mard_bias_help_body" formatted="false">• MARD (Mean Absolute Relative Difference): Average sensor error percentage vs fingerstick.\n  - ≤ 10%: Excellent accuracy\n  - 10–15%: Acceptable accuracy\n  - &gt; 15%: Degraded (confirm with fingerstick)\n\n• Bias: Average error direction.\n  - Positive (+): Sensor reads lower than blood glucose\n  - Negative (-): Sensor reads higher than blood glucose\n  - Near 0%: Balanced (no systematic drift)</string>
 
     <string name="insulin_hub_title">Insulin Management</string>
     <string name="insulin_active_total">Total Active Insulin (IOB)</string>
