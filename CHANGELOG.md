@@ -1,5 +1,31 @@
 # Changelog
 
+## 71cea1c (Nov 26, 2026 09:56:21)
+Merge pull request #81 from antonio-bravo/renovate/actions-checkout-7.x
+
+Update actions/checkout action to v7 — antonio-bravo
+[detail](#71cea1c-details)
+
+<details id='71cea1c-details'>
+<summary>Changed files</summary>
+
+- .github/workflows/purgar-releases.yml [Modified]
+</details>
+
+
+---
+## e5a5dd5 (Nov 26, 2026 00:50:37)
+Update changelog — github-actions[bot]
+[detail](#e5a5dd5-details)
+
+<details id='e5a5dd5-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## e34b7b8 (Nov 26, 2026 00:50:25)
 Update dependency com.android.application to v9.5.3 (#80)
 
@@ -112,6 +138,18 @@ add renovate — antonio-bravo
 <summary>Changed files</summary>
 
 - renovate.json [Deleted]
+</details>
+
+
+---
+## 7e03604 (Nov 22, 2026 21:40:03)
+Update actions/checkout action to v7 — renovate[bot]
+[detail](#7e03604-details)
+
+<details id='7e03604-details'>
+<summary>Changed files</summary>
+
+- .github/workflows/purgar-releases.yml [Modified]
 </details>
 
 
@@ -603,44 +641,6 @@ Update dependency com.google.firebase:firebase-bom to v35.2.0 — renovate[bot]
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 9344d46 (Nov 11, 2026 02:17:44)
-Update changelog — github-actions[bot]
-[detail](#9344d46-details)
-
-<details id='9344d46-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## d01cb6a (Nov 11, 2026 02:17:31)
-Update Gradle to v9.9.1 (#62)
-
-Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
-[detail](#d01cb6a-details)
-
-<details id='d01cb6a-details'>
-<summary>Changed files</summary>
-
-- gradle/wrapper/gradle-wrapper.properties [Modified]
-</details>
-
-
----
-## c51e483 (Nov 09, 2026 03:01:17)
-Update changelog — github-actions[bot]
-[detail](#c51e483-details)
-
-<details id='c51e483-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
 </details>
 
 
