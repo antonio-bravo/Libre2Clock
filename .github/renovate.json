@@ -5,6 +5,28 @@
   "addLabels": ["dependencies"],
   "packageRules": [
     {
+      "groupName": "Jetpack Compose & AndroidX UI",
+      "matchPackagePatterns": [
+        "^androidx\\.compose",
+        "^androidx\\.activity:activity-compose",
+        "^androidx\\.lifecycle:lifecycle-.*-compose",
+        "^androidx\\.navigation3",
+        "^androidx\\.compose\\.material3"
+      ]
+    },
+    {
+      "groupName": "CameraX",
+      "matchPackagePatterns": [
+        "^androidx\\.camera:"
+      ]
+    },
+    {
+      "groupName": "Room Database",
+      "matchPackagePatterns": [
+        "^androidx\\.room:"
+      ]
+    },
+    {
       "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
       "automerge": true
     }

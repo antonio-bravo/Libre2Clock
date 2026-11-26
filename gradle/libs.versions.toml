@@ -118,3 +118,26 @@ google-devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "googleDev
 jetbrains-kotlin-plugin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "jetbrainsKotlinPluginSerialization" }
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
 
+[bundles]
+compose = [
+    "androidx-activity-compose",
+    "androidx-compose-ui",
+    "androidx-compose-ui-graphics",
+    "androidx-compose-ui-tooling-preview",
+    "androidx-compose-material3",
+    "androidx-compose-material-icons-core",
+    "androidx-compose-material-icons-extended",
+    "androidx-lifecycle-runtime-compose",
+    "androidx-lifecycle-viewmodel-compose"
+]
+camera = [
+    "androidx-camera-core",
+    "androidx-camera-camera2",
+    "androidx-camera-lifecycle",
+    "androidx-camera-view"
+]
+room = [
+    "androidx-room-runtime",
+    "androidx-room-ktx"
+]
+

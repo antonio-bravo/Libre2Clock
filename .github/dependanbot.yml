@@ -6,6 +6,15 @@ updates:
       - "/app"
     schedule:
       interval: "weekly"
+    groups:
+      compose-dependencies:
+        patterns:
+          - "androidx.compose*"
+          - "androidx.activity:activity-compose*"
+          - "androidx.lifecycle:lifecycle-*-compose*"
+      camerax-dependencies:
+        patterns:
+          - "androidx.camera*"
 
   - package-ecosystem: "github-actions"
     directory: "/"
