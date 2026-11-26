@@ -1,5 +1,29 @@
 # Changelog
 
+## 59ffbf9 (Nov 26, 2026 23:06:13)
+purge-releases just manual, it does on the main build — antonio-bravo
+[detail](#59ffbf9-details)
+
+<details id='59ffbf9-details'>
+<summary>Changed files</summary>
+
+- .github/workflows/purgar-releases.yml [Modified]
+</details>
+
+
+---
+## 404d464 (Nov 26, 2026 22:03:40)
+Update changelog — github-actions[bot]
+[detail](#404d464-details)
+
+<details id='404d464-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 195db06 (Nov 26, 2026 23:03:25)
 explain MARD/Bias — antonio-bravo
 [detail](#195db06-details)
@@ -721,31 +745,6 @@ workflow — antonio-bravo
 
 - .github/workflows/build-release.yml [Modified]
 - .github/workflows/purgar-releases.yml [Modified]
-</details>
-
-
----
-## 4a33452 (Nov 22, 2026 21:29:17)
-Update changelog — github-actions[bot]
-[detail](#4a33452-details)
-
-<details id='4a33452-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 35fe55b (Nov 22, 2026 22:29:03)
-purge releases — antonio-bravo
-[detail](#35fe55b-details)
-
-<details id='35fe55b-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/purgar-releases.yml [Deleted]
-- .idea/misc.xml [Modified]
 </details>
 
 
