@@ -1,5 +1,90 @@
 # Changelog
 
+## 2b7e81a (Nov 26, 2026 22:05:35)
+improvements — antonio-bravo
+[detail](#2b7e81a-details)
+
+<details id='2b7e81a-details'>
+<summary>Changed files</summary>
+
+- .idea/misc.xml [Modified]
+- app/build.gradle.kts [Modified]
+- app/src/main/AndroidManifest.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/MainActivity.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/api/DexcomService.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/api/LibreService.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/local/GlucoseHistoryDatabaseHelper.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseRepositoryImpl.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/InsulinProcessor.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/SecureCredentialStore.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/di/AppContainer.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/service/GlucoseAlarmReceiver.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/components/ShareDialog.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/TrendGraph.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/AgpChartComponent.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/PdfViewerDialog.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/report/ReportViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/sensor/SensorLogsScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsAdvancedScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsComponents.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsDeviceScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEmergencyScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsNightscoutScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsVoiceScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsWidgetScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/AlertSnoozeHelper.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/util/ClinicalExporter.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/util/EmergencyAlertDispatcher.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/EmergencyLocationManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/EventLogManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/GlucoseUnitConverter.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/util/GlucoseVoiceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/HealthConnectManager.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/util/NightscoutManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/PdfReportGenerator.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/ReportCalculator.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/util/SensorErrorSummary.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/widget/GlucoseWidgetProvider.kt [Modified]
+- app/src/main/res/drawable/placeholder.png [Added]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/colors.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+- app/src/main/res/xml/glucose_widget_info.xml [Modified]
+- app/src/test/java/com/tonio/libre2clock/AlertSnoozeHelperTest.kt [Deleted]
+- app/src/test/java/com/tonio/libre2clock/ClinicalExporterTest.kt [Deleted]
+- app/src/test/java/com/tonio/libre2clock/DexcomServiceTest.kt [Modified]
+- app/src/test/java/com/tonio/libre2clock/GlucoseAndInsulinProcessorTest.kt [Deleted]
+- app/src/test/java/com/tonio/libre2clock/GlucoseUnitConverterTest.kt [Deleted]
+- app/src/test/java/com/tonio/libre2clock/HealthConnectTest.kt [Deleted]
+- app/src/test/java/com/tonio/libre2clock/ReportCalculatorTest.kt [Deleted]
+- app/src/test/java/com/tonio/libre2clock/SensorQualityTest.kt [Deleted]
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 6f1be67 (Nov 26, 2026 14:19:13)
+Update changelog — github-actions[bot]
+[detail](#6f1be67-details)
+
+<details id='6f1be67-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 07a32e3 (Nov 26, 2026 15:18:58)
 adjust intelligency blood samples per sensor — antonio-bravo
 [detail](#07a32e3-details)
@@ -661,32 +746,6 @@ fix sync on widget — antonio-bravo
 - app/src/main/java/com/tonio/libre2clock/service/GlucoseAlarmReceiver.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
 - app/src/main/java/com/tonio/libre2clock/widget/GlucoseWidgetProvider.kt [Modified]
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## cc7a06a (Nov 22, 2026 08:28:44)
-Update changelog — github-actions[bot]
-[detail](#cc7a06a-details)
-
-<details id='cc7a06a-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 98961b0 (Nov 22, 2026 08:28:32)
-Update dependency androidx.navigation3:navigation3-ui to v1.2.2 (#77)
-
-Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
-[detail](#98961b0-details)
-
-<details id='98961b0-details'>
-<summary>Changed files</summary>
-
 - gradle/libs.versions.toml [Modified]
 </details>
 
