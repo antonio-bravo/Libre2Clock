@@ -1,5 +1,31 @@
 # Changelog
 
+## e34b7b8 (Nov 26, 2026 00:50:25)
+Update dependency com.android.application to v9.5.3 (#80)
+
+Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
+[detail](#e34b7b8-details)
+
+<details id='e34b7b8-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 7e617ab (Nov 23, 2026 23:01:56)
+Update changelog — github-actions[bot]
+[detail](#7e617ab-details)
+
+<details id='7e617ab-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 9196331 (Nov 23, 2026 23:01:44)
 Update dependency androidx.camera:camera-view to v1.7.0 (#71)
 
@@ -612,33 +638,6 @@ Update changelog — github-actions[bot]
 [detail](#c51e483-details)
 
 <details id='c51e483-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 6ab12f2 (Nov 09, 2026 03:01:02)
-Update Gradle to v9.9.0 (#61)
-
-Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
-[detail](#6ab12f2-details)
-
-<details id='6ab12f2-details'>
-<summary>Changed files</summary>
-
-- gradle/wrapper/gradle-wrapper.jar [Modified]
-- gradle/wrapper/gradle-wrapper.properties [Modified]
-</details>
-
-
----
-## 06f1c0e (Nov 08, 2026 16:47:07)
-Update changelog — github-actions[bot]
-[detail](#06f1c0e-details)
-
-<details id='06f1c0e-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
