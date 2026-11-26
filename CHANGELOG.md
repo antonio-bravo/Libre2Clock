@@ -1,5 +1,30 @@
 # Changelog
 
+## edb8dad (Nov 26, 2026 13:12:11)
+fix intelligence adjustment using % — antonio-bravo
+[detail](#edb8dad-details)
+
+<details id='edb8dad-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseProcessor.kt [Modified]
+- app/src/test/java/com/tonio/libre2clock/ExampleUnitTest.kt [Modified]
+</details>
+
+
+---
+## 1f9fe74 (Nov 26, 2026 11:15:35)
+Update changelog — github-actions[bot]
+[detail](#1f9fe74-details)
+
+<details id='1f9fe74-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 6e2b588 (Nov 26, 2026 12:15:18)
 fix correction intelligence apply to ranges — antonio-bravo
 [detail](#6e2b588-details)
@@ -652,32 +677,6 @@ Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> 
 [detail](#07078bd-details)
 
 <details id='07078bd-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## eb994a1 (Nov 21, 2026 04:50:15)
-Update changelog — github-actions[bot]
-[detail](#eb994a1-details)
-
-<details id='eb994a1-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## c48eb58 (Nov 21, 2026 04:50:03)
-Update dependency androidx.lifecycle:lifecycle-viewmodel-compose to v2.11.1 (#74)
-
-Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
-[detail](#c48eb58-details)
-
-<details id='c48eb58-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
