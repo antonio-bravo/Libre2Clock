@@ -356,16 +356,27 @@ fun RangeItem(
                 )
 
                 if (autoRangeMode == AutoRangeOffsetMode.BY_RANGE && insight != null) {
-                    val dynamicOffsetSign = if (insight.suggestedOffset >= 0) "+" else ""
                     val dynamicPctSign = if (insight.suggestedPercentage >= 0) "+" else ""
-                    Text(
-                        text = stringResource(
-                            R.string.settings_range_dynamic_applied,
+                    val dynamicOffsetSign = if (insight.suggestedOffset >= 0) "+" else ""
+                    
+                    val textToShow = if (insight.suggestedOffset != 0) {
+                        stringResource(
+                            R.string.settings_range_dynamic_applied_with_offset,
+                            dynamicPctSign,
+                            insight.suggestedPercentage,
                             dynamicOffsetSign,
-                            insight.suggestedOffset,
+                            insight.suggestedOffset
+                        )
+                    } else {
+                        stringResource(
+                            R.string.settings_range_dynamic_applied,
                             dynamicPctSign,
                             insight.suggestedPercentage
-                        ),
+                        )
+                    }
+
+                    Text(
+                        text = textToShow,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold

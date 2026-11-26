@@ -433,7 +433,8 @@
     <string name="settings_range_label">Rango: %1$d - %2$s mg/dL</string>
     <string name="settings_range_fixed_offset">Offset fijo: %1$s%2$d mg/dL</string>
     <string name="settings_range_percentage_offset">Offset porcentual: %1$s%2$d%%</string>
-    <string name="settings_range_dynamic_applied">Ajuste automático activo: %1$s%2$d mg/dL (%3$s%4$d%%)</string>
+    <string name="settings_range_dynamic_applied">Ajuste automático activo: %1$s%2$d%%</string>
+    <string name="settings_range_dynamic_applied_with_offset">Ajuste automático activo: %1$s%2$d%% (%3$s%4$d mg/dL)</string>
     <string name="settings_range_percentage_with_error">Offset porcentual: %1$s%2$d%% (Error: %3$s%4$.1f%%)</string>
     <string name="settings_range_sensor_audit">Error (actual / total): %1$s / %2$s (%3$s)</string>
     <string name="settings_avg_error_vs_capillary">Error medio vs capilar: actual %1$.1f mg/dL -&gt; smart %2$.1f mg/dL</string>
