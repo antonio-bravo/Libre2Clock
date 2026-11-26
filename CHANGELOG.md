@@ -1,5 +1,38 @@
 # Changelog
 
+## 07a32e3 (Nov 26, 2026 15:18:58)
+adjust intelligency blood samples per sensor — antonio-bravo
+[detail](#07a32e3-details)
+
+<details id='07a32e3-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/model/OffsetModels.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseProcessor.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/data/repository/PreferenceManager.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCalibrationScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsComponents.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsSectionCacheRepository.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+- app/src/test/java/com/tonio/libre2clock/ExampleUnitTest.kt [Modified]
+</details>
+
+
+---
+## 6db25a9 (Nov 26, 2026 12:38:35)
+Update changelog — github-actions[bot]
+[detail](#6db25a9-details)
+
+<details id='6db25a9-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 0792a10 (Nov 26, 2026 13:38:22)
 update porcentaje dinámico:
 Ajuste automático activo: +16% — antonio-bravo
@@ -652,32 +685,6 @@ Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> 
 [detail](#98961b0-details)
 
 <details id='98961b0-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 8061f68 (Nov 22, 2026 01:28:35)
-Update changelog — github-actions[bot]
-[detail](#8061f68-details)
-
-<details id='8061f68-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## d27a44e (Nov 22, 2026 01:28:17)
-Update dependency androidx.navigation3:navigation3-runtime to v1.2.2 (#76)
-
-Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
-[detail](#d27a44e-details)
-
-<details id='d27a44e-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
