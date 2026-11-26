@@ -280,51 +280,25 @@ object GlucoseProcessor {
         capillaryReadings: List<CapillaryMeasurement>,
         sensorFilter: (Int) -> Boolean
     ): RangeOffsetEstimate? {
-        // OPTIMIZACIÓN CRÍTICA: Regresión lineal en 2 pasadas SIN crear listas intermedias (Zero-Allocation)
-        var sumX = 0.0
-        var sumY = 0.0
+        var sumPct = 0.0
         var count = 0
 
-        // Pasada 1: Calcular medias
         for (reading in capillaryReadings) {
             val sensor = reading.sensorValue ?: continue
-            if (sensor == 0 || !sensorFilter(sensor)) continue
-            
-            sumX += sensor
-            sumY += (reading.value - sensor)
+            if (sensor <= 0 || !sensorFilter(sensor)) continue
+
+            val relativeErrorPct = ((reading.value - sensor).toDouble() / sensor.toDouble()) * 100.0
+            sumPct += relativeErrorPct
             count++
         }
 
         if (count == 0) return null
-        if (count == 1) {
-            return RangeOffsetEstimate(offset = sumY.roundToInt(), percentage = 0, sampleCount = 1)
-        }
 
-        val meanX = sumX / count
-        val meanY = sumY / count
-
-        var varianceX = 0.0
-        var covariance = 0.0
-
-        // Pasada 2: Calcular varianza y covarianza
-        for (reading in capillaryReadings) {
-            val sensor = reading.sensorValue ?: continue
-            if (sensor == 0 || !sensorFilter(sensor)) continue
-            
-            val x = sensor.toDouble()
-            val y = (reading.value - sensor).toDouble()
-            val dx = x - meanX
-            
-            varianceX += dx * dx
-            covariance += dx * (y - meanY)
-        }
-
-        val slope = if (varianceX > 1e-9) covariance / varianceX else 0.0
-        val intercept = meanY - slope * meanX
+        val avgPercentage = sumPct / count
 
         return RangeOffsetEstimate(
-            offset = intercept.roundToInt(),
-            percentage = (slope * 100.0).roundToInt(),
+            offset = 0,
+            percentage = avgPercentage.roundToInt(),
             sampleCount = count
         )
     }

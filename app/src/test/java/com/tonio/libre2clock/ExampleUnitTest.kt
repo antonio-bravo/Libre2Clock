@@ -104,29 +104,29 @@ class ExampleUnitTest {
     fun rangeEstimatePrioritizesActiveSensorWhenAvailable() {
         val range = GlucoseOffsetRange(min = 80, max = 130)
         val capillaryReadings = listOf(
-            CapillaryMeasurement(value = 110, timestamp = "2024-01-01T10:00", sensorValue = 100, sensorSerialNumber = "SN-001"), // delta +10
-            CapillaryMeasurement(value = 130, timestamp = "2024-01-01T11:00", sensorValue = 100, sensorSerialNumber = "SN-002")  // delta +30
+            CapillaryMeasurement(value = 110, timestamp = "2024-01-01T10:00", sensorValue = 100, sensorSerialNumber = "SN-001"), // +10%
+            CapillaryMeasurement(value = 130, timestamp = "2024-01-01T11:00", sensorValue = 100, sensorSerialNumber = "SN-002")  // +30%
         )
 
         val estimateActive = GlucoseProcessor.estimateOffsetsForRange(range, capillaryReadings, activeSensorSn = "SN-002")
         assertEquals(1, estimateActive?.sampleCount)
         assertEquals(true, estimateActive?.isSensorSpecific)
-        // Ponderado suave con 1 muestra (35% SN-002 + 65% promedio histórico): 0.35*30 + 0.65*20 = 23.5 -> 24
-        assertEquals(24, estimateActive?.offset)
+        // Ponderado suave porcentual con 1 muestra (35% SN-002 [+30%] + 65% promedio histórico [+20%]): 0.35*30 + 0.65*20 = 23.5 -> 24%
+        assertEquals(24, estimateActive?.percentage)
     }
 
     @Test
     fun rangeEstimateFallsBackToRangeAverageWhenActiveSensorHasNoData() {
         val range = GlucoseOffsetRange(min = 80, max = 130)
         val capillaryReadings = listOf(
-            CapillaryMeasurement(value = 110, timestamp = "2024-01-01T10:00", sensorValue = 100, sensorSerialNumber = "SN-001"),
-            CapillaryMeasurement(value = 130, timestamp = "2024-01-01T11:00", sensorValue = 100, sensorSerialNumber = "SN-002")
+            CapillaryMeasurement(value = 110, timestamp = "2024-01-01T10:00", sensorValue = 100, sensorSerialNumber = "SN-001"), // +10%
+            CapillaryMeasurement(value = 130, timestamp = "2024-01-01T11:00", sensorValue = 100, sensorSerialNumber = "SN-002")  // +30%
         )
 
         val estimateFallback = GlucoseProcessor.estimateOffsetsForRange(range, capillaryReadings, activeSensorSn = "SN-003")
         assertEquals(2, estimateFallback?.sampleCount)
         assertEquals(false, estimateFallback?.isSensorSpecific)
-        assertEquals(20, estimateFallback?.offset)
+        assertEquals(20, estimateFallback?.percentage)
     }
 
     @Test
@@ -156,8 +156,8 @@ class ExampleUnitTest {
             activeSensorSn = "SN-NEW"
         )
 
-        // Verifica que no se duplique la suma (138 + 22 + 22 = 182 ó 209), sino un valor suave y preciso de 159 mg/dL
-        assertEquals(159, calibrated.calibratedValue)
+        // Verifica ajuste proporcional porcentual escalado correctamente (~161 mg/dL)
+        assertEquals(161, calibrated.calibratedValue)
     }
 
     @Test
