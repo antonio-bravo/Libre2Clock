@@ -1,5 +1,29 @@
 # Changelog
 
+## 8314233 (Nov 26, 2026 22:50:28)
+restore VERSION_CODE yyyyMMddHH — antonio-bravo
+[detail](#8314233-details)
+
+<details id='8314233-details'>
+<summary>Changed files</summary>
+
+- app/build.gradle.kts [Modified]
+</details>
+
+
+---
+## 1ea522b (Nov 26, 2026 21:05:51)
+Update changelog — github-actions[bot]
+[detail](#1ea522b-details)
+
+<details id='1ea522b-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 2b7e81a (Nov 26, 2026 22:05:35)
 improvements — antonio-bravo
 [detail](#2b7e81a-details)
@@ -720,33 +744,6 @@ Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> 
 <summary>Changed files</summary>
 
 - gradle/wrapper/gradle-wrapper.properties [Modified]
-</details>
-
-
----
-## 0292976 (Nov 22, 2026 10:05:32)
-Update changelog — github-actions[bot]
-[detail](#0292976-details)
-
-<details id='0292976-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## f47931d (Nov 22, 2026 11:05:20)
-fix sync on widget — antonio-bravo
-[detail](#f47931d-details)
-
-<details id='f47931d-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/service/GlucoseAlarmReceiver.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/service/GlucoseForegroundService.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/widget/GlucoseWidgetProvider.kt [Modified]
-- gradle/libs.versions.toml [Modified]
 </details>
 
 
