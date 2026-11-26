@@ -1,5 +1,33 @@
 # Changelog
 
+## 195db06 (Nov 26, 2026 23:03:25)
+explain MARD/Bias — antonio-bravo
+[detail](#195db06-details)
+
+<details id='195db06-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/components/SensorQualityHelpDialog.kt [Deleted]
+- app/src/main/java/com/tonio/libre2clock/ui/dashboard/DashboardScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/sensor/SensorLogsScreen.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+</details>
+
+
+---
+## 0f037b9 (Nov 26, 2026 21:50:43)
+Update changelog — github-actions[bot]
+[detail](#0f037b9-details)
+
+<details id='0f037b9-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 8314233 (Nov 26, 2026 22:50:28)
 restore VERSION_CODE yyyyMMddHH — antonio-bravo
 [detail](#8314233-details)
@@ -718,32 +746,6 @@ purge releases — antonio-bravo
 
 - .github/workflows/purgar-releases.yml [Deleted]
 - .idea/misc.xml [Modified]
-</details>
-
-
----
-## 6ad5428 (Nov 22, 2026 12:53:17)
-Update changelog — github-actions[bot]
-[detail](#6ad5428-details)
-
-<details id='6ad5428-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## b39324f (Nov 22, 2026 12:53:04)
-Update Gradle to v9.9.2 (#79)
-
-Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
-[detail](#b39324f-details)
-
-<details id='b39324f-details'>
-<summary>Changed files</summary>
-
-- gradle/wrapper/gradle-wrapper.properties [Modified]
 </details>
 
 
