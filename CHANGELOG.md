@@ -1,5 +1,31 @@
 # Changelog
 
+## cbe4145 (Nov 26, 2026 09:56:47)
+Merge pull request #78 from antonio-bravo/renovate/composebom
+
+Update dependency androidx.compose:compose-bom to v2026.11.01 — antonio-bravo
+[detail](#cbe4145-details)
+
+<details id='cbe4145-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## c893a31 (Nov 26, 2026 08:56:34)
+Update changelog — github-actions[bot]
+[detail](#c893a31-details)
+
+<details id='c893a31-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 71cea1c (Nov 26, 2026 09:56:21)
 Merge pull request #81 from antonio-bravo/renovate/actions-checkout-7.x
 
@@ -10,6 +36,18 @@ Update actions/checkout action to v7 — antonio-bravo
 <summary>Changed files</summary>
 
 - .github/workflows/purgar-releases.yml [Modified]
+</details>
+
+
+---
+## f0582cd (Nov 26, 2026 04:29:40)
+Update dependency androidx.compose:compose-bom to v2026.11.01 — renovate[bot]
+[detail](#f0582cd-details)
+
+<details id='f0582cd-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
 </details>
 
 
@@ -599,45 +637,6 @@ Update dependency com.google.gms.google-services to v4.6.0 — antonio-bravo
 [detail](#175a502-details)
 
 <details id='175a502-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 699be2a (Nov 11, 2026 21:22:27)
-Log Cloud Authentication — antonio-bravo
-[detail](#699be2a-details)
-
-<details id='699be2a-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/sync/AuthManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-</details>
-
-
----
-## 4c4d76c (Nov 11, 2026 19:32:19)
-Update dependency com.google.gms.google-services to v4.6.0 — renovate[bot]
-[detail](#4c4d76c-details)
-
-<details id='4c4d76c-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## bc76b3a (Nov 11, 2026 19:32:12)
-Update dependency com.google.firebase:firebase-bom to v35.2.0 — renovate[bot]
-[detail](#bc76b3a-details)
-
-<details id='bc76b3a-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
