@@ -33,6 +33,7 @@ fun SettingsCalibrationScreen(
     val autoAdjustEnabled by viewModel.autoAdjustEnabled.collectAsStateWithLifecycle()
     val autoRangeOffsetMode by viewModel.autoRangeOffsetMode.collectAsStateWithLifecycle()
     val isUnifiedSmartCalibrationEnabled by viewModel.isUnifiedSmartCalibrationEnabled.collectAsStateWithLifecycle()
+    val minSensorSamplesForCalibration by viewModel.minSensorSamplesForCalibration.collectAsStateWithLifecycle()
     val targetGlucoseLow by viewModel.targetGlucoseLow.collectAsStateWithLifecycle()
     val targetGlucoseHigh by viewModel.targetGlucoseHigh.collectAsStateWithLifecycle()
     val rangeInsights by viewModel.rangeOffsetInsights.collectAsStateWithLifecycle()
@@ -148,6 +149,13 @@ fun SettingsCalibrationScreen(
 
             if (showAdvancedOptions) {
                 item {
+                    MinSensorSamplesSection(
+                        samples = minSensorSamplesForCalibration,
+                        onSamplesChange = viewModel::updateMinSensorSamplesForCalibration
+                    )
+                }
+
+                item {
                     GlobalOffsetSection(
                         offset = offset,
                         autoAdjustEnabled = autoAdjustEnabled,
@@ -249,6 +257,40 @@ private fun UnifiedSmartCalibrationSection(
                 text = stringResource(R.string.settings_unified_smart_calibration_desc),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Suppress("DEPRECATION")
+@Composable
+private fun MinSensorSamplesSection(
+    samples: Int,
+    onSamplesChange: (Int) -> Unit
+) {
+    SettingsSection(title = stringResource(R.string.settings_min_sensor_samples_title)) {
+        Text(
+            text = stringResource(R.string.settings_min_sensor_samples_desc, samples),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Slider(
+                value = samples.toFloat(),
+                onValueChange = { onSamplesChange(it.toInt().coerceIn(1, 10)) },
+                valueRange = 1f..10f,
+                steps = 8,
+                modifier = Modifier.weight(1f)
+            )
+            Text(
+                text = "$samples",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
             )
         }
     }

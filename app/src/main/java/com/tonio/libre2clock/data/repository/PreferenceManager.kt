@@ -137,6 +137,7 @@ class PreferenceManager(private val context: Context) {
     private val CLOUD_SYNC_LAST_SUCCESS_AT_KEY = longPreferencesKey("cloud_sync_last_success_at")
     private val SETTINGS_UPDATED_AT_KEY = longPreferencesKey("settings_updated_at")
     private val PREDICTIVE_ALARMS_ENABLED_KEY = booleanPreferencesKey("predictive_alarms_enabled")
+    private val MIN_SENSOR_SAMPLES_CALIBRATION_KEY = intPreferencesKey("min_sensor_samples_calibration")
     private val GLUCOSE_SOURCE_PROVIDER_KEY = stringPreferencesKey("glucose_source_provider")
     private val DEXCOM_SERVER_REGION_KEY = stringPreferencesKey("dexcom_server_region")
     private val DEXCOM_ACCOUNT_NAME_KEY = stringPreferencesKey("dexcom_account_name")
@@ -204,6 +205,7 @@ class PreferenceManager(private val context: Context) {
         }
 
     val autoAdjustEnabled: Flow<Boolean> = context.dataStore.data.map { it[AUTO_ADJUST_ENABLED_KEY] ?: false }.distinctUntilChanged()
+    val minSensorSamplesForCalibration: Flow<Int> = context.dataStore.data.map { (it[MIN_SENSOR_SAMPLES_CALIBRATION_KEY] ?: 5).coerceIn(1, 10) }.distinctUntilChanged()
 
     val autoRangeOffsetMode: Flow<AutoRangeOffsetMode> = context.dataStore.data.map { prefs ->
         val persisted = prefs[AUTO_RANGE_OFFSET_MODE_KEY]
@@ -564,6 +566,13 @@ class PreferenceManager(private val context: Context) {
         context.dataStore.edit { preferences ->
             preferences[AUTO_RANGE_OFFSET_MODE_KEY] = mode.name
             preferences[AUTO_RANGE_OFFSETS_ENABLED_KEY] = mode != AutoRangeOffsetMode.OFF
+        }
+        updateBackupPayload()
+    }
+
+    suspend fun saveMinSensorSamplesForCalibration(samples: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[MIN_SENSOR_SAMPLES_CALIBRATION_KEY] = samples.coerceIn(1, 10)
         }
         updateBackupPayload()
     }

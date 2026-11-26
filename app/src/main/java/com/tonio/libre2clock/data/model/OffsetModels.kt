@@ -32,7 +32,7 @@ data class RangeOffsetInsight(
     val max: Int?,
     val sampleCount: Int,
     val suggestedOffset: Int,
-    val suggestedPercentage: Int,
+    val suggestedPercentage: Double,
     val currentMae: Double,
     val suggestedMae: Double,
     val currentDeviationPct: Double,

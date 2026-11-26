@@ -28,6 +28,7 @@ import com.tonio.libre2clock.data.repository.GlucoseRepository
 import com.tonio.libre2clock.data.repository.PreferenceManager
 import com.tonio.libre2clock.data.sync.CloudSyncManager
 import com.tonio.libre2clock.data.sync.RemoteConfigManager
+import kotlin.math.roundToInt
 import com.tonio.libre2clock.di.AppContainer
 import com.tonio.libre2clock.R
 import com.tonio.libre2clock.util.EmergencyAlertDispatcher
@@ -121,6 +122,7 @@ class SettingsViewModel(
     val glucoseOffsetRanges = preferenceManager.glucoseOffsetRanges.stateInDefault(emptyList())
     val autoAdjustEnabled = preferenceManager.autoAdjustEnabled.stateInDefault(false)
     val autoRangeOffsetMode = preferenceManager.autoRangeOffsetMode.stateInDefault(AutoRangeOffsetMode.OFF)
+    val minSensorSamplesForCalibration = preferenceManager.minSensorSamplesForCalibration.stateInDefault(5)
 
     val isUnifiedSmartCalibrationEnabled: StateFlow<Boolean> = combine(
         autoAdjustEnabled,
@@ -248,7 +250,8 @@ class SettingsViewModel(
         val ranges: List<GlucoseOffsetRange>,
         val capillaries: List<CapillaryMeasurement>,
         val activeSensorSn: String?,
-        val retentionDays: Int
+        val retentionDays: Int,
+        val minSensorSamples: Int
     )
 
     private data class RangePoint(
@@ -261,17 +264,18 @@ class SettingsViewModel(
         preferenceManager.glucoseOffsetRanges,
         this.capillaryReadings,
         preferenceManager.activeSensorSerialNumber,
-        preferenceManager.historyRetentionDays
-    ) { ranges, capillaries, activeSensorSn, retentionDays ->
-        RangeInsightsInput(ranges, capillaries, activeSensorSn, retentionDays)
-    }.map { (ranges, capillaries, activeSensorSn, retentionDays) ->
-        val signature = SettingsSectionCacheRepository.buildRangeInsightsSignature(ranges, capillaries, activeSensorSn)
+        preferenceManager.historyRetentionDays,
+        preferenceManager.minSensorSamplesForCalibration
+    ) { ranges, capillaries, activeSensorSn, retentionDays, minSamples ->
+        RangeInsightsInput(ranges, capillaries, activeSensorSn, retentionDays, minSamples)
+    }.map { (ranges, capillaries, activeSensorSn, retentionDays, minSamples) ->
+        val signature = SettingsSectionCacheRepository.buildRangeInsightsSignature(ranges, capillaries, activeSensorSn) + ";min=$minSamples"
         settingsCache.getOrComputeRangeInsights(
             signature = signature,
             retentionDays = retentionDays
         ) {
             ranges.mapNotNull { range ->
-                val estimate = GlucoseProcessor.estimateOffsetsForRange(range, capillaries, activeSensorSn) ?: return@mapNotNull null
+                val estimate = GlucoseProcessor.estimateOffsetsForRange(range, capillaries, activeSensorSn, minSamples) ?: return@mapNotNull null
                 
                 val points = capillaries.mapNotNull { reading ->
                     val sensor = reading.sensorValue ?: return@mapNotNull null
@@ -310,12 +314,12 @@ class SettingsViewModel(
                     val absDiff = abs(s - c)
                     sumAbsDiff += absDiff
 
-                    if (c > 0) {
+                    if (c > 0 && s > 0) {
                         sumCurrentDevPct += (absDiff / c) * 100.0
-                        sumSignedRawBias += ((s - c) / c) * 100.0
+                        sumSignedRawBias += ((c - s) / s) * 100.0
 
                         if (activeSensorSn != null && pt.sensorSn == activeSensorSn) {
-                            currentSensorSignedRawBias += ((s - c) / c) * 100.0
+                            currentSensorSignedRawBias += ((c - s) / s) * 100.0
                             currentSensorCount++
                         }
                         
@@ -357,6 +361,7 @@ class SettingsViewModel(
     fun updateOffset(offset: Int) = launchSave { preferenceManager.saveGlucoseOffset(offset) }
     fun updateAutoAdjustEnabled(enabled: Boolean) = launchSave { preferenceManager.saveAutoAdjustEnabled(enabled) }
     fun updateAutoRangeOffsetMode(mode: AutoRangeOffsetMode) = launchSave { preferenceManager.saveAutoRangeOffsetMode(mode) }
+    fun updateMinSensorSamplesForCalibration(samples: Int) = launchSave { preferenceManager.saveMinSensorSamplesForCalibration(samples) }
     fun toggleUnifiedSmartCalibration(enabled: Boolean) = launchSave {
         if (enabled) {
             preferenceManager.saveAutoRangeOffsetMode(AutoRangeOffsetMode.BY_RANGE)
@@ -1026,7 +1031,7 @@ class SettingsViewModel(
 
             val updated = glucoseOffsetRanges.value.map { range ->
                 insightsByKey[insightKey(range.min, range.max)]?.let { insight ->
-                    range.copy(offset = insight.suggestedOffset, percentage = insight.suggestedPercentage)
+                    range.copy(offset = insight.suggestedOffset, percentage = insight.suggestedPercentage.roundToInt())
                 } ?: range
             }
             preferenceManager.saveGlucoseOffsetRanges(updated)

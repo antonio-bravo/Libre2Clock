@@ -111,8 +111,8 @@ class ExampleUnitTest {
         val estimateActive = GlucoseProcessor.estimateOffsetsForRange(range, capillaryReadings, activeSensorSn = "SN-002")
         assertEquals(1, estimateActive?.sampleCount)
         assertEquals(true, estimateActive?.isSensorSpecific)
-        // Ponderado suave porcentual con 1 muestra (35% SN-002 [+30%] + 65% promedio histórico [+20%]): 0.35*30 + 0.65*20 = 23.5 -> 24%
-        assertEquals(24, estimateActive?.percentage)
+        // Con umbral de 5 muestras y 1 muestra obtenida (20% SN-002 [+30%] + 80% promedio histórico [+20%]): 0.20*30 + 0.80*20 = 22.0%
+        assertEquals(22.0, estimateActive?.percentage ?: 0.0, 0.1)
     }
 
     @Test
@@ -126,7 +126,7 @@ class ExampleUnitTest {
         val estimateFallback = GlucoseProcessor.estimateOffsetsForRange(range, capillaryReadings, activeSensorSn = "SN-003")
         assertEquals(2, estimateFallback?.sampleCount)
         assertEquals(false, estimateFallback?.isSensorSpecific)
-        assertEquals(20, estimateFallback?.percentage)
+        assertEquals(20.0, estimateFallback?.percentage ?: 0.0, 0.1)
     }
 
     @Test
@@ -156,8 +156,35 @@ class ExampleUnitTest {
             activeSensorSn = "SN-NEW"
         )
 
-        // Verifica ajuste proporcional porcentual escalado correctamente (~161 mg/dL)
-        assertEquals(161, calibrated.calibratedValue)
+        // Verifica ajuste proporcional porcentual de precisión continua (~162 mg/dL)
+        assertEquals(162, calibrated.calibratedValue)
+    }
+
+    @Test
+    fun whenActiveSensorReachesMinSamplesThresholdItUses100PercentActiveSensorData() {
+        val range = GlucoseOffsetRange(min = 70, max = 180)
+        val capillaryReadings = listOf(
+            // 5 pruebas para el sensor activo SN-NEW (desviación +10%)
+            CapillaryMeasurement(value = 110, timestamp = "2024-01-01T10:00", sensorValue = 100, sensorSerialNumber = "SN-NEW"),
+            CapillaryMeasurement(value = 110, timestamp = "2024-01-01T11:00", sensorValue = 100, sensorSerialNumber = "SN-NEW"),
+            CapillaryMeasurement(value = 110, timestamp = "2024-01-01T12:00", sensorValue = 100, sensorSerialNumber = "SN-NEW"),
+            CapillaryMeasurement(value = 110, timestamp = "2024-01-01T13:00", sensorValue = 100, sensorSerialNumber = "SN-NEW"),
+            CapillaryMeasurement(value = 110, timestamp = "2024-01-01T14:00", sensorValue = 100, sensorSerialNumber = "SN-NEW"),
+            // Histórico viejo con desviación muy diferente (+50%)
+            CapillaryMeasurement(value = 150, timestamp = "2023-12-01T10:00", sensorValue = 100, sensorSerialNumber = "SN-OLD")
+        )
+
+        // Al alcanzar las 5 muestras necesarias, debe usar 100% los datos del sensor activo (+10.0%) e ignorar totalmente el histórico
+        val estimate = GlucoseProcessor.estimateOffsetsForRange(
+            range = range,
+            capillaryReadings = capillaryReadings,
+            activeSensorSn = "SN-NEW",
+            minSensorSamples = 5
+        )
+
+        assertEquals(5, estimate?.sampleCount)
+        assertEquals(true, estimate?.isSensorSpecific)
+        assertEquals(10.0, estimate?.percentage ?: 0.0, 0.01)
     }
 
     @Test

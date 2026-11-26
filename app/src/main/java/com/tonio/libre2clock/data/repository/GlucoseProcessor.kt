@@ -91,8 +91,15 @@ object GlucoseProcessor {
         context: CalculationContext? = null,
         activeSensorSn: String? = null
     ): Int {
-        // Búsqueda lineal está bien aquí porque userRanges suele ser muy pequeño (< 10 elementos)
-        val matchingRange = userRanges.firstOrNull { range ->
+        val activeRanges = if (userRanges.isEmpty()) {
+            listOf(
+                GlucoseOffsetRange(min = 0, max = 70),
+                GlucoseOffsetRange(min = 70, max = 180),
+                GlucoseOffsetRange(min = 180, max = null)
+            )
+        } else userRanges
+
+        val matchingRange = activeRanges.firstOrNull { range ->
             rawValue >= range.min && (range.max == null || rawValue < range.max)
         }
 
@@ -222,7 +229,7 @@ object GlucoseProcessor {
 
     data class RangeOffsetEstimate(
         val offset: Int,
-        val percentage: Int,
+        val percentage: Double,
         val sampleCount: Int,
         val isSensorSpecific: Boolean = false
     )
@@ -230,7 +237,8 @@ object GlucoseProcessor {
     fun estimateOffsetsForRange(
         range: GlucoseOffsetRange,
         capillaryReadings: List<CapillaryMeasurement>,
-        activeSensorSn: String? = null
+        activeSensorSn: String? = null,
+        minSensorSamples: Int = 5
     ): RangeOffsetEstimate? {
         val fallbackEstimate = estimateOffsetsInternal(capillaryReadings) { sensor ->
             sensor >= range.min && (range.max == null || sensor < range.max)
@@ -244,19 +252,19 @@ object GlucoseProcessor {
 
             if (sensorEstimate != null && sensorEstimate.sampleCount > 0) {
                 val n = sensorEstimate.sampleCount
-                // Si no hay promedio histórico o si ya tenemos 3 o más muestras del sensor actual, usar 100% el sensor actual
-                if (fallbackEstimate == null || n >= 3) {
+                val threshold = minSensorSamples.coerceAtLeast(1)
+
+                // Si no hay promedio histórico o si ya alcanzamos el umbral configurado (ej. >= 5), usar 100% el sensor actual
+                if (fallbackEstimate == null || n >= threshold) {
                     return sensorEstimate.copy(isSensorSpecific = true)
                 }
 
-                // Ponderación suavizada para evitar que 1 sola muestra con ruido distorsione el valor:
-                // Con 1 muestra: 35% sensor actual, 65% promedio histórico acumulado
-                // Con 2 muestras: 70% sensor actual, 30% promedio histórico acumulado
-                val weightSensor = if (n == 1) 0.35 else 0.70
+                // Transición progresiva hasta alcanzar minSensorSamples (ej. con min=5: 1=20%, 2=40%, 3=60%, 4=80%, 5+=100%)
+                val weightSensor = (n.toDouble() / threshold.toDouble()).coerceIn(0.0, 1.0)
                 val weightFallback = 1.0 - weightSensor
 
                 val blendedOffset = (sensorEstimate.offset * weightSensor + fallbackEstimate.offset * weightFallback).roundToInt()
-                val blendedPct = (sensorEstimate.percentage * weightSensor + fallbackEstimate.percentage * weightFallback).roundToInt()
+                val blendedPct = sensorEstimate.percentage * weightSensor + fallbackEstimate.percentage * weightFallback
 
                 return RangeOffsetEstimate(
                     offset = blendedOffset,
@@ -298,7 +306,7 @@ object GlucoseProcessor {
 
         return RangeOffsetEstimate(
             offset = 0,
-            percentage = avgPercentage.roundToInt(),
+            percentage = avgPercentage,
             sampleCount = count
         )
     }
