@@ -1,6 +1,7 @@
 package com.tonio.libre2clock.ui.settings
 
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
@@ -13,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -37,6 +39,20 @@ fun SettingsNightscoutScreen(
     val nightscoutUseCalibrated by viewModel.nightscoutUseCalibrated.collectAsStateWithLifecycle()
     val xdripBroadcastEnabled by viewModel.xdripBroadcastEnabled.collectAsStateWithLifecycle()
     val isTestingNightscout by viewModel.isTestingNightscout.collectAsStateWithLifecycle()
+    val healthConnectEnabled by viewModel.healthConnectEnabled.collectAsStateWithLifecycle()
+    val hasHealthConnectPerms by viewModel.hasHealthConnectPermissions.collectAsStateWithLifecycle()
+    val healthConnectSteps24h by viewModel.healthConnectSteps24h.collectAsStateWithLifecycle()
+    val isHealthConnectAvailable = remember { com.tonio.libre2clock.util.HealthConnectManager.isAvailable(context) }
+
+    val hcPermissionLauncher = rememberLauncherForActivityResult(
+        contract = androidx.health.connect.client.PermissionController.createRequestPermissionResultContract()
+    ) {
+        viewModel.refreshHealthConnectStatus()
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.refreshHealthConnectStatus()
+    }
 
     var urlInput by remember(nightscoutUrl) { mutableStateOf(nightscoutUrl) }
     var secretInput by remember(nightscoutApiSecret) { mutableStateOf(nightscoutApiSecret) }
@@ -167,6 +183,22 @@ fun SettingsNightscoutScreen(
                                 Text(stringResource(R.string.nightscout_test_button))
                             }
                         }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        OutlinedButton(
+                            onClick = {
+                                viewModel.syncNightscoutTreatments { _, message ->
+                                    Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                                }
+                            },
+                            enabled = !isTestingNightscout && urlInput.isNotBlank(),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(stringResource(R.string.nightscout_sync_treatments_button))
+                        }
                     }
                 }
             }
@@ -181,6 +213,73 @@ fun SettingsNightscoutScreen(
                         onCheckedChange = viewModel::setXdripBroadcastEnabled,
                         icon = Icons.Default.Share
                     )
+                }
+            }
+
+            // --- Health Connect (Android) ---
+            item(key = "health_connect_section") {
+                SettingsSection(title = stringResource(R.string.health_connect_title)) {
+                    Text(
+                        text = stringResource(R.string.health_connect_desc),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    if (!isHealthConnectAvailable) {
+                        Text(
+                            text = stringResource(R.string.health_connect_unavailable),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    } else {
+                        NightscoutToggleOption(
+                            title = stringResource(R.string.health_connect_enable),
+                            description = if (hasHealthConnectPerms) {
+                                stringResource(R.string.health_connect_permissions_ok)
+                            } else {
+                                stringResource(R.string.health_connect_permissions_missing)
+                            },
+                            checked = healthConnectEnabled,
+                            onCheckedChange = viewModel::setHealthConnectEnabled,
+                            icon = Icons.Default.Favorite
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        if (!hasHealthConnectPerms) {
+                            OutlinedButton(
+                                onClick = {
+                                    hcPermissionLauncher.launch(com.tonio.libre2clock.util.HealthConnectManager.REQUIRED_PERMISSIONS)
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(stringResource(R.string.health_connect_grant_permissions))
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+
+                        OutlinedButton(
+                            onClick = {
+                                viewModel.syncToHealthConnectNow { _, message ->
+                                    Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                                }
+                            },
+                            enabled = !isTestingNightscout,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(stringResource(R.string.health_connect_sync_now))
+                        }
+
+                        healthConnectSteps24h?.let { steps ->
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = pluralStringResource(R.plurals.health_connect_steps_24h, steps.toInt(), steps.toInt()),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
                 }
             }
 

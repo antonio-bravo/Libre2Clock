@@ -29,17 +29,20 @@ class GlucoseRepositoryImpl(
 ) : GlucoseRepository {
 
     private val appContext = context.applicationContext
-    private val historyDb = GlucoseHistoryDatabaseHelper(appContext)
+    private val historyDb = com.tonio.libre2clock.di.AppContainer.provideHistoryDbHelper(appContext)
     private val credentialStore = SecureCredentialStore(appContext)
     private val historicalState = MutableStateFlow<List<GlucoseMeasurement>>(emptyList())
     private val _dataVersion = MutableStateFlow(0L)
     override val dataVersion: Flow<Long> = _dataVersion.asStateFlow()
 
-    private val historicalWindowCache = object : LinkedHashMap<String, List<GlucoseMeasurement>>(16, 0.75f, true) {
-        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, List<GlucoseMeasurement>>): Boolean {
-            return size > MAX_WINDOW_CACHE_ENTRIES
-        }
-    }
+    private val historicalWindowCache: MutableMap<String, List<GlucoseMeasurement>> =
+        Collections.synchronizedMap(
+            object : LinkedHashMap<String, List<GlucoseMeasurement>>(16, 0.75f, true) {
+                override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, List<GlucoseMeasurement>>): Boolean {
+                    return size > MAX_WINDOW_CACHE_ENTRIES
+                }
+            }
+        )
 
     override val currentGlucose: Flow<GlucoseMeasurement?> = historicalState
         .map { it.firstOrNull() }
@@ -389,12 +392,9 @@ class GlucoseRepositoryImpl(
     }
 
     suspend fun initialize() {
-        LibreService.init(
-            appContext,
-            preferenceManager,
-            credentialStore,
-            com.tonio.libre2clock.di.AppContainer.provideEventLogManager(appContext)
-        )
+        val logManager = com.tonio.libre2clock.di.AppContainer.provideEventLogManager(appContext)
+        LibreService.ensureInitialized(preferenceManager, credentialStore, logManager)
+        com.tonio.libre2clock.data.api.DexcomService.ensureInitialized(preferenceManager, credentialStore, logManager)
         initializeLocalHistoryIfNeeded()
 
         preferenceManager.requestHistoryCloudBackupIfDue()

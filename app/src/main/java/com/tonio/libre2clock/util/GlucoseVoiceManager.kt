@@ -51,9 +51,10 @@ class GlucoseVoiceManager private constructor(context: Context) : TextToSpeech.O
         measurement: GlucoseMeasurement,
         rapidIob: Double = 0.0,
         slowIob: Double = 0.0,
-        isDetailed: Boolean = false
+        isDetailed: Boolean = false,
+        glucoseUnit: com.tonio.libre2clock.data.model.GlucoseUnit = com.tonio.libre2clock.data.model.GlucoseUnit.MG_DL
     ) {
-        val textToSpeak = formatGlucosePhrase(measurement, rapidIob, slowIob, isDetailed)
+        val textToSpeak = formatGlucosePhrase(measurement, rapidIob, slowIob, isDetailed, glucoseUnit)
         speakText(textToSpeak)
     }
 
@@ -80,11 +81,14 @@ class GlucoseVoiceManager private constructor(context: Context) : TextToSpeech.O
         measurement: GlucoseMeasurement,
         rapidIob: Double = 0.0,
         slowIob: Double = 0.0,
-        isDetailed: Boolean = false
+        isDetailed: Boolean = false,
+        glucoseUnit: com.tonio.libre2clock.data.model.GlucoseUnit = com.tonio.libre2clock.data.model.GlucoseUnit.MG_DL
     ): String {
         val isSpanish = Locale.getDefault().language.equals("es", ignoreCase = true)
         val rawVal = measurement.value
         val calVal = if (measurement.calibratedValue > 0) measurement.calibratedValue else rawVal
+        val rawStr = GlucoseUnitConverter.formatValue(rawVal, glucoseUnit)
+        val calStr = GlucoseUnitConverter.formatValue(calVal, glucoseUnit)
 
         val trendText = when (measurement.trendArrow) {
             1 -> if (isSpanish) "bajando rápidamente" else "falling rapidly"
@@ -96,11 +100,11 @@ class GlucoseVoiceManager private constructor(context: Context) : TextToSpeech.O
         }
 
         val glucosePart = if (rawVal != calVal) {
-            if (isSpanish) "Glucosa $calVal, original $rawVal, $trendText"
-            else "Glucose $calVal, raw $rawVal, $trendText"
+            if (isSpanish) "Glucosa $calStr, original $rawStr, $trendText"
+            else "Glucose $calStr, raw $rawStr, $trendText"
         } else {
-            if (isSpanish) "Glucosa $calVal, $trendText"
-            else "Glucose $calVal, $trendText"
+            if (isSpanish) "Glucosa $calStr, $trendText"
+            else "Glucose $calStr, $trendText"
         }
 
         return if (isDetailed && (rapidIob > 0.0 || slowIob > 0.0)) {

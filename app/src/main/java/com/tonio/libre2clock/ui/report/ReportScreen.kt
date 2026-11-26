@@ -193,6 +193,49 @@ fun ReportScreen(
 
                 LayoutSelector(selected = selectedLayout, onSelect = viewModel::setLayout)
 
+                val exportChooserTitle = stringResource(R.string.report_export_chooser)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        enabled = !isGenerating && metrics != null,
+                        onClick = {
+                            scope.launch {
+                                viewModel.setGenerating(true)
+                                val file = viewModel.exportClinicalFile(context, isJson = false)
+                                viewModel.setGenerating(false)
+                                if (file != null) {
+                                    shareClinicalFile(context, file, "text/csv", exportChooserTitle)
+                                } else {
+                                    Toast.makeText(context, reportFailedMsg, Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(stringResource(R.string.report_export_csv))
+                    }
+                    OutlinedButton(
+                        enabled = !isGenerating && metrics != null,
+                        onClick = {
+                            scope.launch {
+                                viewModel.setGenerating(true)
+                                val file = viewModel.exportClinicalFile(context, isJson = true)
+                                viewModel.setGenerating(false)
+                                if (file != null) {
+                                    shareClinicalFile(context, file, "application/json", exportChooserTitle)
+                                } else {
+                                    Toast.makeText(context, reportFailedMsg, Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(stringResource(R.string.report_export_json))
+                    }
+                }
+
                 metrics?.let { m ->
                     GlucoseStatsSection(m)
                     CvVariabilityCard(
@@ -383,6 +426,7 @@ private fun GlucoseStatsSection(metrics: ReportMetrics) {
             Spacer(modifier = Modifier.height(8.dp))
             MetricRow(stringResource(R.string.report_avg_glucose), "%.0f mg/dL".format(metrics.avgGlucose))
             MetricRow(stringResource(R.string.report_gmi), "%.1f %%".format(metrics.gmi))
+            MetricRow(stringResource(R.string.report_gri), java.lang.String.format(java.util.Locale.US, "%.0f / 100 (Zona %s)", metrics.gri, metrics.griZone))
             MetricRow(stringResource(R.string.report_variability_cv), "%.1f %%".format(metrics.cv))
             MetricRow(stringResource(R.string.report_std_dev), "%.1f mg/dL".format(metrics.stdDev))
             MetricRow(stringResource(R.string.report_active_sensor), "%.1f %%".format(metrics.activeSensorPercent))
@@ -392,6 +436,43 @@ private fun GlucoseStatsSection(metrics: ReportMetrics) {
 
             Spacer(modifier = Modifier.height(16.dp))
             ClinicalTargetsSection(metrics.targetsStatus)
+
+            Spacer(modifier = Modifier.height(16.dp))
+            GlycemicEpisodesSection(metrics.episodes)
+        }
+    }
+}
+
+@Composable
+private fun GlycemicEpisodesSection(episodes: GlycemicEpisodesSummary) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(
+            text = stringResource(R.string.report_episodes_title),
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Bold
+        )
+        MetricRow(
+            stringResource(R.string.report_episodes_hypo_l1),
+            "${episodes.hypoLevel1Count}" + if (episodes.hypoLevel1Count > 0) " (media %.0f min)".format(java.util.Locale.US, episodes.hypoLevel1AvgMinutes) else ""
+        )
+        MetricRow(
+            stringResource(R.string.report_episodes_hypo_l2),
+            "${episodes.hypoLevel2Count}" + if (episodes.hypoLevel2Count > 0) " (media %.0f min)".format(java.util.Locale.US, episodes.hypoLevel2AvgMinutes) else ""
+        )
+        MetricRow(
+            stringResource(R.string.report_episodes_hyper),
+            "${episodes.hyperCount}" + if (episodes.hyperCount > 0) " (media %.0f min)".format(java.util.Locale.US, episodes.hyperAvgMinutes) else ""
+        )
+        MetricRow(
+            stringResource(R.string.report_episodes_hyper_severe),
+            "${episodes.hyperSevereCount}"
+        )
+        episodes.mostFrequentHypoHour?.let { hr ->
+            Text(
+                text = stringResource(R.string.report_episodes_typical_hour, hr),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }
@@ -679,6 +760,16 @@ private fun CvPeriodCell(
             }
         }
     }
+}
+
+private fun shareClinicalFile(context: android.content.Context, file: File, mimeType: String, chooserTitle: String) {
+    val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+    val intent = Intent(Intent.ACTION_SEND).apply {
+        type = mimeType
+        putExtra(Intent.EXTRA_STREAM, uri)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    context.startActivity(Intent.createChooser(intent, chooserTitle))
 }
 
 private fun sharePdf(context: android.content.Context, file: File, chooserTitle: String) {

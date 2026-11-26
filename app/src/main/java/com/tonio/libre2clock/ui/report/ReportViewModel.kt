@@ -45,6 +45,18 @@ data class AgpTargetsStatus(
 )
 
 @Serializable
+data class GlycemicEpisodesSummary(
+    val hypoLevel1Count: Int = 0,
+    val hypoLevel1AvgMinutes: Double = 0.0,
+    val hypoLevel2Count: Int = 0,
+    val hypoLevel2AvgMinutes: Double = 0.0,
+    val hyperCount: Int = 0,
+    val hyperAvgMinutes: Double = 0.0,
+    val hyperSevereCount: Int = 0,
+    val mostFrequentHypoHour: Int? = null
+)
+
+@Serializable
 data class ReportMetrics(
     val avgGlucose: Double,
     val gmi: Double,
@@ -64,7 +76,10 @@ data class ReportMetrics(
     val readingsCount: Int,
     val overnightAvg: Double = 0.0,
     val overnightTir: Double = 0.0,
-    val overnightTbr: Double = 0.0
+    val overnightTbr: Double = 0.0,
+    val gri: Double = 0.0,
+    val griZone: String = "A",
+    val episodes: GlycemicEpisodesSummary = GlycemicEpisodesSummary()
 )
 
 @Serializable
@@ -176,7 +191,7 @@ class ReportViewModel(
             glucose = input.glucose, doses = input.doses, offset = input.offset,
             ranges = input.ranges, autoAdjustEnabled = input.autoAdjust,
             capillaries = input.capillaries, autoRangeMode = params.autoRangeMode.name,
-            extraTag = "full_report:${params.start}:${params.end}:${params.activeSensorSn}"
+            extraTag = "full_report_gri_v1:${params.start}:${params.end}:${params.activeSensorSn}"
         )
 
         reportCache.getOrComputeFullReport(
@@ -273,6 +288,31 @@ class ReportViewModel(
 
     fun setShowPdfViewer(show: Boolean) {
         _showPdfViewer.value = show
+    }
+
+    suspend fun exportClinicalFile(context: Context, isJson: Boolean): File? = kotlinx.coroutines.withContext(Dispatchers.IO) {
+        val (glucose, doses) = windowedData.first()
+        val capillaries = preferenceManager.capillaryReadings.first()
+        val sensorLogs = preferenceManager.sensorLogs.first()
+        val currentMetrics = reportData.value?.metrics
+        val content = if (isJson) {
+            com.tonio.libre2clock.util.ClinicalExporter.generateClinicalJson(
+                glucose = glucose,
+                doses = doses,
+                capillaries = capillaries,
+                sensorLogs = sensorLogs,
+                metrics = currentMetrics
+            )
+        } else {
+            com.tonio.libre2clock.util.ClinicalExporter.generateCsv(
+                glucose = glucose,
+                doses = doses,
+                capillaries = capillaries
+            )
+        }
+        val ext = if (isJson) "json" else "csv"
+        val fileName = "libre2clock_${_startDate.value}_${_endDate.value}.$ext"
+        com.tonio.libre2clock.util.ClinicalExporter.writeReportFile(context, fileName, content)
     }
 
     private data class ReportInput(

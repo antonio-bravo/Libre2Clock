@@ -143,6 +143,10 @@ object ReportCalculator {
         val overnightTir = if (nightCount > 0) (nightTir.toDouble() / nightCount) * 100.0 else 0.0
         val overnightTbr = if (nightCount > 0) (nightTbr.toDouble() / nightCount) * 100.0 else 0.0
 
+        val gri = calculateGri(tbrVLowPct, tbrLowPct, tarVHighPct, tarHighPct)
+        val griZone = getGriZone(gri)
+        val episodes = calculateGlycemicEpisodes(processed, useOffset, zone)
+
         return ReportMetrics(
             avgGlucose = avg,
             gmi = gmi,
@@ -162,8 +166,110 @@ object ReportCalculator {
             readingsCount = processed.size,
             overnightAvg = overnightAvg,
             overnightTir = overnightTir,
-            overnightTbr = overnightTbr
+            overnightTbr = overnightTbr,
+            gri = gri,
+            griZone = griZone,
+            episodes = episodes
         )
+    }
+
+    /**
+     * Glycemia Risk Index (Klonoff et al., 2022):
+     * GRI = (3.0 * HypoComponent) + (1.6 * HyperComponent), clamped to [0, 100].
+     */
+    fun calculateGri(tbrVLowPct: Double, tbrLowPct: Double, tarVHighPct: Double, tarHighPct: Double): Double {
+        val hypoComponent = tbrVLowPct + (0.8 * tbrLowPct)
+        val hyperComponent = tarVHighPct + (0.5 * tarHighPct)
+        return ((3.0 * hypoComponent) + (1.6 * hyperComponent)).coerceIn(0.0, 100.0)
+    }
+
+    fun getGriZone(gri: Double): String = when {
+        gri <= 20.0 -> "A"
+        gri <= 40.0 -> "B"
+        gri <= 60.0 -> "C"
+        gri <= 80.0 -> "D"
+        else -> "E"
+    }
+
+    fun calculateGlycemicEpisodes(
+        processed: List<ProcessedGlucose>,
+        useOffset: Boolean,
+        zone: ZoneId = ZoneId.systemDefault()
+    ): GlycemicEpisodesSummary {
+        if (processed.isEmpty()) return GlycemicEpisodesSummary()
+        val sorted = processed.sortedBy { it.instant }
+
+        val hypoL1 = detectEpisodes(sorted, useOffset) { it < 70.0 }
+        val hypoL2 = detectEpisodes(sorted, useOffset) { it < 54.0 }
+        val hyper = detectEpisodes(sorted, useOffset) { it > 180.0 }
+        val hyperSevere = detectEpisodes(sorted, useOffset) { it > 250.0 }
+
+        val mostFrequentHypoHour = hypoL1
+            .groupingBy { it.first.atZone(zone).hour }
+            .eachCount()
+            .maxByOrNull { it.value }
+            ?.key
+
+        return GlycemicEpisodesSummary(
+            hypoLevel1Count = hypoL1.size,
+            hypoLevel1AvgMinutes = if (hypoL1.isNotEmpty()) hypoL1.map { it.second }.average() else 0.0,
+            hypoLevel2Count = hypoL2.size,
+            hypoLevel2AvgMinutes = if (hypoL2.isNotEmpty()) hypoL2.map { it.second }.average() else 0.0,
+            hyperCount = hyper.size,
+            hyperAvgMinutes = if (hyper.isNotEmpty()) hyper.map { it.second }.average() else 0.0,
+            hyperSevereCount = hyperSevere.size,
+            mostFrequentHypoHour = mostFrequentHypoHour
+        )
+    }
+
+    private fun detectEpisodes(
+        sorted: List<ProcessedGlucose>,
+        useOffset: Boolean,
+        predicate: (Double) -> Boolean
+    ): List<Pair<Instant, Double>> {
+        val episodes = mutableListOf<Pair<Instant, Double>>()
+        var startInstant: Instant? = null
+        var lastInEpisodeInstant: Instant? = null
+        var readingsInEpisode = 0
+
+        fun closeIfValid() {
+            val start = startInstant
+            val end = lastInEpisodeInstant
+            if (start != null && end != null) {
+                val durationMin = java.time.Duration.between(start, end).toMinutes().toDouble()
+                if (durationMin >= 15.0 || readingsInEpisode >= 2) {
+                    episodes.add(start to durationMin.coerceAtLeast(15.0))
+                }
+            }
+            startInstant = null
+            lastInEpisodeInstant = null
+            readingsInEpisode = 0
+        }
+
+        for (pg in sorted) {
+            val v = if (useOffset) pg.calibratedValue else pg.rawValue
+            val matches = predicate(v)
+            val prevEnd = lastInEpisodeInstant
+            if (matches) {
+                if (startInstant == null) {
+                    startInstant = pg.instant
+                    lastInEpisodeInstant = pg.instant
+                    readingsInEpisode = 1
+                } else if (prevEnd != null && java.time.Duration.between(prevEnd, pg.instant).toMinutes() > 30L) {
+                    closeIfValid()
+                    startInstant = pg.instant
+                    lastInEpisodeInstant = pg.instant
+                    readingsInEpisode = 1
+                } else {
+                    lastInEpisodeInstant = pg.instant
+                    readingsInEpisode++
+                }
+            } else if (startInstant != null) {
+                closeIfValid()
+            }
+        }
+        closeIfValid()
+        return episodes
     }
 
     fun calculateAgp(

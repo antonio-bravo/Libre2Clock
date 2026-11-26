@@ -1,7 +1,3 @@
-import java.time.format.DateTimeFormatter
-import java.time.ZoneId
-import java.time.Instant
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -29,16 +25,16 @@ android {
     defaultConfig {
         applicationId = "com.tonio.libre2clock"
         minSdk = 28
+        //noinspection OldTargetApi
         targetSdk = 36
         
         val appVersion = project.findProperty("appVersion")?.toString() ?: "1.local"
         versionName = appVersion
-        
-        // Generate a versionCode from YYYYMMDDHH format (fits in Int)
-        val datePart = DateTimeFormatter.ofPattern("yyyyMMddHH")
-            .withZone(ZoneId.of("UTC"))
-            .format(Instant.now())
-        versionCode = datePart.toInt()
+
+        val appVersionCode = project.findProperty("appVersionCode")?.toString()?.toIntOrNull()
+            ?: System.getenv("VERSION_CODE")?.toIntOrNull()
+            ?: 1
+        versionCode = appVersionCode
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -146,7 +142,7 @@ dependencies {
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.converter.moshi)
-    implementation("com.squareup.retrofit2:converter-scalars:3.0.0")
+    implementation(libs.converter.scalars)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.core)
@@ -155,6 +151,7 @@ dependencies {
     implementation(libs.moshi.kotlin)
     implementation(libs.okhttp)
     implementation(libs.retrofit)
+    implementation(libs.androidx.health.connect)
     testImplementation(libs.androidx.core)
     testImplementation(libs.androidx.junit)
     testImplementation(libs.junit)

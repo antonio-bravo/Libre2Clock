@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tonio.libre2clock.R
+import com.tonio.libre2clock.data.model.BolusTimeProfile
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.InsulinDose
 import com.tonio.libre2clock.data.model.InsulinType
@@ -65,6 +66,7 @@ fun InsulinHubScreen(
     val useCalibratedForAlarms by viewModel.useCalibratedForAlarms.collectAsStateWithLifecycle()
     val deductIobForBolus by viewModel.deductIobForBolus.collectAsStateWithLifecycle()
     val isFollowerMode by viewModel.isFollowerMode.collectAsStateWithLifecycle()
+    val bolusTimeProfiles by viewModel.bolusTimeProfiles.collectAsStateWithLifecycle()
 
     var showAddDialog by remember { mutableStateOf(false) }
 
@@ -80,8 +82,20 @@ fun InsulinHubScreen(
     val calculatedTdi = remember(doses, tdiCalculationDays) { InsulinProcessor.calculateAverageDaily(doses, tdiCalculationDays) }
     val tdi = manualTdi ?: calculatedTdi
     val calculatedIsf = if (tdi > 0) isfRuleConstant.toDouble() / tdi else 0.0
-    val isf = manualIsf ?: calculatedIsf
-    val icRatio = if (tdi > 0) icRuleConstant.toDouble() / tdi else 0.0
+    val resolvedParams = remember(tdi, icRuleConstant, isfRuleConstant, manualIsf, targetGlucose, bolusTimeProfiles, nowTick) {
+        InsulinProcessor.resolveBolusParams(
+            tdi = tdi,
+            icConstant = icRuleConstant,
+            isfConstant = isfRuleConstant,
+            manualIsf = manualIsf,
+            defaultTargetGlucose = targetGlucose,
+            profiles = bolusTimeProfiles
+        )
+    }
+    val isf = resolvedParams.isf
+    val icRatio = resolvedParams.icRatio
+    val effectiveTargetGlucose = resolvedParams.targetGlucose
+    val icRatioOverride = icRatio.takeIf { it > 0.0 }
 
     // OPTIMIZACIÓN: Partición en una sola pasada en lugar de dos filtros separados
     val (rapidDoses, slowDoses) = remember(doses) {
@@ -100,7 +114,7 @@ fun InsulinHubScreen(
         }
     }
 
-    val (suggestedUnitsRaw, suggestedUnitsCal) = remember(currentGlucoseData, tdi, isf, targetGlucose, isBasalExpiringSoon, rapidIOB, deductIobForBolus) {
+    val (suggestedUnitsRaw, suggestedUnitsCal) = remember(currentGlucoseData, tdi, isf, effectiveTargetGlucose, icRatioOverride, isBasalExpiringSoon, rapidIOB, deductIobForBolus) {
         val rawG = currentGlucoseData?.value
         val calG = currentGlucoseData?.calibratedValue ?: rawG
 
@@ -108,26 +122,28 @@ fun InsulinHubScreen(
             InsulinProcessor.getSuggestedBolusDetailed(
                 carbs = 0.0,
                 currentGlucose = it,
-                targetGlucose = targetGlucose,
+                targetGlucose = effectiveTargetGlucose,
                 tdi = tdi,
                 icConstant = icRuleConstant,
                 isf = isf,
                 isBasalExpiringSoon = isBasalExpiringSoon,
                 iob = rapidIOB,
-                deductIob = deductIobForBolus
+                deductIob = deductIobForBolus,
+                icRatioOverride = icRatioOverride
             ).total
         }
         val calUnits = calG?.let {
             InsulinProcessor.getSuggestedBolusDetailed(
                 carbs = 0.0,
                 currentGlucose = it,
-                targetGlucose = targetGlucose,
+                targetGlucose = effectiveTargetGlucose,
                 tdi = tdi,
                 icConstant = icRuleConstant,
                 isf = isf,
                 isBasalExpiringSoon = isBasalExpiringSoon,
                 iob = rapidIOB,
-                deductIob = deductIobForBolus
+                deductIob = deductIobForBolus,
+                icRatioOverride = icRatioOverride
             ).total
         }
         rawUnits to calUnits
@@ -203,14 +219,16 @@ fun InsulinHubScreen(
                     manualTdi = manualTdi,
                     icConstant = icRuleConstant,
                     isfConstant = isfRuleConstant,
-                    targetGlucose = targetGlucose,
+                    targetGlucose = effectiveTargetGlucose,
                     currentGlucose = currentGlucoseData,
                     doses = doses,
                     rapidIOB = rapidIOB,
                     deductIobForBolus = deductIobForBolus,
                     viewModel = viewModel,
                     isBasalExpiringSoon = isBasalExpiringSoon,
-                    useCalibratedForAlarms = useCalibratedForAlarms
+                    useCalibratedForAlarms = useCalibratedForAlarms,
+                    icRatioOverride = icRatioOverride,
+                    activeProfileName = resolvedParams.activeProfileName
                 )
             }
             item { TodayStatsCard(todayRapid, todaySlow) }
@@ -250,7 +268,8 @@ fun InsulinHubScreen(
             isf = isf,
             tdi = tdi,
             icConstant = icRuleConstant,
-            targetGlucose = targetGlucose,
+            targetGlucose = effectiveTargetGlucose,
+            icRatioOverride = icRatioOverride,
             currentGlucose = currentGlucoseData,
             capillaryReadings = capillaryReadings,
             isBasalExpiringSoon = isBasalExpiringSoon,
@@ -348,7 +367,8 @@ fun BolusCalculatorCard(
     manualIsf: Double?, manualTdi: Double?, icConstant: Int, isfConstant: Int,
     targetGlucose: Int, currentGlucose: GlucoseMeasurement?, doses: List<InsulinDose>,
     rapidIOB: Double, deductIobForBolus: Boolean,
-    viewModel: SettingsViewModel, isBasalExpiringSoon: Boolean, useCalibratedForAlarms: Boolean
+    viewModel: SettingsViewModel, isBasalExpiringSoon: Boolean, useCalibratedForAlarms: Boolean,
+    icRatioOverride: Double? = null, activeProfileName: String? = null
 ) {
     var carbsText by remember { mutableStateOf("") }
     
@@ -362,16 +382,16 @@ fun BolusCalculatorCard(
     // OPTIMIZACIÓN: Derivación de estado en lugar de LaunchedEffect para el slider
     val carbsFloat = carbsText.toFloatOrNull() ?: 0f
 
-    val suggestedResults = remember(carbsText, glucoseText, tdi, isBasalExpiringSoon, isf, targetGlucose, icConstant, rapidIOB, deductIobForBolus) {
+    val suggestedResults = remember(carbsText, glucoseText, tdi, isBasalExpiringSoon, isf, targetGlucose, icConstant, icRatioOverride, rapidIOB, deductIobForBolus) {
         val carbs = carbsText.toDoubleOrNull() ?: 0.0
         val cleanText = glucoseText.replace(" ", "")
         val glucoseParts = cleanText.replace(")", "").split("(")
         val realG = glucoseParts.getOrNull(0)?.toIntOrNull() ?: 0
         val calG = glucoseParts.getOrNull(1)?.toIntOrNull() ?: realG
 
-        val breakdownReal = InsulinProcessor.getSuggestedBolusDetailed(carbs, realG, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon, rapidIOB, deductIobForBolus)
+        val breakdownReal = InsulinProcessor.getSuggestedBolusDetailed(carbs, realG, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon, rapidIOB, deductIobForBolus, icRatioOverride)
         val breakdownCal = if (calG == realG) breakdownReal else
-            InsulinProcessor.getSuggestedBolusDetailed(carbs, calG, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon, rapidIOB, deductIobForBolus)
+            InsulinProcessor.getSuggestedBolusDetailed(carbs, calG, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon, rapidIOB, deductIobForBolus, icRatioOverride)
 
         Triple(realG, calG, breakdownReal to breakdownCal)
     }
@@ -383,6 +403,15 @@ fun BolusCalculatorCard(
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(text = stringResource(R.string.calc_bolus_helper), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            if (!activeProfileName.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = stringResource(R.string.bolus_profiles_active_badge, activeProfileName),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
             Spacer(modifier = Modifier.height(16.dp))
             
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -524,6 +553,7 @@ fun BolusCalculatorCard(
                         tdi = tdi,
                         icConstant = icConstant,
                         targetGlucose = targetGlucose,
+                        icRatioOverride = icRatioOverride,
                         currentGlucose = currentGlucose,
                         capillaryReadings = capillaryReadings,
                         isBasalExpiringSoon = isBasalExpiringSoon,
@@ -810,8 +840,208 @@ fun AdvancedSettingsCard(
                     })
                 )
             }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), thickness = 0.5.dp)
+
+            val bolusTimeProfiles by viewModel.bolusTimeProfiles.collectAsStateWithLifecycle()
+            var editingProfile by remember { mutableStateOf<BolusTimeProfile?>(null) }
+            var showProfileDialog by remember { mutableStateOf(false) }
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = stringResource(R.string.bolus_profiles_title),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = stringResource(R.string.bolus_profiles_desc),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                )
+
+                if (bolusTimeProfiles.isEmpty()) {
+                    Text(
+                        text = stringResource(R.string.bolus_profile_empty),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    bolusTimeProfiles.forEach { profile ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "${profile.name.ifBlank { "${profile.startTime}–${profile.endTime}" }} (${profile.startTime}–${profile.endTime})",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    val details = buildList {
+                                        profile.icRatioOverride?.let { add("I:HC ${"%.1f".format(Locale.US, it)}") }
+                                        profile.isfOverride?.let { add("ISF ${"%.0f".format(Locale.US, it)}") }
+                                        profile.targetGlucoseOverride?.let { add("Obj $it") }
+                                    }.joinToString(" • ")
+                                    if (details.isNotEmpty()) {
+                                        Text(
+                                            text = details,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                                Switch(
+                                    checked = profile.isEnabled,
+                                    onCheckedChange = { enabled ->
+                                        viewModel.addOrUpdateBolusTimeProfile(profile.copy(isEnabled = enabled))
+                                    }
+                                )
+                                IconButton(onClick = {
+                                    editingProfile = profile
+                                    showProfileDialog = true
+                                }) {
+                                    Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
+                                }
+                                IconButton(onClick = { viewModel.deleteBolusTimeProfile(profile.id) }) {
+                                    Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
+                                }
+                            }
+                        }
+                    }
+                }
+
+                OutlinedButton(
+                    onClick = {
+                        editingProfile = null
+                        showProfileDialog = true
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(stringResource(R.string.bolus_profiles_add))
+                }
+            }
+
+            if (showProfileDialog) {
+                BolusTimeProfileDialog(
+                    initialProfile = editingProfile,
+                    onDismiss = { showProfileDialog = false },
+                    onSave = { saved ->
+                        viewModel.addOrUpdateBolusTimeProfile(saved)
+                        showProfileDialog = false
+                    }
+                )
+            }
         }
     }
+}
+
+@Composable
+private fun BolusTimeProfileDialog(
+    initialProfile: BolusTimeProfile?,
+    onDismiss: () -> Unit,
+    onSave: (BolusTimeProfile) -> Unit
+) {
+    var name by remember { mutableStateOf(initialProfile?.name ?: "") }
+    var startTime by remember { mutableStateOf(initialProfile?.startTime ?: "06:00") }
+    var endTime by remember { mutableStateOf(initialProfile?.endTime ?: "12:00") }
+    var icText by remember { mutableStateOf(initialProfile?.icRatioOverride?.toString() ?: "") }
+    var isfText by remember { mutableStateOf(initialProfile?.isfOverride?.toString() ?: "") }
+    var targetText by remember { mutableStateOf(initialProfile?.targetGlucoseOverride?.toString() ?: "") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                stringResource(
+                    if (initialProfile == null) R.string.bolus_profiles_add else R.string.bolus_profiles_edit
+                )
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text(stringResource(R.string.bolus_profile_name_label)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = startTime,
+                        onValueChange = { startTime = it },
+                        label = { Text(stringResource(R.string.settings_schedule_start)) },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f)
+                    )
+                    OutlinedTextField(
+                        value = endTime,
+                        onValueChange = { endTime = it },
+                        label = { Text(stringResource(R.string.settings_schedule_end)) },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                OutlinedTextField(
+                    value = icText,
+                    onValueChange = { icText = it },
+                    label = { Text(stringResource(R.string.bolus_profile_ic_label)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = isfText,
+                    onValueChange = { isfText = it },
+                    label = { Text(stringResource(R.string.bolus_profile_isf_label)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = targetText,
+                    onValueChange = { targetText = it.filter(Char::isDigit) },
+                    label = { Text(stringResource(R.string.bolus_profile_target_label)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val profile = BolusTimeProfile(
+                        id = initialProfile?.id ?: java.util.UUID.randomUUID().toString(),
+                        name = name.trim(),
+                        startTime = startTime.trim(),
+                        endTime = endTime.trim(),
+                        isEnabled = initialProfile?.isEnabled ?: true,
+                        icRatioOverride = icText.replace(',', '.').toDoubleOrNull()?.takeIf { it > 0.0 },
+                        isfOverride = isfText.replace(',', '.').toDoubleOrNull()?.takeIf { it > 0.0 },
+                        targetGlucoseOverride = targetText.toIntOrNull()?.takeIf { it > 0 }
+                    )
+                    onSave(profile)
+                }
+            ) {
+                Text(stringResource(R.string.settings_save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.emergency_btn_cancel))
+            }
+        }
+    )
 }
 
 @Composable
@@ -855,6 +1085,7 @@ fun InsulinDoseDialog(
     rapidIOB: Double = 0.0,
     deductIobForBolus: Boolean = false,
     onDeductIobChange: ((Boolean) -> Unit)? = null,
+    icRatioOverride: Double? = null,
     onDismiss: () -> Unit,
     onConfirm: (InsulinDose) -> Unit
 ) {
@@ -883,7 +1114,7 @@ fun InsulinDoseDialog(
     }
     var customGlucoseText by remember { mutableStateOf(initialGlucoseStr) }
 
-    val computedSuggestedUnits = remember(customGlucoseText, carbsText, tdi, icConstant, isf, targetGlucose, isBasalExpiringSoon, rapidIOB, localDeductIob, suggestedUnits) {
+    val computedSuggestedUnits = remember(customGlucoseText, carbsText, tdi, icConstant, icRatioOverride, isf, targetGlucose, isBasalExpiringSoon, rapidIOB, localDeductIob, suggestedUnits) {
         val carbs = carbsText.toDoubleOrNull() ?: 0.0
         val cleanText = customGlucoseText.replace(" ", "")
         val glucoseParts = cleanText.replace(")", "").split("(")
@@ -891,8 +1122,8 @@ fun InsulinDoseDialog(
         val calG = glucoseParts.getOrNull(1)?.toIntOrNull() ?: realG
 
         if (realG > 0 && tdi > 0 && isf != null && isf > 0) {
-            val bReal = InsulinProcessor.getSuggestedBolusDetailed(carbs, realG, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon, rapidIOB, localDeductIob)
-            val bCal = if (calG == realG) bReal else InsulinProcessor.getSuggestedBolusDetailed(carbs, calG, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon, rapidIOB, localDeductIob)
+            val bReal = InsulinProcessor.getSuggestedBolusDetailed(carbs, realG, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon, rapidIOB, localDeductIob, icRatioOverride)
+            val bCal = if (calG == realG) bReal else InsulinProcessor.getSuggestedBolusDetailed(carbs, calG, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon, rapidIOB, localDeductIob, icRatioOverride)
             Pair(bReal.total, bCal.total)
         } else if (suggestedUnits != null) {
             val baseRaw = suggestedUnits

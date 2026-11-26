@@ -335,12 +335,8 @@ class EmergencyLocationManager(private val context: Context) {
     }
 
     private fun isRecentLocation(location: Location, maxAgeMs: Long): Boolean {
-        val ageMs = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ECLAIR_MR1) {
-            val locationAgeNanos = SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos
-            locationAgeNanos / 1_000_000L
-        } else {
-            System.currentTimeMillis() - location.time
-        }
+        val locationAgeNanos = SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos
+        val ageMs = locationAgeNanos / 1_000_000L
         return ageMs in 0..maxAgeMs
     }
 

@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.pdf.PdfRenderer
+import androidx.core.graphics.createBitmap
 import android.os.Bundle
 import android.os.CancellationSignal
 import android.os.ParcelFileDescriptor
@@ -82,7 +83,7 @@ fun PdfViewerDialog(
                     // Renderizar a 2x de la resolución de la página para buena nitidez
                     val renderWidth = page.width * 2
                     val renderHeight = page.height * 2
-                    val bitmap = Bitmap.createBitmap(renderWidth, renderHeight, Bitmap.Config.ARGB_8888)
+                    val bitmap = createBitmap(renderWidth, renderHeight)
                     bitmap.eraseColor(android.graphics.Color.WHITE)
                     
                     page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)

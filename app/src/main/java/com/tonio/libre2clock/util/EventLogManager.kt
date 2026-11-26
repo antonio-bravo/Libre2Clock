@@ -28,7 +28,7 @@ data class LogEvent(
 enum class LogLevel { INFO, WARNING, ERROR }
 
 class EventLogManager(context: Context) {
-    private val dbHelper = GlucoseHistoryDatabaseHelper(context.applicationContext)
+    private val dbHelper = com.tonio.libre2clock.di.AppContainer.provideHistoryDbHelper(context.applicationContext)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val _events = MutableStateFlow<List<LogEvent>>(emptyList())
     val events: StateFlow<List<LogEvent>> = _events.asStateFlow()

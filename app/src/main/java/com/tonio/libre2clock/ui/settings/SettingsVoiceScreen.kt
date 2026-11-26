@@ -9,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -109,7 +110,7 @@ fun SettingsVoiceScreen(
                         Spacer(modifier = Modifier.height(12.dp))
                         Column(modifier = Modifier.padding(start = 28.dp)) {
                             Text(
-                                text = stringResource(R.string.tts_interval_label, ttsPeriodicIntervalMins),
+                                text = pluralStringResource(R.plurals.tts_interval_label, ttsPeriodicIntervalMins, ttsPeriodicIntervalMins),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold
                             )

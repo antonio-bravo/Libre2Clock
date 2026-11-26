@@ -40,9 +40,9 @@ private val ColorTargetGreenBand = Color(0xFFE8F5E9)
 @Composable
 fun AgpChartComponent(
     agpData: List<AgpPoint>,
+    modifier: Modifier = Modifier,
     rawAgpData: List<AgpPoint>? = null,
-    compareRawAndCalibrated: Boolean = false,
-    modifier: Modifier = Modifier
+    compareRawAndCalibrated: Boolean = false
 ) {
     val density = LocalDensity.current
     var scale by remember { mutableFloatStateOf(1f) }
@@ -120,7 +120,7 @@ fun AgpChartComponent(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = String.format("%02d:00 h", hr),
+                            text = String.format(java.util.Locale.US, "%02d:00 h", hr),
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Bold
                         )
@@ -294,7 +294,7 @@ fun AgpChartComponent(
                         )
 
                         // Texto de hora
-                        val label = String.format("%02d:00", if (hr == 24) 0 else hr)
+                        val label = String.format(java.util.Locale.US, "%02d:00", if (hr == 24) 0 else hr)
                         drawContext.canvas.nativeCanvas.drawText(
                             label,
                             xPos,

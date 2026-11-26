@@ -25,6 +25,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tonio.libre2clock.R
 import com.tonio.libre2clock.data.model.SensorLog
 import com.tonio.libre2clock.ui.settings.SettingsViewModel
+import com.tonio.libre2clock.util.SensorQualityTier
 import com.tonio.libre2clock.util.buildSensorErrorSummary
 import com.tonio.libre2clock.util.TimestampParser
 import kotlinx.coroutines.launch
@@ -303,6 +304,7 @@ fun SensorLogItem(
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    val copySuccessMsg = stringResource(R.string.sensor_log_copy_success)
                     IconButton(
                         onClick = {
                             val text = buildString {
@@ -316,7 +318,7 @@ fun SensorLogItem(
                             scope.launch {
                                 clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("Sensor Log", text)))
                             }
-                            Toast.makeText(context, context.getString(R.string.sensor_log_copy_success), Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, copySuccessMsg, Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier.size(36.dp)
                     ) {
@@ -406,13 +408,30 @@ fun SensorLogItem(
                     text = stringResource(
                         R.string.sensor_error_summary_row,
                         errorSummary.samples,
-                        errorSummary.avgAbsoluteDeviationPct,
+                        errorSummary.mardPct,
                         errorSummary.avgSignedDeviationPct
                     ),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Medium
                 )
+                if (errorSummary.samples >= 2) {
+                    val qualityRes = when (errorSummary.qualityTier) {
+                        SensorQualityTier.EXCELLENT -> R.string.sensor_quality_excellent
+                        SensorQualityTier.ACCEPTABLE -> R.string.sensor_quality_acceptable
+                        SensorQualityTier.DEGRADED -> R.string.sensor_quality_degraded
+                    }
+                    Text(
+                        text = stringResource(qualityRes),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (errorSummary.qualityTier == SensorQualityTier.DEGRADED) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.primary
+                        },
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }

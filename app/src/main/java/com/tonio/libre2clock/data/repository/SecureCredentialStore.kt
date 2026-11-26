@@ -3,6 +3,7 @@ package com.tonio.libre2clock.data.repository
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import androidx.core.content.edit
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 
@@ -54,10 +55,10 @@ class SecureCredentialStore(private val context: Context) {
 
     fun saveCredentials(email: String, password: String) {
         try {
-            prefs?.edit()
-                ?.putString(KEY_EMAIL, email)
-                ?.putString(KEY_PASSWORD, password)
-                ?.apply()
+            prefs?.edit {
+                putString(KEY_EMAIL, email)
+                putString(KEY_PASSWORD, password)
+            }
         } catch (e: Exception) {
             Log.e("SecureCredentialStore", "Failed to save credentials", e)
         }
@@ -80,7 +81,10 @@ class SecureCredentialStore(private val context: Context) {
 
     fun clearCredentials() {
         try {
-            prefs?.edit()?.clear()?.apply()
+            prefs?.edit {
+                remove(KEY_EMAIL)
+                remove(KEY_PASSWORD)
+            }
         } catch (e: Exception) {
             Log.e("SecureCredentialStore", "Failed to clear credentials", e)
         }
@@ -88,10 +92,10 @@ class SecureCredentialStore(private val context: Context) {
 
     fun saveDexcomCredentials(accountName: String, password: String) {
         try {
-            prefs?.edit()
-                ?.putString(KEY_DEXCOM_ACCOUNT_NAME, accountName)
-                ?.putString(KEY_DEXCOM_PASSWORD, password)
-                ?.apply()
+            prefs?.edit {
+                putString(KEY_DEXCOM_ACCOUNT_NAME, accountName)
+                putString(KEY_DEXCOM_PASSWORD, password)
+            }
         } catch (e: Exception) {
             Log.e("SecureCredentialStore", "Failed to save Dexcom credentials", e)
         }
@@ -114,10 +118,10 @@ class SecureCredentialStore(private val context: Context) {
 
     fun clearDexcomCredentials() {
         try {
-            prefs?.edit()
-                ?.remove(KEY_DEXCOM_ACCOUNT_NAME)
-                ?.remove(KEY_DEXCOM_PASSWORD)
-                ?.apply()
+            prefs?.edit {
+                remove(KEY_DEXCOM_ACCOUNT_NAME)
+                remove(KEY_DEXCOM_PASSWORD)
+            }
         } catch (e: Exception) {
             Log.e("SecureCredentialStore", "Failed to clear Dexcom credentials", e)
         }

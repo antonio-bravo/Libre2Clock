@@ -174,10 +174,11 @@ fun ShareDialog(
                         )
                     }
 
+                    val followerLabelRequiredMsg = stringResource(R.string.share_follower_label)
                     Button(
                         onClick = {
                             if (labelInput.isBlank()) {
-                                Toast.makeText(context, context.getString(R.string.share_follower_label), Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, followerLabelRequiredMsg, Toast.LENGTH_SHORT).show()
                                 return@Button
                             }
                             isGenerating = true
@@ -225,9 +226,10 @@ fun ShareDialog(
                                         fontFamily = FontFamily.Monospace
                                     )
                                 }
+                                val shareCopySuccessMsg = stringResource(R.string.share_copy_success)
                                 Button(onClick = {
                                     clipboardManager.setText(AnnotatedString(invite.code))
-                                    Toast.makeText(context, context.getString(R.string.share_copy_success), Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, shareCopySuccessMsg, Toast.LENGTH_SHORT).show()
                                 }) {
                                     Icon(Icons.Filled.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
                                     Spacer(modifier = Modifier.width(6.dp))
@@ -305,10 +307,11 @@ fun ShareDialog(
                         singleLine = true
                     )
 
+                    val shareCodeHintMsg = stringResource(R.string.share_code_hint)
                     Button(
                         onClick = {
                             if (codeInput.isBlank()) {
-                                Toast.makeText(context, context.getString(R.string.share_code_hint), Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, shareCodeHintMsg, Toast.LENGTH_SHORT).show()
                                 return@Button
                             }
                             isRedeeming = true

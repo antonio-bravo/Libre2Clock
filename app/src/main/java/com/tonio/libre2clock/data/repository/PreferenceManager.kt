@@ -18,11 +18,13 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.tonio.libre2clock.data.model.AlarmSchedule
 import com.tonio.libre2clock.data.model.AutoRangeOffsetMode
 import com.tonio.libre2clock.data.model.AppRole
+import com.tonio.libre2clock.data.model.BolusTimeProfile
 import com.tonio.libre2clock.data.model.CapillaryMeasurement
 import com.tonio.libre2clock.data.model.DexcomServerRegion
 import com.tonio.libre2clock.data.model.FollowedPatient
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.GlucoseOffsetRange
+import com.tonio.libre2clock.data.model.GlucoseUnit
 import com.tonio.libre2clock.data.model.GlucoseSourceProvider
 import com.tonio.libre2clock.data.model.HistoryBackupPayload
 import com.tonio.libre2clock.data.model.InsulinDose
@@ -111,6 +113,7 @@ class PreferenceManager(private val context: Context) {
     private val MANUAL_ISF_KEY = doublePreferencesKey("manual_isf")
     private val TDI_CALCULATION_DAYS_KEY = intPreferencesKey("tdi_calculation_days")
     private val TARGET_GLUCOSE_KEY = intPreferencesKey("target_glucose")
+    private val BOLUS_TIME_PROFILES_KEY = stringPreferencesKey("bolus_time_profiles_json")
     private val TARGET_GLUCOSE_LOW_KEY = intPreferencesKey("target_glucose_low")
     private val TARGET_GLUCOSE_HIGH_KEY = intPreferencesKey("target_glucose_high")
     private val INSULIN_DOSES_KEY = stringPreferencesKey("insulin_doses")
@@ -163,6 +166,10 @@ class PreferenceManager(private val context: Context) {
     private val NIGHTSCOUT_API_SECRET_KEY = stringPreferencesKey("nightscout_api_secret")
     private val NIGHTSCOUT_USE_CALIBRATED_KEY = booleanPreferencesKey("nightscout_use_calibrated")
     private val XDRIP_BROADCAST_ENABLED_KEY = booleanPreferencesKey("xdrip_broadcast_enabled")
+    private val HEALTH_CONNECT_ENABLED_KEY = booleanPreferencesKey("health_connect_enabled")
+    private val ALARM_SNOOZE_UNTIL_MS_KEY = longPreferencesKey("alarm_snooze_until_ms")
+    private val HYPO_15_RULE_ENDS_AT_MS_KEY = longPreferencesKey("hypo_15_rule_ends_at_ms")
+    private val GLUCOSE_UNIT_KEY = stringPreferencesKey("glucose_unit")
     private val APP_ROLE_KEY = stringPreferencesKey("app_role")
     private val FOLLOWED_PATIENTS_KEY = stringPreferencesKey("followed_patients")
     private val ACTIVE_FOLLOWED_PATIENT_UID_KEY = stringPreferencesKey("active_followed_patient_uid")
@@ -281,6 +288,16 @@ class PreferenceManager(private val context: Context) {
     val nightscoutApiSecret: Flow<String> = context.dataStore.data.map { it[NIGHTSCOUT_API_SECRET_KEY] ?: "" }.distinctUntilChanged()
     val nightscoutUseCalibrated: Flow<Boolean> = context.dataStore.data.map { it[NIGHTSCOUT_USE_CALIBRATED_KEY] ?: true }.distinctUntilChanged()
     val xdripBroadcastEnabled: Flow<Boolean> = context.dataStore.data.map { it[XDRIP_BROADCAST_ENABLED_KEY] ?: false }.distinctUntilChanged()
+    val healthConnectEnabled: Flow<Boolean> = context.dataStore.data.map { it[HEALTH_CONNECT_ENABLED_KEY] ?: false }.distinctUntilChanged()
+    val alarmSnoozeUntilMs: Flow<Long?> = context.dataStore.data.map { it[ALARM_SNOOZE_UNTIL_MS_KEY] }.distinctUntilChanged()
+    val hypo15RuleEndsAtMs: Flow<Long?> = context.dataStore.data.map { it[HYPO_15_RULE_ENDS_AT_MS_KEY] }.distinctUntilChanged()
+    val glucoseUnit: Flow<GlucoseUnit> = context.dataStore.data
+        .map { prefs ->
+            prefs[GLUCOSE_UNIT_KEY]?.let { name ->
+                runCatching { GlucoseUnit.valueOf(name) }.getOrNull()
+            } ?: GlucoseUnit.MG_DL
+        }
+        .distinctUntilChanged()
     val deductIobForBolus: Flow<Boolean> = context.dataStore.data.map { it[DEDUCT_IOB_FOR_BOLUS_KEY] ?: false }.distinctUntilChanged()
     val useCalibratedForAlarms: Flow<Boolean> = context.dataStore.data.map { it[USE_CALIBRATED_FOR_ALARMS_KEY] ?: true }.distinctUntilChanged()
 
@@ -304,6 +321,12 @@ class PreferenceManager(private val context: Context) {
     val manualIsf: Flow<Double?> = context.dataStore.data.map { it[MANUAL_ISF_KEY] }.distinctUntilChanged()
     val tdiCalculationDays: Flow<Int> = context.dataStore.data.map { (it[TDI_CALCULATION_DAYS_KEY] ?: 30).coerceIn(1, 365) }.distinctUntilChanged()
     val targetGlucose: Flow<Int> = context.dataStore.data.map { it[TARGET_GLUCOSE_KEY] ?: 80 }.distinctUntilChanged()
+    val bolusTimeProfiles: Flow<List<BolusTimeProfile>> = context.dataStore.data
+        .map { it[BOLUS_TIME_PROFILES_KEY] }
+        .distinctUntilChanged()
+        .map { jsonStr ->
+            try { jsonStr?.let { json.decodeFromString<List<BolusTimeProfile>>(it) } ?: emptyList() } catch (_: Exception) { emptyList() }
+        }
     val targetGlucoseLow: Flow<Int> = context.dataStore.data.map { (it[TARGET_GLUCOSE_LOW_KEY] ?: 70).coerceIn(50, 120) }.distinctUntilChanged()
     val targetGlucoseHigh: Flow<Int> = context.dataStore.data.map { (it[TARGET_GLUCOSE_HIGH_KEY] ?: 180).coerceIn(120, 300) }.distinctUntilChanged()
 
@@ -763,6 +786,13 @@ class PreferenceManager(private val context: Context) {
         updateBackupPayload()
     }
 
+    suspend fun saveBolusTimeProfiles(profiles: List<BolusTimeProfile>) {
+        context.dataStore.edit {
+            it[BOLUS_TIME_PROFILES_KEY] = json.encodeToString(profiles)
+        }
+        updateBackupPayload()
+    }
+
     suspend fun saveTargetGlucoseLow(value: Int) {
         context.dataStore.edit { it[TARGET_GLUCOSE_LOW_KEY] = value.coerceIn(50, 120) }
         updateBackupPayload()
@@ -921,6 +951,29 @@ class PreferenceManager(private val context: Context) {
 
     suspend fun saveXdripBroadcastEnabled(enabled: Boolean) {
         context.dataStore.edit { it[XDRIP_BROADCAST_ENABLED_KEY] = enabled }
+        updateBackupPayload()
+    }
+
+    suspend fun saveHealthConnectEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[HEALTH_CONNECT_ENABLED_KEY] = enabled }
+    }
+
+    suspend fun saveAlarmSnoozeUntilMs(epochMs: Long?) {
+        context.dataStore.edit {
+            if (epochMs == null) it.remove(ALARM_SNOOZE_UNTIL_MS_KEY)
+            else it[ALARM_SNOOZE_UNTIL_MS_KEY] = epochMs
+        }
+    }
+
+    suspend fun saveHypo15RuleEndsAtMs(epochMs: Long?) {
+        context.dataStore.edit {
+            if (epochMs == null) it.remove(HYPO_15_RULE_ENDS_AT_MS_KEY)
+            else it[HYPO_15_RULE_ENDS_AT_MS_KEY] = epochMs
+        }
+    }
+
+    suspend fun saveGlucoseUnit(unit: GlucoseUnit) {
+        context.dataStore.edit { it[GLUCOSE_UNIT_KEY] = unit.name }
         updateBackupPayload()
     }
 
@@ -1234,6 +1287,9 @@ class PreferenceManager(private val context: Context) {
             manualIsf = prefs[MANUAL_ISF_KEY],
             tdiCalculationDays = (prefs[TDI_CALCULATION_DAYS_KEY] ?: 30).coerceIn(1, 365),
             targetGlucose = prefs[TARGET_GLUCOSE_KEY] ?: 80,
+            bolusTimeProfiles = try {
+                prefs[BOLUS_TIME_PROFILES_KEY]?.let { json.decodeFromString<List<BolusTimeProfile>>(it) } ?: emptyList()
+            } catch (_: Exception) { emptyList() },
             watchAlertsEnabled = prefs[WATCH_ALERTS_ENABLED_KEY] ?: false,
             watchNotificationMode = watchNotificationMode,
             watchAlertIntervalMinutes = (prefs[WATCH_ALERT_INTERVAL_MINUTES_KEY] ?: 60).coerceIn(5, 180),
@@ -1336,6 +1392,9 @@ class PreferenceManager(private val context: Context) {
             manualTdi = prefs[MANUAL_TDI_KEY],
             manualIsf = prefs[MANUAL_ISF_KEY],
             targetGlucose = prefs[TARGET_GLUCOSE_KEY] ?: 80,
+            bolusTimeProfiles = try {
+                prefs[BOLUS_TIME_PROFILES_KEY]?.let { json.decodeFromString<List<BolusTimeProfile>>(it) } ?: emptyList()
+            } catch (_: Exception) { emptyList() },
             watchAlertsEnabled = prefs[WATCH_ALERTS_ENABLED_KEY] ?: false,
             watchNotificationMode = watchNotificationMode,
             watchAlertIntervalMinutes = (prefs[WATCH_ALERT_INTERVAL_MINUTES_KEY] ?: 60).coerceIn(5, 180),
@@ -1385,6 +1444,9 @@ class PreferenceManager(private val context: Context) {
         payload.manualIsf?.let { preferences[MANUAL_ISF_KEY] = it }
         payload.tdiCalculationDays?.let { preferences[TDI_CALCULATION_DAYS_KEY] = it.coerceIn(1, 365) }
         payload.targetGlucose?.let { preferences[TARGET_GLUCOSE_KEY] = it }
+        if (payload.bolusTimeProfiles.isNotEmpty()) {
+            preferences[BOLUS_TIME_PROFILES_KEY] = json.encodeToString(payload.bolusTimeProfiles)
+        }
         payload.watchAlertsEnabled?.let { preferences[WATCH_ALERTS_ENABLED_KEY] = it }
         payload.watchNotificationMode?.let { preferences[WATCH_NOTIFICATION_MODE_KEY] = it.name }
         payload.watchAlertIntervalMinutes?.let { preferences[WATCH_ALERT_INTERVAL_MINUTES_KEY] = it }

@@ -151,7 +151,6 @@ class MainActivity : ComponentActivity() {
                         repositoryImpl.clearCache()
                     }
                 }
-                System.gc()
             } catch (e: Exception) {
                 // Ignorar
             }
@@ -166,7 +165,6 @@ class MainActivity : ComponentActivity() {
                     repositoryImpl.clearCache()
                 }
             }
-            System.gc()
         } catch (e: Exception) {
             // Ignorar
         }

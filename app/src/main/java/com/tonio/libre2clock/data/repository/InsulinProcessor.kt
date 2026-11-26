@@ -1,11 +1,13 @@
 package com.tonio.libre2clock.data.repository
 
+import com.tonio.libre2clock.data.model.BolusTimeProfile
 import com.tonio.libre2clock.data.model.InsulinDose
 import com.tonio.libre2clock.data.model.InsulinType
 import com.tonio.libre2clock.util.TimestampParser
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import java.util.Locale
@@ -46,8 +48,9 @@ object InsulinProcessor {
                     0.26315 - (0.013155 * minDesde3Horas)
                 }
                 else -> {
-                    val progresoFinal = (minutesPassed - 184).toDouble() / (dose.durationMinutes - 184).toDouble()
-                    0.21053 * (1.0 - progresoFinal)
+                    val remainingWindow = (dose.durationMinutes - 184).coerceAtLeast(1)
+                    val progresoFinal = (minutesPassed - 184).toDouble() / remainingWindow.toDouble()
+                    (0.21053 * (1.0 - progresoFinal)).coerceAtLeast(0.0)
                 }
             }
             max(0.0, dose.units * factorRestante)
@@ -190,6 +193,53 @@ object InsulinProcessor {
         return calculated.coerceIn(10.0, 150.0)
     }
 
+    data class ResolvedBolusParams(
+        val icRatio: Double,
+        val isf: Double,
+        val targetGlucose: Int,
+        val activeProfileName: String? = null
+    )
+
+    fun isTimeInRange(time: LocalTime, startStr: String, endStr: String): Boolean {
+        return try {
+            val start = LocalTime.parse(startStr)
+            val end = LocalTime.parse(endStr)
+            if (start == end) return true
+            if (start.isBefore(end)) {
+                !time.isBefore(start) && time.isBefore(end)
+            } else {
+                !time.isBefore(start) || time.isBefore(end)
+            }
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    fun resolveBolusParams(
+        time: LocalTime = LocalTime.now(),
+        tdi: Double,
+        icConstant: Int,
+        isfConstant: Int,
+        manualIsf: Double?,
+        defaultTargetGlucose: Int,
+        profiles: List<BolusTimeProfile>
+    ): ResolvedBolusParams {
+        val activeProfile = profiles.firstOrNull { it.isEnabled && isTimeInRange(time, it.startTime, it.endTime) }
+        val baseIcRatio = if (tdi > 0) icConstant.toDouble() / tdi else 0.0
+        val baseIsf = calculateISF(tdi, isfConstant, manualIsf)
+
+        val resolvedIc = activeProfile?.icRatioOverride?.takeIf { it > 0.0 } ?: baseIcRatio
+        val resolvedIsf = activeProfile?.isfOverride?.takeIf { it > 0.0 } ?: baseIsf
+        val resolvedTarget = activeProfile?.targetGlucoseOverride?.takeIf { it > 0 } ?: defaultTargetGlucose
+
+        return ResolvedBolusParams(
+            icRatio = resolvedIc,
+            isf = resolvedIsf,
+            targetGlucose = resolvedTarget,
+            activeProfileName = activeProfile?.name?.takeIf { it.isNotBlank() }
+        )
+    }
+
     data class BolusBreakdown(
         val carbDose: Double,
         val correctionDose: Double,
@@ -206,22 +256,23 @@ object InsulinProcessor {
         isf: Double,
         isBasalExpiringSoon: Boolean,
         iob: Double = 0.0,
-        deductIob: Boolean = false
+        deductIob: Boolean = false,
+        icRatioOverride: Double? = null
     ): BolusBreakdown {
-        if (tdi <= 0.0 && isf <= 0.0) return BolusBreakdown(0.0, 0.0, 0.0, 0.0)
-        
-        val icRatio = if (tdi > 0) icConstant / tdi else 0.0
-        val carbDose = if (icRatio > 0) carbs / icRatio else 0.0
-        val correctionDose = if (isf > 0) (currentGlucose - targetGlucose).toDouble() / isf else 0.0
-        
+        val effectiveIcRatio = icRatioOverride?.takeIf { it > 0.0 } ?: if (tdi > 0) icConstant / tdi else 0.0
+        if (effectiveIcRatio <= 0.0 && isf <= 0.0) return BolusBreakdown(0.0, 0.0, 0.0, 0.0)
+
+        val carbDose = if (effectiveIcRatio > 0.0) carbs / effectiveIcRatio else 0.0
+        val correctionDose = if (isf > 0.0) (currentGlucose - targetGlucose).toDouble() / isf else 0.0
+
         var subtotal = carbDose + maxOf(0.0, correctionDose)
         if (isBasalExpiringSoon) {
             subtotal *= 1.20
         }
-        
+
         val appliedIob = if (deductIob) minOf(maxOf(0.0, subtotal), maxOf(0.0, iob)) else 0.0
         val total = maxOf(0.0, subtotal - appliedIob)
-        
+
         return BolusBreakdown(
             carbDose = carbDose,
             correctionDose = maxOf(0.0, correctionDose),
@@ -239,9 +290,10 @@ object InsulinProcessor {
         isf: Double,
         isBasalExpiringSoon: Boolean,
         iob: Double = 0.0,
-        deductIob: Boolean = false
+        deductIob: Boolean = false,
+        icRatioOverride: Double? = null
     ): Double {
-        return getSuggestedBolusDetailed(carbs, currentGlucose, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon, iob, deductIob).total
+        return getSuggestedBolusDetailed(carbs, currentGlucose, targetGlucose, tdi, icConstant, isf, isBasalExpiringSoon, iob, deductIob, icRatioOverride).total
     }
 
     /**

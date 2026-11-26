@@ -20,6 +20,12 @@ enum class WatchNotificationMode {
 }
 
 @Serializable
+enum class GlucoseUnit {
+    MG_DL,
+    MMOL_L
+}
+
+@Serializable
 enum class AutoRangeOffsetMode {
     OFF,
     GLOBAL,
@@ -90,6 +96,18 @@ data class SensorLog(
 )
 
 @Serializable
+data class BolusTimeProfile(
+    val id: String = UUID.randomUUID().toString(),
+    val name: String = "",
+    val startTime: String = "00:00",
+    val endTime: String = "06:00",
+    val isEnabled: Boolean = true,
+    val icRatioOverride: Double? = null,
+    val isfOverride: Double? = null,
+    val targetGlucoseOverride: Int? = null
+)
+
+@Serializable
 data class HistoryBackupPayload(
     val historicalGlucoseArchive: List<GlucoseMeasurement> = emptyList(),
     val capillaryReadings: List<CapillaryMeasurement> = emptyList(),
@@ -112,6 +130,7 @@ data class HistoryBackupPayload(
     val manualIsf: Double? = null,
     val tdiCalculationDays: Int? = null,
     val targetGlucose: Int? = null,
+    val bolusTimeProfiles: List<BolusTimeProfile> = emptyList(),
     // Alert Config
     val watchAlertsEnabled: Boolean? = null,
     val watchNotificationMode: WatchNotificationMode? = null,
@@ -130,6 +149,7 @@ data class HistoryBackupPayload(
     val useCalibratedForAlarms: Boolean? = null,
     // App Config
     val historyRetentionDays: Int? = null,
+    val glucoseUnit: GlucoseUnit? = null,
     // Schedules
     val watchNotificationSchedules: List<AlarmSchedule> = emptyList(),
     val glucoseAlarmSchedules: List<AlarmSchedule> = emptyList(),

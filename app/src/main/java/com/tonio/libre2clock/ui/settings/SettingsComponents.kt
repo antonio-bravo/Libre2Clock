@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -424,9 +425,9 @@ fun RangeItem(
                     )
 
                     val smartModeText = if (insight.isSensorSpecific) {
-                        stringResource(R.string.settings_range_smart_sensor, insight.sampleCount)
+                        pluralStringResource(R.plurals.settings_range_smart_sensor, insight.sampleCount, insight.sampleCount)
                     } else if (insight.sampleCount > 0) {
-                        stringResource(R.string.settings_range_smart_fallback, insight.sampleCount)
+                        pluralStringResource(R.plurals.settings_range_smart_fallback, insight.sampleCount, insight.sampleCount)
                     } else null
 
                     if (smartModeText != null) {
@@ -505,10 +506,9 @@ fun RangeDialog(
     )
 }
 
-// CORRECCIÓN: Renombrado de getLocalizedSectionName a LocalizedSectionName.
-// Las funciones @Composable no deben empezar con "get" según las convenciones de Compose.
+// CORRECCIÓN: Renombrado a localizedSectionName (Composable que retorna valor debe iniciar en minúscula).
 @Composable
-fun LocalizedSectionName(section: String): String {
+fun localizedSectionName(section: String): String {
     return when (section) {
         "dashboard_metrics_v1", "dashboard_metrics_v2", "historical_metrics_v2" -> 
             stringResource(R.string.settings_perf_section_dashboard)

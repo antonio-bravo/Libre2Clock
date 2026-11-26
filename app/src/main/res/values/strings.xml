@@ -18,11 +18,9 @@
     <string name="fetching_data">Fetching data…</string>
 
     <string name="insulin_info">Insulin Info</string>
-    <string name="insulin_total_today">Total Today: %1$.1f U</string>
     <string name="insulin_yesterday">Yesterday</string>
     <string name="insulin_7d_avg">7d Avg</string>
     <string name="insulin_30d_avg">30d Avg</string>
-    <string name="insulin_yesterday_total">Yesterday\'s Total: %1$.1f U</string>
     <string name="total_iob">Total IOB</string>
     <string name="insulin_active_threads">Active Threads: %1$d</string>
 
@@ -47,10 +45,12 @@
     <string name="sensor_log_copy_success">Sensor info copied to clipboard</string>
     <string name="sensor_log_notes_label">Notes</string>
     <string name="sensor_log_filter_failed">Only Failed</string>
-    <string name="sensor_log_stats_failed_count">Failed Sensors: %1$d</string>
     <string name="sensor_log_stats_date_range">from %1$s to %2$s</string>
-    <string name="sensor_error_summary_title">Accuracy vs capillary readings</string>
-    <string name="sensor_error_summary_row">[%1$d] Total %2$.1f%% Trend %3$+.1f%%</string>
+    <string name="sensor_error_summary_row">Samples: %1$d | MARD: %2$.1f%% | Bias: %3$+.1f%%</string>
+    <string name="sensor_quality_excellent">Accuracy: Excellent</string>
+    <string name="sensor_quality_acceptable">Accuracy: Acceptable</string>
+    <string name="sensor_quality_degraded">Accuracy: Degraded (Check sensor)</string>
+    <string name="sensor_compression_low_alert">Possible compression low (%1$d in 24h, nadir %2$d mg/dL)</string>
 
     <string name="insulin_hub_title">Insulin Management</string>
     <string name="insulin_active_total">Total Active Insulin (IOB)</string>
@@ -58,14 +58,9 @@
     <string name="insulin_active_slow">Active Slow/Basal</string>
     <string name="insulin_active_units">%1$.2f Units</string>
     <string name="insulin_active_split">%1$.2f R + %2$.2f S</string>
-    <string name="insulin_injected_total">Total units (historical of active): %1$.1f U</string>
     <string name="insulin_today_stats">Today\'s Totals</string>
-    <string name="insulin_avg_stats">Average Daily Stats</string>
     <string name="insulin_rapid_label">Rapid</string>
     <string name="insulin_slow_label">Slow/Basal</string>
-    <string name="insulin_week_avg">Last 7 Days (Avg)</string>
-    <string name="insulin_month_avg">Last 30 Days (Avg)</string>
-    <string name="insulin_recent_activity">Recent Activity</string>
     <string name="insulin_view_logs">Full History</string>
     <string name="insulin_total_breakdown">TDI: %1$.1f U (%2$.1f R + %3$.1f S)</string>
     <string name="insulin_header_breakdown">Total: %1$.1f U (%2$.1f R + %3$.1f S) FS: %4$s</string>
@@ -75,45 +70,41 @@
     <string name="edit">Edit</string>
     <string name="insulin_units_label">Units (U)</string>
     <string name="insulin_use_suggested">Use</string>
-    <string name="settings_account_title">Account</string>
     <string name="settings_logout">Log out</string>
     <string name="settings_logout_confirm">This will sign you out of LibreLinkUp. Your local history and settings stay on this device.</string>
     <string name="insulin_type_label">Insulin Type</string>
     <string name="insulin_no_doses">No doses recorded yet.</string>
 
-    <string name="calc_title">Bolus Calculator</string>
-    <string name="calc_ratios_header">Current Ratios</string>
     <string name="calc_ic_ratio">I:C Ratio (Rule of %1$d): %2$.1f g/U</string>
     <string name="calc_isf">ISF: %1$.1f mg/dL per U</string>
-    <string name="calc_formula_label">Formula: %1$d / TDI</string>
-    <string name="calc_manual_label">Manual Override</string>
     <string name="dash_fs_label">FS: %1$s</string>
     <string name="predicted_glucose_label">Estimated glucose:</string>
     <string name="calc_bolus_helper">Bolus Helper</string>
     <string name="calc_carbs_label">Carbs (g)</string>
     <string name="calc_glucose_label">Current Glucose (mg/dL)</string>
     <string name="calc_glucose_compact">Glucose: %1$s</string>
-    <string name="calc_suggested_bolus">Suggested Units: %1$s</string>
     <string name="calc_suggested_bolus_dual">Suggested Units: %1$s</string>
-    <string name="calc_suggested_bolus_with_isf">Suggested Units: %1$s\nFS: %2$s</string>
     <string name="glucose_status_low">LOW GLUCOSE</string>
-    <string name="glucose_status_in_range">IN RANGE</string>
     <string name="glucose_status_high">HIGH GLUCOSE</string>
-    <string name="calc_suggested_real">Suggested Bolus (Real)</string>
-    <string name="calc_suggested_offset">Suggested Bolus (Offset)</string>
     <string name="calc_breakdown_label">(Carbs: %1$.2f + Corr: %2$.2f)</string>
-    <string name="calc_basal_expiring_warning">Basal is expiring soon! Applied +20% adjustment.</string>
-    <string name="calc_basal_expiring_warning_short">Basal expiring: +20% applied</string>
-    <string name="calc_considerations_title">Considerations</string>
-    <string name="calc_considerations_text">Calculations are based on your configured TDI and rules. Always confirm with your physician. If basal is within 2 hours of expiration, bolus is increased by 20% to prevent drift.</string>
+    <string name="calc_basal_expiring_warning" formatted="false">Basal is expiring soon! Applied +20% adjustment.</string>
+    <string name="calc_basal_expiring_warning_short" formatted="false">Basal expiring: +20% applied</string>
 
     <string name="settings_advanced_insulin">Advanced Insulin Setup</string>
-    <string name="settings_insulin_durations">Insulin Durations</string>
     <string name="settings_rapid_duration">Rapid Duration (HH:mm)</string>
     <string name="settings_slow_duration">Slow/Basal Duration (HH:mm)</string>
-    <string name="settings_calc_rules">Calculator Rules</string>
     <string name="settings_ic_rule">I:C Rule Constant (e.g. 450)</string>
     <string name="settings_isf_rule">ISF Rule Constant (e.g. 1800)</string>
+    <string name="bolus_profiles_title">Time-of-Day Bolus Profiles</string>
+    <string name="bolus_profiles_desc">Override I:C ratio, ISF, and target glucose for specific time windows (e.g., Morning, Night).</string>
+    <string name="bolus_profiles_add">Add Time Profile</string>
+    <string name="bolus_profiles_edit">Edit Time Profile</string>
+    <string name="bolus_profiles_active_badge">Active profile: %1$s</string>
+    <string name="bolus_profile_name_label">Name (e.g. Morning)</string>
+    <string name="bolus_profile_ic_label">I:C Ratio (g/U, optional)</string>
+    <string name="bolus_profile_isf_label">ISF (mg/dL per U, optional)</string>
+    <string name="bolus_profile_target_label">Target Glucose (mg/dL, optional)</string>
+    <string name="bolus_profile_empty">No time profiles configured. Global rules apply 24h.</string>
     <string name="settings_manual_tdi">Manual TDI (U) - Leave empty for Auto</string>
     <string name="settings_manual_isf">Manual ISF (mg/dL/U) - Leave empty for Auto</string>
     <string name="settings_target_glucose">Target Glucose (mg/dL)</string>
@@ -130,18 +121,15 @@
     <string name="insulin_daily_total_today_val">Today\'s Daily Total: %1$.1f U</string>
     <string name="insulin_isf_calc_val">Calculated ISF: %1$.1f mg/dL/U</string>
     <string name="insulin_isf_auto_from_tdi">Auto ISF from TDI: %1$.1f mg/dL/U</string>
-    <string name="insulin_tdi_30d_val">TDI 30d: %1$.1f U %2$s</string>
     <string name="insulin_tdi_used_val">TDI Used: %1$.1f U %2$s</string>
     <string name="insulin_tdi_calc_30d_val">TDI Calculated 30d: %1$.1f U</string>
     <string name="insulin_tdi_calc_short">Calculated TDI: %1$.1f U</string>
     <string name="insulin_placeholder_real_offset">Real(Offset)</string>
-    <string name="insulin_date_format_label">Date (yyyy-MM-dd)</string>
-    <string name="insulin_time_format_label">Time (HH:mm)</string>
     <string name="insulin_manual_tdi_value_label">TDI Value (U)</string>
     <string name="insulin_manual_isf_value_label">ISF Value (mg/dL/U)</string>
     <string name="settings_tdi_days">TDI / ISF Average Days</string>
     <string name="settings_tdi_days_desc">History days used to average Total Daily Insulin (TDI) in the ISF rule (ADA recommended: 14d, default: 30d).</string>
-    <string name="settings_tdi_days_label">TDI Calculation Days (1-365)</string>
+    <string name="settings_tdi_days_label">TDI Calculation Days (1–365)</string>
 
     <string name="strategy_title">Trend Strategies</string>
     <string name="strategy_insulin_adj">Insulin Adjustment: %1$s</string>
@@ -154,7 +142,6 @@
     <string name="save_capillary_reading">Save capillary reading</string>
     <string name="add_capillary_reading">Add capillary reading</string>
     <string name="capillary_value_label">Value (mg/dL)</string>
-    <string name="capillary_timestamp_label">Date and time (yyyy-MM-dd HH:mm)</string>
     <string name="capillary_current_sensor">Current sensor reading</string>
     <string name="capillary_no_readings">No capillary readings saved yet.</string>
 
@@ -181,11 +168,9 @@
     <string name="adj_falling_slowly">Subtract 25 mg/dL</string>
     <string name="adj_falling_fast">Subtract 50 mg/dL</string>
     <string name="adj_falling_very_fast">Subtract 75 mg/dL</string>
-    <string name="settings_backup_insulin">Backup only insulin history</string>
-    <string name="settings_restore_insulin">Restore only insulin history (merge)</string>
     <string name="settings_use_calibrated_alarms">Use value with offset for alarms</string>
     <string name="settings_predictive_alarms">Early Predictive Hypo Warnings</string>
-    <string name="settings_predictive_alarms_subtitle">Projects glucose 15-45 min ahead based on trend and IOB to alert the watch before falling below 70 mg/dL.</string>
+    <string name="settings_predictive_alarms_subtitle">Projects glucose 15–45 min ahead based on trend and IOB to alert the watch before falling below 70 mg/dL.</string>
 
     <string name="report_title">Reports &amp; Analytics</string>
     <string name="report_range_1d">1 Day</string>
@@ -193,11 +178,15 @@
     <string name="report_range_15d">15 Days</string>
     <string name="report_range_30d">30 Days</string>
     <string name="report_range_90d">90 Days</string>
-    <string name="report_tir">Time in Range (70–180)</string>
-    <string name="report_tar">Above Range (&gt;180)</string>
-    <string name="report_tbr">Below Range (&lt;70)</string>
     <string name="report_avg_glucose">Avg Glucose</string>
     <string name="report_gmi">GMI (Est. A1c)</string>
+    <string name="report_gri">GRI (Risk Index)</string>
+    <string name="report_episodes_title">Glycemic Episodes (≥15 min)</string>
+    <string name="report_episodes_hypo_l1">Hypo &lt;70 mg/dL</string>
+    <string name="report_episodes_hypo_l2">Hypo &lt;54 mg/dL</string>
+    <string name="report_episodes_hyper">Hyper &gt;180 mg/dL</string>
+    <string name="report_episodes_hyper_severe">Severe &gt;250 mg/dL</string>
+    <string name="report_episodes_typical_hour">Peak hypo hour: %1$02d:00</string>
     <string name="report_insulin_stats">Insulin Statistics</string>
     <string name="report_avg_tdi">Avg. Daily Insulin</string>
     <string name="report_basal_bolus">Basal vs Bolus</string>
@@ -205,18 +194,16 @@
     <string name="report_layout_daily">Daily Logs</string>
     <string name="report_layout_full">Full Report</string>
     <string name="report_layout_agp_complete">Informe AGP Completo</string>
-    <string name="report_share">Share Summary</string>
-    <string name="report_summary_header">Libre2Clock Report (%1$s)\nRange: %2$s to %3$s\n</string>
     <string name="report_failed_generate">Failed to generate report</string>
     <string name="report_using_calibrated">Using Calibrated (Offset)</string>
     <string name="report_using_raw">Using Raw (Real)</string>
     <string name="report_preview_title">Preview (Daily Trends)</string>
-    <string name="report_generating">Generating Report...</string>
+    <string name="report_generating">Generating Report…</string>
     <string name="report_generating_wait">Please wait, this may take a moment for long ranges.</string>
     <string name="report_type_label">Report Type</string>
     <string name="report_glucose_summary">Glucose Summary</string>
     <string name="report_variability_cv">Variability (CV)</string>
-    <string name="report_time_in_range_label">Time In Range (70-180)</string>
+    <string name="report_time_in_range_label">Time In Range (70–180)</string>
     <string name="report_low_percent">Low: %1$.0f%%</string>
     <string name="report_high_percent">High: %1$.0f%%</string>
     <string name="report_share_chooser">Share Report</string>
@@ -229,8 +216,6 @@
     <string name="report_std_dev">Standard Deviation (SD)</string>
     <string name="report_active_sensor">Active Sensor</string>
     <string name="report_clinical_targets">Clinical Targets (2019 Consensus)</string>
-    <string name="report_target_met">Target Met</string>
-    <string name="report_target_review">Review Control</string>
     <string name="report_cv_card_title">Coefficient of Variation (CV%)</string>
     <string name="report_cv_card_explanation" formatted="false">Measures glucose stability. A CV &lt; 36% indicates stable variability. A CV ≥ 36% indicates unstable glucose and higher hypoglycemia risk.</string>
     <string name="report_cv_target_label">Target: CV &lt; 36%</string>
@@ -241,10 +226,15 @@
     <string name="report_cv_period_30d">30 Days</string>
     <string name="report_cv_period_90d">90 Days</string>
     <string name="report_page_counter">Page %1$d of %2$d</string>
-    <string name="report_patient_notes">Patient Notes</string>
-    <string name="report_patient_notes_hint">Optional clinical observations or treatment notes...</string>
     <string name="report_view_pdf">View PDF</string>
-    <string name="report_nighttime_tir">Overnight (00:00 - 06:00)</string>
+    <string name="report_export_csv">Export CSV</string>
+    <string name="report_export_json">Export JSON</string>
+    <string name="report_export_chooser">Share clinical data</string>
+    <string name="nightscout_sync_treatments_button">Sync Treatments (Insulin / Carbs / BG)</string>
+    <plurals name="nightscout_sync_treatments_success">
+        <item quantity="one">Synced %1$d treatment to Nightscout</item>
+        <item quantity="other">Synced %1$d treatments to Nightscout</item>
+    </plurals>
     <string name="cv_variability_slide_title">Glycemic Variability (CV%) &lt; 36</string>
     <string name="period_7d">7 Days</string>
     <string name="period_14d">14 Days</string>
@@ -274,9 +264,8 @@
     <string name="settings_tab_alarms">🚨 Glucose Alarms</string>
     <string name="settings_watch_test_sent">Test notification sent! Check your smartwatch.</string>
     <string name="settings_watch_quick_presets">Quick interval presets:</string>
-    <string name="settings_watch_mode_periodic_and_schedules">Periodic + Schedules</string>
     <string name="settings_watch_banner_text">Real-time sync with your smartwatch (Galaxy Watch, Pixel Watch, Garmin, etc.). Libre2Clock sends glucose readings and trend arrows as standard Android notifications.</string>
-    <string name="settings_watch_start_minute_help">Interval alignment minute (0-59). Example: Interval 15 min and start minute 0 sends at :00, :15, :30, and :45 of every hour.</string>
+    <string name="settings_watch_start_minute_help">Interval alignment minute (0–59). Example: Interval 15 min and start minute 0 sends at :00, :15, :30, and :45 of every hour.</string>
     <string name="settings_watch_mode_off">Disabled</string>
     <string name="settings_watch_mode_periodic">Periodic</string>
     <string name="settings_watch_mode_schedules">Schedules Only</string>
@@ -285,9 +274,8 @@
     <string name="settings_watch_desc_periodic">Notifications are sent periodically every N minutes.</string>
     <string name="settings_watch_desc_schedules">Notifications are sent only during active scheduled time windows.</string>
     <string name="settings_watch_desc_all">Notifications are sent periodically every N minutes within active scheduled time windows.</string>
-    <string name="settings_watch_interval_label">Interval (minutes, 5-180)</string>
-    <string name="settings_watch_start_minute_label">Start minute (0-59)</string>
-    <string name="settings_watch_trigger_desc">Notifications are sent when minute matches this start point and then every interval.</string>
+    <string name="settings_watch_interval_label">Interval (minutes, 5–180)</string>
+    <string name="settings_watch_start_minute_label">Start minute (0–59)</string>
     <string name="settings_watch_active_schedules">Watch Active Schedules</string>
     <string name="settings_schedules_global_desc">Always active (Global switch). Add a schedule to restrict.</string>
     <string name="settings_add_watch_schedule">Add Watch Schedule</string>
@@ -310,7 +298,6 @@
     <string name="settings_custom_only_on_crossing">Notify only on line crossing</string>
     <string name="settings_custom_only_on_crossing_desc">Notifies only when glucose transitions across the threshold.</string>
     <string name="calc_deduct_iob_label">Deduct Active Insulin (IOB: %1$.2f U)</string>
-    <string name="calc_deduct_iob_checkbox">Deduct Active Insulin (IOB)</string>
     <string name="calc_deduct_iob_subtitle">Subtracts remaining active rapid insulin units from the suggested dose.</string>
     <string name="settings_alarm_active_schedules">Alarm Active Schedules</string>
     <string name="settings_add_alarm_schedule">Add Alarm Schedule</string>
@@ -329,17 +316,13 @@
     <string name="settings_demo_mode_desc">Simulate glucose readings and sensor status for testing purposes.</string>
     <string name="settings_enable_demo_mode">Enable Demo Mode</string>
     <string name="settings_history_backup">History &amp; Backup</string>
-    <string name="settings_retention_days_label">Retention days (30-365)</string>
+    <string name="settings_retention_days_label">Retention days (30–365)</string>
     <string name="settings_retention_days_error">Please enter a value between 30 and 365</string>
     <string name="settings_history_backup_desc">Libre2Clock keeps your history locally and asks Android to back it up to your Google account.</string>
     <string name="settings_cloud_sync_title">Cloud Sync</string>
     <string name="settings_cloud_sync_desc">Sync your settings and history across devices using your Google account.</string>
     <string name="settings_llu_account_header">LibreLinkUp Account</string>
     <string name="settings_llu_account_desc">This is your primary glucose data source.</string>
-    <string name="settings_google_cloud_backup">Google Cloud Backup</string>
-    <string name="settings_last_request">Last request: %1$s</string>
-    <string name="settings_no_request">No request sent yet.</string>
-    <string name="settings_request_backup_now">Request Google Backup Now</string>
     <string name="settings_local_json_backup">Local JSON Backup</string>
     <string name="settings_export">Export</string>
     <string name="settings_restore">Restore</string>
@@ -366,14 +349,9 @@
     <string name="graph_btn_exit">Exit</string>
     <string name="graph_btn_reset_height">Reset Height</string>
     <string name="graph_no_data">No data available</string>
-    <string name="glucose_raw_subtitle">Sin calibrar: %1$d mg/dL</string>
-    <string name="settings_range_total_tests">Total comparable tests: %1$d</string>
     <string name="settings_range_based_offsets_desc">Define specific offsets for different glucose ranges.</string>
-    <string name="settings_range_no_data_hint">No capillary data for this range yet.</string>
     <string name="settings_no_ranges_defined">No ranges defined. Click \'Add Range\' to start.</string>
     <string name="settings_add_range">Add Range</string>
-    <string name="settings_watch_sync_test">Watch Sync Test</string>
-    <string name="settings_watch_sync_test_desc">Trigger a mock notification to verify that glucose data is correctly mirrored to your Amazfit Bip S.</string>
     <string name="settings_test_notification">Test Notification</string>
 
     <string name="settings_perf_title">Section Performance</string>
@@ -397,22 +375,11 @@
     <string name="settings_perf_section_dashboard_enter">Dashboard: Enter Time</string>
     <string name="settings_perf_section_unknown">Unknown Section (%1$s)</string>
 
-    <string name="settings_perf_system_health">System Health</string>
     <string name="settings_perf_loading_time">History Loading</string>
     <string name="settings_perf_algorithm_latency">Algorithm Latency</string>
     <string name="settings_perf_ms_short">ms</string>
-    <string name="settings_perf_health_good">Excellent</string>
-    <string name="settings_perf_health_fair">Good</string>
-    <string name="settings_perf_health_slow">Slow</string>
 
     <string name="settings_schedule_interval_row">Interval: %1$s | Start: %2$s</string>
-    <string name="day_mon">Mon</string>
-    <string name="day_tue">Tue</string>
-    <string name="day_wed">Wed</string>
-    <string name="day_thu">Thu</string>
-    <string name="day_fri">Fri</string>
-    <string name="day_sat">Sat</string>
-    <string name="day_sun">Sun</string>
     <string name="day_mon_short">M</string>
     <string name="day_tue_short">T</string>
     <string name="day_wed_short">W</string>
@@ -441,9 +408,7 @@
     <string name="settings_range_percentage_offset">Percentage offset: %1$s%2$d%%</string>
     <string name="settings_range_dynamic_applied">Active automatic adjustment: %1$s%2$s%%</string>
     <string name="settings_range_dynamic_applied_with_offset">Active automatic adjustment: %1$s%2$s%% (%3$s%4$d mg/dL)</string>
-    <string name="settings_range_percentage_with_error">Percentage offset: %1$s%2$d%% (Error: %3$s%4$.1f%%)</string>
     <string name="settings_range_sensor_audit">Error (actual / total): %1$s / %2$s (%3$s)</string>
-    <string name="settings_avg_error_vs_capillary">Avg error vs capillary: current %1$.1f mg/dL -&gt; smart %2$.1f mg/dL</string>
     <string name="settings_edit_range">Edit Range</string>
     <string name="settings_min_glucose">Min Glucose</string>
     <string name="settings_max_glucose_label">Max Glucose (leave empty for ∞)</string>
@@ -455,15 +420,14 @@
     <string name="settings_min_sensor_samples_title">Fingerstick tests for 100%% active sensor calibration</string>
     <string name="settings_min_sensor_samples_desc">Number of fingerstick readings required on the active sensor to ignore historical averages completely (Default: %1$d).</string>
     <string name="settings_advanced_calibration_options">Advanced Calibration Options</string>
-    <string name="settings_auto_range_label">Automatic smart offsets by range</string>
-    <string name="settings_auto_range_off_desc">Disabled: Uses your manual range offsets exactly as configured below.</string>
-    <string name="settings_auto_range_global_desc">Global smart offset: Computes a single overall offset from capillary readings and applies it to all ranges.</string>
-    <string name="settings_auto_range_by_range_desc">Smart offsets by range: Uses capillary measurements from your current sensor for each range. If no readings exist for this sensor in a range, it falls back to the historical average for that range.</string>
-    <string name="settings_range_smart_sensor">Smart: Current sensor (%1$d tests)</string>
-    <string name="settings_range_smart_fallback">Smart: Historical range average (%1$d tests)</string>
-    <string name="settings_apply_intelligent_suggestions">Apply intelligent suggestions (%1$d ranges)</string>
-    <string name="settings_real_deviation_label">Real deviation for this range: %1$.1f%%</string>
-    <string name="settings_smart_estimated_deviation_label">Smart estimated deviation: %1$.1f%%</string>
+    <plurals name="settings_range_smart_sensor">
+        <item quantity="one">Smart: Current sensor (%1$d test)</item>
+        <item quantity="other">Smart: Current sensor (%1$d tests)</item>
+    </plurals>
+    <plurals name="settings_range_smart_fallback">
+        <item quantity="one">Smart: Historical range average (%1$d test)</item>
+        <item quantity="other">Smart: Historical range average (%1$d tests)</item>
+    </plurals>
 
     <!-- Cloud Sync Screen -->
     <string name="cloud_account_section">Account</string>
@@ -500,15 +464,12 @@
     <string name="event_log_copy_all">Copy All</string>
     <string name="event_log_close">Close</string>
     <string name="event_log_clear_tooltip">Clear Logs</string>
-    <string name="event_log_item_tag">Tag</string>
     <string name="settings_event_log_desc">View detailed logs and system errors.</string>
 
     <!-- Backup Restore Dialog -->
     <string name="restore_dialog_title">Restore Backup</string>
     <string name="restore_dialog_message">Are you sure you want to restore? This will merge data.</string>
-    <string name="restore_dialog_desc">How do you want to restore the data?\n\nMerge: Combines with current data.\nHard Reset: Deletes everything and leaves only the backup content.</string>
     <string name="restore_merge_button">Merge</string>
-    <string name="restore_hard_reset_button">Hard Reset</string>
 
     <!-- Cloud Hard Reset -->
     <string name="cloud_danger_zone">Danger Zone</string>
@@ -527,7 +488,10 @@
     <string name="breakfast">Breakfast</string>
     <string name="lunch">Lunch</string>
     <string name="dinner">Dinner</string>
-    <string name="days_format">%1$d days</string>
+    <plurals name="days_format">
+        <item quantity="one">%1$d day</item>
+        <item quantity="other">%1$d days</item>
+    </plurals>
     <string name="trend_graph">Trend Graph</string>
     <string name="avg_glucose_last_month">Avg Glucose (Last Month)</string>
     <string name="hypos_last_month">Hypos (Last Month)</string>
@@ -574,7 +538,6 @@
     <string name="emergency_contacts_title">Emergency Contacts (%1$d)</string>
     <string name="emergency_add_contact">Add</string>
     <string name="emergency_empty_contacts">You have not added any emergency contacts yet.</string>
-    <string name="emergency_test_button">Test SOS Alert Now</string>
     <string name="emergency_testing_button">Fetching GPS &amp; Sending…</string>
     <string name="emergency_dialog_add_title">Add SOS Contact</string>
     <string name="emergency_dialog_edit_title">Edit SOS Contact</string>
@@ -589,21 +552,20 @@
     <string name="emergency_btn_cancel">Cancel</string>
     <string name="emergency_btn_edit">Edit</string>
     <string name="emergency_btn_delete">Delete</string>
-    <string name="emergency_test_sent">SOS alert sent to %1$d contact channels.</string>
+    <plurals name="emergency_test_sent">
+        <item quantity="one">SOS alert sent to %1$d contact channel.</item>
+        <item quantity="other">SOS alert sent to %1$d contact channels.</item>
+    </plurals>
     <string name="emergency_test_no_contacts">Please add at least one contact before testing.</string>
     <string name="emergency_test_local_notification">Test notification generated on device.</string>
     <string name="emergency_msg_body_location">📍 Current location:\n%1$s</string>
     <string name="emergency_msg_body_no_location">📍 GPS location not available.</string>
     <string name="emergency_msg_text">⚠️ HYPOGLYCEMIA SOS ALERT: My glucose level dropped to %1$d mg/dL at %2$s on %3$s.\n%4$s</string>
     <string name="emergency_telegram_help_title">How to Setup Telegram Bot</string>
-    <string name="emergency_telegram_help_content">1. Open Telegram and search for @BotFather.\n2. Send /newbot and follow instructions to name your bot.\n3. Copy the HTTP API Token and paste it above.\n\nGetting Chat ID:\n• For an individual: Have your contact start your bot, then add @getidsbot to get ID and ask ask @userinfobot for their ID.\n• For a Family Group: Add your bot and @myidbot to a Telegram group and type /getgroupid to get the group ID (starts with -100...).</string>
+    <string name="emergency_telegram_help_content">1. Open Telegram and search for @BotFather.\n2. Send /newbot and follow instructions to name your bot.\n3. Copy the HTTP API Token and paste it above.\n\nGetting Chat ID:\n• For an individual: Have your contact start your bot, then add @getidsbot to get ID and ask @userinfobot for their ID.\n• For a Family Group: Add your bot and @myidbot to a Telegram group and type /getgroupid to get the group ID (starts with -100…).</string>
     <string name="emergency_telegram_help_button">Telegram Setup Guide</string>
     <string name="emergency_btn_close">Close</string>
-    <string name="emergency_gps_disabled_warning">GPS is disabled on your device. Please enable GPS in system settings for SOS location.</string>
     <string name="emergency_permission_denied_warning">Location permission was denied. SOS messages will be sent without GPS coordinates.</string>
-    <string name="emergency_enable_gps_dialog_title">Location Disabled</string>
-    <string name="emergency_enable_gps_dialog_desc">To send your GPS location in SOS alerts, please enable Location Services on your device.</string>
-    <string name="emergency_enable_gps_dialog_btn">Enable Location</string>
     <string name="emergency_test_full_button">Test Full SOS Alert</string>
     <string name="emergency_test_cell_button">Test Cell Tower Location</string>
     <string name="emergency_test_wifi_button">Test Wi-Fi Location</string>
@@ -622,7 +584,7 @@
     <string name="emergency_contact_whatsapp_group_id_label">WhatsApp Group ID (@g.us)</string>
     <string name="emergency_contact_whatsapp_group_id_hint">E.g., 120363410417355783@g.us</string>
     <string name="emergency_whatsapp_group_help_title">How to Get WhatsApp Group ID</string>
-    <string name="emergency_whatsapp_group_help_content">WhatsApp Group ID has the format 120363...@g.us. You can get it in 10 seconds from WhatsApp Web (web.whatsapp.com) on your PC:\n\n1. Open web.whatsapp.com in your browser and open the group.\n2. Press F12 or Ctrl+Shift+J to open Developer Console.\n3. Paste one of these commands and press Enter:\n\nCommand 1 (Active Group):\nwindow.require("WAWebCollections").Chat.getActive().attributes.id._serialized\n\nCommand 2 (List All Your Groups):\nwindow.require("WAWebCollections").Chat.map(c => c.attributes).filter(c => c.isGroup).map(c => `${c.name}: ${c.id._serialized}`)</string>
+    <string name="emergency_whatsapp_group_help_content">WhatsApp Group ID has the format 120363…@g.us. You can get it in 10 seconds from WhatsApp Web (web.whatsapp.com) on your PC:\n\n1. Open web.whatsapp.com in your browser and open the group.\n2. Press F12 or Ctrl+Shift+J to open Developer Console.\n3. Paste one of these commands and press Enter:\n\nCommand 1 (Active Group):\nwindow.require("WAWebCollections").Chat.getActive().attributes.id._serialized\n\nCommand 2 (List All Your Groups):\nwindow.require("WAWebCollections").Chat.map(c => c.attributes).filter(c => c.isGroup).map(c => `${c.name}: ${c.id._serialized}`)</string>
     <string name="emergency_copy_command_1">Copy Active Group Command</string>
     <string name="emergency_copy_command_2">Copy List All Groups Command</string>
     <string name="emergency_copied_to_clipboard">Command copied to clipboard</string>
@@ -643,7 +605,7 @@
     <string name="emergency_placeholder_apikey">E.g., 123456</string>
     <string name="emergency_placeholder_chat_id">E.g., 987654321</string>
     <string name="emergency_placeholder_phone">E.g., +15551234567</string>
-    <string name="emergency_placeholder_webhook">https://wasenderapi.com/... or custom webhook</string>
+    <string name="emergency_placeholder_webhook">https://wasenderapi.com/… or custom webhook</string>
 
     <!-- Widget Settings -->
     <string name="settings_widget_title">Widget Settings</string>
@@ -655,8 +617,6 @@
     <string name="widget_opacity_desc">Adjust background transparency (0%% = fully transparent IP Widget style, 100%% = fully opaque).</string>
     <string name="widget_use_target_color_title">Color by Glucose Target Range</string>
     <string name="widget_use_target_color_desc">Color background based on current glucose range (Red/Orange/Green) or neutral dark glass.</string>
-    <string name="widget_show_insulin_title">Show Active Insulin (IOB)</string>
-    <string name="widget_show_insulin_desc">Displays Rapid and Slow active insulin units if space permits.</string>
     <string name="widget_show_rapid_title">Show Rapid Insulin (IOB)</string>
     <string name="widget_show_rapid_desc">Displays active rapid insulin units on the widget.</string>
     <string name="widget_show_slow_title">Show Slow Insulin (IOB)</string>
@@ -673,7 +633,6 @@
     <string name="widget_slow_compact_text">%1$s: %2$sU</string>
     <string name="widget_decimals_title">Insulin Precision</string>
     <string name="widget_decimals_desc">Choose decimal places for insulin units displayed on the widget.</string>
-    <string name="widget_decimals_auto">Auto (1 or 2 decimals)</string>
     <string name="widget_decimals_1">1 decimal place (1.5 U)</string>
     <string name="widget_decimals_2">2 decimal places (1.52 U)</string>
     <string name="widget_stale_indicator_title">Stale Data Indicator (&gt; 15 min)</string>
@@ -710,7 +669,6 @@
     <string name="widget_show_last_update_desc">Displays the timestamp of the last reading on the widget.</string>
     <string name="widget_tap_action_title">Widget Tap Action</string>
     <string name="widget_tap_action_desc">Tapping the widget on your home screen opens Libre2Clock directly.</string>
-    <string name="widget_description">Shows real-time glucose, trend arrow, and active insulin on home screen.</string>
 
     <!-- Voice TTS Settings -->
     <string name="settings_voice_title">Voice Reading (TTS)</string>
@@ -723,9 +681,11 @@
     <string name="tts_announce_alert_desc">Reads glucose aloud when entering High/Low or on rapid rise/fall arrows.</string>
     <string name="tts_format_detailed_title">Detailed Speech Format</string>
     <string name="tts_format_detailed_desc">Include active insulin (IOB) units in the spoken announcement.</string>
-    <string name="tts_interval_label">Speech Interval: %1$d minutes</string>
+    <plurals name="tts_interval_label">
+        <item quantity="one">Speech Interval: %1$d minute</item>
+        <item quantity="other">Speech Interval: %1$d minutes</item>
+    </plurals>
     <string name="tts_test_button">Test Voice Announcement</string>
-    <string name="tts_test_phrase">Glucose 110 mg/dL, stable. Active insulin 1.5 units.</string>
 
     <!-- Nightscout & xDrip+ Settings -->
     <string name="settings_nightscout_title">Nightscout &amp; xDrip+ / AAPS</string>
@@ -742,6 +702,33 @@
     <string name="nightscout_testing_button">Testing connection…</string>
     <string name="xdrip_broadcast_title">xDrip+ / AndroidAPS Local Broadcast</string>
     <string name="xdrip_broadcast_desc">Sends local inter-app broadcasts on this phone for xDrip+, AndroidAPS, and Wear OS apps.</string>
+    <string name="health_connect_title">Health Connect (Android)</string>
+    <string name="health_connect_desc">Sync CGM glucose readings and carbs with Android Health Connect, and correlate 24h steps.</string>
+    <string name="health_connect_enable">Auto-sync to Health Connect</string>
+    <string name="health_connect_grant_permissions">Grant Health Connect Permissions</string>
+    <string name="health_connect_permissions_ok">Permissions granted</string>
+    <string name="health_connect_permissions_missing">Health Connect permissions are required</string>
+    <string name="health_connect_unavailable">Health Connect is not installed or unavailable on this device.</string>
+    <string name="health_connect_sync_now">Sync Now (Glucose &amp; Carbs)</string>
+    <plurals name="health_connect_steps_24h">
+        <item quantity="one">Steps (last 24h): %1$d step</item>
+        <item quantity="other">Steps (last 24h): %1$d steps</item>
+    </plurals>
+    <plurals name="health_connect_sync_success">
+        <item quantity="one">Synced %1$d record to Health Connect</item>
+        <item quantity="other">Synced %1$d records to Health Connect</item>
+    </plurals>
+    <string name="alarm_action_snooze_30m">Snooze 30m</string>
+    <string name="alarm_action_hypo_15_rule">Treated hypo (15/15)</string>
+    <string name="hypo_15_check_notif_title">15/15 Rule: Recheck Glucose</string>
+    <string name="hypo_15_check_notif_body">15 minutes have passed since hypo treatment. Check your glucose trend now.</string>
+    <string name="hypo_15_card_title">15/15 Rule Assistant</string>
+    <string name="hypo_15_card_countdown">Recheck in %1$02d:%2$02d • 15g fast carbs</string>
+    <string name="hypo_15_start_button">Treated Hypo (15g Carbs • 15m)</string>
+    <string name="alarm_snoozed_banner">Alarms snoozed until %1$s (&lt;55 mg/dL stays active)</string>
+    <string name="alarm_resume_button">Resume</string>
+    <string name="settings_glucose_unit_title">Glucose Units</string>
+    <string name="settings_glucose_unit_desc">Choose display units for Dashboard, Widget, Notifications, and Voice (calculations remain exact in mg/dL).</string>
 
     <!-- Caregiver & Data Sharing Strings -->
     <string name="share_title">Data Sharing &amp; Caregivers</string>
@@ -752,11 +739,8 @@
     <string name="share_follower_label">Follower Name / Label (e.g., Mom)</string>
     <string name="share_expiry_label">Code Validity:</string>
     <string name="share_no_limit">Unlimited</string>
-    <string name="share_days_7">7 days</string>
-    <string name="share_days_30">30 days</string>
-    <string name="share_custom_date">Custom Date...</string>
+    <string name="share_custom_date">Custom Date…</string>
     <string name="share_until_date">Until %1$s</string>
-    <string name="share_select_date">Select Expiration Date</string>
     <string name="share_generate_button">Generate Invite Code</string>
     <string name="share_code_for">One-time code for \'%1$s\':</string>
     <string name="share_copy_button">Copy Code</string>
@@ -772,7 +756,6 @@
     <string name="share_followed_patients">Followed Patients</string>
     <string name="share_viewing_active">🟢 Viewing currently</string>
     <string name="share_viewing_label">Viewing:</string>
-    <string name="share_read_only_badge">Read-Only</string>
     <string name="share_change_patient">Change patient</string>
     <string name="share_followed_patients_header">FOLLOWED PATIENTS</string>
     <string name="share_add_patient">➕ Connect to another patient</string>

@@ -1,10 +1,11 @@
 package com.tonio.libre2clock.ui.dashboard
 
+import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.Intent
-import android.net.Uri
 import android.provider.Settings
 import android.widget.Toast
+import androidx.core.net.toUri
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -32,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -45,13 +47,16 @@ import kotlin.math.roundToInt
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tonio.libre2clock.R
+import com.tonio.libre2clock.data.model.BolusTimeProfile
 import com.tonio.libre2clock.data.model.CapillaryMeasurement
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.model.InsulinDose
 import com.tonio.libre2clock.data.model.InsulinType
 import com.tonio.libre2clock.data.model.SensorStatus
 import com.tonio.libre2clock.data.repository.GlucoseProcessor
+import com.tonio.libre2clock.util.CompressionLowEvent
 import com.tonio.libre2clock.util.SensorErrorSummary
+import com.tonio.libre2clock.util.SensorQualityTier
 import com.tonio.libre2clock.data.repository.InsulinProcessor
 import com.tonio.libre2clock.ui.insulin.InsulinDoseDialog
 import com.tonio.libre2clock.ui.components.DateHourMinuteInput
@@ -73,6 +78,14 @@ private val SyncDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss
 private val ColorPagerActive = Color(0xFF0B57D0)
 private val ColorPagerInactive = Color(0xFFD6DCE5)
 private val TrendColors = arrayOf(Color.Gray, Color.Red, Color.Red, Color.Gray, Color.Green, Color.Green, Color.Gray)
+
+@SuppressLint("BatteryLife")
+private fun openBatteryOptimizationSettings(context: android.content.Context) {
+    val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+        data = "package:${context.packageName}".toUri()
+    }
+    context.startActivity(intent)
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -102,11 +115,17 @@ fun DashboardScreen(
     val dashboardMetrics by viewModel.dashboardMetrics.collectAsStateWithLifecycle()
     val graphWindowDays by viewModel.graphWindowDays.collectAsStateWithLifecycle()
     val currentSensorError by viewModel.currentSensorError.collectAsStateWithLifecycle()
+    val recentCompressionLows by viewModel.recentCompressionLows.collectAsStateWithLifecycle()
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val icRuleConstant by viewModel.icRuleConstant.collectAsStateWithLifecycle()
     val targetGlucose by viewModel.targetGlucose.collectAsStateWithLifecycle()
     val targetGlucoseLow by viewModel.targetGlucoseLow.collectAsStateWithLifecycle()
     val targetGlucoseHigh by viewModel.targetGlucoseHigh.collectAsStateWithLifecycle()
+    val bolusTimeProfiles by viewModel.bolusTimeProfiles.collectAsStateWithLifecycle()
+    val alarmSnoozeUntilMs by viewModel.alarmSnoozeUntilMs.collectAsStateWithLifecycle()
+    val hypo15RuleEndsAtMs by viewModel.hypo15RuleEndsAtMs.collectAsStateWithLifecycle()
+    val lowGlucoseThreshold by viewModel.lowGlucoseThreshold.collectAsStateWithLifecycle()
+    val glucoseUnit by viewModel.glucoseUnit.collectAsStateWithLifecycle()
     val deductIobForBolus by viewModel.deductIobForBolus.collectAsStateWithLifecycle()
     val predictedPoints by viewModel.predictedGlucose.collectAsStateWithLifecycle()
     val isBatteryOptimized by viewModel.isBatteryOptimized.collectAsStateWithLifecycle()
@@ -367,10 +386,7 @@ fun DashboardScreen(
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
                             onClick = {
-                                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                                    data = Uri.parse("package:${context.packageName}")
-                                }
-                                context.startActivity(intent)
+                                openBatteryOptimizationSettings(context)
                             }
                         ) {
                             Row(
@@ -400,12 +416,99 @@ fun DashboardScreen(
                         }
                     }
                 }
+                // Asistente Regla 15/15 y estado Snooze de alarmas
+                item(key = "hypo15_and_snooze") {
+                    var timerNowMs by remember { mutableLongStateOf(System.currentTimeMillis()) }
+                    val isHypo15Active = hypo15RuleEndsAtMs != null && hypo15RuleEndsAtMs!! > timerNowMs
+                    val isSnoozeActive = alarmSnoozeUntilMs != null && alarmSnoozeUntilMs!! > timerNowMs
+                    val currentVal = currentGlucose?.let { if (it.calibratedValue > 0) it.calibratedValue else it.value } ?: 0
+                    val isCurrentlyLow = currentVal in 1 until lowGlucoseThreshold
+
+                    LaunchedEffect(hypo15RuleEndsAtMs, alarmSnoozeUntilMs) {
+                        while (true) {
+                            val now = System.currentTimeMillis()
+                            timerNowMs = now
+                            val active15 = hypo15RuleEndsAtMs?.let { it > now } == true
+                            val activeSnooze = alarmSnoozeUntilMs?.let { it > now } == true
+                            if (!active15 && !activeSnooze) break
+                            delay(if (active15) 1000L else 15_000L)
+                        }
+                    }
+
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (isHypo15Active) {
+                            val remainingSec = com.tonio.libre2clock.util.AlertSnoozeHelper.getRemainingSeconds(timerNowMs, hypo15RuleEndsAtMs)
+                            val mins = (remainingSec / 60).toInt()
+                            val secs = (remainingSec % 60).toInt()
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = stringResource(R.string.hypo_15_card_title),
+                                            style = MaterialTheme.typography.titleSmall,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Text(
+                                            text = stringResource(R.string.hypo_15_card_countdown, mins, secs),
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                    }
+                                    TextButton(onClick = viewModel::cancelHypo15Rule) {
+                                        Text(stringResource(R.string.emergency_btn_cancel))
+                                    }
+                                }
+                            }
+                        } else if (isCurrentlyLow) {
+                            Button(
+                                onClick = viewModel::startHypo15Rule,
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                            ) {
+                                Text(stringResource(R.string.hypo_15_start_button))
+                            }
+                        }
+
+                        if (isSnoozeActive) {
+                            val untilTimeStr = remember(alarmSnoozeUntilMs) {
+                                val inst = Instant.ofEpochMilli(alarmSnoozeUntilMs ?: 0L)
+                                DateTimeFormatter.ofPattern("HH:mm").withZone(ZoneId.systemDefault()).format(inst)
+                            }
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.alarm_snoozed_banner, untilTimeStr),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    TextButton(onClick = viewModel::clearSnooze) {
+                                        Text(stringResource(R.string.alarm_resume_button))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
                 item {
                 GlucoseCard(
                     measurement = currentGlucose,
                     metrics = dashboardMetrics,
                     targetLow = targetGlucoseLow,
                     targetHigh = targetGlucoseHigh,
+                    glucoseUnit = glucoseUnit,
                     onTapGlucoseCard = { viewModel.speakCurrentGlucoseIfTapEnabled() }
                 )
             }
@@ -413,6 +516,7 @@ fun DashboardScreen(
                     SensorHealthCard(
                         status = sensorStatus,
                         errorSummary = currentSensorError,
+                        compressionLows = recentCompressionLows,
                         isRefreshing = isRefreshing,
                         isDemoMode = isDemoMode,
                         onRefresh = viewModel::refresh
@@ -434,7 +538,8 @@ fun DashboardScreen(
                         deductIobForBolus = deductIobForBolus,
                         onDeductIobChange = viewModel::updateDeductIobForBolus,
                         fallbackGlucose = graphData.lastOrNull(),
-                        tdiCalculationDays = tdiCalculationDays
+                        tdiCalculationDays = tdiCalculationDays,
+                        bolusTimeProfiles = bolusTimeProfiles
                     )
                 }
                 item {
@@ -468,7 +573,7 @@ fun DashboardScreen(
                             DropdownMenu(expanded = showGraphMenu, onDismissRequest = { showGraphMenu = false }) {
                                 listOf(1, 2, 7, 14, 30, 90).forEach { days ->
                                     DropdownMenuItem(
-                                        text = { Text(stringResource(R.string.days_format, days)) },
+                                        text = { Text(pluralStringResource(R.plurals.days_format, days, days)) },
                                         onClick = { viewModel.setGraphWindow(days); showGraphMenu = false }
                                     )
                                 }
@@ -599,7 +704,8 @@ fun InsulinHealthCard(
     deductIobForBolus: Boolean = false,
     onDeductIobChange: ((Boolean) -> Unit)? = null,
     fallbackGlucose: GlucoseMeasurement? = null,
-    tdiCalculationDays: Int = 30
+    tdiCalculationDays: Int = 30,
+    bolusTimeProfiles: List<BolusTimeProfile> = emptyList()
 ) {
     val pagerState = rememberPagerState(pageCount = { 3 })
     val today = LocalDate.now()
@@ -619,7 +725,19 @@ fun InsulinHealthCard(
 
     val calculatedTdi = remember(doses, tdiCalculationDays) { InsulinProcessor.calculateAverageDaily(doses, tdiCalculationDays) }
     val tdi = manualTdi ?: calculatedTdi
-    val currentIsf = InsulinProcessor.calculateISF(tdi, isfRuleConstant, manualIsf)
+    val resolvedBolusParams = remember(tdi, icRuleConstant, isfRuleConstant, manualIsf, targetGlucose, bolusTimeProfiles, nowTick) {
+        InsulinProcessor.resolveBolusParams(
+            tdi = tdi,
+            icConstant = icRuleConstant,
+            isfConstant = isfRuleConstant,
+            manualIsf = manualIsf,
+            defaultTargetGlucose = targetGlucose,
+            profiles = bolusTimeProfiles
+        )
+    }
+    val currentIsf = resolvedBolusParams.isf
+    val effectiveTargetGlucose = resolvedBolusParams.targetGlucose
+    val effectiveIcRatioOverride = resolvedBolusParams.icRatio.takeIf { it > 0.0 }
 
     val formattedIsf = remember(currentIsf) {
         if (currentIsf > 0.0) {
@@ -702,7 +820,7 @@ fun InsulinHealthCard(
         }
     }
 
-    val (suggestedUnitsRaw, suggestedUnitsCal) = remember(currentGlucose, tdi, currentIsf, targetGlucose, isBasalExpiringSoon, rapidIOB, deductIobForBolus) {
+    val (suggestedUnitsRaw, suggestedUnitsCal) = remember(currentGlucose, tdi, currentIsf, effectiveTargetGlucose, effectiveIcRatioOverride, isBasalExpiringSoon, rapidIOB, deductIobForBolus) {
         val rawG = currentGlucose?.let { if (it.value > 0) it.value else (if (it.valueInMgPerDl > 0) it.valueInMgPerDl else null) }
         val calG = currentGlucose?.let { if (it.calibratedValue > 0) it.calibratedValue else rawG }
 
@@ -710,26 +828,28 @@ fun InsulinHealthCard(
             InsulinProcessor.getSuggestedBolusDetailed(
                 carbs = 0.0,
                 currentGlucose = it,
-                targetGlucose = targetGlucose,
+                targetGlucose = effectiveTargetGlucose,
                 tdi = tdi,
                 icConstant = icRuleConstant,
                 isf = currentIsf,
                 isBasalExpiringSoon = isBasalExpiringSoon,
                 iob = rapidIOB,
-                deductIob = deductIobForBolus
+                deductIob = deductIobForBolus,
+                icRatioOverride = effectiveIcRatioOverride
             ).total
         }
         val calUnits = calG?.let {
             InsulinProcessor.getSuggestedBolusDetailed(
                 carbs = 0.0,
                 currentGlucose = it,
-                targetGlucose = targetGlucose,
+                targetGlucose = effectiveTargetGlucose,
                 tdi = tdi,
                 icConstant = icRuleConstant,
                 isf = currentIsf,
                 isBasalExpiringSoon = isBasalExpiringSoon,
                 iob = rapidIOB,
-                deductIob = deductIobForBolus
+                deductIob = deductIobForBolus,
+                icRatioOverride = effectiveIcRatioOverride
             ).total
         }
         rawUnits to calUnits
@@ -871,7 +991,8 @@ fun InsulinHealthCard(
             isf = currentIsf,
             tdi = tdi,
             icConstant = icRuleConstant,
-            targetGlucose = targetGlucose,
+            targetGlucose = effectiveTargetGlucose,
+            icRatioOverride = effectiveIcRatioOverride,
             currentGlucose = currentGlucose,
             isBasalExpiringSoon = isBasalExpiringSoon,
             rapidIOB = rapidIOB,
@@ -890,6 +1011,7 @@ fun InsulinHealthCard(
 fun SensorHealthCard(
     status: SensorStatus?,
     errorSummary: SensorErrorSummary?,
+    compressionLows: List<CompressionLowEvent> = emptyList(),
     isRefreshing: Boolean,
     isDemoMode: Boolean,
     onRefresh: () -> Unit
@@ -948,6 +1070,7 @@ fun SensorHealthCard(
                     }
                     if (status != null) {
                         Spacer(modifier = Modifier.width(8.dp))
+                        val copySensorInfoMsg = stringResource(R.string.copy_sensor_info)
                         IconButton(
                             onClick = {
                                 val text = buildString {
@@ -959,7 +1082,7 @@ fun SensorHealthCard(
                                 scope.launch {
                                     clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("Sensor Info", text)))
                                 }
-                                Toast.makeText(context, context.getString(R.string.copy_sensor_info), Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, copySensorInfoMsg, Toast.LENGTH_SHORT).show()
                             },
                             modifier = Modifier.size(24.dp)
                         ) {
@@ -1017,12 +1140,41 @@ fun SensorHealthCard(
                             text = stringResource(
                                 R.string.sensor_error_summary_row,
                                 errorSummary.samples,
-                                errorSummary.avgAbsoluteDeviationPct,
+                                errorSummary.mardPct,
                                 errorSummary.avgSignedDeviationPct
                             ),
                             style = MaterialTheme.typography.labelSmall,
                             color = if (isDemoMode) MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.9f) else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.9f),
                             fontWeight = FontWeight.Medium
+                        )
+                        if (errorSummary.samples >= 2) {
+                            val qualityRes = when (errorSummary.qualityTier) {
+                                SensorQualityTier.EXCELLENT -> R.string.sensor_quality_excellent
+                                SensorQualityTier.ACCEPTABLE -> R.string.sensor_quality_acceptable
+                                SensorQualityTier.DEGRADED -> R.string.sensor_quality_degraded
+                            }
+                            Text(
+                                text = stringResource(qualityRes),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (errorSummary.qualityTier == SensorQualityTier.DEGRADED) {
+                                    MaterialTheme.colorScheme.error
+                                } else if (isDemoMode) {
+                                    MaterialTheme.colorScheme.onTertiaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.primary
+                                },
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                    if (compressionLows.isNotEmpty()) {
+                        val latestNadir = compressionLows.last().nadirMgDl
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = stringResource(R.string.sensor_compression_low_alert, compressionLows.size, latestNadir),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.error,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
@@ -1045,6 +1197,7 @@ private fun GlucoseCard(
     metrics: DashboardMetrics,
     targetLow: Int = 70,
     targetHigh: Int = 180,
+    glucoseUnit: com.tonio.libre2clock.data.model.GlucoseUnit = com.tonio.libre2clock.data.model.GlucoseUnit.MG_DL,
     onTapGlucoseCard: () -> Unit = {}
 ) {
     val measurementInstant = remember(measurement) {
@@ -1163,11 +1316,11 @@ private fun GlucoseCard(
                     }
                     
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        val displayValue = remember(measurement) {
+                        val displayValue = remember(measurement, glucoseUnit) {
                             val rawVal = measurement.value
                             if (rawVal < 40) "LO"
                             else if (rawVal > 500) "HI"
-                            else GlucoseProcessor.formatDualValue(measurement.value, measurement.calibratedValue)
+                            else com.tonio.libre2clock.util.GlucoseUnitConverter.formatDualValue(measurement.value, measurement.calibratedValue, glucoseUnit)
                         }
                         
                         AnimatedContent(
@@ -1194,7 +1347,7 @@ private fun GlucoseCard(
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Text(
-                                text = "mg/dL",
+                                text = com.tonio.libre2clock.util.GlucoseUnitConverter.unitLabel(glucoseUnit),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = if (isStale) cardContentColor.copy(alpha = 0.5f) else cardContentColor

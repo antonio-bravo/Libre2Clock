@@ -48,7 +48,7 @@ class CloudSyncManager(
 ) {
     private val firestore: FirebaseFirestore
         get() = FirebaseFirestore.getInstance()
-    private val dbHelper = GlucoseHistoryDatabaseHelper(context)
+    private val dbHelper = AppContainer.provideHistoryDbHelper(context)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val eventLogger = AppContainer.provideEventLogManager(context)
 

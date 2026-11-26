@@ -12,6 +12,7 @@ import android.os.Build
 import android.telephony.SmsManager
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import com.tonio.libre2clock.MainActivity
 import com.tonio.libre2clock.R
 import com.tonio.libre2clock.data.model.EmergencyConfig
@@ -47,18 +48,16 @@ class EmergencyAlertDispatcher(private val context: Context) {
     }
 
     private fun createEmergencyNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = context.getString(R.string.emergency_screen_title)
-            val descriptionText = context.getString(R.string.emergency_enable_desc)
-            val importance = NotificationManager.IMPORTANCE_HIGH
-            val channel = NotificationChannel(EMERGENCY_CHANNEL_ID, name, importance).apply {
-                description = descriptionText
-                enableVibration(true)
-                vibrationPattern = longArrayOf(0, 500, 200, 500, 200, 500)
-            }
-            val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
+        val name = context.getString(R.string.emergency_screen_title)
+        val descriptionText = context.getString(R.string.emergency_enable_desc)
+        val importance = NotificationManager.IMPORTANCE_HIGH
+        val channel = NotificationChannel(EMERGENCY_CHANNEL_ID, name, importance).apply {
+            description = descriptionText
+            enableVibration(true)
+            vibrationPattern = longArrayOf(0, 500, 200, 500, 200, 500)
         }
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.createNotificationChannel(channel)
     }
 
     fun formatSosMessage(glucoseMgDl: Int, location: EmergencyLocation?): String {
@@ -384,8 +383,7 @@ class EmergencyAlertDispatcher(private val context: Context) {
 
         val cleanDigits = trimmedTarget.replace("[^0-9]".toRegex(), "")
         val jid = if (cleanDigits.isNotBlank()) "$cleanDigits@s.whatsapp.net" else ""
-        val uri = Uri.parse("https://api.whatsapp.com/send?phone=$cleanDigits&text=${Uri.encode(message)}")
-        return Intent(Intent.ACTION_SEND, uri).apply {
+        return Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
             putExtra(Intent.EXTRA_TEXT, message)
             if (jid.isNotBlank()) putExtra("jid", jid)
@@ -443,12 +441,11 @@ class EmergencyAlertDispatcher(private val context: Context) {
         // Determinar número directo (Usuario)
         val cleanDigits = trimmedTarget.replace("[^0-9]".toRegex(), "")
         val jid = if (cleanDigits.isNotBlank()) "$cleanDigits@s.whatsapp.net" else ""
-        val uri = Uri.parse("https://api.whatsapp.com/send?phone=$cleanDigits&text=${Uri.encode(message)}")
-        
+
         var enviado = false
         for (pkg in paquetesWhatsApp) {
             try {
-                val intent = Intent(Intent.ACTION_SEND, uri).apply {
+                val intent = Intent(Intent.ACTION_SEND).apply {
                     type = "text/plain"
                     putExtra(Intent.EXTRA_TEXT, message)
                     if (jid.isNotBlank()) putExtra("jid", jid)
@@ -480,7 +477,7 @@ class EmergencyAlertDispatcher(private val context: Context) {
     }
 
     fun createTelegramIntent(message: String): Intent {
-        val uri = Uri.parse("https://t.me/share/url?url=${Uri.encode(message)}")
+        val uri = "https://t.me/share/url?url=${Uri.encode(message)}".toUri()
         return Intent(Intent.ACTION_VIEW, uri).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }

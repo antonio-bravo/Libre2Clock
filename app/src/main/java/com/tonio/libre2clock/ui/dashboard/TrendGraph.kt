@@ -79,18 +79,18 @@ private data class NormalizedPredPoint(
 @Composable
 fun InteractiveTrendGraph(
     measurements: List<GlucoseMeasurement>,
+    modifier: Modifier = Modifier,
     predictedPoints: List<Pair<Instant, Int>> = emptyList(),
     targetLow: Int = 70,
     targetHigh: Int = 180,
     isFullScreen: Boolean = false,
-    onCloseFullScreen: (() -> Unit)? = null,
-    modifier: Modifier = Modifier
+    onCloseFullScreen: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current
     val is24Hour = DateFormat.is24HourFormat(context)
-    val configuration = LocalConfiguration.current
-    val screenWidth = configuration.screenWidthDp.dp
+    val windowInfo = androidx.compose.ui.platform.LocalWindowInfo.current
+    val screenWidth = with(density) { windowInfo.containerSize.width.toDp() }
     
     val scrollState = rememberScrollState()
     var selectedMeasurement by remember { mutableStateOf<GlucoseMeasurement?>(null) }

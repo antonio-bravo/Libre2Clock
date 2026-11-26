@@ -54,6 +54,9 @@ fun SettingsEmergencyScreen(
         com.tonio.libre2clock.util.EmergencyAccessibilityService.isServiceEnabled(context)
     }
 
+    val permissionDeniedWarning = stringResource(R.string.emergency_permission_denied_warning)
+    val smsPermissionWarning = stringResource(R.string.emergency_sms_permission_warning)
+
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -63,12 +66,12 @@ fun SettingsEmergencyScreen(
 
         if (!fineGranted && !coarseGranted && emergencyConfig.includeLocation) {
             scope.launch {
-                snackbarHostState.showSnackbar(context.getString(R.string.emergency_permission_denied_warning))
+                snackbarHostState.showSnackbar(permissionDeniedWarning)
             }
         }
         if (!smsGranted && emergencyConfig.contacts.any { it.sendViaSms }) {
             scope.launch {
-                snackbarHostState.showSnackbar(context.getString(R.string.emergency_sms_permission_warning))
+                snackbarHostState.showSnackbar(smsPermissionWarning)
             }
         }
     }
@@ -947,12 +950,13 @@ fun EmergencyContactDialog(
                         text = stringResource(R.string.emergency_whatsapp_group_help_content),
                         style = MaterialTheme.typography.bodySmall
                     )
+                    val copiedMsg = stringResource(R.string.emergency_copied_to_clipboard)
                     OutlinedButton(
                         onClick = {
                             coroutineScope.launch {
                                 clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("cmd1", cmd1)))
                             }
-                            android.widget.Toast.makeText(context, context.getString(R.string.emergency_copied_to_clipboard), android.widget.Toast.LENGTH_SHORT).show()
+                            android.widget.Toast.makeText(context, copiedMsg, android.widget.Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -965,7 +969,7 @@ fun EmergencyContactDialog(
                             coroutineScope.launch {
                                 clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("cmd2", cmd2)))
                             }
-                            android.widget.Toast.makeText(context, context.getString(R.string.emergency_copied_to_clipboard), android.widget.Toast.LENGTH_SHORT).show()
+                            android.widget.Toast.makeText(context, copiedMsg, android.widget.Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {

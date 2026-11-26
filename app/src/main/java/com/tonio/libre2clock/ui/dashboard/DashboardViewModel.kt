@@ -1,13 +1,15 @@
 package com.tonio.libre2clock.ui.dashboard
 
+import android.app.Application
 import android.content.Context
 import android.os.PowerManager
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.tonio.libre2clock.R
 import com.tonio.libre2clock.data.model.ActiveSensorInfo
 import com.tonio.libre2clock.data.model.AutoRangeOffsetMode
 import com.tonio.libre2clock.data.model.AppRole
+import com.tonio.libre2clock.data.model.BolusTimeProfile
 import com.tonio.libre2clock.data.model.CapillaryMeasurement
 import com.tonio.libre2clock.data.model.FollowedPatient
 import com.tonio.libre2clock.data.model.FollowerInfo
@@ -22,8 +24,10 @@ import com.tonio.libre2clock.data.repository.GlucoseProcessor
 import com.tonio.libre2clock.data.repository.GlucoseRepository
 import com.tonio.libre2clock.data.repository.InsulinProcessor
 import com.tonio.libre2clock.data.repository.PreferenceManager
+import com.tonio.libre2clock.util.CompressionLowEvent
 import com.tonio.libre2clock.util.SensorErrorSummary
 import com.tonio.libre2clock.util.buildSensorErrorSummary
+import com.tonio.libre2clock.util.detectCompressionLows
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -53,8 +57,11 @@ import java.util.Locale
 class DashboardViewModel(
     private val repository: GlucoseRepository,
     private val preferenceManager: PreferenceManager,
-    private val androidContext: android.content.Context
-) : ViewModel() {
+    application: Application
+) : AndroidViewModel(application) {
+
+    private val androidContext: Context
+        get() = getApplication()
 
     private val subscribedSharing = SharingStarted.WhileSubscribed(5000)
     private val dashboardMetricsCache = DashboardMetricsCacheRepository(androidContext)
@@ -359,6 +366,48 @@ class DashboardViewModel(
     val targetGlucoseHigh: StateFlow<Int> = preferenceManager.targetGlucoseHigh
         .stateIn(viewModelScope, subscribedSharing, 180)
 
+    val bolusTimeProfiles: StateFlow<List<BolusTimeProfile>> = preferenceManager.bolusTimeProfiles
+        .stateIn(viewModelScope, subscribedSharing, emptyList())
+
+    val alarmSnoozeUntilMs: StateFlow<Long?> = preferenceManager.alarmSnoozeUntilMs
+        .stateIn(viewModelScope, subscribedSharing, null)
+
+    val hypo15RuleEndsAtMs: StateFlow<Long?> = preferenceManager.hypo15RuleEndsAtMs
+        .stateIn(viewModelScope, subscribedSharing, null)
+
+    val lowGlucoseThreshold: StateFlow<Int> = preferenceManager.lowGlucoseThreshold
+        .stateIn(viewModelScope, subscribedSharing, 70)
+
+    val glucoseUnit: StateFlow<com.tonio.libre2clock.data.model.GlucoseUnit> = preferenceManager.glucoseUnit
+        .stateIn(viewModelScope, subscribedSharing, com.tonio.libre2clock.data.model.GlucoseUnit.MG_DL)
+
+    fun snoozeAlarms(minutes: Int = 30) {
+        viewModelScope.launch {
+            preferenceManager.saveAlarmSnoozeUntilMs(System.currentTimeMillis() + minutes * 60_000L)
+        }
+    }
+
+    fun clearSnooze() {
+        viewModelScope.launch {
+            preferenceManager.saveAlarmSnoozeUntilMs(null)
+        }
+    }
+
+    fun startHypo15Rule() {
+        viewModelScope.launch {
+            val endMs = System.currentTimeMillis() + 15 * 60_000L
+            preferenceManager.saveHypo15RuleEndsAtMs(endMs)
+            preferenceManager.saveAlarmSnoozeUntilMs(endMs)
+            com.tonio.libre2clock.service.GlucoseAlarmReceiver.scheduleHypo15CheckAlarm(androidContext, endMs)
+        }
+    }
+
+    fun cancelHypo15Rule() {
+        viewModelScope.launch {
+            preferenceManager.saveHypo15RuleEndsAtMs(null)
+        }
+    }
+
     val rapidDurationMinutes: StateFlow<Int> = preferenceManager.rapidDurationMins
         .stateIn(viewModelScope, subscribedSharing, 240)
 
@@ -430,6 +479,14 @@ class DashboardViewModel(
         buildSensorErrorSummary(emptyList(), sensorCapillaries).firstOrNull()
     }.stateIn(viewModelScope, subscribedSharing, null)
 
+    val recentCompressionLows: StateFlow<List<CompressionLowEvent>> = graphData
+        .map { readings ->
+            val cutoff = Instant.now().minusSeconds(24L * 3600L)
+            detectCompressionLows(readings).filter { !it.timestamp.isBefore(cutoff) }
+        }
+        .flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, subscribedSharing, emptyList())
+
     // --- 7. Predicted Glucose ---
     val predictedGlucose: StateFlow<List<Pair<Instant, Int>>> = combine(
         currentGlucose,
@@ -437,7 +494,8 @@ class DashboardViewModel(
         manualTdi,
         manualIsf,
         isfRuleConstant,
-        tdiCalculationDays
+        tdiCalculationDays,
+        bolusTimeProfiles
     ) { flows ->
         val current = flows[0] as? GlucoseMeasurement
         @Suppress("UNCHECKED_CAST")
@@ -446,12 +504,21 @@ class DashboardViewModel(
         val mIsf = flows[3] as? Double
         val isfRule = (flows[4] as? Int) ?: 1800
         val tdiDays = (flows[5] as? Int) ?: 30
+        @Suppress("UNCHECKED_CAST")
+        val profiles = (flows[6] as? List<BolusTimeProfile>) ?: emptyList()
 
         val g = current?.calibratedValue ?: return@combine emptyList()
         val calculatedTdi = tdi ?: InsulinProcessor.calculateAverageDaily(doses, tdiDays)
-        val isf = InsulinProcessor.calculateISF(calculatedTdi, isfRule, mIsf)
-        
-        InsulinProcessor.predictGlucosePath(g, doses, isf)
+        val resolved = InsulinProcessor.resolveBolusParams(
+            tdi = calculatedTdi,
+            icConstant = 450,
+            isfConstant = isfRule,
+            manualIsf = mIsf,
+            defaultTargetGlucose = 100,
+            profiles = profiles
+        )
+
+        InsulinProcessor.predictGlucosePath(g, doses, resolved.isf)
     }.stateIn(viewModelScope, subscribedSharing, emptyList())
 
     // --- 8. Background Sync ---

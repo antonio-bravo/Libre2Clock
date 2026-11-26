@@ -330,10 +330,11 @@ private fun DoubleTapTestCard(
     onLockThreshold: (Int) -> Unit
 ) {
     val context = LocalContext.current
-    var lastTapTime by remember { mutableStateOf(0L) }
+    var lastTapTime by remember { mutableLongStateOf(0L) }
     var measuredIntervalMs by remember { mutableStateOf<Int?>(null) }
     var statusText by remember { mutableStateOf("") }
     var isSuccessState by remember { mutableStateOf<Boolean?>(null) }
+    val resources = androidx.compose.ui.platform.LocalResources.current
 
     Card(
         modifier = Modifier
@@ -346,21 +347,21 @@ private fun DoubleTapTestCard(
                         measuredIntervalMs = diff
                         if (diff <= currentThresholdMs) {
                             isSuccessState = true
-                            statusText = context.resources.getString(R.string.widget_double_tap_test_success, diff, currentThresholdMs)
+                            statusText = resources.getString(R.string.widget_double_tap_test_success, diff, currentThresholdMs)
                             val voiceManager = com.tonio.libre2clock.util.GlucoseVoiceManager.getInstance(context)
                             voiceManager.speakCustom("Doble toque de $diff milisegundos detectado")
                         } else {
                             isSuccessState = false
-                            statusText = context.resources.getString(R.string.widget_double_tap_test_too_slow, diff, currentThresholdMs)
+                            statusText = resources.getString(R.string.widget_double_tap_test_too_slow, diff, currentThresholdMs)
                         }
                         lastTapTime = 0L
                     } else {
                         lastTapTime = now
-                        statusText = context.resources.getString(R.string.widget_double_tap_first_click)
+                        statusText = resources.getString(R.string.widget_double_tap_first_click)
                     }
                 } else {
                     lastTapTime = now
-                    statusText = context.resources.getString(R.string.widget_double_tap_first_click)
+                    statusText = resources.getString(R.string.widget_double_tap_first_click)
                 }
             },
         colors = CardDefaults.cardColors(

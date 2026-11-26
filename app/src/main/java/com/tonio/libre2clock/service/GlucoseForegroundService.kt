@@ -1,6 +1,5 @@
 package com.tonio.libre2clock.service
 
-import android.R
 import android.app.AlarmManager
 import android.app.Notification
 import android.app.NotificationChannel
@@ -134,6 +133,36 @@ class GlucoseForegroundService : Service() {
         const val GLUCOSE_ALARM_COOLDOWN_MS = 15 * 60 * 1000L
         const val LOW_GLUCOSE_THRESHOLD = 70
         const val HIGH_GLUCOSE_THRESHOLD = 180
+
+        fun scheduleNextPollAlarm(context: Context, delayMs: Long) {
+            val appContext = context.applicationContext
+            val alarmManager = appContext.getSystemService(ALARM_SERVICE) as? AlarmManager ?: return
+            val intent = Intent(appContext, GlucoseAlarmReceiver::class.java).apply {
+                action = ACTION_POLL_GLUCOSE
+            }
+            val pendingIntent = PendingIntent.getBroadcast(
+                appContext,
+                0,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            val triggerAtMillis = System.currentTimeMillis() + delayMs
+
+            try {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerAtMillis,
+                    pendingIntent
+                )
+            } catch (_: SecurityException) {
+                alarmManager.setAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerAtMillis,
+                    pendingIntent
+                )
+            }
+        }
     }
 
     override fun onCreate() {
@@ -369,6 +398,7 @@ class GlucoseForegroundService : Service() {
                 maybeSendEmergencySosAlert(processed)
                 maybeVoiceAnnounce(processed, config)
                 maybeSyncNightscout(processed)
+                maybeSyncHealthConnect(processed)
                 maybeBroadcastXdrip(processed)
             } else {
                 fetchResult.exceptionOrNull()?.let { error ->
@@ -384,48 +414,7 @@ class GlucoseForegroundService : Service() {
     }
 
     private fun scheduleNextAlarm(delayMs: Long) {
-        val alarmManager = getSystemService(ALARM_SERVICE) as? AlarmManager ?: return
-        val intent = Intent(this, GlucoseAlarmReceiver::class.java).apply {
-            action = ACTION_POLL_GLUCOSE
-        }
-        val pendingIntent = PendingIntent.getBroadcast(
-            this,
-            0,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        
-        val triggerAtMillis = System.currentTimeMillis() + delayMs
-        
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    triggerAtMillis,
-                    pendingIntent
-                )
-            } else {
-                alarmManager.setExact(
-                    AlarmManager.RTC_WAKEUP,
-                    triggerAtMillis,
-                    pendingIntent
-                )
-            }
-        } catch (e: SecurityException) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    triggerAtMillis,
-                    pendingIntent
-                )
-            } else {
-                alarmManager.set(
-                    AlarmManager.RTC_WAKEUP,
-                    triggerAtMillis,
-                    pendingIntent
-                )
-            }
-        }
+        scheduleNextPollAlarm(this, delayMs)
     }
 
     private fun calculatePollingInterval(firstPoll: Boolean, batteryState: BatteryState, config: ServiceConfig): Long {
@@ -448,22 +437,20 @@ class GlucoseForegroundService : Service() {
     }
 
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-            
-            val channel = NotificationChannel(CHANNEL_ID, "Glucose Monitoring", NotificationManager.IMPORTANCE_LOW).apply {
-                description = "Shows current glucose readings"
-            }
-            notificationManager.createNotificationChannel(channel)
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
-            val alertChannel = NotificationChannel(ALERT_CHANNEL_ID, "Glucose Alerts", NotificationManager.IMPORTANCE_HIGH).apply {
-                description = "Notifications for glucose tests and alerts"
-                enableVibration(true)
-                vibrationPattern = longArrayOf(0, 500, 200, 500)
-                lockscreenVisibility = Notification.VISIBILITY_PUBLIC
-            }
-            notificationManager.createNotificationChannel(alertChannel)
+        val channel = NotificationChannel(CHANNEL_ID, "Glucose Monitoring", NotificationManager.IMPORTANCE_LOW).apply {
+            description = "Shows current glucose readings"
         }
+        notificationManager.createNotificationChannel(channel)
+
+        val alertChannel = NotificationChannel(ALERT_CHANNEL_ID, "Glucose Alerts", NotificationManager.IMPORTANCE_HIGH).apply {
+            description = "Notifications for glucose tests and alerts"
+            enableVibration(true)
+            vibrationPattern = longArrayOf(0, 500, 200, 500)
+            lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+        }
+        notificationManager.createNotificationChannel(alertChannel)
     }
 
     private fun createNotification(content: String): Notification {
@@ -481,10 +468,14 @@ class GlucoseForegroundService : Service() {
             .build()
     }
 
+    @Volatile
+    private var currentGlucoseUnit: com.tonio.libre2clock.data.model.GlucoseUnit = com.tonio.libre2clock.data.model.GlucoseUnit.MG_DL
+
     private fun updateNotification(measurement: GlucoseMeasurement) {
         val trendStr = GlucoseProcessor.getTrendArrowSymbol(measurement.trendArrow)
-        val dualValue = GlucoseProcessor.formatDualValue(measurement.value, measurement.calibratedValue)
-        val content = "$dualValue mg/dL $trendStr"
+        val dualValue = com.tonio.libre2clock.util.GlucoseUnitConverter.formatDualValue(measurement.value, measurement.calibratedValue, currentGlucoseUnit)
+        val unitLabel = com.tonio.libre2clock.util.GlucoseUnitConverter.unitLabel(currentGlucoseUnit)
+        val content = "$dualValue $unitLabel $trendStr"
         
         // Notify widget to update explicitly regardless of content change
         GlucoseWidgetProvider.triggerUpdate(this)
@@ -604,8 +595,10 @@ class GlucoseForegroundService : Service() {
                     val rapidIob = com.tonio.libre2clock.data.repository.InsulinProcessor.calculateTotalIOB(rapidDoses)
                     val slowIob = com.tonio.libre2clock.data.repository.InsulinProcessor.calculateTotalIOB(slowDoses)
 
+                    val unit = preferenceManager.glucoseUnit.first()
+                    currentGlucoseUnit = unit
                     val voiceManager = com.tonio.libre2clock.util.GlucoseVoiceManager.getInstance(applicationContext)
-                    voiceManager.speakGlucose(measurement, rapidIob, slowIob, isDetailed = ttsDetailed)
+                    voiceManager.speakGlucose(measurement, rapidIob, slowIob, isDetailed = ttsDetailed, glucoseUnit = unit)
                 }
             } catch (e: Exception) {
                 // Ignore TTS failures in background
@@ -633,6 +626,25 @@ class GlucoseForegroundService : Service() {
                 }
             } catch (e: Exception) {
                 eventLogger.log(LogLevel.WARNING, "NightscoutSync", "Upload failed: ${e.message}")
+            }
+        }
+    }
+
+    private fun maybeSyncHealthConnect(measurement: GlucoseMeasurement) {
+        serviceScope.launch {
+            try {
+                val enabled = preferenceManager.healthConnectEnabled.first()
+                if (!enabled) return@launch
+                if (!com.tonio.libre2clock.util.HealthConnectManager.hasAllPermissions(applicationContext)) return@launch
+
+                val useCal = preferenceManager.nightscoutUseCalibrated.first()
+                com.tonio.libre2clock.util.HealthConnectManager.syncGlucoseReadings(
+                    context = applicationContext,
+                    measurements = listOf(measurement),
+                    useCalibrated = useCal
+                )
+            } catch (e: Exception) {
+                eventLogger.log(LogLevel.WARNING, "HealthConnectSync", "Sync failed: ${e.message}")
             }
         }
     }
@@ -769,11 +781,15 @@ class GlucoseForegroundService : Service() {
         notificationManager.notify(WATCH_ALERT_NOTIFICATION_ID, notification)
     }
 
-    private fun maybeSendGlucoseAlarms(measurement: GlucoseMeasurement, config: ServiceConfig) {
+    private suspend fun maybeSendGlucoseAlarms(measurement: GlucoseMeasurement, config: ServiceConfig) {
         if (!isWithinAnyActiveSchedule(config.parsedAlarmSchedules)) return
         
         val now = System.currentTimeMillis()
         val valueToCheck = if (config.useCalibratedForAlarms) measurement.calibratedValue else measurement.value
+        val snoozeUntil = preferenceManager.alarmSnoozeUntilMs.first()
+        if (com.tonio.libre2clock.util.AlertSnoozeHelper.isAlarmSnoozed(now, snoozeUntil, valueToCheck)) {
+            return
+        }
 
         if (config.lowGlucoseAlarmEnabled && valueToCheck < config.lowGlucoseThreshold) {
             if (now - lastLowAlarmAtMillis >= GLUCOSE_ALARM_COOLDOWN_MS) {
@@ -839,10 +855,20 @@ class GlucoseForegroundService : Service() {
         val alarmText = if (isLow) "Low glucose alarm" else "High glucose alarm"
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
-        val notification = NotificationCompat.Builder(this, ALERT_CHANNEL_ID)
+        val snoozeIntent = PendingIntent.getBroadcast(
+            this,
+            901,
+            Intent(this, GlucoseAlarmReceiver::class.java).apply {
+                action = GlucoseAlarmReceiver.ACTION_SNOOZE_ALARM
+                putExtra(GlucoseAlarmReceiver.EXTRA_SNOOZE_MINUTES, 30)
+            },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val builder = NotificationCompat.Builder(this, ALERT_CHANNEL_ID)
             .setContentTitle(styledTitle)
             .setContentText(alarmText)
-            .setSmallIcon(R.drawable.stat_notify_sync)
+            .setSmallIcon(android.R.drawable.stat_notify_sync)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
@@ -852,9 +878,21 @@ class GlucoseForegroundService : Service() {
             .setOngoing(false)
             .setAutoCancel(true)
             .setTimeoutAfter(TEST_ALERT_TIMEOUT_MS)
-            .build()
+            .addAction(0, getString(com.tonio.libre2clock.R.string.alarm_action_snooze_30m), snoozeIntent)
 
-        notificationManager.notify(GLUCOSE_ALARM_NOTIFICATION_ID, notification)
+        if (isLow) {
+            val hypo15Intent = PendingIntent.getBroadcast(
+                this,
+                902,
+                Intent(this, GlucoseAlarmReceiver::class.java).apply {
+                    action = GlucoseAlarmReceiver.ACTION_START_HYPO_15_RULE
+                },
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            builder.addAction(0, getString(com.tonio.libre2clock.R.string.alarm_action_hypo_15_rule), hypo15Intent)
+        }
+
+        notificationManager.notify(GLUCOSE_ALARM_NOTIFICATION_ID, builder.build())
     }
 
     private fun sendCustomAlarmNotification(measurement: GlucoseMeasurement, config: ServiceConfig, isCrossing: Boolean = false) {
@@ -867,10 +905,20 @@ class GlucoseForegroundService : Service() {
         val alarmText = "$prefix ($typeLabel $dirSymbol ${config.customGlucoseThreshold} mg/dL)"
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
 
-        val notification = NotificationCompat.Builder(this, ALERT_CHANNEL_ID)
+        val snoozeIntent = PendingIntent.getBroadcast(
+            this,
+            901,
+            Intent(this, GlucoseAlarmReceiver::class.java).apply {
+                action = GlucoseAlarmReceiver.ACTION_SNOOZE_ALARM
+                putExtra(GlucoseAlarmReceiver.EXTRA_SNOOZE_MINUTES, 30)
+            },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val builder = NotificationCompat.Builder(this, ALERT_CHANNEL_ID)
             .setContentTitle(styledTitle)
             .setContentText(alarmText)
-            .setSmallIcon(R.drawable.stat_notify_sync)
+            .setSmallIcon(android.R.drawable.stat_notify_sync)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
@@ -880,9 +928,22 @@ class GlucoseForegroundService : Service() {
             .setOngoing(false)
             .setAutoCancel(true)
             .setTimeoutAfter(TEST_ALERT_TIMEOUT_MS)
-            .build()
+            .addAction(0, getString(com.tonio.libre2clock.R.string.alarm_action_snooze_30m), snoozeIntent)
 
-        notificationManager.notify(GLUCOSE_ALARM_NOTIFICATION_ID, notification)
+        val isLowCustom = config.customGlucoseAlarmDirection == "BELOW"
+        if (isLowCustom) {
+            val hypo15Intent = PendingIntent.getBroadcast(
+                this,
+                902,
+                Intent(this, GlucoseAlarmReceiver::class.java).apply {
+                    action = GlucoseAlarmReceiver.ACTION_START_HYPO_15_RULE
+                },
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            builder.addAction(0, getString(com.tonio.libre2clock.R.string.alarm_action_hypo_15_rule), hypo15Intent)
+        }
+
+        notificationManager.notify(GLUCOSE_ALARM_NOTIFICATION_ID, builder.build())
     }
 
     private suspend fun maybeSendPredictiveHypoAlert(measurement: GlucoseMeasurement, config: ServiceConfig) {
@@ -898,15 +959,23 @@ class GlucoseForegroundService : Service() {
         val isfRuleC = preferenceManager.isfRuleConstant.first()
         val manualTdi = preferenceManager.manualTdi.first()
         val tdiDays = preferenceManager.tdiCalculationDays.first()
+        val profiles = preferenceManager.bolusTimeProfiles.first()
         val calculatedTdi = InsulinProcessor.calculateAverageDaily(doses, tdiDays)
         val tdi = manualTdi ?: calculatedTdi
-        val isf = InsulinProcessor.calculateISF(tdi, isfRuleC, manualIsf)
+        val resolved = InsulinProcessor.resolveBolusParams(
+            tdi = tdi,
+            icConstant = 450,
+            isfConstant = isfRuleC,
+            manualIsf = manualIsf,
+            defaultTargetGlucose = 100,
+            profiles = profiles
+        )
 
         val risk = InsulinProcessor.calculatePredictiveHypoRisk(
             currentGlucose = valueToCheck,
             trendArrow = measurement.trendArrow ?: 4,
             doses = doses,
-            isf = isf,
+            isf = resolved.isf,
             hypoThreshold = LOW_GLUCOSE_THRESHOLD
         )
 
@@ -924,7 +993,7 @@ class GlucoseForegroundService : Service() {
         val notification = NotificationCompat.Builder(this, ALERT_CHANNEL_ID)
             .setContentTitle(titleText)
             .setContentText(contentText)
-            .setSmallIcon(R.drawable.stat_notify_sync)
+            .setSmallIcon(android.R.drawable.stat_notify_sync)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
@@ -941,8 +1010,9 @@ class GlucoseForegroundService : Service() {
 
     private fun buildWatchPlainTitle(measurement: GlucoseMeasurement): String {
         val trendStr = GlucoseProcessor.getTrendArrowSymbol(measurement.trendArrow)
-        val dualValue = GlucoseProcessor.formatDualValue(measurement.value, measurement.calibratedValue)
-        return "$dualValue mg/dL  $trendStr"
+        val dualValue = com.tonio.libre2clock.util.GlucoseUnitConverter.formatDualValue(measurement.value, measurement.calibratedValue, currentGlucoseUnit)
+        val unitLabel = com.tonio.libre2clock.util.GlucoseUnitConverter.unitLabel(currentGlucoseUnit)
+        return "$dualValue $unitLabel  $trendStr"
     }
 
     private fun buildWatchStyledTitle(title: String, dualValue: String): CharSequence {

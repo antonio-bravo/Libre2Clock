@@ -1,7 +1,9 @@
 package com.tonio.libre2clock.di
 
+import android.annotation.SuppressLint
 import android.content.Context
 import com.tonio.libre2clock.data.api.LibreService
+import com.tonio.libre2clock.data.local.GlucoseHistoryDatabaseHelper
 import com.tonio.libre2clock.data.repository.GlucoseRepositoryImpl
 import com.tonio.libre2clock.data.repository.PreferenceManager
 import com.tonio.libre2clock.data.repository.SecureCredentialStore
@@ -9,6 +11,7 @@ import com.tonio.libre2clock.data.sync.AuthManager
 import com.tonio.libre2clock.data.sync.CloudSyncManager
 import com.tonio.libre2clock.util.EventLogManager
 
+@SuppressLint("StaticFieldLeak")
 object AppContainer {
 
     @Volatile
@@ -25,6 +28,20 @@ object AppContainer {
 
     @Volatile
     private var eventLogManager: EventLogManager? = null
+
+    @Volatile
+    private var historyDbHelper: GlucoseHistoryDatabaseHelper? = null
+
+    fun provideHistoryDbHelper(context: Context): GlucoseHistoryDatabaseHelper {
+        val existing = historyDbHelper
+        if (existing != null) return existing
+
+        return synchronized(this) {
+            val cached = historyDbHelper
+            if (cached != null) cached
+            else GlucoseHistoryDatabaseHelper(context.applicationContext).also { historyDbHelper = it }
+        }
+    }
 
     fun providePreferenceManager(context: Context): PreferenceManager {
         val existing = preferenceManager
@@ -92,8 +109,8 @@ object AppContainer {
                 val credStore = SecureCredentialStore(appContext)
                 val logManager = provideEventLogManager(appContext)
 
-                LibreService.init(appContext, prefManager, credStore, logManager)
-                com.tonio.libre2clock.data.api.DexcomService.init(appContext, prefManager, credStore, logManager)
+                LibreService.configure(prefManager, credStore, logManager)
+                com.tonio.libre2clock.data.api.DexcomService.configure(prefManager, credStore, logManager)
 
                 GlucoseRepositoryImpl(
                     context = appContext,

@@ -551,7 +551,7 @@ private fun DangerZoneSection(
 }
 
 // OPTIMIZACIÓN: DateTimeFormatter es thread-safe por diseño, eliminando la necesidad de 'synchronized'
-private val timestampFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+private val timestampFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", java.util.Locale.US)
     .withZone(ZoneId.systemDefault())
 
 @Suppress("DEPRECATION")

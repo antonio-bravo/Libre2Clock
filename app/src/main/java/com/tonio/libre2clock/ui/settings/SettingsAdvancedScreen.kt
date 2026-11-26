@@ -158,7 +158,7 @@ private fun PerfStatItem(stat: SectionPerfTelemetry.Snapshot) {
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text(
-                text = LocalizedSectionName(stat.section),
+                text = localizedSectionName(stat.section),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -299,6 +299,7 @@ private fun DebugLogCard(
                     modifier = Modifier.weight(1f)
                 )
 
+                val logCopiedMsg = stringResource(R.string.settings_log_copied)
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     IconButton(
                         onClick = {
@@ -309,7 +310,7 @@ private fun DebugLogCard(
                             }
                             Toast.makeText(
                                 context,
-                                context.getString(R.string.settings_log_copied),
+                                logCopiedMsg,
                                 Toast.LENGTH_SHORT
                             ).show()
                         },

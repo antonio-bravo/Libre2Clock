@@ -1,7 +1,9 @@
 package com.tonio.libre2clock.data.api
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
+import com.tonio.libre2clock.BuildConfig
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tonio.libre2clock.data.model.DexcomAuthRequest
@@ -12,8 +14,12 @@ import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.data.repository.PreferenceManager
 import com.tonio.libre2clock.data.repository.SecureCredentialStore
 import com.tonio.libre2clock.util.EventLogManager
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -25,6 +31,7 @@ import java.util.Locale
 import java.util.TimeZone
 import java.util.regex.Pattern
 
+@SuppressLint("StaticFieldLeak")
 object DexcomService {
 
     @Volatile
@@ -41,6 +48,34 @@ object DexcomService {
     private var eventLogger: EventLogManager? = null
 
     private var retrofit: Retrofit? = null
+    private val initMutex = Mutex()
+
+    fun configure(
+        prefManager: PreferenceManager,
+        credStore: SecureCredentialStore,
+        logger: EventLogManager? = null
+    ) {
+        preferenceManager = prefManager
+        credentialStore = credStore
+        eventLogger = logger
+    }
+
+    suspend fun ensureInitialized(
+        prefManager: PreferenceManager,
+        credStore: SecureCredentialStore,
+        logger: EventLogManager? = null
+    ) {
+        configure(prefManager, credStore, logger)
+        if (isInitialized) return
+        initMutex.withLock {
+            if (isInitialized) return
+            withContext(Dispatchers.IO) {
+                region = prefManager.dexcomServerRegion.first()
+                isInitialized = true
+                Log.d("DexcomService", "DexcomService initialized async with region: ${region.displayName}")
+            }
+        }
+    }
 
     fun init(
         context: Context,
@@ -48,20 +83,10 @@ object DexcomService {
         credStore: SecureCredentialStore,
         logger: EventLogManager? = null
     ) {
+        configure(prefManager, credStore, logger)
         if (isInitialized) return
-        synchronized(this) {
-            if (isInitialized) return
-            preferenceManager = prefManager
-            credentialStore = credStore
-            eventLogger = logger
-
-            runBlocking {
-                val savedRegion = prefManager.dexcomServerRegion.first()
-                region = savedRegion
-            }
-
-            isInitialized = true
-            Log.d("DexcomService", "DexcomService initialized with region: ${region.displayName}")
+        runBlocking {
+            ensureInitialized(prefManager, credStore, logger)
         }
     }
 
@@ -86,7 +111,7 @@ object DexcomService {
     }
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
+        level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
     }
 
     private val moshi = Moshi.Builder()
@@ -197,30 +222,26 @@ object DexcomService {
         )
     }
 
+    private val dateRegex = Regex("Date\\((-?\\d+)")
+
     fun extractEpochMs(reading: DexcomGlucoseReading): Long? {
         if (reading.epoch != null && reading.epoch > 0) {
             return reading.epoch
         }
 
         val dateStr = reading.wt ?: reading.st ?: reading.dt ?: return null
-        val pattern = Pattern.compile("Date\\((-?\\d+)")
-        val matcher = pattern.matcher(dateStr)
-        if (matcher.find()) {
-            return matcher.group(1)?.toLongOrNull()
-        }
-        return null
+        val match = dateRegex.find(dateStr) ?: return null
+        return match.groupValues[1].toLongOrNull()
     }
 
     fun mapTrendToTrendArrow(trend: String?): Int {
         return when (trend?.lowercase()?.trim()) {
-            "doubleup" -> 1       // Subiendo rápido
-            "singleup" -> 2       // Subiendo
-            "fortyfiveup" -> 3   // Subiendo suavemente
-            "flat" -> 4           // Estable
-            "fortyfivedown" -> 5 // Bajando suavemente
-            "singledown" -> 6     // Bajando
-            "doubledown" -> 7     // Bajando rápido
-            else -> 0             // Sin flecha / No computable
+            "doubledown", "singledown" -> 1 // ↓ Bajando / Bajando rápido
+            "fortyfivedown" -> 2            // ↘ Bajando suavemente
+            "flat" -> 3                     // → Estable
+            "fortyfiveup" -> 4              // ↗ Subiendo suavemente
+            "singleup", "doubleup" -> 5     // ↑ Subiendo / Subiendo rápido
+            else -> 0                       // Sin flecha / No computable
         }
     }
 
@@ -229,8 +250,6 @@ object DexcomService {
     }
 
     private fun formatIsoTimestamp(epochMs: Long): String {
-        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
-        sdf.timeZone = TimeZone.getTimeZone("UTC")
-        return sdf.format(Date(epochMs))
+        return java.time.Instant.ofEpochMilli(epochMs).toString()
     }
 }

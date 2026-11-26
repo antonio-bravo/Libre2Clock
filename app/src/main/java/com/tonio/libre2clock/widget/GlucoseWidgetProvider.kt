@@ -7,6 +7,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import androidx.core.graphics.toColorInt
 import android.os.Bundle
 import android.os.SystemClock
 import android.util.TypedValue
@@ -36,14 +37,13 @@ import java.util.Locale
 
 class GlucoseWidgetProvider : AppWidgetProvider() {
 
-    private val job = SupervisorJob()
-    private val scope = CoroutineScope(Dispatchers.IO + job)
-    
     private val syncDateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault())
 
     companion object {
         const val ACTION_UPDATE_WIDGET = "com.tonio.libre2clock.ACTION_UPDATE_WIDGET"
         const val ACTION_WIDGET_CLICK = "com.tonio.libre2clock.ACTION_WIDGET_CLICK"
+
+        private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
         @Volatile
         private var lastWidgetClickTime: Long = 0L
@@ -109,9 +109,10 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
                             val rapidIob = InsulinProcessor.calculateTotalIOB(rapidDoses)
                             val slowIob = InsulinProcessor.calculateTotalIOB(slowDoses)
                             val ttsDetailed = preferenceManager.ttsFormatDetailed.first()
+                            val unit = preferenceManager.glucoseUnit.first()
 
                             val voiceManager = GlucoseVoiceManager.getInstance(context)
-                            voiceManager.speakGlucose(measurement, rapidIob, slowIob, isDetailed = ttsDetailed)
+                            voiceManager.speakGlucose(measurement, rapidIob, slowIob, isDetailed = ttsDetailed, glucoseUnit = unit)
                         }
                     } else {
                         // First tap: delay launching app slightly to see if a second tap follows
@@ -178,12 +179,12 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
 
     private fun getTrendColor(trend: Int?): Int {
         return when (trend) {
-            1 -> Color.parseColor("#FF5252") // ↓ Rapidly falling (Red)
-            2 -> Color.parseColor("#FF9800") // ↘ Falling (Orange)
-            3 -> Color.parseColor("#FFFFFF") // → Stable (White)
-            4 -> Color.parseColor("#FFD54F") // ↗ Rising (Yellow)
-            5 -> Color.parseColor("#FF5252") // ↑ Rapidly rising (Red)
-            else -> Color.parseColor("#FFFFFF")
+            1 -> "#FF5252".toColorInt() // ↓ Rapidly falling (Red)
+            2 -> "#FF9800".toColorInt() // ↘ Falling (Orange)
+            3 -> "#FFFFFF".toColorInt() // → Stable (White)
+            4 -> "#FFD54F".toColorInt() // ↗ Rising (Yellow)
+            5 -> "#FF5252".toColorInt() // ↑ Rapidly rising (Red)
+            else -> "#FFFFFF".toColorInt()
         }
     }
 
@@ -221,6 +222,7 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
             val staleIndicatorPref = preferenceManager.widgetStaleIndicator.first()
             val targetLow = preferenceManager.lowGlucoseThreshold.first()
             val targetHigh = preferenceManager.highGlucoseThreshold.first()
+            val glucoseUnit = preferenceManager.glucoseUnit.first()
 
             // Dimensions from Widget options
             val options = appWidgetManager.getAppWidgetOptions(appWidgetId)
@@ -261,7 +263,7 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
             val evalVal = measurement?.calibratedValue ?: measurement?.value ?: 0
             val rawVal = measurement?.value ?: 0
             val dualValueStr = if (measurement != null && rawVal > 0) {
-                GlucoseProcessor.formatDualValue(rawVal, evalVal)
+                com.tonio.libre2clock.util.GlucoseUnitConverter.formatDualValue(rawVal, evalVal, glucoseUnit)
             } else {
                 "---"
             }
@@ -277,11 +279,11 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
 
             // Base RGB Color
             val baseRgb = when {
-                applyStaleMode -> Color.parseColor("#2C2C2C")
-                !useTargetColor -> Color.parseColor("#1E1E1E")
-                evalVal < targetLow -> Color.parseColor("#C83B34")
-                evalVal > targetHigh -> Color.parseColor("#E89940")
-                else -> Color.parseColor("#9DCA44")
+                applyStaleMode -> "#2C2C2C".toColorInt()
+                !useTargetColor -> "#1E1E1E".toColorInt()
+                evalVal < targetLow -> "#C83B34".toColorInt()
+                evalVal > targetHigh -> "#E89940".toColorInt()
+                else -> "#9DCA44".toColorInt()
             }
 
             // Alpha calculation
@@ -293,9 +295,9 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
                 views.setTextViewText(R.id.tv_glucose_value, dualValueStr)
                 views.setTextViewText(R.id.tv_glucose_trend, GlucoseProcessor.getTrendArrowSymbol(trend ?: 0))
                 
-                val glucoseColor = if (applyStaleMode) Color.parseColor("#888888") else Color.parseColor("#FFFFFF")
-                val trendColor = if (applyStaleMode) Color.parseColor("#666666") else getTrendColor(trend)
-                val timeColor = if (applyStaleMode) Color.parseColor("#666666") else Color.parseColor("#DDDDDD")
+                val glucoseColor = if (applyStaleMode) "#888888".toColorInt() else "#FFFFFF".toColorInt()
+                val trendColor = if (applyStaleMode) "#666666".toColorInt() else getTrendColor(trend)
+                val timeColor = if (applyStaleMode) "#666666".toColorInt() else "#DDDDDD".toColorInt()
 
                 views.setTextColor(R.id.tv_glucose_value, glucoseColor)
                 views.setTextColor(R.id.tv_glucose_trend, trendColor)
@@ -307,7 +309,7 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
                 views.setTextViewText(R.id.tv_glucose_value, "---")
                 views.setTextViewText(R.id.tv_glucose_trend, "")
                 views.setTextViewText(R.id.tv_last_update, "----")
-                views.setTextColor(R.id.tv_glucose_value, Color.parseColor("#888888"))
+                views.setTextColor(R.id.tv_glucose_value, "#888888".toColorInt())
             }
 
             // Calculate Insulin & FS
@@ -341,9 +343,9 @@ class GlucoseWidgetProvider : AppWidgetProvider() {
                 else context.getString(R.string.widget_slow_text, slowLabel, formattedSlowVal)
             } else ""
 
-            val subTextColor = if (applyStaleMode) Color.parseColor("#666666") else Color.parseColor("#82B1FF")
-            val slowTextColor = if (applyStaleMode) Color.parseColor("#666666") else Color.parseColor("#FF8A80")
-            val fsTextColor = if (applyStaleMode) Color.parseColor("#666666") else Color.parseColor("#C5E1A5")
+            val subTextColor = if (applyStaleMode) "#666666".toColorInt() else "#82B1FF".toColorInt()
+            val slowTextColor = if (applyStaleMode) "#666666".toColorInt() else "#FF8A80".toColorInt()
+            val fsTextColor = if (applyStaleMode) "#666666".toColorInt() else "#C5E1A5".toColorInt()
 
             views.setTextViewText(R.id.tv_insulin_rapid, rapidText)
             views.setTextColor(R.id.tv_insulin_rapid, subTextColor)

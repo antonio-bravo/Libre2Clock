@@ -4,6 +4,7 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.database.sqlite.SQLiteStatement
+import androidx.core.database.sqlite.transaction
 import com.tonio.libre2clock.data.model.GlucoseMeasurement
 import com.tonio.libre2clock.util.TimestampParser
 
@@ -200,28 +201,22 @@ class GlucoseHistoryDatabaseHelper(context: Context) :
 
     fun replaceAll(measurements: List<GlucoseMeasurement>) {
         val db = writableDatabase
-        db.beginTransaction()
-        try {
-            db.delete("glucose_history", null, null)
-            val statement = db.compileStatement(upsertStatementSql)
-            measurements.forEach { bindAndExecute(statement, it) }
-            db.setTransactionSuccessful()
-        } finally {
-            db.endTransaction()
+        db.transaction {
+            delete("glucose_history", null, null)
+            compileStatement(upsertStatementSql).use { statement ->
+                measurements.forEach { bindAndExecute(statement, it) }
+            }
         }
     }
 
     fun upsertAll(measurements: List<GlucoseMeasurement>) {
         if (measurements.isEmpty()) return
-        
+
         val db = writableDatabase
-        db.beginTransaction()
-        try {
-            val statement = db.compileStatement(upsertStatementSql)
-            measurements.forEach { bindAndExecute(statement, it) }
-            db.setTransactionSuccessful()
-        } finally {
-            db.endTransaction()
+        db.transaction {
+            compileStatement(upsertStatementSql).use { statement ->
+                measurements.forEach { bindAndExecute(statement, it) }
+            }
         }
     }
 

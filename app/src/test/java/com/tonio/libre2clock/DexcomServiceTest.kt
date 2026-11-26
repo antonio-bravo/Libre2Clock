@@ -11,13 +11,13 @@ class DexcomServiceTest {
 
     @Test
     fun mapTrendToTrendArrowMapsAllDexcomTrendsCorrectly() {
-        assertEquals(1, DexcomService.mapTrendToTrendArrow("DoubleUp"))
-        assertEquals(2, DexcomService.mapTrendToTrendArrow("SingleUp"))
-        assertEquals(3, DexcomService.mapTrendToTrendArrow("FortyFiveUp"))
-        assertEquals(4, DexcomService.mapTrendToTrendArrow("Flat"))
-        assertEquals(5, DexcomService.mapTrendToTrendArrow("FortyFiveDown"))
-        assertEquals(6, DexcomService.mapTrendToTrendArrow("SingleDown"))
-        assertEquals(7, DexcomService.mapTrendToTrendArrow("DoubleDown"))
+        assertEquals(5, DexcomService.mapTrendToTrendArrow("DoubleUp"))
+        assertEquals(5, DexcomService.mapTrendToTrendArrow("SingleUp"))
+        assertEquals(4, DexcomService.mapTrendToTrendArrow("FortyFiveUp"))
+        assertEquals(3, DexcomService.mapTrendToTrendArrow("Flat"))
+        assertEquals(2, DexcomService.mapTrendToTrendArrow("FortyFiveDown"))
+        assertEquals(1, DexcomService.mapTrendToTrendArrow("SingleDown"))
+        assertEquals(1, DexcomService.mapTrendToTrendArrow("DoubleDown"))
         assertEquals(0, DexcomService.mapTrendToTrendArrow("None"))
         assertEquals(0, DexcomService.mapTrendToTrendArrow(null))
     }
@@ -45,7 +45,7 @@ class DexcomServiceTest {
         assertNotNull(measurement)
         assertEquals(135, measurement?.value)
         assertEquals(135, measurement?.valueInMgPerDl)
-        assertEquals(2, measurement?.trendArrow)
+        assertEquals(5, measurement?.trendArrow)
         assertEquals(1711234567L, measurement?.epochSeconds)
     }
 

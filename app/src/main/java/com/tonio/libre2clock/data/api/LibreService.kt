@@ -1,7 +1,9 @@
 package com.tonio.libre2clock.data.api
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
+import com.tonio.libre2clock.BuildConfig
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tonio.libre2clock.data.model.LoginData
@@ -9,7 +11,11 @@ import com.tonio.libre2clock.data.model.LoginRequest
 import com.tonio.libre2clock.data.repository.PreferenceManager
 import com.tonio.libre2clock.data.repository.SecureCredentialStore
 import com.tonio.libre2clock.util.EventLogManager
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -18,6 +24,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.security.MessageDigest
 
+@SuppressLint("StaticFieldLeak")
 object LibreService {
     private const val DEFAULT_BASE_URL = "https://api.libreview.io/"
     private const val PRODUCT = "llu.android"
@@ -41,21 +48,28 @@ object LibreService {
 
     private var retrofit: Retrofit? = null
     private var directRetrofit: Retrofit? = null
+    private val initMutex = Mutex()
 
-    fun init(
-        context: Context,
+    fun configure(
         prefManager: PreferenceManager,
         credStore: SecureCredentialStore,
         logger: EventLogManager? = null
     ) {
-        if (isInitialized) return
-        synchronized(this) {
-            if (isInitialized) return
-            preferenceManager = prefManager
-            credentialStore = credStore
-            eventLogger = logger
+        preferenceManager = prefManager
+        credentialStore = credStore
+        eventLogger = logger
+    }
 
-            runBlocking {
+    suspend fun ensureInitialized(
+        prefManager: PreferenceManager,
+        credStore: SecureCredentialStore,
+        logger: EventLogManager? = null
+    ) {
+        configure(prefManager, credStore, logger)
+        if (isInitialized) return
+        initMutex.withLock {
+            if (isInitialized) return
+            withContext(Dispatchers.IO) {
                 val token = prefManager.getAuthTokenSync()
                 val id = prefManager.getUserIdSync()
                 val savedRegion = prefManager.getRegionSync()
@@ -68,10 +82,23 @@ object LibreService {
                 if (!savedRegion.isNullOrBlank()) {
                     baseUrl = "https://api-$savedRegion.libreview.io/"
                 }
-            }
 
-            isInitialized = true
-            Log.d("LibreService", "LibreService initialized with baseUrl: $baseUrl, authToken present: ${authToken != null}")
+                isInitialized = true
+                Log.d("LibreService", "LibreService initialized async with baseUrl: $baseUrl, authToken present: ${authToken != null}")
+            }
+        }
+    }
+
+    fun init(
+        context: Context,
+        prefManager: PreferenceManager,
+        credStore: SecureCredentialStore,
+        logger: EventLogManager? = null
+    ) {
+        configure(prefManager, credStore, logger)
+        if (isInitialized) return
+        runBlocking {
+            ensureInitialized(prefManager, credStore, logger)
         }
     }
 
@@ -135,7 +162,7 @@ object LibreService {
     }
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
+        level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
     }
 
     private val moshi = Moshi.Builder()

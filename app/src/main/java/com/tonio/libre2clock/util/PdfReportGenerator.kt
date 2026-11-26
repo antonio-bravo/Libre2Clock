@@ -3,6 +3,7 @@ package com.tonio.libre2clock.util
 import android.content.Context
 import android.graphics.*
 import android.graphics.pdf.PdfDocument
+import androidx.core.graphics.toColorInt
 import android.os.Build
 import com.tonio.libre2clock.ui.report.*
 import java.io.File
@@ -23,16 +24,16 @@ object PdfReportGenerator {
 
     // Colors matching FreeStyle Libre AGP Report (Consenso Internacional)
     private val LOCALE_SPANISH = Locale.forLanguageTag("es")
-    private val COLOR_BLUE = Color.parseColor("#2563EB")           // Calibrated
-    private val COLOR_RAW_ORANGE = Color.parseColor("#D97706")     // Raw
-    private val COLOR_BG_BAND = Color.parseColor("#E8F5E9")        // Target range band (70-180)
-    private val COLOR_TIR_GREEN = Color.parseColor("#2E7D32")      // Time in Range (70-180)
-    private val COLOR_TAR_HIGH_ORANGE = Color.parseColor("#EF6C00") // Above target (181-250)
-    private val COLOR_TAR_VHIGH_RED = Color.parseColor("#B71C1C")   // Very high (>250)
-    private val COLOR_TBR_LOW_YELLOW = Color.parseColor("#F57F17")  // Below target (54-69)
-    private val COLOR_TBR_VLOW_RED = Color.parseColor("#C62828")    // Very low (<54)
-    private val COLOR_P1090_LIGHT = Color.parseColor("#D0E1F9")     // 10-90 percentile
-    private val COLOR_P2575_MID = Color.parseColor("#90CAF9")       // 25-75 percentile
+    private val COLOR_BLUE = "#2563EB".toColorInt()           // Calibrated
+    private val COLOR_RAW_ORANGE = "#D97706".toColorInt()     // Raw
+    private val COLOR_BG_BAND = "#E8F5E9".toColorInt()        // Target range band (70-180)
+    private val COLOR_TIR_GREEN = "#2E7D32".toColorInt()      // Time in Range (70-180)
+    private val COLOR_TAR_HIGH_ORANGE = "#EF6C00".toColorInt() // Above target (181-250)
+    private val COLOR_TAR_VHIGH_RED = "#B71C1C".toColorInt()   // Very high (>250)
+    private val COLOR_TBR_LOW_YELLOW = "#F57F17".toColorInt()  // Below target (54-69)
+    private val COLOR_TBR_VLOW_RED = "#C62828".toColorInt()    // Very low (<54)
+    private val COLOR_P1090_LIGHT = "#D0E1F9".toColorInt()     // 10-90 percentile
+    private val COLOR_P2575_MID = "#90CAF9".toColorInt()       // 25-75 percentile
 
     fun generateFullReport(
         context: Context,
@@ -389,7 +390,7 @@ object PdfReportGenerator {
         val col2 = MARGIN + 150f
         val col3 = MARGIN + 300f
 
-        val bgPaint = Paint().apply { color = Color.parseColor("#F5F5F5") }
+        val bgPaint = Paint().apply { color = "#F5F5F5".toColorInt() }
         canvas.drawRect(MARGIN, y, PAGE_WIDTH - MARGIN, y + 16f, bgPaint)
         canvas.drawText("Métrica", col1 + 5f, y + 11f, labelPaint)
         canvas.drawText("Calibrada", col2, y + 11f, valPaint)
@@ -405,6 +406,11 @@ object PdfReportGenerator {
         canvas.drawText("GMI (Est. A1c)", col1 + 5f, y + 10f, labelPaint)
         canvas.drawText("%.1f%% o %.0f mmol/mol".format(cal.gmi, (cal.gmi - 2.15) * 10.929), col2, y + 10f, valPaint)
         if (compare && raw != null) canvas.drawText("%.1f%%".format(raw.gmi), col3, y + 10f, rawValPaint)
+        y += 14f
+
+        canvas.drawText("GRI (Índice de Riesgo)", col1 + 5f, y + 10f, labelPaint)
+        canvas.drawText(String.format(java.util.Locale.US, "%.0f / 100 (Zona %s)", cal.gri, cal.griZone), col2, y + 10f, valPaint)
+        if (compare && raw != null) canvas.drawText(String.format(java.util.Locale.US, "%.0f (Zona %s)", raw.gri, raw.griZone), col3, y + 10f, rawValPaint)
         y += 14f
 
         canvas.drawText("Variabilidad (%CV)", col1 + 5f, y + 10f, labelPaint)
@@ -423,6 +429,12 @@ object PdfReportGenerator {
             if (compare && raw != null) canvas.drawText("%.0f mg/dL".format(raw.overnightAvg), col3, y + 10f, rawValPaint)
             y += 14f
         }
+
+        val ep = cal.episodes
+        val epText = "Hipo <70: ${ep.hypoLevel1Count} (${String.format(java.util.Locale.US, "%.0f", ep.hypoLevel1AvgMinutes)}m) | <54: ${ep.hypoLevel2Count} | Hiper >180: ${ep.hyperCount} | >250: ${ep.hyperSevereCount}"
+        canvas.drawText("Episodios (≥15 min)", col1 + 5f, y + 10f, labelPaint)
+        canvas.drawText(epText, col2, y + 10f, valPaint)
+        y += 14f
         y += 6f
 
         return y
@@ -487,8 +499,8 @@ object PdfReportGenerator {
 
         // Draw AGP percentile shading for Calibrated
         if (calAgp.isNotEmpty()) {
-            val p1090Paint = Paint().apply { color = Color.parseColor("#D0E1F9"); style = Paint.Style.FILL }
-            val p2575Paint = Paint().apply { color = Color.parseColor("#90CAF9"); style = Paint.Style.FILL }
+            val p1090Paint = Paint().apply { color = "#D0E1F9".toColorInt(); style = Paint.Style.FILL }
+            val p2575Paint = Paint().apply { color = "#90CAF9".toColorInt(); style = Paint.Style.FILL }
             val calMedianPaint = Paint().apply { color = COLOR_BLUE; style = Paint.Style.STROKE; strokeWidth = 2.5f; isAntiAlias = true }
 
             drawPercentileBand(canvas, calAgp, { it.p10 }, { it.p90 }, x, y, w, h, minG, rangeG, p1090Paint)
@@ -952,7 +964,7 @@ object PdfReportGenerator {
         val lblPaint = Paint().apply { color = Color.DKGRAY; textSize = 7.5f }
         for (h in 0..24 step 6) {
             val hx = MARGIN + (h / 24f) * chartW
-            canvas.drawText(String.format("%02d:00", h), hx - 12f, y + chartH + 12f, lblPaint)
+            canvas.drawText(String.format(java.util.Locale.US, "%02d:00", h), hx - 12f, y + chartH + 12f, lblPaint)
         }
 
         y += chartH + 25f
@@ -1008,7 +1020,7 @@ object PdfReportGenerator {
         items: List<SnapshotItem>,
         compare: Boolean
     ) {
-        val cardPaint = Paint().apply { color = Color.parseColor("#FAFAFA"); style = Paint.Style.FILL }
+        val cardPaint = Paint().apply { color = "#FAFAFA".toColorInt(); style = Paint.Style.FILL }
         val cardBorder = Paint().apply { color = Color.LTGRAY; style = Paint.Style.STROKE; strokeWidth = 1f }
 
         canvas.drawRect(x, y, x + w, y + h, cardPaint)
@@ -1102,7 +1114,7 @@ object PdfReportGenerator {
         for (h in 0..24 step 2) {
             val hx = chartX + (h / 24f) * chartW
             canvas.drawLine(hx, y, hx, y + chartH, dashPaint)
-            canvas.drawText(String.format("%02d:00", if (h == 24) 0 else h), hx - 12f, y + chartH + 14f, lblPaint)
+            canvas.drawText(String.format(java.util.Locale.US, "%02d:00", if (h == 24) 0 else h), hx - 12f, y + chartH + 14f, lblPaint)
 
             if (h < 24) {
                 calAgp.getOrNull(h)?.let { pt ->
@@ -1472,27 +1484,27 @@ object PdfReportGenerator {
 
         for (h in 0..24 step 2) {
             val hx = chartX + (h / 24f) * chartW
-            canvas.drawText(String.format("%02d:00", h), hx - 12f, y + chartH + 14f, lblPaint)
+            canvas.drawText(String.format(java.util.Locale.US, "%02d:00", h), hx - 12f, y + chartH + 14f, lblPaint)
         }
 
         y += chartH + 30f
 
         // Gráfico de Carbohidratos
-        y = drawBarChart(canvas, chartX, y, chartW, lblPaint, "Carb. gramos", getCarbsData(), Color.parseColor("#FF6F00"))
+        y = drawBarChart(canvas, chartX, y, chartW, lblPaint, "Carb. gramos", getCarbsData(), "#FF6F00".toColorInt())
 
         // Gráfico de Insulina rápida
-        y = drawBarChart(canvas, chartX, y, chartW, lblPaint, "Insulina de acción rápida (unidades)", getRapidInsulinData(), Color.parseColor("#1976D2"))
+        y = drawBarChart(canvas, chartX, y, chartW, lblPaint, "Insulina de acción rápida (unidades)", getRapidInsulinData(), "#1976D2".toColorInt())
 
         // Gráfico de Insulina lenta
-        y = drawBarChart(canvas, chartX, y, chartW, lblPaint, "Insulina de acción lenta (unidades)", getBasalInsulinData(), Color.parseColor("#388E3C"))
+        y = drawBarChart(canvas, chartX, y, chartW, lblPaint, "Insulina de acción lenta (unidades)", getBasalInsulinData(), "#388E3C".toColorInt())
 
         // Leyenda
         val legendPaint = Paint().apply { textSize = 8f }
-        legendPaint.color = Color.parseColor("#FF6F00")
+        legendPaint.color = "#FF6F00".toColorInt()
         canvas.drawText("█ Carbohidratos", chartX, y, legendPaint)
-        legendPaint.color = Color.parseColor("#1976D2")
+        legendPaint.color = "#1976D2".toColorInt()
         canvas.drawText("█ Insulina rápida", chartX + 120f, y, legendPaint)
-        legendPaint.color = Color.parseColor("#388E3C")
+        legendPaint.color = "#388E3C".toColorInt()
         canvas.drawText("█ Insulina lenta", chartX + 250f, y, legendPaint)
     }
 

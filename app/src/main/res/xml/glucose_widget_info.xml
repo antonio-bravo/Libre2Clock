@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:initialLayout="@layout/widget_glucose"
     android:minWidth="40dp"
     android:minHeight="40dp"
@@ -9,4 +10,5 @@
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
     android:targetCellWidth="2"
-    android:targetCellHeight="1" />
+    android:targetCellHeight="1"
+    tools:targetApi="31" />

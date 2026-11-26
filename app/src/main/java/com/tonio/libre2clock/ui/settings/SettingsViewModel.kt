@@ -11,6 +11,7 @@ import com.tonio.libre2clock.data.api.LibreService
 import com.tonio.libre2clock.data.model.AlarmSchedule
 import com.tonio.libre2clock.data.model.AppRole
 import com.tonio.libre2clock.data.model.AutoRangeOffsetMode
+import com.tonio.libre2clock.data.model.BolusTimeProfile
 import com.tonio.libre2clock.data.model.CapillaryMeasurement
 import com.tonio.libre2clock.data.model.EmergencyConfig
 import com.tonio.libre2clock.data.model.EmergencyContact
@@ -166,6 +167,7 @@ class SettingsViewModel(
     val targetGlucose = preferenceManager.targetGlucose.stateInDefault(100)
     val targetGlucoseLow = preferenceManager.targetGlucoseLow.stateInDefault(70)
     val targetGlucoseHigh = preferenceManager.targetGlucoseHigh.stateInDefault(180)
+    val bolusTimeProfiles = preferenceManager.bolusTimeProfiles.stateInDefault(emptyList())
     
     val insulinDoses = preferenceManager.insulinDoses
         .map { list -> list.filter { !it.isDeleted } }
@@ -185,6 +187,11 @@ class SettingsViewModel(
     val batteryCriticalThreshold = preferenceManager.batteryCriticalThreshold.stateInDefault(5)
     val disableFastRefreshOnSlowCharge = preferenceManager.disableFastRefreshOnSlowCharge.stateInDefault(true)
     val sensorDurationDays = preferenceManager.sensorDurationDays.stateInDefault(15)
+    val glucoseUnit = preferenceManager.glucoseUnit.stateInDefault(com.tonio.libre2clock.data.model.GlucoseUnit.MG_DL)
+
+    fun updateGlucoseUnit(unit: com.tonio.libre2clock.data.model.GlucoseUnit) = launchSave {
+        preferenceManager.saveGlucoseUnit(unit)
+    }
 
     val widgetCompactMode = preferenceManager.widgetCompactMode.stateInDefault(false)
     val widgetShowInsulin = preferenceManager.widgetShowInsulin.stateInDefault(true)
@@ -392,6 +399,18 @@ class SettingsViewModel(
     fun updateManualIsf(isf: Double?) = launchSave { preferenceManager.saveManualIsf(isf) }
     fun updateTdiCalculationDays(days: Int) = launchSave { preferenceManager.saveTdiCalculationDays(days) }
     fun updateTargetGlucose(target: Int) = launchSave { preferenceManager.saveTargetGlucose(target) }
+    fun saveBolusTimeProfiles(profiles: List<BolusTimeProfile>) = launchSave {
+        preferenceManager.saveBolusTimeProfiles(profiles)
+    }
+    fun addOrUpdateBolusTimeProfile(profile: BolusTimeProfile) = launchSave {
+        val current = bolusTimeProfiles.value.toMutableList()
+        val idx = current.indexOfFirst { it.id == profile.id }
+        if (idx >= 0) current[idx] = profile else current.add(profile)
+        preferenceManager.saveBolusTimeProfiles(current)
+    }
+    fun deleteBolusTimeProfile(profileId: String) = launchSave {
+        preferenceManager.saveBolusTimeProfiles(bolusTimeProfiles.value.filterNot { it.id == profileId })
+    }
     fun updateTargetGlucoseLow(value: Int) = launchSave { preferenceManager.saveTargetGlucoseLow(value) }
     fun updateTargetGlucoseHigh(value: Int) = launchSave { preferenceManager.saveTargetGlucoseHigh(value) }
     fun updateBatteryLowThreshold(threshold: Int) = launchSave { preferenceManager.saveBatteryLowThreshold(threshold) }
@@ -582,7 +601,7 @@ class SettingsViewModel(
             } else ""
 
             val baseResult = if (dispatchedCount > 0) {
-                appContext.getString(R.string.emergency_test_sent, dispatchedCount)
+                appContext.resources.getQuantityString(R.plurals.emergency_test_sent, dispatchedCount, dispatchedCount)
             } else if (config.contacts.isEmpty()) {
                 appContext.getString(R.string.emergency_test_no_contacts)
             } else {
@@ -772,16 +791,10 @@ class SettingsViewModel(
     }
 
     private fun getWebClientId(): String {
-        try {
-            val resId = appContext.resources.getIdentifier("default_web_client_id", "string", appContext.packageName)
-            if (resId != 0) {
-                val clientFromRes = appContext.getString(resId)
-                if (clientFromRes.isNotBlank()) return clientFromRes
-            }
-        } catch (_: Exception) {}
-
         return try {
-            appContext.getString(R.string.default_web_client_id)
+            appContext.getString(R.string.default_web_client_id).ifBlank {
+                "172410610607-nbpqb5f16vr1ets2v7oh43do23ogo50k.apps.googleusercontent.com"
+            }
         } catch (_: Exception) {
             "172410610607-nbpqb5f16vr1ets2v7oh43do23ogo50k.apps.googleusercontent.com"
         }
@@ -1378,6 +1391,57 @@ class SettingsViewModel(
     fun setNightscoutUseCalibrated(useCalibrated: Boolean) = viewModelScope.launch { preferenceManager.saveNightscoutUseCalibrated(useCalibrated) }
     fun setXdripBroadcastEnabled(enabled: Boolean) = viewModelScope.launch { preferenceManager.saveXdripBroadcastEnabled(enabled) }
 
+    val healthConnectEnabled: StateFlow<Boolean> = preferenceManager.healthConnectEnabled.stateInDefault(false)
+    private val _hasHealthConnectPermissions = MutableStateFlow(false)
+    val hasHealthConnectPermissions: StateFlow<Boolean> = _hasHealthConnectPermissions.asStateFlow()
+    private val _healthConnectSteps24h = MutableStateFlow<Long?>(null)
+    val healthConnectSteps24h: StateFlow<Long?> = _healthConnectSteps24h.asStateFlow()
+
+    fun setHealthConnectEnabled(enabled: Boolean) = viewModelScope.launch {
+        preferenceManager.saveHealthConnectEnabled(enabled)
+    }
+
+    fun refreshHealthConnectStatus() {
+        viewModelScope.launch {
+            val hasPerms = com.tonio.libre2clock.util.HealthConnectManager.hasAllPermissions(appContext)
+            _hasHealthConnectPermissions.value = hasPerms
+            if (hasPerms) {
+                _healthConnectSteps24h.value = com.tonio.libre2clock.util.HealthConnectManager.readRecentSteps(appContext).getOrNull()
+            } else {
+                _healthConnectSteps24h.value = null
+            }
+        }
+    }
+
+    fun syncToHealthConnectNow(onResult: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            _isTestingNightscout.value = true
+            try {
+                val hasPerms = com.tonio.libre2clock.util.HealthConnectManager.hasAllPermissions(appContext)
+                _hasHealthConnectPermissions.value = hasPerms
+                if (!hasPerms) {
+                    onResult(false, appContext.getString(R.string.health_connect_permissions_missing))
+                    return@launch
+                }
+                val history = repository.historicalGlucose.first().take(500)
+                val useCal = nightscoutUseCalibrated.value
+                val gRes = com.tonio.libre2clock.util.HealthConnectManager.syncGlucoseReadings(appContext, history, useCal)
+                val cRes = com.tonio.libre2clock.util.HealthConnectManager.syncCarbsFromDoses(appContext, insulinDoses.value)
+                _healthConnectSteps24h.value = com.tonio.libre2clock.util.HealthConnectManager.readRecentSteps(appContext).getOrNull()
+
+                val total = (gRes.getOrDefault(0)) + (cRes.getOrDefault(0))
+                if (gRes.isSuccess && cRes.isSuccess) {
+                    onResult(true, appContext.resources.getQuantityString(R.plurals.health_connect_sync_success, total, total))
+                } else {
+                    val err = gRes.exceptionOrNull()?.localizedMessage ?: cRes.exceptionOrNull()?.localizedMessage ?: "Error"
+                    onResult(false, err)
+                }
+            } finally {
+                _isTestingNightscout.value = false
+            }
+        }
+    }
+
     fun testNightscoutConnection(onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
             _isTestingNightscout.value = true
@@ -1406,6 +1470,40 @@ class SettingsViewModel(
                     val err = result.exceptionOrNull()?.localizedMessage ?: "Error de conexión"
                     onResult(false, err)
                 }
+            } catch (e: Exception) {
+                onResult(false, "Error: ${e.localizedMessage}")
+            } finally {
+                _isTestingNightscout.value = false
+            }
+        }
+    }
+
+    fun syncNightscoutTreatments(onResult: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            _isTestingNightscout.value = true
+            try {
+                val url = nightscoutUrl.value
+                val secret = nightscoutApiSecret.value
+                val doses = insulinDoses.value
+                val caps = capillaryReadings.value
+                val sensors = sensorLogs.value
+
+                val result = com.tonio.libre2clock.util.NightscoutManager.uploadTreatmentsBatch(
+                    nightscoutUrl = url,
+                    apiSecret = secret,
+                    doses = doses,
+                    capillaries = caps,
+                    sensorLogs = sensors
+                )
+
+                result.fold(
+                    onSuccess = { count ->
+                        onResult(true, appContext.resources.getQuantityString(R.plurals.nightscout_sync_treatments_success, count, count))
+                    },
+                    onFailure = { err ->
+                        onResult(false, err.localizedMessage ?: "Error")
+                    }
+                )
             } catch (e: Exception) {
                 onResult(false, "Error: ${e.localizedMessage}")
             } finally {

@@ -24,6 +24,7 @@ fun SettingsDeviceScreen(
 ) {
     val sensorDurationDays by viewModel.sensorDurationDays.collectAsStateWithLifecycle()
     val isDemoMode by viewModel.isDemoMode.collectAsStateWithLifecycle()
+    val glucoseUnit by viewModel.glucoseUnit.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -52,6 +53,28 @@ fun SettingsDeviceScreen(
                     currentDays = sensorDurationDays,
                     onDaysChange = viewModel::updateSensorDurationDays
                 )
+            }
+
+            item(key = "glucose_unit") {
+                SettingsSection(title = stringResource(R.string.settings_glucose_unit_title)) {
+                    Text(
+                        text = stringResource(R.string.settings_glucose_unit_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        com.tonio.libre2clock.data.model.GlucoseUnit.entries.forEach { unit ->
+                            FilterChip(
+                                selected = glucoseUnit == unit,
+                                onClick = { viewModel.updateGlucoseUnit(unit) },
+                                label = {
+                                    Text(com.tonio.libre2clock.util.GlucoseUnitConverter.unitLabel(unit))
+                                }
+                            )
+                        }
+                    }
+                }
             }
 
             item(key = "demo_mode") {
