@@ -341,6 +341,7 @@ fun ActiveInsulinCard(
     }
 }
 
+@Suppress("DEPRECATION")
 @Composable
 fun BolusCalculatorCard(
     tdi: Double, calculatedTdi: Double, icRatio: Double, isf: Double, calculatedIsf: Double,

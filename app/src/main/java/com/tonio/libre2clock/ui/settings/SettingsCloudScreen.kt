@@ -554,6 +554,7 @@ private fun DangerZoneSection(
 private val timestampFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
     .withZone(ZoneId.systemDefault())
 
+@Suppress("DEPRECATION")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ShareInvitesSection(

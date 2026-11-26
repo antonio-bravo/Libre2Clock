@@ -116,7 +116,9 @@ object GlucoseProcessor {
             matchingRange?.let { (rawValue * (it.percentage / 100.0)).roundToInt() } ?: 0
         }
 
-        val autoAdjustment = if (autoAdjustEnabled) {
+        // Si selectedEstimate está activo (modo auto-rango inteligente), este ya cubre la calibración
+        // y no debemos sumar autoAdjustment otra vez para evitar duplicar el offset.
+        val autoAdjustment = if (autoAdjustEnabled && selectedEstimate == null) {
             getAutoAdjustment(rawValue, measurementInstant, capillaryReadings, context = context)
         } else {
             0
@@ -230,19 +232,41 @@ object GlucoseProcessor {
         capillaryReadings: List<CapillaryMeasurement>,
         activeSensorSn: String? = null
     ): RangeOffsetEstimate? {
+        val fallbackEstimate = estimateOffsetsInternal(capillaryReadings) { sensor ->
+            sensor >= range.min && (range.max == null || sensor < range.max)
+        }
+
         if (!activeSensorSn.isNullOrBlank()) {
             val sensorSpecificReadings = capillaryReadings.filter { it.sensorSerialNumber == activeSensorSn }
             val sensorEstimate = estimateOffsetsInternal(sensorSpecificReadings) { sensor ->
                 sensor >= range.min && (range.max == null || sensor < range.max)
             }
+
             if (sensorEstimate != null && sensorEstimate.sampleCount > 0) {
-                return sensorEstimate.copy(isSensorSpecific = true)
+                val n = sensorEstimate.sampleCount
+                // Si no hay promedio histórico o si ya tenemos 3 o más muestras del sensor actual, usar 100% el sensor actual
+                if (fallbackEstimate == null || n >= 3) {
+                    return sensorEstimate.copy(isSensorSpecific = true)
+                }
+
+                // Ponderación suavizada para evitar que 1 sola muestra con ruido distorsione el valor:
+                // Con 1 muestra: 35% sensor actual, 65% promedio histórico acumulado
+                // Con 2 muestras: 70% sensor actual, 30% promedio histórico acumulado
+                val weightSensor = if (n == 1) 0.35 else 0.70
+                val weightFallback = 1.0 - weightSensor
+
+                val blendedOffset = (sensorEstimate.offset * weightSensor + fallbackEstimate.offset * weightFallback).roundToInt()
+                val blendedPct = (sensorEstimate.percentage * weightSensor + fallbackEstimate.percentage * weightFallback).roundToInt()
+
+                return RangeOffsetEstimate(
+                    offset = blendedOffset,
+                    percentage = blendedPct,
+                    sampleCount = n,
+                    isSensorSpecific = true
+                )
             }
         }
 
-        val fallbackEstimate = estimateOffsetsInternal(capillaryReadings) { sensor ->
-            sensor >= range.min && (range.max == null || sensor < range.max)
-        }
         return fallbackEstimate?.copy(isSensorSpecific = false)
     }
 

@@ -23,6 +23,7 @@ import com.tonio.libre2clock.service.GlucoseForegroundService
 import com.tonio.libre2clock.ui.icons.Visibility
 import com.tonio.libre2clock.ui.icons.VisibilityOff
 
+@Suppress("DEPRECATION")
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel,

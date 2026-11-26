@@ -33,6 +33,7 @@ import com.tonio.libre2clock.data.model.EmergencyContact
 import com.tonio.libre2clock.util.EmergencyLocationManager
 import kotlinx.coroutines.launch
 
+@Suppress("DEPRECATION")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsEmergencyScreen(

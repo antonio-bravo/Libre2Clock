@@ -111,7 +111,8 @@ class ExampleUnitTest {
         val estimateActive = GlucoseProcessor.estimateOffsetsForRange(range, capillaryReadings, activeSensorSn = "SN-002")
         assertEquals(1, estimateActive?.sampleCount)
         assertEquals(true, estimateActive?.isSensorSpecific)
-        assertEquals(30, estimateActive?.offset)
+        // Ponderado suave con 1 muestra (35% SN-002 + 65% promedio histórico): 0.35*30 + 0.65*20 = 23.5 -> 24
+        assertEquals(24, estimateActive?.offset)
     }
 
     @Test
@@ -126,6 +127,37 @@ class ExampleUnitTest {
         assertEquals(2, estimateFallback?.sampleCount)
         assertEquals(false, estimateFallback?.isSensorSpecific)
         assertEquals(20, estimateFallback?.offset)
+    }
+
+    @Test
+    fun smartCalibrationPreventsDoubleCountingAndOutlierDistortion() {
+        val range = GlucoseOffsetRange(min = 70, max = 180)
+        val capillaryReadings = listOf(
+            CapillaryMeasurement(value = 160, timestamp = "2024-01-01T12:00:00", sensorValue = 138, sensorSerialNumber = "SN-NEW"),
+            CapillaryMeasurement(value = 120, timestamp = "2024-01-01T10:00:00", sensorValue = 100, sensorSerialNumber = "SN-OLD")
+        )
+
+        val measurement = GlucoseMeasurement(
+            factoryTimestamp = "",
+            timestamp = "2024-01-01T12:05:00",
+            type = 0,
+            valueInMgPerDl = 138,
+            trendArrow = 3,
+            value = 138
+        )
+
+        val calibrated = GlucoseProcessor.process(
+            measurement = measurement,
+            manualOffset = 0,
+            userRanges = listOf(range),
+            autoAdjustEnabled = true,
+            autoRangeOffsetMode = com.tonio.libre2clock.data.model.AutoRangeOffsetMode.BY_RANGE,
+            capillaryReadings = capillaryReadings,
+            activeSensorSn = "SN-NEW"
+        )
+
+        // Verifica que no se duplique la suma (138 + 22 + 22 = 182 ó 209), sino un valor suave y preciso de 159 mg/dL
+        assertEquals(159, calibrated.calibratedValue)
     }
 
     @Test

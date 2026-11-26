@@ -107,6 +107,7 @@ fun SettingsBatteryScreen(
 
 // --- Componentes Extraídos para Aislar Recomposiciones ---
 
+@Suppress("DEPRECATION")
 @Composable
 private fun BatteryThresholdSlider(
     value: Int,
