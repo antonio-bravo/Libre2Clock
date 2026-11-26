@@ -1,5 +1,39 @@
 # Changelog
 
+## 6e2b588 (Nov 26, 2026 12:15:18)
+fix correction intelligence apply to ranges — antonio-bravo
+[detail](#6e2b588-details)
+
+<details id='6e2b588-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/data/repository/GlucoseProcessor.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/components/ShareDialog.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/insulin/InsulinScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/login/LoginScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsBatteryScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsEmergencyScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsNightscoutScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsVoiceScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsWidgetScreen.kt [Modified]
+- app/src/test/java/com/tonio/libre2clock/ExampleUnitTest.kt [Modified]
+</details>
+
+
+---
+## ae11612 (Nov 26, 2026 10:26:27)
+Update changelog — github-actions[bot]
+[detail](#ae11612-details)
+
+<details id='ae11612-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## a426c19 (Nov 26, 2026 11:25:40)
 update packages
 
@@ -644,32 +678,6 @@ Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> 
 [detail](#c48eb58-details)
 
 <details id='c48eb58-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## f5b886b (Nov 20, 2026 16:28:05)
-Update changelog — github-actions[bot]
-[detail](#f5b886b-details)
-
-<details id='f5b886b-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 0c1e8b1 (Nov 20, 2026 16:27:50)
-Update dependency androidx.lifecycle:lifecycle-runtime-ktx to v2.11.1 (#73)
-
-Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
-[detail](#0c1e8b1-details)
-
-<details id='0c1e8b1-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
