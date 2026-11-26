@@ -1,5 +1,31 @@
 # Changelog
 
+## 607a348 (Nov 26, 2026 10:51:49)
+Merge pull request #84 from antonio-bravo/renovate/major-composebom
+
+Update dependency androidx.compose:compose-bom to v2026 — antonio-bravo
+[detail](#607a348-details)
+
+<details id='607a348-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 43d7de6 (Nov 26, 2026 09:46:27)
+Update changelog — github-actions[bot]
+[detail](#43d7de6-details)
+
+<details id='43d7de6-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 2a66472 (Nov 26, 2026 10:46:17)
 Merge pull request #82 from antonio-bravo/renovate/activitycompose
 
@@ -7,6 +33,18 @@ Update dependency androidx.activity:activity-compose to v1.13.0 — antonio-brav
 [detail](#2a66472-details)
 
 <details id='2a66472-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## fb6df16 (Nov 26, 2026 09:43:50)
+Update dependency androidx.compose:compose-bom to v2026 — renovate[bot]
+[detail](#fb6df16-details)
+
+<details id='fb6df16-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
@@ -604,45 +642,6 @@ Update changelog — github-actions[bot]
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
-</details>
-
-
----
-## 68fd988 (Nov 12, 2026 10:29:13)
-fix google syc — antonio-bravo
-[detail](#68fd988-details)
-
-<details id='68fd988-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
-- app/src/main/res/values/strings.xml [Modified]
-</details>
-
-
----
-## 1477ab9 (Nov 11, 2026 21:45:38)
-Merge pull request #65 from antonio-bravo/renovate/kotlinxserializationcore
-
-Update dependency org.jetbrains.kotlinx:kotlinx-serialization-core to v1.13.0 — antonio-bravo
-[detail](#1477ab9-details)
-
-<details id='1477ab9-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 9719405 (Nov 11, 2026 21:45:08)
-Merge branch 'main' into renovate/kotlinxserializationcore — antonio-bravo
-[detail](#9719405-details)
-
-<details id='9719405-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
 </details>
 
 
