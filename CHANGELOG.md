@@ -1,5 +1,43 @@
 # Changelog
 
+## 2a66472 (Nov 26, 2026 10:46:17)
+Merge pull request #82 from antonio-bravo/renovate/activitycompose
+
+Update dependency androidx.activity:activity-compose to v1.13.0 — antonio-bravo
+[detail](#2a66472-details)
+
+<details id='2a66472-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 694b50a (Nov 26, 2026 09:43:37)
+Update dependency androidx.activity:activity-compose to v1.13.0 — renovate[bot]
+[detail](#694b50a-details)
+
+<details id='694b50a-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 706325f (Nov 26, 2026 09:42:56)
+Update changelog — github-actions[bot]
+[detail](#706325f-details)
+
+<details id='706325f-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 71172e9 (Nov 26, 2026 10:42:21)
 simplify UI for intelligence per sensor offset on ranges — antonio-bravo
 [detail](#71172e9-details)
@@ -602,44 +640,6 @@ Merge branch 'main' into renovate/kotlinxserializationcore — antonio-bravo
 [detail](#9719405-details)
 
 <details id='9719405-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 2599611 (Nov 11, 2026 21:44:34)
-Merge pull request #66 from antonio-bravo/renovate/kotlinxserializationjson
-
-Update dependency org.jetbrains.kotlinx:kotlinx-serialization-json to v1.13.0 — antonio-bravo
-[detail](#2599611-details)
-
-<details id='2599611-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## b5bfb86 (Nov 11, 2026 20:39:19)
-Update dependency org.jetbrains.kotlinx:kotlinx-serialization-json to v1.13.0 — renovate[bot]
-[detail](#b5bfb86-details)
-
-<details id='b5bfb86-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 16956d1 (Nov 11, 2026 20:39:12)
-Update dependency org.jetbrains.kotlinx:kotlinx-serialization-core to v1.13.0 — renovate[bot]
-[detail](#16956d1-details)
-
-<details id='16956d1-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
