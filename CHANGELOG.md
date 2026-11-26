@@ -1,5 +1,31 @@
 # Changelog
 
+## 19a650c (Nov 26, 2026 11:02:50)
+dependandbot by groups — antonio-bravo
+[detail](#19a650c-details)
+
+<details id='19a650c-details'>
+<summary>Changed files</summary>
+
+- .github/dependanbot.yml [Modified]
+- .github/renovate.json [Modified]
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 68cd1bb (Nov 26, 2026 09:58:28)
+Update changelog — github-actions[bot]
+[detail](#68cd1bb-details)
+
+<details id='68cd1bb-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 08a0583 (Nov 26, 2026 10:58:11)
 fix update — antonio-bravo
 [detail](#08a0583-details)
@@ -614,32 +640,6 @@ Update changelog — github-actions[bot]
 [detail](#2961ec7-details)
 
 <details id='2961ec7-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 561a18a (Nov 14, 2026 01:15:25)
-Update dependency com.google.devtools.ksp to v2.3.14 (#67)
-
-Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
-[detail](#561a18a-details)
-
-<details id='561a18a-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 11384d7 (Nov 12, 2026 21:01:53)
-Update changelog — github-actions[bot]
-[detail](#11384d7-details)
-
-<details id='11384d7-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
