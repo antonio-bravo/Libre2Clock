@@ -1,5 +1,30 @@
 # Changelog
 
+## 08a0583 (Nov 26, 2026 10:58:11)
+fix update — antonio-bravo
+[detail](#08a0583-details)
+
+<details id='08a0583-details'>
+<summary>Changed files</summary>
+
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsNightscoutScreen.kt [Modified]
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## f6fee88 (Nov 26, 2026 09:52:00)
+Update changelog — github-actions[bot]
+[detail](#f6fee88-details)
+
+<details id='f6fee88-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 607a348 (Nov 26, 2026 10:51:49)
 Merge pull request #84 from antonio-bravo/renovate/major-composebom
 
@@ -615,30 +640,6 @@ Update changelog — github-actions[bot]
 [detail](#11384d7-details)
 
 <details id='11384d7-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## ee08aa9 (Nov 12, 2026 22:01:39)
-Sync with cloud the whole sync — antonio-bravo
-[detail](#ee08aa9-details)
-
-<details id='ee08aa9-details'>
-<summary>Changed files</summary>
-
-- app/src/main/java/com/tonio/libre2clock/data/sync/CloudSyncManager.kt [Modified]
-</details>
-
-
----
-## 1c5df82 (Nov 12, 2026 09:29:28)
-Update changelog — github-actions[bot]
-[detail](#1c5df82-details)
-
-<details id='1c5df82-details'>
 <summary>Changed files</summary>
 
 - CHANGELOG.md [Modified]
