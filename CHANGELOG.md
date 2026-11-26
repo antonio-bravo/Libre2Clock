@@ -1,5 +1,61 @@
 # Changelog
 
+## a426c19 (Nov 26, 2026 11:25:40)
+update packages
+
+# Conflicts:
+#	gradle/libs.versions.toml
+
+diff --git c/app/build.gradle.kts i/app/build.gradle.kts
+index 542c9bd..3add69a 100644
+--- c/app/build.gradle.kts
++++ i/app/build.gradle.kts
+@@ -166,4 +166,8 @@ dependencies {
+     androidTestImplementation(libs.androidx.runner)
+     debugImplementation(libs.androidx.compose.ui.test.manifest)
+     debugImplementation(libs.androidx.compose.ui.tooling)
++}
++
++tasks.matching { it.name.contains("AarMetadata") }.configureEach {
++    enabled = false
+ }
+\ No newline at end of file
+diff --git c/gradle/libs.versions.toml i/gradle/libs.versions.toml
+index 7debfba..6a9d85a 100644
+--- c/gradle/libs.versions.toml
++++ i/gradle/libs.versions.toml
+@@ -9,7 +9,7 @@ lifecycleViewmodelCompose = "2.11.1"
+ lifecycleRuntimeCompose = "2.11.1"
+ activityCompose = "1.13.0"
+ kotlin = "2.4.21"
+-composeBom = "2025.12.01"
++composeBom = "2026.11.01"
+ googleDevtoolsKsp = "2.3.14"
+ jetbrainsKotlinPluginSerialization = "2.4.21"
+ kotlinxSerializationCore = "1.13.0" — antonio-bravo
+[detail](#a426c19-details)
+
+<details id='a426c19-details'>
+<summary>Changed files</summary>
+
+- app/build.gradle.kts [Modified]
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## b565fa7 (Nov 26, 2026 10:10:43)
+Update changelog — github-actions[bot]
+[detail](#b565fa7-details)
+
+<details id='b565fa7-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## f0c015e (Nov 26, 2026 11:10:32)
 Merge pull request #87 from antonio-bravo/renovate/jetpack-compose-and-androidx-ui
 
@@ -614,32 +670,6 @@ Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> 
 [detail](#0c1e8b1-details)
 
 <details id='0c1e8b1-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 32b9ca8 (Nov 20, 2026 06:30:59)
-Update changelog — github-actions[bot]
-[detail](#32b9ca8-details)
-
-<details id='32b9ca8-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## 0b1ce45 (Nov 20, 2026 06:30:46)
-Update dependency androidx.lifecycle:lifecycle-runtime-compose to v2.11.1 (#72)
-
-Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
-[detail](#0b1ce45-details)
-
-<details id='0b1ce45-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
