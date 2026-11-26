@@ -1,5 +1,36 @@
 # Changelog
 
+## 71172e9 (Nov 26, 2026 10:42:21)
+simplify UI for intelligence per sensor offset on ranges — antonio-bravo
+[detail](#71172e9-details)
+
+<details id='71172e9-details'>
+<summary>Changed files</summary>
+
+- .idea/misc.xml [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCalibrationScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsCloudScreen.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsComponents.kt [Modified]
+- app/src/main/java/com/tonio/libre2clock/ui/settings/SettingsViewModel.kt [Modified]
+- app/src/main/res/values-es/strings.xml [Modified]
+- app/src/main/res/values/strings.xml [Modified]
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## c1f33c4 (Nov 26, 2026 08:56:59)
+Update changelog — github-actions[bot]
+[detail](#c1f33c4-details)
+
+<details id='c1f33c4-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## cbe4145 (Nov 26, 2026 09:56:47)
 Merge pull request #78 from antonio-bravo/renovate/composebom
 
@@ -609,34 +640,6 @@ Update dependency org.jetbrains.kotlinx:kotlinx-serialization-core to v1.13.0 �
 [detail](#16956d1-details)
 
 <details id='16956d1-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 7dd707a (Nov 11, 2026 21:38:51)
-Merge pull request #63 from antonio-bravo/renovate/firebasebom
-
-Update dependency com.google.firebase:firebase-bom to v35.2.0 — antonio-bravo
-[detail](#7dd707a-details)
-
-<details id='7dd707a-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 175a502 (Nov 11, 2026 21:38:39)
-Merge pull request #64 from antonio-bravo/renovate/googleservices
-
-Update dependency com.google.gms.google-services to v4.6.0 — antonio-bravo
-[detail](#175a502-details)
-
-<details id='175a502-details'>
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
