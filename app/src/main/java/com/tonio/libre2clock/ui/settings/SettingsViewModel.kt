@@ -121,6 +121,13 @@ class SettingsViewModel(
     val glucoseOffsetRanges = preferenceManager.glucoseOffsetRanges.stateInDefault(emptyList())
     val autoAdjustEnabled = preferenceManager.autoAdjustEnabled.stateInDefault(false)
     val autoRangeOffsetMode = preferenceManager.autoRangeOffsetMode.stateInDefault(AutoRangeOffsetMode.OFF)
+
+    val isUnifiedSmartCalibrationEnabled: StateFlow<Boolean> = combine(
+        autoAdjustEnabled,
+        autoRangeOffsetMode
+    ) { autoAdjust, autoMode ->
+        autoAdjust || autoMode != AutoRangeOffsetMode.OFF
+    }.distinctUntilChanged().stateIn(viewModelScope, sharingStrategy, false)
     
     // OPTIMIZACIÓN: Filtramos los borrados a nivel de ViewModel para que toda la UI los ignore
     val capillaryReadings = preferenceManager.capillaryReadings
@@ -350,6 +357,15 @@ class SettingsViewModel(
     fun updateOffset(offset: Int) = launchSave { preferenceManager.saveGlucoseOffset(offset) }
     fun updateAutoAdjustEnabled(enabled: Boolean) = launchSave { preferenceManager.saveAutoAdjustEnabled(enabled) }
     fun updateAutoRangeOffsetMode(mode: AutoRangeOffsetMode) = launchSave { preferenceManager.saveAutoRangeOffsetMode(mode) }
+    fun toggleUnifiedSmartCalibration(enabled: Boolean) = launchSave {
+        if (enabled) {
+            preferenceManager.saveAutoRangeOffsetMode(AutoRangeOffsetMode.BY_RANGE)
+            preferenceManager.saveAutoAdjustEnabled(true)
+        } else {
+            preferenceManager.saveAutoRangeOffsetMode(AutoRangeOffsetMode.OFF)
+            preferenceManager.saveAutoAdjustEnabled(false)
+        }
+    }
     fun updateWatchAlertIntervalMinutes(minutes: Int) = launchSave { preferenceManager.saveWatchAlertIntervalMinutes(minutes) }
     fun updateWatchAlertStartMinute(minute: Int) = launchSave { preferenceManager.saveWatchAlertStartMinute(minute) }
     fun updateLowGlucoseAlarmEnabled(enabled: Boolean) = launchSave { preferenceManager.saveLowGlucoseAlarmEnabled(enabled) }

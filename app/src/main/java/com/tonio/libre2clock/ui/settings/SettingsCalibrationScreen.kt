@@ -32,22 +32,22 @@ fun SettingsCalibrationScreen(
     val ranges by viewModel.glucoseOffsetRanges.collectAsStateWithLifecycle()
     val autoAdjustEnabled by viewModel.autoAdjustEnabled.collectAsStateWithLifecycle()
     val autoRangeOffsetMode by viewModel.autoRangeOffsetMode.collectAsStateWithLifecycle()
+    val isUnifiedSmartCalibrationEnabled by viewModel.isUnifiedSmartCalibrationEnabled.collectAsStateWithLifecycle()
     val targetGlucoseLow by viewModel.targetGlucoseLow.collectAsStateWithLifecycle()
     val targetGlucoseHigh by viewModel.targetGlucoseHigh.collectAsStateWithLifecycle()
     val rangeInsights by viewModel.rangeOffsetInsights.collectAsStateWithLifecycle()
     val sectionPerfStats by viewModel.sectionPerfStats.collectAsStateWithLifecycle()
 
-    // OPTIMIZACIÓN: Búsqueda O(1) en lugar de .find() O(N) en cada recomposición
     val calibrationStats = remember(sectionPerfStats) {
         sectionPerfStats.find { it.section == "settings_range_insights_v1" }
     }
 
-    // OPTIMIZACIÓN: Mapa para búsqueda O(1) de insights por rango
     val insightsMap = remember(rangeInsights) {
         rangeInsights.associateBy { "${it.min}_${it.max}" }
     }
 
     var editingRange by remember { mutableStateOf<GlucoseOffsetRange?>(null) }
+    var showAdvancedOptions by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -68,7 +68,15 @@ fun SettingsCalibrationScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // OPTIMIZACIÓN: Cada sección es un 'item' independiente para aislar recomposiciones
+            // 1. Interruptor Maestro Unificado: Calibración Automática Inteligente
+            item {
+                UnifiedSmartCalibrationSection(
+                    isEnabled = isUnifiedSmartCalibrationEnabled,
+                    onToggle = viewModel::toggleUnifiedSmartCalibration
+                )
+            }
+
+            // 2. Rango Saludable Objetivo
             item {
                 HealthyTargetRangeSection(
                     targetLow = targetGlucoseLow,
@@ -78,30 +86,13 @@ fun SettingsCalibrationScreen(
                 )
             }
 
-            item {
-                GlobalOffsetSection(
-                    offset = offset,
-                    autoAdjustEnabled = autoAdjustEnabled,
-                    onOffsetChange = viewModel::updateOffset,
-                    onAutoAdjustChange = viewModel::updateAutoAdjustEnabled
-                )
-            }
-
-            item {
-                AutoRangeSection(
-                    mode = autoRangeOffsetMode,
-                    rangeInsights = rangeInsights,
-                    onModeChange = viewModel::updateAutoRangeOffsetMode,
-                    onApplySuggestions = viewModel::applySuggestedRangeOffsets
-                )
-            }
-
+            // 3. Estado de Calibración Activa por Rango
             item {
                 Text(
                     text = stringResource(R.string.settings_range_based_offsets),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(vertical = 8.dp)
+                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
                 )
             }
 
@@ -114,51 +105,90 @@ fun SettingsCalibrationScreen(
                     )
                 }
             } else {
-                // OPTIMIZACIÓN: Uso de 'items' con 'key' para lazy loading real
                 items(
                     items = ranges,
                     key = { range -> "${range.min}_${range.max}_${range.offset}" }
                 ) { range ->
-                    // Búsqueda O(1) usando el mapa pre-construido
                     val insight = insightsMap["${range.min}_${range.max}"]
                     RangeItem(
                         range = range,
                         insight = insight,
+                        autoRangeMode = autoRangeOffsetMode,
                         onDelete = { viewModel.removeRange(range) },
                         onEdit = { editingRange = range }
                     )
                 }
             }
 
+            // 4. Opciones Avanzadas (Desplegable)
             item {
-                OutlinedButton(
-                    onClick = { viewModel.recomputeAllCache() },
-                    modifier = Modifier.fillMaxWidth()
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { showAdvancedOptions = !showAdvancedOptions }
                 ) {
-                    Icon(Icons.Default.Refresh, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.settings_perf_recompute_long))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.settings_advanced_calibration_options),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Icon(
+                            imageVector = if (showAdvancedOptions) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                            contentDescription = null
+                        )
+                    }
                 }
+            }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                OutlinedButton(
-                    onClick = { viewModel.addDefaultRange() },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.settings_add_range))
-                }
-
-                if (calibrationStats != null) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    SectionPerformanceCard(
-                        calibrationStats,
-                        stringResource(R.string.settings_perf_algorithm_latency)
+            if (showAdvancedOptions) {
+                item {
+                    GlobalOffsetSection(
+                        offset = offset,
+                        autoAdjustEnabled = autoAdjustEnabled,
+                        onOffsetChange = viewModel::updateOffset,
+                        onAutoAdjustChange = viewModel::updateAutoAdjustEnabled
                     )
                 }
 
+                item {
+                    OutlinedButton(
+                        onClick = { viewModel.addDefaultRange() },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.settings_add_range))
+                    }
+                }
+
+                item {
+                    OutlinedButton(
+                        onClick = { viewModel.recomputeAllCache() },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Refresh, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.settings_perf_recompute_long))
+                    }
+                }
+
+                if (calibrationStats != null) {
+                    item {
+                        SectionPerformanceCard(
+                            calibrationStats,
+                            stringResource(R.string.settings_perf_algorithm_latency)
+                        )
+                    }
+                }
+            }
+
+            item {
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }
@@ -176,7 +206,53 @@ fun SettingsCalibrationScreen(
     }
 }
 
-// --- Componentes Extraídos para Aislar Recomposiciones ---
+// --- Componentes Extraídos ---
+
+@Composable
+private fun UnifiedSmartCalibrationSection(
+    isEnabled: Boolean,
+    onToggle: (Boolean) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isEnabled) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = null,
+                        tint = if (isEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = stringResource(R.string.settings_unified_smart_calibration_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                Switch(
+                    checked = isEnabled,
+                    onCheckedChange = onToggle
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = stringResource(R.string.settings_unified_smart_calibration_desc),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
 
 @Composable
 private fun GlobalOffsetSection(
@@ -260,57 +336,6 @@ private fun DebouncedOffsetField(
         modifier = Modifier.fillMaxWidth(),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
     )
-}
-
-@Composable
-private fun AutoRangeSection(
-    mode: AutoRangeOffsetMode,
-    rangeInsights: List<RangeOffsetInsight>,
-    onModeChange: (AutoRangeOffsetMode) -> Unit,
-    onApplySuggestions: () -> Unit
-) {
-    SettingsSection(title = stringResource(R.string.settings_auto_range_label)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                stringResource(R.string.settings_auto_range_label),
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.weight(1f)
-            )
-            Switch(
-                checked = mode != AutoRangeOffsetMode.OFF,
-                onCheckedChange = { enabled ->
-                    onModeChange(if (enabled) AutoRangeOffsetMode.BY_RANGE else AutoRangeOffsetMode.OFF)
-                }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = when (mode) {
-                AutoRangeOffsetMode.OFF -> stringResource(R.string.settings_auto_range_off_desc)
-                AutoRangeOffsetMode.GLOBAL -> stringResource(R.string.settings_auto_range_global_desc)
-                AutoRangeOffsetMode.BY_RANGE -> stringResource(R.string.settings_auto_range_by_range_desc)
-            },
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        if (rangeInsights.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(12.dp))
-            val applicable = rangeInsights.count { it.sampleCount >= 2 }
-            Button(
-                onClick = onApplySuggestions,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(stringResource(R.string.settings_apply_intelligent_suggestions, applicable))
-            }
-        }
-    }
 }
 
 @Composable

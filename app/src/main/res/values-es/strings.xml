@@ -433,6 +433,7 @@
     <string name="settings_range_label">Rango: %1$d - %2$s mg/dL</string>
     <string name="settings_range_fixed_offset">Offset fijo: %1$s%2$d mg/dL</string>
     <string name="settings_range_percentage_offset">Offset porcentual: %1$s%2$d%%</string>
+    <string name="settings_range_dynamic_applied">Ajuste automático activo: %1$s%2$d mg/dL (%3$s%4$d%%)</string>
     <string name="settings_range_percentage_with_error">Offset porcentual: %1$s%2$d%% (Error: %3$s%4$.1f%%)</string>
     <string name="settings_range_sensor_audit">Error (actual / total): %1$s / %2$s (%3$s)</string>
     <string name="settings_avg_error_vs_capillary">Error medio vs capilar: actual %1$.1f mg/dL -&gt; smart %2$.1f mg/dL</string>
@@ -442,6 +443,9 @@
     <string name="settings_fixed_offset_label">Offset fijo (mg/dL)</string>
     <string name="settings_percentage_offset_label">Offset porcentual (%)</string>
 
+    <string name="settings_unified_smart_calibration_title">Calibración Automática Inteligente</string>
+    <string name="settings_unified_smart_calibration_desc">La app calcula automáticamente la corrección óptima en tiempo real combinando las mediciones capilares de tu sensor actual con tu historial histórico acumulado por rangos.</string>
+    <string name="settings_advanced_calibration_options">Opciones Avanzadas de Calibración</string>
     <string name="settings_auto_range_label">Offsets automáticos inteligentes por rango</string>
     <string name="settings_auto_range_off_desc">Desactivado: Usa exactamente los offsets manuales configurados por ti para cada rango.</string>
     <string name="settings_auto_range_global_desc">Offset global inteligente: Calcula un único ajuste general a partir de las capilares y lo aplica a todos los rangos.</string>

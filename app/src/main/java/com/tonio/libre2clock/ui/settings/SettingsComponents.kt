@@ -22,6 +22,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.tonio.libre2clock.R
 import com.tonio.libre2clock.data.model.AlarmSchedule
+import com.tonio.libre2clock.data.model.AutoRangeOffsetMode
 import com.tonio.libre2clock.data.model.GlucoseOffsetRange
 import com.tonio.libre2clock.data.model.RangeOffsetInsight
 import com.tonio.libre2clock.util.SectionPerfTelemetry
@@ -332,6 +333,7 @@ fun ScheduleDialog(
 fun RangeItem(
     range: GlucoseOffsetRange,
     insight: RangeOffsetInsight?,
+    autoRangeMode: AutoRangeOffsetMode = AutoRangeOffsetMode.OFF,
     onDelete: () -> Unit,
     onEdit: () -> Unit
 ) {
@@ -352,14 +354,32 @@ fun RangeItem(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
-                Text(
-                    text = stringResource(R.string.settings_range_fixed_offset, if (range.offset >= 0) "+" else "", range.offset),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Text(
-                    text = stringResource(R.string.settings_range_percentage_offset, if (range.percentage >= 0) "+" else "", range.percentage),
-                    style = MaterialTheme.typography.bodyMedium
-                )
+
+                if (autoRangeMode == AutoRangeOffsetMode.BY_RANGE && insight != null) {
+                    val dynamicOffsetSign = if (insight.suggestedOffset >= 0) "+" else ""
+                    val dynamicPctSign = if (insight.suggestedPercentage >= 0) "+" else ""
+                    Text(
+                        text = stringResource(
+                            R.string.settings_range_dynamic_applied,
+                            dynamicOffsetSign,
+                            insight.suggestedOffset,
+                            dynamicPctSign,
+                            insight.suggestedPercentage
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                } else {
+                    Text(
+                        text = stringResource(R.string.settings_range_fixed_offset, if (range.offset >= 0) "+" else "", range.offset),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = stringResource(R.string.settings_range_percentage_offset, if (range.percentage >= 0) "+" else "", range.percentage),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
                 if (insight != null) {
                     val currentSensorText = insight.currentSensorRawDeviationPct?.let { 
                         "${if (it >= 0) "+" else ""}${String.format(Locale.US, "%.1f", it)}%"

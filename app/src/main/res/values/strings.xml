@@ -439,6 +439,7 @@
     <string name="settings_range_label">Range: %1$d - %2$s mg/dL</string>
     <string name="settings_range_fixed_offset">Fixed offset: %1$s%2$d mg/dL</string>
     <string name="settings_range_percentage_offset">Percentage offset: %1$s%2$d%%</string>
+    <string name="settings_range_dynamic_applied">Active dynamic offset: %1$s%2$d mg/dL (%3$s%4$d%%)</string>
     <string name="settings_range_percentage_with_error">Percentage offset: %1$s%2$d%% (Error: %3$s%4$.1f%%)</string>
     <string name="settings_range_sensor_audit">Error (actual / total): %1$s / %2$s (%3$s)</string>
     <string name="settings_avg_error_vs_capillary">Avg error vs capillary: current %1$.1f mg/dL -&gt; smart %2$.1f mg/dL</string>
@@ -448,6 +449,9 @@
     <string name="settings_fixed_offset_label">Fixed offset (mg/dL)</string>
     <string name="settings_percentage_offset_label">Percentage offset (%)</string>
 
+    <string name="settings_unified_smart_calibration_title">Automatic Smart Calibration</string>
+    <string name="settings_unified_smart_calibration_desc">The app automatically calculates optimal real-time corrections combining fingerstick readings from your active sensor with historical range averages.</string>
+    <string name="settings_advanced_calibration_options">Advanced Calibration Options</string>
     <string name="settings_auto_range_label">Automatic smart offsets by range</string>
     <string name="settings_auto_range_off_desc">Disabled: Uses your manual range offsets exactly as configured below.</string>
     <string name="settings_auto_range_global_desc">Global smart offset: Computes a single overall offset from capillary readings and applies it to all ranges.</string>
