@@ -1,5 +1,43 @@
 # Changelog
 
+## f0c015e (Nov 26, 2026 11:10:32)
+Merge pull request #87 from antonio-bravo/renovate/jetpack-compose-and-androidx-ui
+
+Update Jetpack Compose & AndroidX UI — antonio-bravo
+[detail](#f0c015e-details)
+
+<details id='f0c015e-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 3804c57 (Nov 26, 2026 10:03:31)
+Update Jetpack Compose & AndroidX UI — renovate[bot]
+[detail](#3804c57-details)
+
+<details id='3804c57-details'>
+<summary>Changed files</summary>
+
+- gradle/libs.versions.toml [Modified]
+</details>
+
+
+---
+## 569ffbe (Nov 26, 2026 10:03:06)
+Update changelog — github-actions[bot]
+[detail](#569ffbe-details)
+
+<details id='569ffbe-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 19a650c (Nov 26, 2026 11:02:50)
 dependandbot by groups — antonio-bravo
 [detail](#19a650c-details)
@@ -605,44 +643,6 @@ Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> 
 <summary>Changed files</summary>
 
 - gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## fc91fd0 (Nov 19, 2026 05:48:51)
-Update changelog — github-actions[bot]
-[detail](#fc91fd0-details)
-
-<details id='fc91fd0-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## e1a7b3a (Nov 19, 2026 05:48:36)
-Update dependency androidx.camera:camera-camera2 to v1.7.0 (#68)
-
-Co-authored-by: renovate[bot] <29139614+renovate[bot]@users.noreply.github.com> — renovate[bot]
-[detail](#e1a7b3a-details)
-
-<details id='e1a7b3a-details'>
-<summary>Changed files</summary>
-
-- gradle/libs.versions.toml [Modified]
-</details>
-
-
----
-## 2961ec7 (Nov 14, 2026 01:15:39)
-Update changelog — github-actions[bot]
-[detail](#2961ec7-details)
-
-<details id='2961ec7-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
 </details>
 
 
