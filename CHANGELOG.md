@@ -1,5 +1,43 @@
 # Changelog
 
+## f4473f0 (Nov 27, 2026 22:17:23)
+Merge pull request #89 from antonio-bravo/renovate/gradle-9.x
+
+Update Gradle to v9.9.3 — antonio-bravo
+[detail](#f4473f0-details)
+
+<details id='f4473f0-details'>
+<summary>Changed files</summary>
+
+- gradle/wrapper/gradle-wrapper.properties [Modified]
+</details>
+
+
+---
+## 86b960b (Nov 27, 2026 15:45:22)
+Update Gradle to v9.9.3 — renovate[bot]
+[detail](#86b960b-details)
+
+<details id='86b960b-details'>
+<summary>Changed files</summary>
+
+- gradle/wrapper/gradle-wrapper.properties [Modified]
+</details>
+
+
+---
+## f561b6a (Nov 26, 2026 22:06:26)
+Update changelog — github-actions[bot]
+[detail](#f561b6a-details)
+
+<details id='f561b6a-details'>
+<summary>Changed files</summary>
+
+- CHANGELOG.md [Modified]
+</details>
+
+
+---
 ## 59ffbf9 (Nov 26, 2026 23:06:13)
 purge-releases just manual, it does on the main build — antonio-bravo
 [detail](#59ffbf9-details)
@@ -708,43 +746,6 @@ add renovate — antonio-bravo
 <summary>Changed files</summary>
 
 - renovate.json [Deleted]
-</details>
-
-
----
-## 7e03604 (Nov 22, 2026 21:40:03)
-Update actions/checkout action to v7 — renovate[bot]
-[detail](#7e03604-details)
-
-<details id='7e03604-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/purgar-releases.yml [Modified]
-</details>
-
-
----
-## 8f99dc9 (Nov 22, 2026 21:39:20)
-Update changelog — github-actions[bot]
-[detail](#8f99dc9-details)
-
-<details id='8f99dc9-details'>
-<summary>Changed files</summary>
-
-- CHANGELOG.md [Modified]
-</details>
-
-
----
-## e682eb0 (Nov 22, 2026 22:39:07)
-workflow — antonio-bravo
-[detail](#e682eb0-details)
-
-<details id='e682eb0-details'>
-<summary>Changed files</summary>
-
-- .github/workflows/build-release.yml [Modified]
-- .github/workflows/purgar-releases.yml [Modified]
 </details>
 
 
